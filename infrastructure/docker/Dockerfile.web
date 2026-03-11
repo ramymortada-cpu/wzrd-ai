@@ -19,6 +19,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY apps/web/ .
 
+# Ensure public directory exists (even if empty)
+RUN mkdir -p /app/public
+
 # Next.js standalone output (smallest possible image)
 ENV NEXT_TELEMETRY_DISABLED=1
 
@@ -42,7 +45,7 @@ ENV NODE_ENV=production \
 
 COPY --from=builder --chown=radd:radd /app/.next/standalone ./
 COPY --from=builder --chown=radd:radd /app/.next/static ./.next/static
-COPY --from=builder --chown=radd:radd /app/public ./public 2>/dev/null || true
+COPY --from=builder --chown=radd:radd /app/public ./public
 
 USER radd
 
