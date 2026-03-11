@@ -73,7 +73,7 @@ function statusBadge(status: string) {
 export default function SuperAdminOverview() {
   const [kpis, setKpis] = useState<PlatformKPIs | null>(null);
   const [loading, setLoading] = useState(true);
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
   async function load() {
     setLoading(true);
