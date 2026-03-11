@@ -19,6 +19,7 @@ class CurrentUser:
         self.user = user
         self.workspace_id = workspace_id
         self.role = user.role
+        self.is_superadmin = user.is_superadmin
 
 
 async def get_current_user(
@@ -52,6 +53,15 @@ def require_role(*roles: str):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
         return current
     return _check
+
+
+async def require_superadmin(
+    current: Annotated[CurrentUser, Depends(get_current_user)],
+) -> CurrentUser:
+    """Require the user to have is_superadmin=True."""
+    if not current.is_superadmin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required")
+    return current
 
 
 # Convenience role dependencies

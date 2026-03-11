@@ -40,7 +40,7 @@ async def login(request: Request, body: LoginRequest):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
     return TokenResponse(
-        access_token=create_access_token(user.id, workspace.id, user.role),
+        access_token=create_access_token(user.id, workspace.id, user.role, user.is_superadmin),
         refresh_token=create_refresh_token(user.id, workspace.id),
     )
 
@@ -68,7 +68,7 @@ async def refresh(request: Request, body: RefreshRequest):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 
     return TokenResponse(
-        access_token=create_access_token(user.id, workspace_id, user.role),
+        access_token=create_access_token(user.id, workspace_id, user.role, user.is_superadmin),
         refresh_token=create_refresh_token(user.id, workspace_id),
     )
 

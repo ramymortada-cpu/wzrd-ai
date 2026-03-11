@@ -59,6 +59,7 @@ class User(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[str] = mapped_column(String(20), nullable=False)  # owner, admin, agent, reviewer
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true")
+    is_superadmin: Mapped[bool] = mapped_column(Boolean, server_default="false")
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = now_utc()
     updated_at: Mapped[datetime] = mapped_column(

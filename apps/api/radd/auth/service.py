@@ -21,7 +21,12 @@ def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
 
 
-def create_access_token(user_id: uuid.UUID, workspace_id: uuid.UUID, role: str) -> str:
+def create_access_token(
+    user_id: uuid.UUID,
+    workspace_id: uuid.UUID,
+    role: str,
+    is_superadmin: bool = False,
+) -> str:
     expire = datetime.now(timezone.utc) + timedelta(
         minutes=settings.jwt_access_token_expire_minutes
     )
@@ -29,6 +34,7 @@ def create_access_token(user_id: uuid.UUID, workspace_id: uuid.UUID, role: str) 
         "sub": str(user_id),
         "workspace_id": str(workspace_id),
         "role": role,
+        "is_superadmin": is_superadmin,
         "type": "access",
         "exp": expire,
     }

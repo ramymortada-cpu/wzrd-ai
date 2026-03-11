@@ -222,3 +222,213 @@ export const createUser = (data: {
     method: "POST",
     body: JSON.stringify(data),
   });
+
+// ─── Super Admin ──────────────────────────────────────────────────────────────
+
+export type PlatformKPIs = {
+  total_workspaces: number;
+  active_workspaces: number;
+  total_messages_today: number;
+  total_messages_week: number;
+  platform_automation_rate: number;
+  total_active_conversations: number;
+  total_pending_escalations: number;
+  top_workspaces: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    plan: string;
+    status: string;
+    messages_today: number;
+  }>;
+  computed_at: string;
+};
+
+export type WorkspaceSummary = {
+  id: string;
+  name: string;
+  slug: string;
+  plan: string;
+  status: string;
+  user_count: number;
+  message_count_today: number;
+  conversation_count: number;
+  created_at: string;
+};
+
+export type WorkspaceDetail = WorkspaceSummary & {
+  settings: Record<string, unknown>;
+  updated_at: string;
+  message_count_total: number;
+  kb_document_count: number;
+  channel_count: number;
+  pending_escalations: number;
+  users: Array<{
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    is_active: boolean;
+    last_login_at: string | null;
+    created_at: string;
+  }>;
+  channels: Array<{
+    id: string;
+    type: string;
+    name: string | null;
+    is_active: boolean;
+    created_at: string;
+  }>;
+};
+
+export type PlatformUser = {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  is_active: boolean;
+  is_superadmin: boolean;
+  workspace_id: string;
+  workspace_name: string;
+  workspace_slug: string;
+  last_login_at: string | null;
+  created_at: string;
+};
+
+export type ServiceStatus = {
+  name: string;
+  status: "ok" | "degraded" | "down";
+  latency_ms: number | null;
+  detail: string | null;
+};
+
+export type SystemHealth = {
+  overall: string;
+  services: ServiceStatus[];
+  checked_at: string;
+};
+
+export type PipelineConfig = {
+  confidence_auto_threshold: number;
+  confidence_soft_escalation_threshold: number;
+  openai_chat_model: string;
+  openai_embedding_model: string;
+  intents: Array<{ name: string; keyword_count: number }>;
+};
+
+export type PlatformAuditEntry = {
+  id: number;
+  workspace_id: string;
+  workspace_name: string;
+  user_id: string | null;
+  user_email: string | null;
+  user_name: string | null;
+  action: string;
+  entity_type: string | null;
+  entity_id: string | null;
+  details: Record<string, unknown>;
+  ip_address: string | null;
+  created_at: string;
+};
+
+// Analytics
+export const getSAAnalytics = () =>
+  apiFetch<PlatformKPIs>("/superadmin/analytics");
+
+// Workspaces
+export const getSAWorkspaces = (page = 1, statusFilter?: string) =>
+  apiFetch<{ items: WorkspaceSummary[]; total: number; page: number; page_size: number }>(
+    `/superadmin/workspaces?page=${page}${statusFilter ? `&status=${statusFilter}` : ""}`
+  );
+
+export const getSAWorkspace = (id: string) =>
+  apiFetch<WorkspaceDetail>(`/superadmin/workspaces/${id}`);
+
+export const createSAWorkspace = (data: {
+  name: string;
+  slug: string;
+  plan: string;
+  owner_name: string;
+  owner_email: string;
+  owner_password: string;
+}) =>
+  apiFetch<WorkspaceSummary>("/superadmin/workspaces", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+export const updateSAWorkspace = (
+  id: string,
+  data: { name?: string; plan?: string; status?: string; settings?: Record<string, unknown> }
+) =>
+  apiFetch<{ updated: boolean }>(`/superadmin/workspaces/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+
+export const deleteSAWorkspace = (id: string) =>
+  apiFetch<void>(`/superadmin/workspaces/${id}`, { method: "DELETE" });
+
+// Users
+export const getSAUsers = (params?: {
+  page?: number;
+  workspace_id?: string;
+  role?: string;
+  is_active?: boolean;
+}) => {
+  const p = new URLSearchParams();
+  if (params?.page) p.set("page", String(params.page));
+  if (params?.workspace_id) p.set("workspace_id", params.workspace_id);
+  if (params?.role) p.set("role", params.role);
+  if (params?.is_active !== undefined) p.set("is_active", String(params.is_active));
+  return apiFetch<{ items: PlatformUser[]; total: number; page: number; page_size: number }>(
+    `/superadmin/users?${p.toString()}`
+  );
+};
+
+export const suspendSAUser = (id: string) =>
+  apiFetch<void>(`/superadmin/users/${id}/suspend`, { method: "POST" });
+
+export const activateSAUser = (id: string) =>
+  apiFetch<void>(`/superadmin/users/${id}/activate`, { method: "POST" });
+
+export const resetSAUserPassword = (id: string, newPassword: string) =>
+  apiFetch<void>(`/superadmin/users/${id}/reset-password`, {
+    method: "POST",
+    body: JSON.stringify({ new_password: newPassword }),
+  });
+
+// Pipeline
+export const getSAPipeline = () =>
+  apiFetch<PipelineConfig>("/superadmin/pipeline");
+
+export const updateSAPipeline = (data: {
+  confidence_auto_threshold?: number;
+  confidence_soft_escalation_threshold?: number;
+}) =>
+  apiFetch<{ updated: boolean; values: Record<string, unknown> }>("/superadmin/pipeline", {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+
+export const getSABenchmark = () =>
+  apiFetch<Record<string, unknown>>("/superadmin/pipeline/benchmark");
+
+// System health
+export const getSASystemHealth = () =>
+  apiFetch<SystemHealth>("/superadmin/system");
+
+// Audit log
+export const getSAAuditLog = (params?: {
+  page?: number;
+  workspace_id?: string;
+  action?: string;
+}) => {
+  const p = new URLSearchParams();
+  if (params?.page) p.set("page", String(params.page));
+  if (params?.workspace_id) p.set("workspace_id", params.workspace_id);
+  if (params?.action) p.set("action", params.action);
+  return apiFetch<{ items: PlatformAuditEntry[]; total: number; page: number; page_size: number }>(
+    `/superadmin/audit-log?${p.toString()}`
+  );
+};
