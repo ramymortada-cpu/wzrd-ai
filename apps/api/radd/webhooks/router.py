@@ -12,7 +12,6 @@ import redis.asyncio as aioredis
 import structlog
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, Response, status
 from radd.limiter import limiter
-from radd.config import settings
 from sqlalchemy import select
 
 from radd.config import settings

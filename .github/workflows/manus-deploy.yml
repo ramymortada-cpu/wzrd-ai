@@ -1,18 +1,111 @@
+###############################################################################
+# Radd — CI/CD Pipeline (GHCR + Docker)
+#
+# Triggers:
+#   push → main : lint + test + build Docker images + push to GHCR
+#
+# Uses GITHUB_TOKEN (automatic) for GHCR authentication — no secrets needed.
+###############################################################################
 
-name: Manus Deployment
+name: CI/CD
 
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
 
 env:
-  REGISTRY: registry.manus.io
+  REGISTRY: ghcr.io
   IMAGE_PREFIX: ${{ github.repository_owner }}/radd
 
 jobs:
-  build-and-push-to-manus:
-    name: Build & Push to Manus Registry
+  # ─────────────────────────────────────────────────────────────────────────
+  # JOB 1: Backend lint + tests
+  # ─────────────────────────────────────────────────────────────────────────
+  test-api:
+    name: API — Lint & Tests
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "0.5.24"
+          enable-cache: true
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Lint (ruff)
+        run: uv run ruff check radd/ workers/ scripts/
+
+      - name: Type-check (mypy)
+        run: uv run mypy radd/ --ignore-missing-imports --no-error-summary
+        continue-on-error: true
+
+      - name: Unit tests (pytest)
+        run: uv run pytest tests/ -v --tb=short --ignore=tests/test_pipeline.py
+        env:
+          DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/test
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: test-secret-key-ci-only
+          OPENAI_API_KEY: sk-test
+          WA_API_TOKEN: test
+          WA_PHONE_NUMBER_ID: "123"
+          WA_VERIFY_TOKEN: test
+          WA_APP_SECRET: test
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # JOB 2: Frontend lint + type-check
+  # ─────────────────────────────────────────────────────────────────────────
+  test-web:
+    name: Web — Lint & Typecheck
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type-check (tsc)
+        run: pnpm typecheck
+
+      - name: Lint (eslint)
+        run: pnpm lint --if-present
+        continue-on-error: true
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # JOB 3: Build & push Docker images to GHCR (only on push to main)
+  # ─────────────────────────────────────────────────────────────────────────
+  build-push:
+    name: Build & Push Docker Images
+    runs-on: ubuntu-latest
+    needs: [test-api, test-web]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
     permissions:
       contents: read
       packages: write
@@ -23,20 +116,21 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Manus Registry
+      - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.MANUS_REGISTRY_USER }}
-          password: ${{ secrets.MANUS_REGISTRY_PASSWORD }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Compute image tag
         id: tag
         run: |
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-8)
-          echo "tag=${{ github.ref_name }}-${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "tag=main-${SHORT_SHA}" >> $GITHUB_OUTPUT
           echo "latest_tag=latest" >> $GITHUB_OUTPUT
 
+      # ── API image ──────────────────────────────────────────────────────
       - name: Build & push API image
         uses: docker/build-push-action@v6
         with:
@@ -49,6 +143,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # ── Worker image ───────────────────────────────────────────────────
       - name: Build & push Worker image
         uses: docker/build-push-action@v6
         with:
@@ -61,6 +156,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # ── Web image ──────────────────────────────────────────────────────
       - name: Build & push Web image
         uses: docker/build-push-action@v6
         with:
@@ -68,15 +164,16 @@ jobs:
           file: infrastructure/docker/Dockerfile.web
           push: true
           build-args: |
-            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL || 'https://api.radd.ai' }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-web:${{ steps.tag.outputs.tag }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-web:${{ steps.tag.outputs.latest_tag }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Notify Manus of new images (optional)
+      - name: Output image tags
         run: |
-          echo "Triggering Manus deployment... (This is a placeholder)"
-          # In a real scenario, you would use the Manus CLI or API here:
-          # manus-cli deploy --project RADD-AI --images-from-registry
+          echo "✅ Images pushed to GHCR:"
+          echo "  API:    ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api:${{ steps.tag.outputs.tag }}"
+          echo "  Worker: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-worker:${{ steps.tag.outputs.tag }}"
+          echo "  Web:    ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-web:${{ steps.tag.outputs.tag }}"

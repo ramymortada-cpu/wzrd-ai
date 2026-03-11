@@ -2,10 +2,12 @@ version: '3.8'
 
 services:
   api:
-    image: registry.manus.io/ramymortada-cpu/radd-api:latest
+    image: ghcr.io/ramymortada-cpu/radd-api:latest
     ports:
       - "8000:8000"
     environment:
+      - APP_ENV=production
+      - DEBUG=false
       - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=${REDIS_URL}
       - QDRANT_URL=http://qdrant:6333
@@ -22,20 +24,29 @@ services:
       - SALLA_CLIENT_SECRET=${SALLA_CLIENT_SECRET}
     depends_on:
       - qdrant
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   worker:
-    image: registry.manus.io/ramymortada-cpu/radd-worker:latest
+    image: ghcr.io/ramymortada-cpu/radd-worker:latest
     environment:
+      - APP_ENV=production
       - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=${REDIS_URL}
       - QDRANT_URL=http://qdrant:6333
       - SENTRY_DSN=${SENTRY_DSN}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SECRET_KEY=${SECRET_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
     depends_on:
       - qdrant
 
   web:
-    image: registry.manus.io/ramymortada-cpu/radd-web:latest
+    image: ghcr.io/ramymortada-cpu/radd-web:latest
     ports:
       - "3000:3000"
     environment:
@@ -45,3 +56,8 @@ services:
     image: qdrant/qdrant:v1.12.0
     ports:
       - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+volumes:
+  qdrant_data:
