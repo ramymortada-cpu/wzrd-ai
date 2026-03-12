@@ -20,7 +20,11 @@ from radd.db.models import Channel, Conversation, Customer, Message, AuditLog
 from radd.db.session import get_db_session
 from radd.deps import get_redis
 from radd.pipeline.normalizer import normalize
+from radd.pipeline.intent import classify_intent
+from radd.pipeline.dialect import detect_dialect
+from radd.pipeline.entity_extractor import entities_to_dict, extract_entities
 from radd.pipeline.orchestrator import run_pipeline_async
+from radd.customers.profile_updater import build_customer_context, update_profile
 from radd.whatsapp.client import send_text_message
 
 logger = structlog.get_logger()
@@ -102,8 +106,20 @@ async def process_message(msg_data: dict) -> None:
         customer = await get_or_create_customer(db, workspace_id, sender_phone)
         conversation = await get_or_create_conversation(db, workspace_id, customer, channel.id)
 
-        # Store inbound message
+        # ── Step 7: Normalize Arabic text ────────────────────────────────────
         normalized_text = normalize(text_body)
+
+        # ── Step 8: Detect dialect ────────────────────────────────────────────
+        dialect = detect_dialect(normalized_text)
+
+        # ── Step 9: Classify intent (9 intents v0.2) ─────────────────────────
+        intent_result = classify_intent(normalized_text)
+
+        # ── Step 10: Extract entities → store in message.metadata ────────────
+        raw_entities = extract_entities(normalized_text)
+        entities = entities_to_dict(raw_entities)
+
+        # ── Store inbound message ─────────────────────────────────────────────
         inbound_msg = Message(
             workspace_id=workspace_id,
             conversation_id=conversation.id,
@@ -111,9 +127,13 @@ async def process_message(msg_data: dict) -> None:
             content=text_body,
             content_normalized=normalized_text,
             external_id=external_id,
+            metadata_={"entities": entities, "dialect": dialect, "intent": intent_result.intent},
         )
         db.add(inbound_msg)
         await db.flush()
+
+        # ── Step 11: Build customer context string ────────────────────────────
+        customer_ctx = build_customer_context(customer)
 
         # Fetch recent conversation history for RAG context
         from sqlalchemy import select as sa_select
@@ -129,7 +149,7 @@ async def process_message(msg_data: dict) -> None:
             for m in reversed(history_result.scalars().all())
         ]
 
-        # Run full async pipeline (template + RAG)
+        # ── Step 12: Run orchestrator with full context ───────────────────────
         qdrant = get_qdrant()
         pipeline_result = await run_pipeline_async(
             message=normalized_text,
@@ -137,12 +157,15 @@ async def process_message(msg_data: dict) -> None:
             db=db,
             qdrant=qdrant,
             conversation_context={
-                "store_name": "متجرنا",  # Sprint 4+: load from workspace settings
+                "store_name": "متجرنا",
+                "customer_context": customer_ctx,
+                "dialect": dialect,
+                "intent": intent_result.intent,
             },
             conversation_history=history,
         )
 
-        # Store system response message
+        # ── Step 15: Store outbound message ──────────────────────────────────
         response_msg = Message(
             workspace_id=workspace_id,
             conversation_id=conversation.id,
@@ -169,6 +192,17 @@ async def process_message(msg_data: dict) -> None:
             conversation.status = "waiting_agent"
 
         await db.flush()
+
+        # ── Step 16: Update customer profile ─────────────────────────────────
+        try:
+            await update_profile(
+                db=db,
+                customer=customer,
+                resolution_type=pipeline_result.resolution_type,
+                message_text=text_body,
+            )
+        except Exception as e:
+            logger.warning("worker.profile_update_failed", error=str(e))
 
         # Audit log
         db.add(AuditLog(

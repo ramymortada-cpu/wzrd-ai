@@ -82,6 +82,15 @@ class Customer(Base):
     display_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     language: Mapped[str | None] = mapped_column(String(10), nullable=True)
     metadata_: Mapped[dict] = mapped_column("metadata", JSONB, server_default="{}")
+    # Customer intelligence fields
+    total_conversations: Mapped[int] = mapped_column(Integer, server_default="0")
+    total_escalations: Mapped[int] = mapped_column(Integer, server_default="0")
+    avg_sentiment: Mapped[float | None] = mapped_column(DECIMAL(3, 2), nullable=True)
+    customer_tier: Mapped[str] = mapped_column(String(20), server_default="new")  # new, standard, returning, vip, at_risk
+    salla_customer_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    salla_total_orders: Mapped[int] = mapped_column(Integer, server_default="0")
+    salla_total_revenue: Mapped[float] = mapped_column(DECIMAL(12, 2), server_default="0")
+    last_complaint_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     first_seen_at: Mapped[datetime] = now_utc()
     last_seen_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

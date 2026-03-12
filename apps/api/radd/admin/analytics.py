@@ -113,6 +113,10 @@ async def get_kpis(db: AsyncSession, workspace_id: uuid.UUID) -> dict[str, Any]:
     pending_escalations = pending_result.scalar_one()
 
     # 8. Hallucination rate proxy — RAG responses with low verify confidence (last 24h)
+    # Also compute honesty_blocks: auto-responses prevented because confidence < auto_threshold
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    auto_threshold = 0.85  # Default; ideally load from workspace settings
+
     try:
         hallu_result = await db.execute(
             text("""
@@ -120,7 +124,23 @@ async def get_kpis(db: AsyncSession, workspace_id: uuid.UUID) -> dict[str, Any]:
                     COUNT(*) FILTER (
                         WHERE (confidence->>'verify')::float < 0.70
                     ) AS low_verify,
-                    COUNT(*) AS total_rag
+                    COUNT(*) AS total_rag,
+                    COUNT(*) FILTER (
+                        WHERE LEAST(
+                            (confidence->>'intent')::float,
+                            (confidence->>'retrieval')::float,
+                            (confidence->>'verify')::float
+                        ) < :auto_threshold
+                        AND created_at >= :month_start
+                    ) AS honesty_blocks_month,
+                    COUNT(*) FILTER (
+                        WHERE LEAST(
+                            (confidence->>'intent')::float,
+                            (confidence->>'retrieval')::float,
+                            (confidence->>'verify')::float
+                        ) < :auto_threshold
+                        AND created_at >= :today_start
+                    ) AS honesty_blocks_today
                 FROM messages
                 WHERE workspace_id = :wid
                   AND sender_type = 'system'
@@ -128,15 +148,25 @@ async def get_kpis(db: AsyncSession, workspace_id: uuid.UUID) -> dict[str, Any]:
                   AND confidence ? 'verify'
                   AND created_at >= :since
             """),
-            {"wid": str(workspace_id), "since": yesterday},
+            {
+                "wid": str(workspace_id),
+                "since": yesterday,
+                "auto_threshold": auto_threshold,
+                "month_start": month_start,
+                "today_start": today_start,
+            },
         )
         row = hallu_result.fetchone()
         if row and row.total_rag > 0:
             hallucination_rate = round(row.low_verify / row.total_rag * 100, 1)
         else:
             hallucination_rate = 0.0
+        honesty_blocks_this_month = int(row.honesty_blocks_month) if row else 0
+        honesty_blocks_today = int(row.honesty_blocks_today) if row else 0
     except Exception:
         hallucination_rate = 0.0
+        honesty_blocks_this_month = 0
+        honesty_blocks_today = 0
 
     return {
         "active_conversations": active_conversations,
@@ -147,5 +177,7 @@ async def get_kpis(db: AsyncSession, workspace_id: uuid.UUID) -> dict[str, Any]:
         "messages_today": messages_today,
         "pending_escalations": pending_escalations,
         "hallucination_rate": hallucination_rate,
+        "honesty_blocks_this_month": honesty_blocks_this_month,
+        "honesty_blocks_today": honesty_blocks_today,
         "computed_at": now.isoformat(),
     }

@@ -27,3 +27,11 @@ def format_briefing(b: Briefing) -> str:
     if b.gaps > 0: m += f"\n⚠️ {b.gaps} فجوات معرفة جديدة — سدها في لوحة التحكم"
     if b.hours_saved > 0: m += f"\n\n⏱️ وفرت عليك تقريباً {b.hours_saved} ساعات عمل"
     return m + "\n\n— رَدّ"
+
+
+async def generate_morning_briefing(db_session, workspace_id: str, workspace_name: str) -> Optional[str]:
+    """Convenience wrapper used by scheduler — returns formatted string or None."""
+    briefing = await generate_briefing(db_session, workspace_id, workspace_name)
+    if not briefing:
+        return None
+    return format_briefing(briefing)

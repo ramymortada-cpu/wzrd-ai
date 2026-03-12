@@ -71,6 +71,8 @@ export type KPIs = {
   messages_today: number;
   pending_escalations: number;
   hallucination_rate: number;
+  honesty_blocks_this_month: number;
+  honesty_blocks_today: number;
   computed_at: string;
 };
 
@@ -432,3 +434,15 @@ export const getSAAuditLog = (params?: {
     `/superadmin/audit-log?${p.toString()}`
   );
 };
+
+// ─── Intelligence ──────────────────────────────────────────────────────────────
+export interface KnowledgeGap {
+  question_pattern: string;
+  sample_question: string;
+  occurrence_count: number;
+  intent: string;
+  last_asked: string;
+}
+
+export const getKnowledgeGaps = (days = 7, limit = 20) =>
+  apiFetch<KnowledgeGap[]>(`/intelligence/knowledge-gaps?days=${days}&limit=${limit}`);

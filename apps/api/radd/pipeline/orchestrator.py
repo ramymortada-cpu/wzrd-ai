@@ -219,14 +219,16 @@ async def run_pipeline_async(
             },
         )
 
-    # Generate response
+    # Generate response — include customer context in system prompt
     store_name = context.get("store_name", "متجرنا")
+    customer_context = context.get("customer_context", "")
     response_text, cited_ids = await generate_rag_response(
         query=normalized,
         passages=passages,
         dialect=dialect,
         store_name=store_name,
         conversation_history=conversation_history,
+        customer_context=customer_context,
     )
 
     # Verify grounding

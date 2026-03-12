@@ -10,6 +10,7 @@ import {
   TrendingUp,
   Inbox,
   ShieldAlert,
+  Shield,
 } from "lucide-react";
 import TopBar from "@/components/layout/topbar";
 import KPICard from "@/components/dashboard/kpi-card";
@@ -64,6 +65,23 @@ export default function DashboardPage() {
           </div>
         ) : kpis ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Honesty Counter — full-width highlight card */}
+            <div className="col-span-2 lg:col-span-4 flex items-center gap-4 p-4 rounded-xl bg-gradient-to-l from-primary/5 to-primary/10 border border-primary/20">
+              <div className="p-3 rounded-xl bg-primary/15 shrink-0">
+                <Shield className="h-7 w-7 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs text-primary/70 font-medium">درع الأمانة 🛡️</p>
+                <p className="text-3xl font-bold text-primary">
+                  {kpis.honesty_blocks_this_month ?? 0}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  رد غير دقيق منعه رَدّ هذا الشهر
+                  {kpis.honesty_blocks_today ? ` · ${kpis.honesty_blocks_today} اليوم` : ""}
+                </p>
+              </div>
+            </div>
+
             <KPICard
               title="محادثات نشطة"
               value={kpis.active_conversations}

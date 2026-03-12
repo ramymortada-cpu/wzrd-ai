@@ -10,6 +10,7 @@ from radd.conversations.router import router as conversations_router
 from radd.escalation.router import router as escalations_router
 from radd.knowledge.router import router as kb_router
 from radd.superadmin.router import router as superadmin_router
+from radd.intelligence.router import router as intelligence_router
 from radd.webhooks.router import router as webhooks_router
 from radd.websocket.router import router as ws_router
 from radd.config import settings
@@ -66,6 +67,7 @@ app.include_router(conversations_router, prefix="/api/v1")
 app.include_router(escalations_router, prefix="/api/v1")
 app.include_router(admin_router, prefix="/api/v1")
 app.include_router(superadmin_router, prefix="/api/v1")
+app.include_router(intelligence_router, prefix="/api/v1")
 app.include_router(ws_router)  # WebSocket — no /api/v1 prefix
 
 

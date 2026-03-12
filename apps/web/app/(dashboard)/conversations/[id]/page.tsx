@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowRight, Send, CheckCheck } from "lucide-react";
+import { ArrowRight, Send, CheckCheck, ShieldCheck, Info } from "lucide-react";
 import TopBar from "@/components/layout/topbar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,14 +23,73 @@ import {
 } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
+// ── Trust Ledger ──────────────────────────────────────────────────────────────
+function TrustBadge({ confidence }: { confidence: NonNullable<Message["confidence"]> }) {
+  const [open, setOpen] = useState(false);
+  const min = Math.min(confidence.intent, confidence.retrieval, confidence.verify);
+
+  const color =
+    min >= 0.85
+      ? "bg-green-100 text-green-700 hover:bg-green-200"
+      : min >= 0.60
+      ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
+      : "bg-red-100 text-red-700 hover:bg-red-200";
+
+  const label =
+    min >= 0.85 ? "🟢 ثقة عالية" : min >= 0.60 ? "🟡 ثقة متوسطة" : "🔴 تم التحويل";
+
+  const decision =
+    min >= 0.85 ? "تم الرد تلقائياً" : min >= 0.60 ? "تم عرض مسودة على الموظف" : "تم التحويل للموظف";
+
+  return (
+    <div className="relative inline-block">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className={cn("text-xs px-2 py-0.5 rounded-full font-medium transition-colors flex items-center gap-1", color)}
+      >
+        <ShieldCheck className="h-3 w-3" />
+        {label}
+      </button>
+      {open && (
+        <div
+          className="absolute bottom-full mb-2 right-0 w-72 bg-white border border-border rounded-lg shadow-lg p-3 z-50 text-xs"
+          onMouseLeave={() => setOpen(false)}
+        >
+          <div className="flex items-center gap-1.5 font-semibold mb-2 text-sm">
+            <Info className="h-4 w-4 text-primary" />
+            سجل الأمانة
+          </div>
+          <div className="space-y-1.5">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">تصنيف النية</span>
+              <span className="font-medium">{(confidence.intent * 100).toFixed(0)}%</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">جودة الاسترجاع</span>
+              <span className="font-medium">{(confidence.retrieval * 100).toFixed(0)}%</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">التحقق من الدقة</span>
+              <span className="font-medium">{(confidence.verify * 100).toFixed(0)}%</span>
+            </div>
+            <div className="border-t border-border pt-1.5 mt-1.5 flex justify-between">
+              <span className="text-muted-foreground">القرار</span>
+              <span className="font-semibold text-primary">{decision}</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function MessageBubble({ msg }: { msg: Message }) {
   const isCustomer = msg.sender_type === "customer";
   const isAgent = msg.sender_type === "agent";
+  const isSystem = msg.sender_type === "system";
 
   return (
-    <div
-      className={cn("flex", isCustomer ? "justify-end" : "justify-start")}
-    >
+    <div className={cn("flex flex-col", isCustomer ? "items-end" : "items-start")}>
       <div
         className={cn(
           "max-w-[70%] px-4 py-2.5 text-sm",
@@ -45,30 +104,14 @@ function MessageBubble({ msg }: { msg: Message }) {
           <span className="text-xs text-muted-foreground">
             {formatArabicDate(msg.created_at)}
           </span>
-          {msg.confidence && (
-            <span
-              className={cn(
-                "text-xs font-medium",
-                confidenceColor(
-                  Math.min(
-                    msg.confidence.intent,
-                    msg.confidence.retrieval,
-                    msg.confidence.verify
-                  )
-                )
-              )}
-            >
-              {confidenceLabel(
-                Math.min(
-                  msg.confidence.intent,
-                  msg.confidence.retrieval,
-                  msg.confidence.verify
-                )
-              )}
-            </span>
-          )}
         </div>
       </div>
+      {/* Trust Ledger badge — only for system messages with confidence data */}
+      {isSystem && msg.confidence && (
+        <div className="mt-1 me-1">
+          <TrustBadge confidence={msg.confidence} />
+        </div>
+      )}
     </div>
   );
 }

@@ -66,6 +66,7 @@ async def generate_rag_response(
     dialect: str,
     store_name: str = "متجرنا",
     conversation_history: list[dict] | None = None,
+    customer_context: str = "",
 ) -> tuple[str, list[str]]:
     """
     Generate a grounded Arabic response using GPT-4.1-mini.
@@ -81,6 +82,8 @@ async def generate_rag_response(
         dialect=dialect_name,
         store_name=store_name,
     )
+    if customer_context:
+        system_prompt += f"\n\n{customer_context}"
 
     passages_text = _format_passages(passages)
     history_messages = _format_history(conversation_history or [])
