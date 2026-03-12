@@ -56,8 +56,8 @@ interface AgentData {
 // ─── API fetchers ─────────────────────────────────────────────────────────────
 const getRaddScore = (days = 30) =>
   apiFetch<RaddScore>(`/admin/radd-score?period_days=${days}`);
-const getChurnRadar = (days = 45) =>
-  apiFetch<ChurnData>(`/admin/churn-radar?inactive_days=${days}`);
+const getChurnRadar = (days = 45, autoWinback = false) =>
+  apiFetch<ChurnData & { winback_scheduled: number }>(`/admin/churn-radar?inactive_days=${days}&auto_winback=${autoWinback}`);
 const getAgentPerformance = (days = 30) =>
   apiFetch<AgentData>(`/admin/agent-performance?period_days=${days}`);
 
@@ -221,6 +221,21 @@ export default function AnalyticsPage() {
                       </div>
                     ))}
                   </div>
+
+                  {/* Win-back button */}
+                  {churn.summary.critical + churn.summary.high > 0 && (
+                    <button
+                      onClick={async () => {
+                        const data = await getChurnRadar(45, true);
+                        setChurn(data);
+                        alert(`تم جدولة ${data.winback_scheduled} رسالة win-back للعملاء في خطر عالٍ`);
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors"
+                    >
+                      <Users className="h-4 w-4" />
+                      أرسل win-back تلقائي للعملاء في خطر ({churn.summary.critical + churn.summary.high})
+                    </button>
+                  )}
 
                   {/* Alerts list */}
                   {churn.alerts.length === 0 ? (

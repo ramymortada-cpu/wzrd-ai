@@ -140,6 +140,89 @@ async def scan_for_churn_risk(
     return alerts
 
 
+async def schedule_winback_for_at_risk(
+    db_session,
+    workspace_id: str,
+    alerts: list[ChurnAlert],
+    max_per_run: int = 10,
+) -> int:
+    """
+    Automatically schedule win-back follow-ups for CRITICAL/HIGH churn risk customers.
+    Called by the scheduler worker after each churn scan.
+    Returns the number of win-backs scheduled.
+    """
+    from radd.db.models import FollowUpQueue, Customer
+    from sqlalchemy import select
+    import uuid
+    from datetime import datetime, timezone, timedelta
+
+    WIN_BACK_TEMPLATES = {
+        "gulf": "وحشتنا! مدة ما شفناك. عندنا وصلات جديدة تناسبك 🌟 تشرّف زيارتنا؟",
+        "egyptian": "وحشتنا! فترة مش شايفينك. عندنا حاجات جديدة هتعجبك 🌟",
+        "msa": "نشتاق إليك! مضى وقت منذ آخر تواصل. لدينا منتجات جديدة تهمك 🌟",
+    }
+
+    scheduled = 0
+    high_risk = [a for a in alerts if a.risk_level in (ChurnRiskLevel.CRITICAL, ChurnRiskLevel.HIGH)][:max_per_run]
+
+    for alert in high_risk:
+        try:
+            cust_result = await db_session.execute(
+                select(Customer).where(Customer.id == uuid.UUID(alert.customer_id))
+            )
+            customer = cust_result.scalar_one_or_none()
+            if not customer:
+                continue
+
+            # Don't double-schedule — check for pending win-back
+            existing = await db_session.execute(
+                select(FollowUpQueue).where(
+                    FollowUpQueue.customer_id == customer.id,
+                    FollowUpQueue.status == "pending",
+                ).limit(1)
+            )
+            if existing.scalar_one_or_none():
+                continue
+
+            # Get most recent conversation for this customer
+            from radd.db.models import Conversation
+            conv_result = await db_session.execute(
+                select(Conversation)
+                .where(
+                    Conversation.workspace_id == uuid.UUID(workspace_id),
+                    Conversation.customer_id == customer.id,
+                )
+                .order_by(Conversation.last_message_at.desc())
+                .limit(1)
+            )
+            conversation = conv_result.scalar_one_or_none()
+            if not conversation:
+                continue
+
+            name = customer.display_name or "عزيزي العميل"
+            template = WIN_BACK_TEMPLATES["gulf"].replace("{customer_name}", name)
+
+            followup = FollowUpQueue(
+                workspace_id=uuid.UUID(workspace_id),
+                conversation_id=conversation.id,
+                customer_id=customer.id,
+                scheduled_at=datetime.now(timezone.utc) + timedelta(hours=1),
+                message_template=template,
+                status="pending",
+            )
+            db_session.add(followup)
+            scheduled += 1
+
+        except Exception as e:
+            logger.warning("churn_radar.winback_failed", customer_id=alert.customer_id, error=str(e))
+
+    if scheduled > 0:
+        await db_session.flush()
+        logger.info("churn_radar.winback_scheduled", workspace_id=workspace_id, count=scheduled)
+
+    return scheduled
+
+
 def get_churn_summary(alerts: list[ChurnAlert]) -> dict:
     """Summarize churn risk for the dashboard."""
     if not alerts:

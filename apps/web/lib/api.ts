@@ -600,14 +600,14 @@ export const getRaddScore = (days = 30) =>
   );
 
 // ─── V3: Churn Radar ──────────────────────────────────────────────────────────
-export const getChurnRadar = (inactiveDays = 45) =>
+export const getChurnRadar = (inactiveDays = 45, autoWinback = false) =>
   apiFetch<{
     summary: { total: number; critical: number; high: number; medium: number; at_risk_revenue: number };
     alerts: Array<{
       customer_id: string; customer_tier: string; risk_level: string;
       reason: string; days_inactive: number; total_revenue: number; suggested_action: string;
     }>;
-  }>(`/admin/churn-radar?inactive_days=${inactiveDays}`);
+  } & { winback_scheduled: number }>(`/admin/churn-radar?inactive_days=${inactiveDays}&auto_winback=${autoWinback}`);
 
 // ─── V3: Agent Performance ────────────────────────────────────────────────────
 export const getAgentPerformance = (days = 30) =>

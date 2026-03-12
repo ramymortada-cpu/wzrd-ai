@@ -675,14 +675,19 @@ async def get_churn_radar(
     request: Request,
     current: Annotated[CurrentUser, Depends(require_reviewer)],
     inactive_days: int = Query(45, ge=7, le=180),
+    auto_winback: bool = Query(False),
 ):
-    """Detect customers at churn risk."""
-    from radd.analytics.churn_radar import scan_for_churn_risk, get_churn_summary
+    """Detect customers at churn risk. Optionally schedule win-back messages."""
+    from radd.analytics.churn_radar import scan_for_churn_risk, get_churn_summary, schedule_winback_for_at_risk
     async with get_db_session(current.workspace_id) as db:
         alerts = await scan_for_churn_risk(db, str(current.workspace_id), inactive_days)
+        winback_scheduled = 0
+        if auto_winback:
+            winback_scheduled = await schedule_winback_for_at_risk(db, str(current.workspace_id), alerts)
     summary = get_churn_summary(alerts)
     return {
         "summary": summary,
+        "winback_scheduled": winback_scheduled,
         "alerts": [
             {
                 "customer_id": a.customer_id,

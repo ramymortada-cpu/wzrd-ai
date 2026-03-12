@@ -14,7 +14,7 @@ const SECTORS = [
   { id: "other", label: "أخرى", emoji: "📦", desc: "قاعدة معرفة عامة قابلة للتخصيص" },
 ];
 
-type Step = "plan" | "sector" | "salla" | "done";
+type Step = "plan" | "sector" | "salla" | "preview" | "done";
 
 function OnboardingContent() {
   const router = useRouter();
@@ -50,7 +50,7 @@ function OnboardingContent() {
 
   async function handleSallaSync() {
     if (!sallaToken.trim()) {
-      setStep("done");
+      setStep("preview");
       return;
     }
     setLoading(true);
@@ -68,7 +68,7 @@ function OnboardingContent() {
       setError("تعذّر الاتصال بـ Salla. يمكنك تكرارها من الإعدادات لاحقاً.");
     } finally {
       setLoading(false);
-      setStep("done");
+      setStep("preview");
     }
   }
 
@@ -76,10 +76,11 @@ function OnboardingContent() {
     plan: "الباقة",
     sector: "نوع المتجر",
     salla: "ربط Salla",
+    preview: "راجع الردود",
     done: "جاهز!",
   };
 
-  const steps: Step[] = ["sector", "salla", "done"];
+  const steps: Step[] = ["sector", "salla", "preview", "done"];
   const currentIdx = steps.indexOf(step);
 
   return (
@@ -214,7 +215,62 @@ function OnboardingContent() {
             </>
           )}
 
-          {/* ── Step 3: Done ── */}
+          {/* ── Step 3: Preview Sample Replies ── */}
+          {step === "preview" && (
+            <>
+              <div className="text-center">
+                <div className="inline-flex p-3 rounded-xl bg-amber-50 mb-3">
+                  <PlayCircle className="h-6 w-6 text-amber-600" />
+                </div>
+                <h2 className="text-xl font-bold">راجع أول 5 ردود تجريبية</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  هذا كيف سيرد رَدّ على أسئلة عملائك — تأكد إنك راضٍ قبل التفعيل
+                </p>
+              </div>
+
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {[
+                  { q: "عندكم هذا المنتج؟", a: "أهلاً بك! نعم، المنتج متاح الآن. تبي أعطيك التفاصيل الكاملة؟ 😊" },
+                  { q: "كم سعره؟", a: "سعره ______ ر.س (يتحدد حسب منتجاتك في سلة). وشحن مجاني للطلبات فوق 200 ر.س." },
+                  { q: "متى يوصل؟", a: "التوصيل عادةً خلال 2-4 أيام عمل. تقدر تتابع طلبك بعد التأكيد." },
+                  { q: "أبي أرجع المنتج", a: "عذراً عن الإزعاج! سياسة الإرجاع لدينا 14 يوم من تاريخ الاستلام. أساعدك؟" },
+                  { q: "هل هو أصلي؟", a: "نعم، كل منتجاتنا أصلية 100% مع ضمان المنشأ. 🏅" },
+                ].map(({ q, a }, i) => (
+                  <div key={i} className="bg-muted/30 rounded-xl p-3 space-y-2">
+                    <div className="flex gap-2">
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full shrink-0">عميل</span>
+                      <p className="text-sm">{q}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full shrink-0">رَدّ</span>
+                      <p className="text-sm text-muted-foreground">{a}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <p className="text-xs text-muted-foreground text-center">
+                الردود الفعلية ستكون مخصصة لمنتجاتك وقاعدة معرفتك
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setStep("salla")}
+                  className="flex-1 py-3 border rounded-xl text-sm text-muted-foreground hover:bg-muted transition-colors"
+                >
+                  ← عدّل الإعدادات
+                </button>
+                <button
+                  onClick={() => setStep("done")}
+                  className="flex-1 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-colors"
+                >
+                  يبدو ممتاز — فعّل! ✓
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* ── Step 4: Done ── */}
           {step === "done" && (
             <div className="text-center space-y-5">
               <div className="flex justify-center">
