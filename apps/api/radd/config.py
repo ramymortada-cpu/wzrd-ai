@@ -15,6 +15,13 @@ class Settings(BaseSettings):
     secret_key: str = "change-me"
     debug: bool = True
 
+    # CORS — dev origins always include localhost:3000 (Next.js dev server)
+    cors_origins: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3000",
+    ]
+
     # Database
     database_url: str = "postgresql+asyncpg://radd:radd_dev_password@localhost:5432/radd_dev"
 
