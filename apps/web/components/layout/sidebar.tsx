@@ -15,6 +15,8 @@ import {
   Radar,
   Sliders,
   BarChart2,
+  Sparkles,
+  Code,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { clearTokens } from "@/lib/auth";
@@ -29,6 +31,8 @@ const NAV_ITEMS = [
   { href: "/rules", label: "قواعد ذكية", icon: Sliders },
   { href: "/knowledge", label: "قاعدة المعرفة", icon: BookOpen },
   { href: "/escalations", label: "التصعيدات", icon: AlertTriangle },
+  { href: "/intelligence", label: "ذكاء السوق", icon: Sparkles },
+  { href: "/developer", label: "API المطورين", icon: Code },
   { href: "/settings", label: "الإعدادات", icon: Settings },
 ];
 

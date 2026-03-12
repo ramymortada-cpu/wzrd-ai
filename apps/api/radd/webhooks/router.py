@@ -104,6 +104,27 @@ async def _process_webhook_payload(payload: dict) -> None:
                     logger.info("whatsapp.duplicate_skipped", message_id=msg_id)
                     continue
 
+                # Handle voice/audio messages — enqueue for Whisper transcription
+                if msg_type in ("audio", "voice"):
+                    audio_data = msg.get("audio", msg.get("voice", {}))
+                    media_id = audio_data.get("id", "")
+                    if media_id:
+                        workspace_id = await _resolve_workspace(phone_number_id)
+                        if workspace_id:
+                            stream_key = f"messages:{workspace_id}"
+                            await r.xadd(stream_key, {
+                                "message_id": msg_id,
+                                "sender_phone": sender_phone,
+                                "text": "[رسالة صوتية]",
+                                "phone_number_id": phone_number_id,
+                                "workspace_id": str(workspace_id),
+                                "timestamp": msg.get("timestamp", ""),
+                                "message_type": "voice",
+                                "media_id": media_id,
+                            })
+                            logger.info("whatsapp.voice_enqueued", workspace_id=str(workspace_id))
+                    continue
+
                 # Handle image messages — enqueue for Vision processing
                 if msg_type == "image":
                     image_data = msg.get("image", {})

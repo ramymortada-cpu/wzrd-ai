@@ -651,3 +651,56 @@ export const createSallaReturn = (order_reference: string, salla_token: string, 
     "/admin/salla/create-return",
     { method: "POST", body: JSON.stringify({ order_reference, salla_token, reason }) }
   );
+
+// ─── V4: Cross-Merchant Intelligence ─────────────────────────────────────────
+export const getBenchmark = (periodDays = 30) =>
+  apiFetch<{
+    available: boolean; sector: string; my_automation_rate: number;
+    sector_avg_automation: number; peer_count: number; percentile: number;
+    gap_analysis: Array<{ metric: string; yours: number; benchmark: number; gap: number; unit: string }>;
+    recommendations: string[]; reason?: string;
+  }>(`/admin/benchmark?period_days=${periodDays}`);
+
+// ─── V4: Seasonal Auto-Prep ───────────────────────────────────────────────────
+export const getUpcomingSeasons = (daysAhead = 60) =>
+  apiFetch<{
+    seasons: Array<{
+      name_ar: string; name_en: string; days_until: number;
+      urgency: "critical" | "warning" | "info"; traffic_multiplier: number;
+      message_ar: string; kb_topics: string[];
+    }>;
+    total: number;
+  }>(`/admin/seasonal/upcoming?days_ahead=${daysAhead}`);
+
+export const generateSeasonalKB = (season_name: string, sector = "other") =>
+  apiFetch<{ created: boolean; doc_id?: string; pairs_count?: number }>("/admin/seasonal/generate-kb", {
+    method: "POST",
+    body: JSON.stringify({ season_name, sector }),
+  });
+
+// ─── V4: Zid Integration ─────────────────────────────────────────────────────
+export const syncZidStore = (zid_token: string, store_id = "") =>
+  apiFetch<{ synced: boolean; products_synced: number; documents_created: number }>("/admin/zid/sync", {
+    method: "POST",
+    body: JSON.stringify({ zid_token, store_id }),
+  });
+
+// ─── V4: Instagram Channel Setup ─────────────────────────────────────────────
+export const setupInstagramChannel = (ig_page_id: string, page_access_token: string) =>
+  apiFetch<{ configured: boolean; channel_type: string; page_id: string }>("/admin/channels/instagram", {
+    method: "POST",
+    body: JSON.stringify({ ig_page_id, page_access_token }),
+  });
+
+// ─── V4: Developer API Keys ───────────────────────────────────────────────────
+export const listApiKeys = () =>
+  apiFetch<{ keys: Array<{ id: string; name: string; key_prefix: string; scopes: string[]; created_at: string; expires_at: string | null }>; total: number }>("/developer/api-keys");
+
+export const createApiKey = (name: string, scopes: string[], expires_days = 365) =>
+  apiFetch<{ id: string; key: string; name: string; warning: string }>("/developer/api-keys", {
+    method: "POST",
+    body: JSON.stringify({ name, scopes, expires_days }),
+  });
+
+export const revokeApiKey = (keyId: string) =>
+  apiFetch(`/developer/api-keys/${keyId}`, { method: "DELETE" });

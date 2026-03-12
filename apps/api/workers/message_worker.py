@@ -100,6 +100,11 @@ async def process_message(msg_data: dict) -> None:
 
     logger.info("worker.processing", workspace_id=str(workspace_id), external_id=external_id, type=message_type)
 
+    # ── Voice message: Whisper transcription pipeline ─────────────────────────
+    if message_type == "voice" and media_id:
+        await _process_voice_message(workspace_id, sender_phone, external_id, media_id)
+        return
+
     # ── Image message: Vision pipeline ────────────────────────────────────────
     if message_type == "image" and media_id:
         await _process_image_message(workspace_id, sender_phone, external_id, media_id, text_body)
@@ -471,6 +476,72 @@ async def process_message(msg_data: dict) -> None:
                 )
         except Exception as e:
             logger.error("worker.send_failed", error=str(e), phone=sender_phone)
+
+
+async def _process_voice_message(
+    workspace_id: uuid.UUID,
+    sender_phone: str,
+    external_id: str,
+    media_id: str,
+) -> None:
+    """Transcribe voice note via Whisper, then route through normal text pipeline."""
+    async with get_db_session(workspace_id) as db:
+        result = await db.execute(
+            select(Channel).where(Channel.workspace_id == workspace_id, Channel.type == "whatsapp")
+        )
+        channel = result.scalar_one_or_none()
+        if not channel:
+            return
+
+        channel_config = channel.config or {}
+        wa_token = channel_config.get("wa_api_token") or settings.wa_api_token
+
+        from radd.voice.transcriber import process_whatsapp_voice, build_voice_fallback_response
+        transcription = await process_whatsapp_voice(media_id=media_id, wa_token=wa_token)
+
+        if not transcription.get("success") or not transcription.get("text"):
+            # Send fallback and store
+            customer = await get_or_create_customer(db, workspace_id, sender_phone)
+            conversation = await get_or_create_conversation(db, workspace_id, customer, channel.id)
+            fallback_text = build_voice_fallback_response("gulf")
+
+            inbound = Message(
+                workspace_id=workspace_id, conversation_id=conversation.id,
+                sender_type="customer", content="[رسالة صوتية]", external_id=external_id,
+                message_type="voice",
+            )
+            db.add(inbound)
+            outbound = Message(
+                workspace_id=workspace_id, conversation_id=conversation.id,
+                sender_type="system", content=fallback_text, message_type="text",
+            )
+            db.add(outbound)
+            await db.flush()
+
+            if not settings.shadow_mode:
+                try:
+                    await send_text_message(
+                        phone_number=sender_phone, message=fallback_text,
+                        phone_number_id=channel_config.get("wa_phone_number_id") or settings.wa_phone_number_id,
+                        api_token=wa_token,
+                    )
+                except Exception as e:
+                    logger.error("worker.voice_fallback_send_failed", error=str(e))
+            return
+
+    # Transcription succeeded — re-enqueue as text message
+    transcribed_text = transcription["text"]
+    logger.info("voice.transcription_success", text_preview=transcribed_text[:60])
+
+    # Process as normal text message by calling process_message directly
+    await process_message({
+        "workspace_id": str(workspace_id),
+        "sender_phone": sender_phone,
+        "text": transcribed_text,
+        "message_id": external_id,
+        "message_type": "text",  # Treat as text from here
+        "media_id": "",
+    })
 
 
 async def _process_image_message(

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Save, UserPlus, Eye, EyeOff, RefreshCw, Layers } from "lucide-react";
+import { Save, UserPlus, Eye, EyeOff, RefreshCw, Layers, Instagram, Code } from "lucide-react";
 import TopBar from "@/components/layout/topbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,8 @@ import {
   setShadowMode,
   triggerSallaSync,
   applyStarterPack,
+  syncZidStore,
+  setupInstagramChannel,
   type WorkspaceSettings,
   type User,
 } from "@/lib/api";
@@ -40,6 +42,17 @@ export default function SettingsPage() {
   const [sallaToken, setSallaToken] = useState("");
   const [sallaSyncing, setSallaSyncing] = useState(false);
   const [sallaSyncMsg, setSallaSyncMsg] = useState("");
+
+  // Zid Sync
+  const [zidToken, setZidToken] = useState("");
+  const [zidSyncing, setZidSyncing] = useState(false);
+  const [zidSyncMsg, setZidSyncMsg] = useState("");
+
+  // Instagram Setup
+  const [igPageId, setIgPageId] = useState("");
+  const [igToken, setIgToken] = useState("");
+  const [igSetupMsg, setIgSetupMsg] = useState("");
+  const [igSetupLoading, setIgSetupLoading] = useState(false);
 
   // Starter Packs
   const [starterSector, setStarterSector] = useState("perfumes");
@@ -325,6 +338,107 @@ export default function SettingsPage() {
             {sallaSyncMsg && (
               <div className="text-sm text-green-700 bg-green-50 px-3 py-2 rounded-lg">
                 {sallaSyncMsg}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Zid Sync */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <RefreshCw className="h-4 w-4 text-primary" />
+              مزامنة Zid — زد
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              زامن المنتجات والسياسات من متجرك على Zid (زد) إلى قاعدة المعرفة تلقائياً.
+            </p>
+            <div className="flex gap-2">
+              <Input
+                type="password"
+                dir="ltr"
+                placeholder="Zid Manager Token"
+                value={zidToken}
+                onChange={(e) => setZidToken(e.target.value)}
+                className="flex-1 font-mono text-xs"
+              />
+              <Button
+                onClick={async () => {
+                  if (!zidToken.trim()) return;
+                  setZidSyncing(true);
+                  try {
+                    const res = await syncZidStore(zidToken);
+                    setZidSyncMsg(`✅ تم مزامنة ${res.products_synced} منتج وإنشاء ${res.documents_created} وثيقة`);
+                  } catch {
+                    setZidSyncMsg("❌ فشل الاتصال بـ Zid — تحقق من الـ token");
+                  } finally {
+                    setZidSyncing(false);
+                  }
+                }}
+                disabled={zidSyncing || !zidToken.trim()}
+              >
+                {zidSyncing ? "جارٍ المزامنة..." : "مزامنة الآن"}
+              </Button>
+            </div>
+            {zidSyncMsg && (
+              <div className={`text-sm px-3 py-2 rounded-lg ${zidSyncMsg.startsWith("✅") ? "text-green-700 bg-green-50" : "text-red-700 bg-red-50"}`}>
+                {zidSyncMsg}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Instagram DM */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Instagram className="h-4 w-4 text-pink-500" />
+              Instagram DM
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              فعّل الردود التلقائية على رسائل Instagram المباشرة.
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <Input
+                dir="ltr"
+                placeholder="Instagram Page ID"
+                value={igPageId}
+                onChange={(e) => setIgPageId(e.target.value)}
+                className="font-mono text-xs"
+              />
+              <Input
+                type="password"
+                dir="ltr"
+                placeholder="Page Access Token"
+                value={igToken}
+                onChange={(e) => setIgToken(e.target.value)}
+                className="font-mono text-xs"
+              />
+            </div>
+            <Button
+              onClick={async () => {
+                if (!igPageId.trim() || !igToken.trim()) return;
+                setIgSetupLoading(true);
+                try {
+                  await setupInstagramChannel(igPageId, igToken);
+                  setIgSetupMsg("✅ تم تفعيل Instagram DM بنجاح");
+                } catch {
+                  setIgSetupMsg("❌ فشل الإعداد — تحقق من الـ Page ID والـ Token");
+                } finally {
+                  setIgSetupLoading(false);
+                }
+              }}
+              disabled={igSetupLoading || !igPageId.trim() || !igToken.trim()}
+            >
+              {igSetupLoading ? "جارٍ الإعداد..." : "تفعيل Instagram"}
+            </Button>
+            {igSetupMsg && (
+              <div className={`text-sm px-3 py-2 rounded-lg ${igSetupMsg.startsWith("✅") ? "text-green-700 bg-green-50" : "text-red-700 bg-red-50"}`}>
+                {igSetupMsg}
               </div>
             )}
           </CardContent>
