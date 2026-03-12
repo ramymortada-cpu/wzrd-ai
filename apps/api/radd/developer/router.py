@@ -194,9 +194,27 @@ async def _verify_api_key(request: Request) -> dict:
     if row.expires_at and row.expires_at < datetime.now(timezone.utc):
         raise HTTPException(status_code=401, detail="API key expired")
 
+    key_id = str(row.id)
+    workspace_id = str(row.workspace_id)
+    scopes = row.scopes or []
+
+    # Update last_used_at asynchronously (fire-and-forget style via background)
+    async with _get_db() as db:
+        try:
+            await db.execute(
+                text("""
+                    UPDATE developer_api_keys
+                    SET last_used_at = NOW()
+                    WHERE id = :kid
+                """),
+                {"kid": key_id},
+            )
+        except Exception:
+            pass  # Non-critical — don't fail the request
+
     return {
-        "workspace_id": str(row.workspace_id),
-        "scopes": row.scopes or [],
+        "workspace_id": workspace_id,
+        "scopes": scopes,
         "key_name": row.name,
     }
 
@@ -257,6 +275,9 @@ async def public_analytics(
     """[Public API] Get KPI analytics for this workspace."""
     if "analytics:read" not in auth["scopes"]:
         raise HTTPException(status_code=403, detail="Missing scope: analytics:read")
+
+    from radd.utils.sql_helpers import safe_period_days
+    period_days = safe_period_days(period_days, min_val=1, max_val=365)
 
     workspace_id = auth["workspace_id"]
     async with get_db_session(uuid.UUID(workspace_id)) as db:

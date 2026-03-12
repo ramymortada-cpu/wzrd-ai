@@ -127,6 +127,9 @@ async def get_merchant_benchmark_report(
     Returns actionable gap analysis with Arabic recommendations.
     """
     from sqlalchemy import text
+    from radd.utils.sql_helpers import safe_period_days
+
+    period_days = safe_period_days(period_days, min_val=7, max_val=90)
 
     # Get workspace sector
     try:

@@ -37,6 +37,10 @@ async def calculate_radd_score(
     Calculate the RADD Score for a workspace over the last N days.
     """
     from sqlalchemy import text
+    from radd.utils.sql_helpers import safe_period_days
+
+    # Validate before interpolation into INTERVAL (no bind param support in PG INTERVAL)
+    period_days = safe_period_days(period_days, min_val=1, max_val=365)
 
     try:
         result = await db_session.execute(

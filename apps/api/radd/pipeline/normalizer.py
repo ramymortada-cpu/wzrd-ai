@@ -15,6 +15,14 @@ WAW_HAMZA = re.compile(r"ؤ")                      # waw hamza → waw
 HAMZA_ON_YA = re.compile(r"ئ")                    # hamza on ya → ya
 EXTRA_WHITESPACE = re.compile(r"\s+")
 
+# Eastern Arabic numerals (٠-٩) and Extended Arabic-Indic numerals (۰-۹) → Western
+_EASTERN_DIGITS = str.maketrans("٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹", "01234567890123456789")
+
+
+def normalize_arabic(text: str) -> str:
+    """Alias for normalize — used in tests and external callers."""
+    return normalize(text)
+
 
 def normalize(text: str) -> str:
     """
@@ -23,6 +31,9 @@ def normalize(text: str) -> str:
     """
     if not text:
         return text
+
+    # Convert Eastern Arabic numerals to Western (٣ → 3)
+    text = text.translate(_EASTERN_DIGITS)
 
     # Remove tashkeel (diacritics)
     text = TASHKEEL.sub("", text)

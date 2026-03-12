@@ -25,13 +25,20 @@ class CurrentUser:
 async def get_current_user(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(bearer_scheme)],
 ) -> CurrentUser:
+    token = credentials.credentials
+
     try:
-        payload = decode_token(credentials.credentials)
+        payload = decode_token(token)
     except ValueError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
     if payload.get("type") != "access":
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not an access token")
+
+    # Check blacklist (handles forced logout / compromised tokens)
+    from radd.auth.service import is_token_blacklisted
+    if await is_token_blacklisted(token):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token revoked")
 
     user_id = uuid.UUID(payload["sub"])
     workspace_id = uuid.UUID(payload["workspace_id"])

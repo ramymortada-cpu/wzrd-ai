@@ -49,3 +49,15 @@ async def update_profile(db, customer, resolution_type: str, message_text: str =
     customer.avg_sentiment = round(float(customer.avg_sentiment or 0.5) * 0.7 + s * 0.3, 2)
     customer.customer_tier = compute_tier(customer)
     await db.flush()
+
+def build_customer_context(customer) -> dict:
+    """Build a context dict from a customer object for pipeline use."""
+    return {
+        'tier': getattr(customer, 'customer_tier', 'new'),
+        'total_conversations': getattr(customer, 'total_conversations', 0),
+        'total_escalations': getattr(customer, 'total_escalations', 0),
+        'avg_sentiment': float(getattr(customer, 'avg_sentiment', 0) or 0),
+        'language': getattr(customer, 'language', 'ar'),
+        'salla_total_orders': getattr(customer, 'salla_total_orders', 0),
+    }
+

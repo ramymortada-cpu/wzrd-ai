@@ -33,14 +33,21 @@ _PII_PATTERNS: list[tuple[str, str, re.Pattern]] = [
 
 # Prompt injection patterns (Arabic + English)
 _INJECTION_PATTERNS: list[re.Pattern] = [
-    re.compile(r"ignore\s+(all\s+)?(previous|above)\s+instructions", re.IGNORECASE),
-    re.compile(r"تجاهل\s+(جميع\s+)?التعليمات", re.IGNORECASE),
+    # English patterns
+    re.compile(r"ignore\s+(all\s+)?(previous|above|prior)\s+instructions?", re.IGNORECASE),
     re.compile(r"act\s+as\s+(?:an?\s+)?(?:ai|assistant|gpt|chatgpt)", re.IGNORECASE),
-    re.compile(r"تصرف\s+(?:كأنك|مثل|كـ)\s+(?:روبوت|ai|ذكاء)", re.IGNORECASE),
     re.compile(r"(system\s+prompt|system\s+message|prompt\s+injection)", re.IGNORECASE),
     re.compile(r"reveal\s+(your\s+)?(system\s+)?prompt", re.IGNORECASE),
     re.compile(r"what\s+(are\s+your|is\s+your)\s+instructions", re.IGNORECASE),
     re.compile(r"DAN\s+mode|jailbreak", re.IGNORECASE),
+    re.compile(r"you\s+are\s+now\s+(a|an|the)\s+\w+\s+(ai|assistant|bot)", re.IGNORECASE),
+    # Arabic patterns — covers "تجاهل كل/جميع التعليمات" in any order
+    re.compile(r"تجاهل\s+(كل|جميع|كافة)?\s*التعليمات", re.IGNORECASE),
+    re.compile(r"تجاهل\s+\S+\s+(التعليمات|الأوامر|التعليمات\s+السابقة)", re.IGNORECASE),
+    re.compile(r"تصرف\s+(?:كأنك|مثل|كـ)\s+(?:روبوت|ai|ذكاء)", re.IGNORECASE),
+    re.compile(r"أنت\s+(الآن\s+)?(?:ذكاء|روبوت|ai|بوت)\s+(?:مختلف|جديد|آخر)", re.IGNORECASE),
+    re.compile(r"(أظهر|اكشف|أخبرني)\s+(عن\s+)?(نظامك|تعليماتك|برمجتك)", re.IGNORECASE),
+    re.compile(r"كلمة\s+السر|بياناتك\s+السرية|المعلومات\s+السرية", re.IGNORECASE),
 ]
 
 # Max response length (characters)

@@ -1,4 +1,5 @@
 from __future__ import annotations
+import hashlib
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -9,6 +10,28 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from radd.config import settings
 from radd.db.models import User
+
+# ─── Token Blacklist (Redis) ──────────────────────────────────────────────────
+# Revoked tokens are stored as SHA-256(token) to avoid storing the token itself.
+
+def _token_blacklist_key(token: str) -> str:
+    return f"token:blacklist:{hashlib.sha256(token.encode()).hexdigest()}"
+
+
+async def blacklist_token(token: str, expires_in_seconds: int) -> None:
+    """Add a token to the Redis blacklist. Used on logout / forced revocation."""
+    from radd.deps import get_redis
+    r = get_redis()
+    key = _token_blacklist_key(token)
+    await r.set(key, "1", ex=expires_in_seconds)
+
+
+async def is_token_blacklisted(token: str) -> bool:
+    """Check if a token has been explicitly revoked."""
+    from radd.deps import get_redis
+    r = get_redis()
+    key = _token_blacklist_key(token)
+    return bool(await r.exists(key))
 
 
 def hash_password(password: str) -> str:

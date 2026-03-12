@@ -37,6 +37,9 @@ async def get_agent_performance(
     Calculate performance metrics for all agents in this workspace.
     """
     from sqlalchemy import text
+    from radd.utils.sql_helpers import safe_period_days
+
+    period_days = safe_period_days(period_days, min_val=1, max_val=365)
 
     try:
         result = await db_session.execute(

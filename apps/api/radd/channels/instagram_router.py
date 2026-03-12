@@ -40,14 +40,16 @@ async def receive_instagram_message(request: Request, background_tasks: Backgrou
     """Receive Instagram DM via Meta webhook."""
     body_bytes = await request.body()
 
-    # HMAC verification (same app secret as WhatsApp)
+    # HMAC-SHA256 verification (Meta signs requests with the app secret)
     if settings.meta_app_secret:
         signature_header = request.headers.get("x-hub-signature-256", "")
-        expected = "sha256=" + hmac.new(
-            settings.meta_app_secret.encode(),
-            body_bytes,
-            hashlib.sha256,
-        ).hexdigest()
+        # Correct usage: hmac.new → must use hmac.new from the standard library
+        mac = hmac.new(
+            settings.meta_app_secret.encode("utf-8"),
+            msg=body_bytes,
+            digestmod=hashlib.sha256,
+        )
+        expected = "sha256=" + mac.hexdigest()
         if not hmac.compare_digest(signature_header, expected):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid signature")
 
