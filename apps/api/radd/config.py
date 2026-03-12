@@ -76,5 +76,9 @@ class Settings(BaseSettings):
     confidence_auto_threshold: float = 0.85
     confidence_soft_escalation_threshold: float = 0.60
 
+    # Shadow Mode — process messages fully but do NOT send WhatsApp responses.
+    # Set to true for 48-hour pre-pilot dry run. Responses are logged only.
+    shadow_mode: bool = False
+
 
 settings = Settings()

@@ -24,7 +24,8 @@ from radd.pipeline.intent import classify_intent
 from radd.pipeline.dialect import detect_dialect
 from radd.pipeline.entity_extractor import entities_to_dict, extract_entities
 from radd.pipeline.orchestrator import run_pipeline_async
-from radd.customers.profile_updater import build_customer_context, update_profile
+from radd.customers.profile_updater import update_profile
+from radd.customers.context_builder import build_customer_context
 from radd.whatsapp.client import send_text_message
 
 logger = structlog.get_logger()
@@ -264,17 +265,27 @@ async def process_message(msg_data: dict) -> None:
     else:
         final_response = guard.redacted_text
 
-    # Send WhatsApp response (outside DB transaction)
-    try:
-        channel_config = channel.config or {}
-        await send_text_message(
-            phone_number=sender_phone,
-            message=final_response,
-            phone_number_id=channel_config.get("wa_phone_number_id") or settings.wa_phone_number_id,
-            api_token=settings.wa_api_token,
+    # ── Step 17: Send (or log-only in shadow mode) ───────────────────────────
+    if settings.shadow_mode:
+        logger.info(
+            "worker.shadow_mode.suppressed",
+            workspace_id=str(workspace_id),
+            phone=sender_phone,
+            response_preview=final_response[:120],
+            resolution_type=pipeline_result.resolution_type,
+            confidence=round(pipeline_result.confidence, 3),
         )
-    except Exception as e:
-        logger.error("worker.send_failed", error=str(e), phone=sender_phone)
+    else:
+        try:
+            channel_config = channel.config or {}
+            await send_text_message(
+                phone_number=sender_phone,
+                message=final_response,
+                phone_number_id=channel_config.get("wa_phone_number_id") or settings.wa_phone_number_id,
+                api_token=settings.wa_api_token,
+            )
+        except Exception as e:
+            logger.error("worker.send_failed", error=str(e), phone=sender_phone)
 
 
 async def run_worker():
