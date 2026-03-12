@@ -37,6 +37,8 @@ class Workspace(Base):
     settings: Mapped[dict] = mapped_column(JSONB, server_default="{}")
     plan: Mapped[str] = mapped_column(String(20), server_default="pilot")
     status: Mapped[str] = mapped_column(String(20), server_default="active")
+    sector: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    subscription_price_sar: Mapped[float] = mapped_column(DECIMAL(10, 2), server_default="499.0")
     created_at: Mapped[datetime] = now_utc()
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
@@ -149,6 +151,8 @@ class Conversation(Base):
     resolution_type: Mapped[str | None] = mapped_column(
         String(20), nullable=True
     )  # auto_template, auto_rag, escalated_hard, escalated_soft
+    stage: Mapped[str] = mapped_column(String(30), server_default="unknown")
+    ai_persona: Mapped[str | None] = mapped_column(String(30), nullable=True)
     message_count: Mapped[int] = mapped_column(Integer, server_default="0")
     first_message_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_message_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -335,4 +339,82 @@ class AuditLog(Base):
     entity_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     details: Mapped[dict] = mapped_column(JSONB, server_default="{}")
     ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
+    created_at: Mapped[datetime] = now_utc()
+
+
+# ── V2 Models ─────────────────────────────────────────────────────────────────
+
+class RevenueEvent(Base):
+    __tablename__ = "revenue_events"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    workspace_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("workspaces.id"), nullable=False
+    )
+    conversation_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("conversations.id"), nullable=True
+    )
+    customer_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("customers.id"), nullable=True
+    )
+    event_type: Mapped[str] = mapped_column(String(30), nullable=False)  # assisted_sale, return_prevented, cart_recovered, upsell
+    amount_sar: Mapped[float] = mapped_column(DECIMAL(12, 2), server_default="0")
+    product_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    order_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    metadata_: Mapped[dict] = mapped_column("metadata", JSONB, server_default="{}")
+    created_at: Mapped[datetime] = now_utc()
+
+
+class RadarAlert(Base):
+    __tablename__ = "radar_alerts"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    workspace_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("workspaces.id"), nullable=False
+    )
+    alert_type: Mapped[str] = mapped_column(String(30), nullable=False)  # shipping_anomaly, product_issue, demand_opportunity
+    severity: Mapped[str] = mapped_column(String(10), server_default="medium")  # low, medium, high, critical
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    suggested_action: Mapped[str | None] = mapped_column(Text, nullable=True)
+    metadata_: Mapped[dict] = mapped_column("metadata", JSONB, server_default="{}")
+    is_read: Mapped[bool] = mapped_column(Boolean, server_default="false")
+    created_at: Mapped[datetime] = now_utc()
+
+
+class SmartRule(Base):
+    __tablename__ = "smart_rules"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    workspace_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("workspaces.id"), nullable=False
+    )
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, server_default="true")
+    priority: Mapped[int] = mapped_column(Integer, server_default="0")
+    triggers: Mapped[list] = mapped_column(JSONB, server_default="[]")
+    actions: Mapped[list] = mapped_column(JSONB, server_default="[]")
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = now_utc()
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class FollowUpQueue(Base):
+    __tablename__ = "follow_up_queue"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    workspace_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("workspaces.id"), nullable=False
+    )
+    conversation_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("conversations.id"), nullable=False
+    )
+    customer_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("customers.id"), nullable=False
+    )
+    scheduled_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    message_template: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(20), server_default="pending")  # pending, sent, cancelled
     created_at: Mapped[datetime] = now_utc()

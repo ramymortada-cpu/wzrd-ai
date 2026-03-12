@@ -16,7 +16,7 @@ from sqlalchemy import func, select, update
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from radd.config import settings
-from radd.db.models import Channel, Conversation, Customer, Message, AuditLog
+from radd.db.models import Channel, Conversation, Customer, Message, AuditLog, RevenueEvent, SmartRule as SmartRuleModel, FollowUpQueue
 from radd.db.session import get_db_session
 from radd.deps import get_redis
 from radd.pipeline.normalizer import normalize
@@ -27,6 +27,10 @@ from radd.pipeline.orchestrator import run_pipeline_async
 from radd.customers.profile_updater import update_profile
 from radd.customers.context_builder import build_customer_context
 from radd.whatsapp.client import send_text_message
+from radd.personas.engine import select_persona, build_persona_prompt, PersonaType
+from radd.returns.prevention import detect_return_reason, generate_prevention_response
+from radd.rules.engine import evaluate_rules, apply_rule_action, DEFAULT_RULES, SmartRule as SmartRuleObj, TriggerType, ActionType
+from radd.sales.engine import determine_stage
 
 logger = structlog.get_logger()
 
@@ -150,21 +154,146 @@ async def process_message(msg_data: dict) -> None:
             for m in reversed(history_result.scalars().all())
         ]
 
-        # ── Step 12: Run orchestrator with full context ───────────────────────
-        qdrant = get_qdrant()
-        pipeline_result = await run_pipeline_async(
-            message=normalized_text,
-            workspace_id=workspace_id,
-            db=db,
-            qdrant=qdrant,
-            conversation_context={
-                "store_name": "متجرنا",
-                "customer_context": customer_ctx,
-                "dialect": dialect,
-                "intent": intent_result.intent,
-            },
-            conversation_history=history,
+        # ── Step 11b: V2 — Smart Rules evaluation ─────────────────────────────
+        current_hour = datetime.now(timezone.utc).hour
+        current_stage = getattr(conversation, "stage", "unknown") or "unknown"
+        customer_sentiment = float(customer.avg_sentiment or 0.5)
+
+        # Load workspace-specific rules from DB, fall back to defaults
+        rules_result = await db.execute(
+            select(SmartRuleModel).where(
+                SmartRuleModel.workspace_id == workspace_id,
+                SmartRuleModel.is_active == True,
+            ).order_by(SmartRuleModel.priority.desc())
         )
+        db_rules = rules_result.scalars().all()
+
+        if db_rules:
+            smart_rules = [
+                SmartRuleObj(
+                    id=str(r.id),
+                    name=r.name,
+                    description=r.description or "",
+                    trigger_type=TriggerType(r.triggers[0]["type"]) if r.triggers else TriggerType.INTENT,
+                    trigger_value=r.triggers[0]["value"] if r.triggers else "",
+                    action_type=ActionType(r.actions[0]["type"]) if r.actions else ActionType.USE_PERSONA,
+                    action_value=r.actions[0]["value"] if r.actions else "",
+                    is_active=r.is_active,
+                    priority=r.priority,
+                )
+                for r in db_rules
+            ]
+        else:
+            smart_rules = DEFAULT_RULES
+
+        rule_match = evaluate_rules(
+            rules=smart_rules,
+            intent=intent_result.intent,
+            customer_tier=customer.customer_tier or "new",
+            conversation_stage=current_stage,
+            message_text=text_body,
+            current_hour=current_hour,
+            sentiment=customer_sentiment,
+        )
+        rule_instructions = apply_rule_action(rule_match)
+        if rule_match.matched:
+            logger.info(
+                "worker.rule_matched",
+                rule=rule_match.rule.name if rule_match.rule else "unknown",
+                action=str(rule_match.action_type),
+            )
+
+        # ── Step 11c: V2 — Persona selection ──────────────────────────────────
+        is_pre_purchase = intent_result.intent in {"product_inquiry", "product_comparison", "purchase_hesitation"}
+        forced_persona_name = rule_instructions.get("force_persona")
+
+        if forced_persona_name:
+            persona_map = {"sales": PersonaType.SALES, "support": PersonaType.SUPPORT, "receptionist": PersonaType.RECEPTIONIST}
+            from radd.personas.engine import PERSONAS
+            persona = PERSONAS.get(persona_map.get(forced_persona_name, PersonaType.RECEPTIONIST))
+        else:
+            persona = select_persona(
+                intent=intent_result.intent,
+                is_pre_purchase=is_pre_purchase,
+                conversation_turn=conversation.message_count or 0,
+                customer_tier=customer.customer_tier or "new",
+            )
+
+        persona_system_prompt = build_persona_prompt(
+            persona=persona,
+            store_name="متجرنا",
+            dialect=dialect.dialect if hasattr(dialect, "dialect") else str(dialect),
+            customer_context=customer_ctx,
+        )
+
+        # ── Step 11d: V2 — Return Prevention attempt ───────────────────────────
+        prevention_response = None
+        if intent_result.intent == "return_policy" or rule_instructions.get("try_return_prevention"):
+            try:
+                return_reason = detect_return_reason(text_body)
+                prevention_result = generate_prevention_response(
+                    reason=return_reason,
+                    dialect=dialect.dialect if hasattr(dialect, "dialect") else "gulf",
+                )
+                if prevention_result.confidence >= 0.65:
+                    prevention_response = prevention_result.response_text
+                    logger.info(
+                        "worker.return_prevention_applied",
+                        reason=str(return_reason),
+                        confidence=prevention_result.confidence,
+                    )
+            except Exception as e:
+                logger.warning("worker.return_prevention_failed", error=str(e))
+
+        # ── Step 11e: V2 — Determine conversation stage ───────────────────────
+        new_stage = determine_stage(
+            intent=intent_result.intent,
+            is_pre_purchase=is_pre_purchase,
+            message_text=text_body,
+            conversation_turn=conversation.message_count or 0,
+            previous_stage=current_stage,
+        )
+
+        # ── Step 12: Run orchestrator with full context ───────────────────────
+        # Force escalation if a rule demands it
+        if rule_instructions.get("force_escalation"):
+            from radd.pipeline.templates import get_escalation_message
+            from radd.pipeline.orchestrator import PipelineResult
+            dial_str = dialect.dialect if hasattr(dialect, "dialect") else "gulf"
+            pipeline_result = PipelineResult(
+                response_text=get_escalation_message(dial_str),
+                intent=intent_result.intent,
+                dialect=dial_str,
+                confidence=0.0,
+                resolution_type="escalated_hard",
+                intent_result=intent_result,
+                confidence_breakdown={"intent": intent_result.confidence, "retrieval": 0.0, "verify": 0.0},
+            )
+        else:
+            override_threshold = rule_instructions.get("override_auto_threshold")
+            from radd.deps import get_qdrant
+            qdrant = get_qdrant()
+            pipeline_result = await run_pipeline_async(
+                message=normalized_text,
+                workspace_id=workspace_id,
+                db=db,
+                qdrant=qdrant,
+                conversation_context={
+                    "store_name": "متجرنا",
+                    "customer_context": customer_ctx,
+                    "dialect": dialect.dialect if hasattr(dialect, "dialect") else str(dialect),
+                    "intent": intent_result.intent,
+                    "persona_system_prompt": persona_system_prompt,
+                    "override_auto_threshold": override_threshold,
+                },
+                conversation_history=history,
+            )
+
+        # Apply return prevention if orchestrator didn't auto-respond
+        if prevention_response and pipeline_result.resolution_type.startswith("escalated"):
+            pipeline_result.response_text = prevention_response
+            pipeline_result.resolution_type = "auto_rag"
+            pipeline_result.confidence = 0.75
 
         # ── Step 15: Store outbound message ──────────────────────────────────
         response_msg = Message(
@@ -188,6 +317,8 @@ async def process_message(msg_data: dict) -> None:
         conversation.resolution_type = pipeline_result.resolution_type
         conversation.last_message_at = datetime.now(timezone.utc)
         conversation.message_count = (conversation.message_count or 0) + 2
+        conversation.stage = new_stage.value if hasattr(new_stage, "value") else str(new_stage)
+        conversation.ai_persona = persona.type.value if persona else None
 
         if pipeline_result.resolution_type.startswith("escalated"):
             conversation.status = "waiting_agent"

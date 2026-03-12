@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from radd.admin.analytics import get_kpis
 from radd.auth.middleware import CurrentUser, require_admin, require_owner, require_reviewer
 from radd.auth.service import hash_password
-from radd.db.models import AuditLog, Customer, User, Workspace
+from radd.db.models import AuditLog, Customer, User, Workspace, RevenueEvent, RadarAlert, SmartRule as SmartRuleModel, FollowUpQueue
 from radd.db.session import get_db_session
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -295,3 +295,345 @@ async def update_user(
             setattr(user, k, v)
 
     return UserResponse.model_validate(user)
+
+
+# ─── V2: Revenue Attribution ──────────────────────────────────────────────────
+
+@router.get("/revenue/summary")
+@limiter.limit(settings.default_rate_limit)
+async def get_revenue_summary(
+    request: Request,
+    current: Annotated[CurrentUser, Depends(require_reviewer)],
+    period: str = Query("this_month", description="this_month | last_month | all_time"),
+):
+    """Revenue attribution summary for the dashboard."""
+    from radd.revenue.attribution import get_revenue_summary
+    async with get_db_session(current.workspace_id) as db:
+        result = await db.execute(
+            select(Workspace).where(Workspace.id == current.workspace_id)
+        )
+        ws = result.scalar_one_or_none()
+        subscription_cost = float(ws.subscription_price_sar) if ws and ws.subscription_price_sar else 499.0
+        summary = await get_revenue_summary(
+            db_session=db,
+            workspace_id=str(current.workspace_id),
+            period=period,
+            subscription_cost=subscription_cost,
+        )
+    return {
+        "period": period,
+        "total_attributed_sar": summary.total_attributed,
+        "assisted_sales_sar": summary.assisted_sales,
+        "returns_prevented_sar": summary.returns_prevented,
+        "carts_recovered_sar": summary.carts_recovered,
+        "upsells_sar": 0,
+        "event_count": summary.assisted_sales_count + summary.returns_prevented_count + summary.carts_recovered_count,
+        "roi_multiplier": summary.roi_multiple,
+        "subscription_cost_sar": summary.subscription_cost,
+    }
+
+
+@router.get("/revenue/events")
+@limiter.limit(settings.default_rate_limit)
+async def list_revenue_events(
+    request: Request,
+    current: Annotated[CurrentUser, Depends(require_reviewer)],
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
+):
+    """Paginated list of revenue attribution events."""
+    async with get_db_session(current.workspace_id) as db:
+        total_result = await db.execute(
+            select(func.count(RevenueEvent.id)).where(RevenueEvent.workspace_id == current.workspace_id)
+        )
+        total = total_result.scalar_one()
+        result = await db.execute(
+            select(RevenueEvent)
+            .where(RevenueEvent.workspace_id == current.workspace_id)
+            .order_by(RevenueEvent.created_at.desc())
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+        )
+        events = result.scalars().all()
+    return {
+        "items": [
+            {
+                "id": str(e.id),
+                "event_type": e.event_type,
+                "amount_sar": float(e.amount_sar),
+                "product_name": e.product_name,
+                "order_id": e.order_id,
+                "conversation_id": str(e.conversation_id) if e.conversation_id else None,
+                "created_at": e.created_at.isoformat(),
+            }
+            for e in events
+        ],
+        "total": total,
+        "page": page,
+    }
+
+
+# ─── V2: Operational Radar ────────────────────────────────────────────────────
+
+@router.get("/radar/alerts")
+@limiter.limit(settings.default_rate_limit)
+async def list_radar_alerts(
+    request: Request,
+    current: Annotated[CurrentUser, Depends(require_reviewer)],
+    unread_only: bool = Query(False),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
+):
+    """List operational radar alerts for this workspace."""
+    async with get_db_session(current.workspace_id) as db:
+        q = select(RadarAlert).where(RadarAlert.workspace_id == current.workspace_id)
+        if unread_only:
+            q = q.where(RadarAlert.is_read == False)
+        total_result = await db.execute(select(func.count()).select_from(q.subquery()))
+        total = total_result.scalar_one()
+        q = q.order_by(RadarAlert.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
+        result = await db.execute(q)
+        alerts = result.scalars().all()
+    return {
+        "items": [
+            {
+                "id": str(a.id),
+                "alert_type": a.alert_type,
+                "severity": a.severity,
+                "title": a.title,
+                "description": a.description,
+                "suggested_action": a.suggested_action,
+                "is_read": a.is_read,
+                "created_at": a.created_at.isoformat(),
+            }
+            for a in alerts
+        ],
+        "total": total,
+        "page": page,
+    }
+
+
+@router.post("/radar/scan")
+@limiter.limit("5/minute")
+async def trigger_radar_scan(
+    request: Request,
+    current: Annotated[CurrentUser, Depends(require_admin)],
+):
+    """Manually trigger an operational radar scan for this workspace."""
+    from radd.radar.detector import scan_for_anomalies
+    async with get_db_session(current.workspace_id) as db:
+        alerts = await scan_for_anomalies(db_session=db, workspace_id=str(current.workspace_id))
+        saved = []
+        for alert in alerts:
+            ra = RadarAlert(
+                workspace_id=current.workspace_id,
+                alert_type=alert.alert_type.value if hasattr(alert.alert_type, "value") else str(alert.alert_type),
+                severity=alert.severity.value if hasattr(alert.severity, "value") else str(alert.severity),
+                title=alert.title,
+                description=alert.description,
+                suggested_action=alert.suggested_action,
+                metadata_=alert.metadata if hasattr(alert, "metadata") else {},
+            )
+            db.add(ra)
+            saved.append({"alert_type": ra.alert_type, "severity": ra.severity, "title": ra.title})
+        await db.flush()
+    return {"scanned": True, "alerts_found": len(saved), "alerts": saved}
+
+
+@router.patch("/radar/alerts/{alert_id}/read")
+@limiter.limit(settings.default_rate_limit)
+async def mark_alert_read(
+    request: Request,
+    alert_id: uuid.UUID,
+    current: Annotated[CurrentUser, Depends(require_reviewer)],
+):
+    async with get_db_session(current.workspace_id) as db:
+        result = await db.execute(
+            select(RadarAlert).where(
+                RadarAlert.id == alert_id,
+                RadarAlert.workspace_id == current.workspace_id,
+            )
+        )
+        alert = result.scalar_one_or_none()
+        if not alert:
+            raise HTTPException(status_code=404, detail="Alert not found")
+        alert.is_read = True
+    return {"marked_read": True}
+
+
+# ─── V2: Smart Rules CRUD ─────────────────────────────────────────────────────
+
+class SmartRuleCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    is_active: bool = True
+    priority: int = 0
+    triggers: list[dict] = []
+    actions: list[dict] = []
+
+
+@router.get("/rules")
+@limiter.limit(settings.default_rate_limit)
+async def list_smart_rules(
+    request: Request,
+    current: Annotated[CurrentUser, Depends(require_reviewer)],
+):
+    """List all smart rules for this workspace."""
+    async with get_db_session(current.workspace_id) as db:
+        result = await db.execute(
+            select(SmartRuleModel)
+            .where(SmartRuleModel.workspace_id == current.workspace_id)
+            .order_by(SmartRuleModel.priority.desc())
+        )
+        rules = result.scalars().all()
+    return {
+        "items": [
+            {
+                "id": str(r.id),
+                "name": r.name,
+                "description": r.description,
+                "is_active": r.is_active,
+                "priority": r.priority,
+                "triggers": r.triggers,
+                "actions": r.actions,
+                "created_at": r.created_at.isoformat(),
+            }
+            for r in rules
+        ]
+    }
+
+
+@router.post("/rules", status_code=status.HTTP_201_CREATED)
+@limiter.limit(settings.default_rate_limit)
+async def create_smart_rule(
+    request: Request,
+    body: SmartRuleCreate,
+    current: Annotated[CurrentUser, Depends(require_admin)],
+):
+    """Create a new smart rule."""
+    async with get_db_session(current.workspace_id) as db:
+        rule = SmartRuleModel(
+            workspace_id=current.workspace_id,
+            name=body.name,
+            description=body.description,
+            is_active=body.is_active,
+            priority=body.priority,
+            triggers=body.triggers,
+            actions=body.actions,
+        )
+        db.add(rule)
+        await db.flush()
+    return {"id": str(rule.id), "name": rule.name, "created": True}
+
+
+@router.patch("/rules/{rule_id}")
+@limiter.limit(settings.default_rate_limit)
+async def update_smart_rule(
+    request: Request,
+    rule_id: uuid.UUID,
+    body: dict,
+    current: Annotated[CurrentUser, Depends(require_admin)],
+):
+    """Update an existing smart rule (name, is_active, priority, triggers, actions)."""
+    allowed = {"name", "description", "is_active", "priority", "triggers", "actions"}
+    updates = {k: v for k, v in body.items() if k in allowed}
+    async with get_db_session(current.workspace_id) as db:
+        result = await db.execute(
+            select(SmartRuleModel).where(
+                SmartRuleModel.id == rule_id,
+                SmartRuleModel.workspace_id == current.workspace_id,
+            )
+        )
+        rule = result.scalar_one_or_none()
+        if not rule:
+            raise HTTPException(status_code=404, detail="Rule not found")
+        for k, v in updates.items():
+            setattr(rule, k, v)
+    return {"updated": True}
+
+
+@router.delete("/rules/{rule_id}", status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit(settings.default_rate_limit)
+async def delete_smart_rule(
+    request: Request,
+    rule_id: uuid.UUID,
+    current: Annotated[CurrentUser, Depends(require_admin)],
+):
+    """Delete a smart rule."""
+    async with get_db_session(current.workspace_id) as db:
+        result = await db.execute(
+            select(SmartRuleModel).where(
+                SmartRuleModel.id == rule_id,
+                SmartRuleModel.workspace_id == current.workspace_id,
+            )
+        )
+        rule = result.scalar_one_or_none()
+        if not rule:
+            raise HTTPException(status_code=404, detail="Rule not found")
+        await db.delete(rule)
+
+
+# ─── V2: Salla Auto-Sync ──────────────────────────────────────────────────────
+
+class SallaSyncRequest(BaseModel):
+    salla_api_url: str = "https://api.salla.dev/admin/v2"
+    salla_token: str
+
+
+@router.post("/salla/sync")
+@limiter.limit("10/minute")
+async def trigger_salla_sync(
+    request: Request,
+    body: SallaSyncRequest,
+    current: Annotated[CurrentUser, Depends(require_admin)],
+):
+    """Trigger a full Salla product + store policy sync into the KB."""
+    from radd.onboarding.salla_sync import run_full_sync
+    from radd.knowledge.service import KBService
+    async with get_db_session(current.workspace_id) as db:
+        kb_service = KBService(db=db, workspace_id=uuid.UUID(str(current.workspace_id)))
+        result = await run_full_sync(
+            workspace_id=str(current.workspace_id),
+            salla_api_url=body.salla_api_url,
+            salla_token=body.salla_token,
+            db_session=db,
+            kb_service=kb_service,
+        )
+    return {
+        "synced": True,
+        "products_synced": result.products_synced if hasattr(result, "products_synced") else 0,
+        "documents_created": result.documents_created if hasattr(result, "documents_created") else 0,
+    }
+
+
+# ─── V2: Starter Packs ────────────────────────────────────────────────────────
+
+class StarterPackRequest(BaseModel):
+    sector: str  # perfumes | fashion | electronics | food
+
+
+@router.post("/starter-pack")
+@limiter.limit("5/minute")
+async def apply_starter_pack(
+    request: Request,
+    body: StarterPackRequest,
+    current: Annotated[CurrentUser, Depends(require_admin)],
+):
+    """Apply a sector-specific starter pack (pre-built KB + keywords) to this workspace."""
+    from radd.sales.engine import apply_starter_pack
+    from radd.knowledge.service import KBService
+    async with get_db_session(current.workspace_id) as db:
+        kb_service = KBService(db=db, workspace_id=uuid.UUID(str(current.workspace_id)))
+        result = await apply_starter_pack(
+            workspace_id=str(current.workspace_id),
+            sector=body.sector,
+            kb_service=kb_service,
+        )
+        # Save sector to workspace
+        ws_result = await db.execute(
+            select(Workspace).where(Workspace.id == current.workspace_id)
+        )
+        ws = ws_result.scalar_one_or_none()
+        if ws:
+            ws.sector = body.sector
+    return result

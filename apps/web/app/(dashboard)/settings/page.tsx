@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Save, UserPlus, Eye, EyeOff } from "lucide-react";
+import { Save, UserPlus, Eye, EyeOff, RefreshCw, Layers } from "lucide-react";
 import TopBar from "@/components/layout/topbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,8 @@ import {
   createUser,
   getShadowMode,
   setShadowMode,
+  triggerSallaSync,
+  applyStarterPack,
   type WorkspaceSettings,
   type User,
 } from "@/lib/api";
@@ -33,6 +35,16 @@ export default function SettingsPage() {
   // Shadow mode
   const [shadowMode, setShadowModeState] = useState(false);
   const [shadowLoading, setShadowLoading] = useState(false);
+
+  // Salla Sync
+  const [sallaToken, setSallaToken] = useState("");
+  const [sallaSyncing, setSallaSyncing] = useState(false);
+  const [sallaSyncMsg, setSallaSyncMsg] = useState("");
+
+  // Starter Packs
+  const [starterSector, setStarterSector] = useState("perfumes");
+  const [starterApplying, setStarterApplying] = useState(false);
+  const [starterMsg, setStarterMsg] = useState("");
 
   // New user form
   const [showNewUser, setShowNewUser] = useState(false);
@@ -90,6 +102,35 @@ export default function SettingsPage() {
     }
   }
 
+  async function handleSallaSync() {
+    if (!sallaToken.trim()) { setError("أدخل رمز Salla API أولاً"); return; }
+    setSallaSyncing(true);
+    setSallaSyncMsg("");
+    setError("");
+    try {
+      const res = await triggerSallaSync(sallaToken);
+      setSallaSyncMsg(`تمت المزامنة — ${res.products_synced} منتج، ${res.documents_created} مستند KB`);
+    } catch {
+      setError("تعذّر المزامنة مع Salla — تأكد من صحة الرمز");
+    } finally {
+      setSallaSyncing(false);
+    }
+  }
+
+  async function handleApplyStarterPack() {
+    setStarterApplying(true);
+    setStarterMsg("");
+    setError("");
+    try {
+      await applyStarterPack(starterSector);
+      setStarterMsg(`تم تطبيق الباقة الجاهزة لقطاع "${SECTOR_LABELS[starterSector]}" بنجاح`);
+    } catch {
+      setError("تعذّر تطبيق الباقة الجاهزة");
+    } finally {
+      setStarterApplying(false);
+    }
+  }
+
   async function handleCreateUser(e: React.FormEvent) {
     e.preventDefault();
     setCreatingUser(true);
@@ -112,6 +153,13 @@ export default function SettingsPage() {
     admin: "مدير",
     agent: "موظف",
     reviewer: "مراجع",
+  };
+
+  const SECTOR_LABELS: Record<string, string> = {
+    perfumes: "عطور",
+    fashion: "أزياء",
+    electronics: "إلكترونيات",
+    food: "طعام",
   };
 
   if (loading) {
@@ -243,6 +291,79 @@ export default function SettingsPage() {
                 {shadowLoading ? "جارٍ التغيير..." : shadowMode ? "إيقاف وضع المراقبة" : "تفعيل وضع المراقبة"}
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Salla Auto-Sync */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <RefreshCw className="h-4 w-4 text-primary" />
+              مزامنة Salla التلقائية
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              استورد منتجاتك وسياسات متجرك من Salla مباشرةً إلى قاعدة المعرفة.
+            </p>
+            <div className="flex gap-2">
+              <Input
+                type="password"
+                dir="ltr"
+                placeholder="Salla API Token"
+                value={sallaToken}
+                onChange={(e) => setSallaToken(e.target.value)}
+                className="flex-1 font-mono text-xs"
+              />
+              <Button
+                onClick={handleSallaSync}
+                disabled={sallaSyncing || !sallaToken.trim()}
+              >
+                {sallaSyncing ? "جارٍ المزامنة..." : "مزامنة الآن"}
+              </Button>
+            </div>
+            {sallaSyncMsg && (
+              <div className="text-sm text-green-700 bg-green-50 px-3 py-2 rounded-lg">
+                {sallaSyncMsg}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Starter Packs */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Layers className="h-4 w-4 text-primary" />
+              باقات البداية السريعة
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              احصل على قاعدة معرفة جاهزة وكلمات مفتاحية مُعدّة خصيصاً لقطاعك.
+            </p>
+            <div className="flex gap-2">
+              <select
+                value={starterSector}
+                onChange={(e) => setStarterSector(e.target.value)}
+                className="flex-1 px-3 py-2 text-sm border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
+              >
+                {Object.entries(SECTOR_LABELS).map(([v, l]) => (
+                  <option key={v} value={v}>{l}</option>
+                ))}
+              </select>
+              <Button
+                onClick={handleApplyStarterPack}
+                disabled={starterApplying}
+              >
+                {starterApplying ? "جارٍ التطبيق..." : "تطبيق الباقة"}
+              </Button>
+            </div>
+            {starterMsg && (
+              <div className="text-sm text-green-700 bg-green-50 px-3 py-2 rounded-lg">
+                {starterMsg}
+              </div>
+            )}
           </CardContent>
         </Card>
 

@@ -219,9 +219,10 @@ async def run_pipeline_async(
             },
         )
 
-    # Generate response — include customer context in system prompt
+    # Generate response — use persona prompt if available, else standard context
     store_name = context.get("store_name", "متجرنا")
     customer_context = context.get("customer_context", "")
+    persona_system_prompt = context.get("persona_system_prompt")
     response_text, cited_ids = await generate_rag_response(
         query=normalized,
         passages=passages,
@@ -229,6 +230,7 @@ async def run_pipeline_async(
         store_name=store_name,
         conversation_history=conversation_history,
         customer_context=customer_context,
+        system_prompt_override=persona_system_prompt,
     )
 
     # Verify grounding
@@ -255,7 +257,7 @@ async def run_pipeline_async(
     }
 
     # ── 6. Confidence routing ─────────────────────────────────────────────────
-    auto_threshold = settings.confidence_auto_threshold
+    auto_threshold = context.get("override_auto_threshold") or settings.confidence_auto_threshold
     soft_threshold = settings.confidence_soft_escalation_threshold
 
     if confidence >= auto_threshold:

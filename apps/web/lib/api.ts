@@ -469,6 +469,118 @@ export const setShadowMode = (enabled: boolean) =>
     body: JSON.stringify({ enabled }),
   });
 
+// ─── V2: Revenue Attribution ──────────────────────────────────────────────────
+export interface RevenueSummary {
+  period: string;
+  total_attributed_sar: number;
+  assisted_sales_sar: number;
+  returns_prevented_sar: number;
+  carts_recovered_sar: number;
+  upsells_sar: number;
+  event_count: number;
+  roi_multiplier: number;
+  subscription_cost_sar: number;
+}
+
+export interface RevenueEvent {
+  id: string;
+  event_type: "assisted_sale" | "return_prevented" | "cart_recovered" | "upsell";
+  amount_sar: number;
+  product_name: string | null;
+  order_id: string | null;
+  conversation_id: string | null;
+  created_at: string;
+}
+
+export const getRevenueSummary = (period = "this_month") =>
+  apiFetch<RevenueSummary>(`/admin/revenue/summary?period=${period}`);
+
+export const getRevenueEvents = (page = 1) =>
+  apiFetch<{ items: RevenueEvent[]; total: number; page: number }>(
+    `/admin/revenue/events?page=${page}`
+  );
+
+// ─── V2: Radar Alerts ─────────────────────────────────────────────────────────
+export interface RadarAlert {
+  id: string;
+  alert_type: "shipping_anomaly" | "product_issue" | "demand_opportunity";
+  severity: "low" | "medium" | "high" | "critical";
+  title: string;
+  description: string;
+  suggested_action: string | null;
+  is_read: boolean;
+  created_at: string;
+}
+
+export const getRadarAlerts = (unreadOnly = false, page = 1) =>
+  apiFetch<{ items: RadarAlert[]; total: number; page: number }>(
+    `/admin/radar/alerts?unread_only=${unreadOnly}&page=${page}`
+  );
+
+export const triggerRadarScan = () =>
+  apiFetch<{ scanned: boolean; alerts_found: number; alerts: RadarAlert[] }>(
+    "/admin/radar/scan",
+    { method: "POST" }
+  );
+
+export const markAlertRead = (alertId: string) =>
+  apiFetch<{ marked_read: boolean }>(`/admin/radar/alerts/${alertId}/read`, {
+    method: "PATCH",
+  });
+
+// ─── V2: Smart Rules ──────────────────────────────────────────────────────────
+export interface SmartRule {
+  id: string;
+  name: string;
+  description: string | null;
+  is_active: boolean;
+  priority: number;
+  triggers: Array<{ type: string; value: string }>;
+  actions: Array<{ type: string; value: string }>;
+  created_at: string;
+}
+
+export const getSmartRules = () =>
+  apiFetch<{ items: SmartRule[] }>("/admin/rules");
+
+export const createSmartRule = (data: Omit<SmartRule, "id" | "created_at">) =>
+  apiFetch<{ id: string; name: string; created: boolean }>("/admin/rules", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+export const updateSmartRule = (id: string, data: Partial<SmartRule>) =>
+  apiFetch<{ updated: boolean }>(`/admin/rules/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+
+export const deleteSmartRule = (id: string) =>
+  apiFetch<void>(`/admin/rules/${id}`, { method: "DELETE" });
+
+// ─── V2: Salla Sync ───────────────────────────────────────────────────────────
+export const triggerSallaSync = (salla_token: string, salla_api_url?: string) =>
+  apiFetch<{ synced: boolean; products_synced: number; documents_created: number }>(
+    "/admin/salla/sync",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        salla_token,
+        salla_api_url: salla_api_url ?? "https://api.salla.dev/admin/v2",
+      }),
+    }
+  );
+
+// ─── V2: Starter Packs ────────────────────────────────────────────────────────
+export const applyStarterPack = (sector: string) =>
+  apiFetch<{ success: boolean; documents_created?: number }>(
+    "/admin/starter-pack",
+    {
+      method: "POST",
+      body: JSON.stringify({ sector }),
+    }
+  );
+
 // ─── Intelligence ──────────────────────────────────────────────────────────────
 export interface KnowledgeGap {
   question_pattern: string;

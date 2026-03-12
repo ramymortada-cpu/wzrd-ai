@@ -67,10 +67,12 @@ async def generate_rag_response(
     store_name: str = "متجرنا",
     conversation_history: list[dict] | None = None,
     customer_context: str = "",
+    system_prompt_override: str | None = None,
 ) -> tuple[str, list[str]]:
     """
     Generate a grounded Arabic response using GPT-4.1-mini.
     Returns (response_text, cited_chunk_ids).
+    If system_prompt_override is provided (V2 Persona prompt), it replaces the default system prompt.
     """
     if not passages:
         return "عذراً، لم أجد معلومات كافية للإجابة. سأحولك لفريق الدعم.", []
@@ -78,12 +80,17 @@ async def generate_rag_response(
     client = AsyncOpenAI(api_key=settings.openai_api_key)
     dialect_name = DIALECT_NAMES.get(dialect, "الفصحى")
 
-    system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
-        dialect=dialect_name,
-        store_name=store_name,
-    )
-    if customer_context:
-        system_prompt += f"\n\n{customer_context}"
+    if system_prompt_override:
+        system_prompt = system_prompt_override
+        temperature = 0.3  # Persona-appropriate temperature (overridden per persona at call site)
+    else:
+        system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
+            dialect=dialect_name,
+            store_name=store_name,
+        )
+        if customer_context:
+            system_prompt += f"\n\n{customer_context}"
+        temperature = 0.2
 
     passages_text = _format_passages(passages)
     history_messages = _format_history(conversation_history or [])
@@ -104,7 +111,7 @@ async def generate_rag_response(
         response = await client.chat.completions.create(
             model=settings.openai_chat_model,
             messages=messages,
-            temperature=0.2,       # Low temperature for factual CS responses
+            temperature=temperature,
             max_tokens=400,
             timeout=15.0,
         )
