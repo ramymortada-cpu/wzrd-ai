@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Save, UserPlus, Eye, EyeOff, RefreshCw, Layers, Instagram, Code } from "lucide-react";
+import {
+  Save, UserPlus, Eye, EyeOff, RefreshCw, Layers,
+  Instagram, Code, Mic, MicOff, Smartphone, Copy, Check,
+  Webhook, Globe,
+} from "lucide-react";
 import TopBar from "@/components/layout/topbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,6 +57,13 @@ export default function SettingsPage() {
   const [igToken, setIgToken] = useState("");
   const [igSetupMsg, setIgSetupMsg] = useState("");
   const [igSetupLoading, setIgSetupLoading] = useState(false);
+
+  // Voice Understanding
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [voiceLoading, setVoiceLoading] = useState(false);
+
+  // Webhook URLs / copy state
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   // Starter Packs
   const [starterSector, setStarterSector] = useState("perfumes");
@@ -141,6 +152,25 @@ export default function SettingsPage() {
       setError("تعذّر تطبيق الباقة الجاهزة");
     } finally {
       setStarterApplying(false);
+    }
+  }
+
+  function copyToClipboard(text: string, key: string) {
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2000);
+  }
+
+  async function handleVoiceToggle() {
+    setVoiceLoading(true);
+    try {
+      await updateSettings({ voice_transcription_enabled: !voiceEnabled });
+      setVoiceEnabled(!voiceEnabled);
+      setSuccess(voiceEnabled ? "تم إيقاف تفريغ الرسائل الصوتية" : "تم تفعيل تفريغ الرسائل الصوتية بـ Whisper");
+    } catch {
+      setError("تعذّر تحديث إعداد الصوت");
+    } finally {
+      setVoiceLoading(false);
     }
   }
 
@@ -441,6 +471,174 @@ export default function SettingsPage() {
                 {igSetupMsg}
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Voice Understanding Toggle */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              {voiceEnabled
+                ? <Mic className="h-4 w-4 text-green-500" />
+                : <MicOff className="h-4 w-4 text-muted-foreground" />
+              }
+              تفريغ الرسائل الصوتية (Whisper AI)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1 text-sm text-muted-foreground leading-relaxed">
+                <p>
+                  عندما يرسل العميل رسالة صوتية على WhatsApp، يُفرّغها رَدّ تلقائياً
+                  بـ OpenAI Whisper ويُعالجها كنص عربي.
+                </p>
+                <p>
+                  الحالة الحالية:{" "}
+                  <span className={voiceEnabled ? "text-green-600 font-semibold" : "text-muted-foreground"}>
+                    {voiceEnabled ? "✅ مفعّل" : "⏸ موقوف"}
+                  </span>
+                </p>
+              </div>
+              <Button
+                variant={voiceEnabled ? "destructive" : "default"}
+                size="sm"
+                onClick={handleVoiceToggle}
+                disabled={voiceLoading}
+                className="shrink-0"
+              >
+                {voiceLoading
+                  ? "جارٍ الحفظ..."
+                  : voiceEnabled
+                  ? "إيقاف"
+                  : "تفعيل"}
+              </Button>
+            </div>
+            {voiceEnabled && (
+              <div className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3 space-y-1">
+                <p>• يدعم: OGG, MP3, MP4, WebM, WAV</p>
+                <p>• اللغة المبدئية: العربية (يكتشف اللهجة تلقائياً)</p>
+                <p>• في حالة الفشل: يُرسل رسالة للعميل يطلب منه الكتابة</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Webhook URLs */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Webhook className="h-4 w-4 text-blue-500" />
+              روابط Webhook — للإعداد في المنصات الخارجية
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              استخدم هذه الروابط عند إعداد الـ Webhook في Meta (Instagram) أو Zid.
+            </p>
+
+            {/* WhatsApp */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">WhatsApp Webhook URL</label>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 text-xs bg-muted px-3 py-2 rounded-lg font-mono text-foreground overflow-x-auto" dir="ltr">
+                  {typeof window !== "undefined" ? `${window.location.origin.replace("3000", "8000")}/api/v1/webhooks/whatsapp` : "https://api.radd.ai/api/v1/webhooks/whatsapp"}
+                </code>
+                <button
+                  onClick={() => copyToClipboard("/api/v1/webhooks/whatsapp", "wa")}
+                  className="p-2 hover:bg-muted rounded-lg transition-colors shrink-0"
+                >
+                  {copiedKey === "wa" ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Instagram */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Instagram DM Webhook URL</label>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 text-xs bg-muted px-3 py-2 rounded-lg font-mono text-foreground overflow-x-auto" dir="ltr">
+                  {typeof window !== "undefined" ? `${window.location.origin.replace("3000", "8000")}/api/v1/webhooks/instagram` : "https://api.radd.ai/api/v1/webhooks/instagram"}
+                </code>
+                <button
+                  onClick={() => copyToClipboard("/api/v1/webhooks/instagram", "ig")}
+                  className="p-2 hover:bg-muted rounded-lg transition-colors shrink-0"
+                >
+                  {copiedKey === "ig" ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground">اذهب إلى Meta for Developers → Webhooks → Instagram → أضف هذا الرابط</p>
+            </div>
+
+            {/* Salla */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Salla Webhook URL</label>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 text-xs bg-muted px-3 py-2 rounded-lg font-mono text-foreground overflow-x-auto" dir="ltr">
+                  {typeof window !== "undefined" ? `${window.location.origin.replace("3000", "8000")}/api/v1/webhooks/salla` : "https://api.radd.ai/api/v1/webhooks/salla"}
+                </code>
+                <button
+                  onClick={() => copyToClipboard("/api/v1/webhooks/salla", "salla")}
+                  className="p-2 hover:bg-muted rounded-lg transition-colors shrink-0"
+                >
+                  {copiedKey === "salla" ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Zid */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Zid Webhook URL</label>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 text-xs bg-muted px-3 py-2 rounded-lg font-mono text-foreground overflow-x-auto" dir="ltr">
+                  {typeof window !== "undefined" ? `${window.location.origin.replace("3000", "8000")}/api/v1/webhooks/zid` : "https://api.radd.ai/api/v1/webhooks/zid"}
+                </code>
+                <button
+                  onClick={() => copyToClipboard("/api/v1/webhooks/zid", "zid")}
+                  className="p-2 hover:bg-muted rounded-lg transition-colors shrink-0"
+                >
+                  {copiedKey === "zid" ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground">اذهب إلى لوحة Zid → الإعدادات → Webhooks → أضف هذا الرابط</p>
+            </div>
+
+            <div className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
+              <strong>Verify Token:</strong>{" "}
+              <code className="font-mono" dir="ltr">radd-webhook-verify</code>
+              {" "}— استخدمه في خانة &quot;Verify Token&quot; عند إعداد Meta Webhooks
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Mobile App */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Smartphone className="h-4 w-4 text-indigo-500" />
+              تطبيق رَدّ للجوال
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              تابع محادثاتك وردود العملاء وتنبيهات التصعيد في أي وقت من هاتفك.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col items-center gap-2 p-4 bg-muted/50 rounded-xl border border-border">
+                <div className="text-3xl">🍎</div>
+                <p className="text-sm font-medium">iOS (App Store)</p>
+                <Badge variant="secondary" className="text-xs">قريباً</Badge>
+              </div>
+              <div className="flex flex-col items-center gap-2 p-4 bg-muted/50 rounded-xl border border-border">
+                <div className="text-3xl">🤖</div>
+                <p className="text-sm font-medium">Android (Play Store)</p>
+                <Badge variant="secondary" className="text-xs">قريباً</Badge>
+              </div>
+            </div>
+            <div className="text-xs text-muted-foreground bg-blue-50 text-blue-700 rounded-lg p-3 border border-blue-200">
+              💡 للتطوير والاختبار: نفّذ{" "}
+              <code className="font-mono bg-blue-100 px-1 rounded" dir="ltr">cd apps/mobile && npx expo start</code>
+              {" "}لتشغيل التطبيق محلياً على هاتفك بتطبيق Expo Go.
+            </div>
           </CardContent>
         </Card>
 

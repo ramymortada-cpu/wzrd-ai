@@ -102,8 +102,23 @@ async def process_message(msg_data: dict) -> None:
 
     # ── Voice message: Whisper transcription pipeline ─────────────────────────
     if message_type == "voice" and media_id:
-        await _process_voice_message(workspace_id, sender_phone, external_id, media_id)
-        return
+        # Check if voice transcription is enabled for this workspace
+        voice_enabled = True
+        try:
+            async with get_db_session(workspace_id) as _db:
+                from radd.db.models import Workspace as WsModel
+                _ws = await _db.get(WsModel, workspace_id)
+                if _ws:
+                    _cfg = _ws.settings or {}
+                    voice_enabled = _cfg.get("voice_transcription_enabled", True)
+        except Exception:
+            pass
+
+        if voice_enabled:
+            await _process_voice_message(workspace_id, sender_phone, external_id, media_id)
+            return
+        # If disabled, fall through and process as "[رسالة صوتية]" text
+        text_body = "[رسالة صوتية — التفريغ موقوف]"
 
     # ── Image message: Vision pipeline ────────────────────────────────────────
     if message_type == "image" and media_id:

@@ -14,6 +14,7 @@ from radd.intelligence.router import router as intelligence_router
 from radd.webhooks.router import router as webhooks_router
 from radd.websocket.router import router as ws_router
 from radd.channels.instagram_router import router as instagram_router
+from radd.channels.zid_router import router as zid_router
 from radd.developer.router import router as developer_router
 from radd.config import settings
 from radd.deps import check_db_health, check_qdrant_health, check_redis_health
@@ -75,6 +76,7 @@ app.include_router(admin_router, prefix="/api/v1")
 app.include_router(superadmin_router, prefix="/api/v1")
 app.include_router(intelligence_router, prefix="/api/v1")
 app.include_router(instagram_router, prefix="/api/v1")
+app.include_router(zid_router, prefix="/api/v1")
 app.include_router(developer_router, prefix="/api/v1")
 app.include_router(ws_router)  # WebSocket — no /api/v1 prefix
 

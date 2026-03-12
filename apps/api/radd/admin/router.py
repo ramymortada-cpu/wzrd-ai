@@ -117,6 +117,7 @@ class SettingsUpdate(BaseModel):
     store_name: Optional[str] = None
     escalation_message_gulf: Optional[str] = None
     escalation_message_msa: Optional[str] = None
+    voice_transcription_enabled: Optional[bool] = None
 
 
 @router.get("/settings")
@@ -1087,3 +1088,35 @@ async def setup_instagram_channel(
             db.add(channel)
 
     return {"configured": True, "channel_type": "instagram", "page_id": body.ig_page_id}
+
+
+# ─── V4: Channels Status ──────────────────────────────────────────────────────
+
+@router.get("/channels")
+@limiter.limit(settings.default_rate_limit)
+async def list_channels(
+    request: Request,
+    current: Annotated[CurrentUser, Depends(require_reviewer)],
+):
+    """List all configured channels for this workspace."""
+    from radd.db.models import Channel
+    async with get_db_session(current.workspace_id) as db:
+        result = await db.execute(
+            select(Channel).where(Channel.workspace_id == current.workspace_id)
+        )
+        channels = result.scalars().all()
+
+    return {
+        "channels": [
+            {
+                "id": str(ch.id),
+                "type": ch.type,
+                "name": ch.name,
+                "is_active": ch.is_active,
+                "config": {k: "***" if "token" in k.lower() or "secret" in k.lower() else v
+                           for k, v in (ch.config or {}).items()},
+                "created_at": ch.created_at.isoformat() if ch.created_at else "",
+            }
+            for ch in channels
+        ]
+    }
