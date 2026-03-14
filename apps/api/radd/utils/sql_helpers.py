@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 SQL safety helpers.
 Never interpolate user input into raw SQL — use these validators.

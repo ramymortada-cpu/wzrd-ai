@@ -16,7 +16,6 @@ import signal
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Optional
 
 logger = logging.getLogger("radd.workers.message_worker_v2")
 
@@ -205,7 +204,6 @@ async def process_message(msg_data: dict, workspace_id: str):
     """
     # استيراد الـ pipeline (deferred لتجنب circular imports)
     try:
-        from radd.pipeline.orchestrator import run_pipeline_async
         from radd.pipeline.intent_v2 import classify_intent_llm
 
         # --- Parse ---
@@ -470,8 +468,9 @@ async def main():
         redis_client = get_redis()
     except ImportError:
         # Fallback for standalone testing
-        import redis.asyncio as redis
         import os
+
+        import redis.asyncio as redis
         redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
         redis_client = redis.from_url(redis_url, decode_responses=False)
 

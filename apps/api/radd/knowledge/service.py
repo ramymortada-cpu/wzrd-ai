@@ -1,16 +1,21 @@
 from __future__ import annotations
+
 """
 KB service — document CRUD + approval workflow + chunk management.
 """
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from radd.db.models import KBChunk, KBDocument, ResponseTemplate
-from radd.knowledge.schemas import KBDocumentCreate, KBDocumentUpdate, TemplateCreate, TemplateUpdate
-
+from radd.knowledge.schemas import (
+    KBDocumentCreate,
+    KBDocumentUpdate,
+    TemplateCreate,
+    TemplateUpdate,
+)
 
 # ─── Documents ────────────────────────────────────────────────────────────────
 
@@ -91,7 +96,7 @@ async def update_document(
 
 
 async def soft_delete_document(db: AsyncSession, doc: KBDocument) -> None:
-    doc.deleted_at = datetime.now(timezone.utc)
+    doc.deleted_at = datetime.now(UTC)
     doc.status = "archived"
     # Deactivate all chunks
     await db.execute(
@@ -202,7 +207,6 @@ class KBService:
         content_type: str = "product_info",
         metadata: dict | None = None,
     ) -> KBDocument:
-        from radd.knowledge.schemas import KBDocumentCreate
         user_id = await self._get_system_user_id()
         doc = KBDocument(
             workspace_id=self.workspace_id,
@@ -256,7 +260,7 @@ class KBService:
         return result.scalar_one_or_none()
 
     async def archive_document(self, doc_id: uuid.UUID) -> None:
-        from datetime import datetime, timezone
+        from datetime import datetime
         result = await self.db.execute(
             select(KBDocument).where(
                 KBDocument.id == doc_id,
@@ -265,5 +269,5 @@ class KBService:
         )
         doc = result.scalar_one_or_none()
         if doc:
-            doc.deleted_at = datetime.now(timezone.utc)
+            doc.deleted_at = datetime.now(UTC)
             await self.db.flush()

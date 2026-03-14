@@ -1,9 +1,10 @@
 from __future__ import annotations
+
 """
 V4 Admin Sub-Router — Intelligence, Integrations, Channels.
 Extracted from admin/router.py to keep it below 500 lines.
 """
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
@@ -56,8 +57,8 @@ async def get_upcoming_seasons(
     days_ahead: int = Query(60, ge=7, le=180),
 ):
     """Upcoming seasons/holidays with KB preparation recommendations."""
-    from radd.intelligence.seasonal_prep import get_upcoming_seasons as _get_seasons
     from radd.db.models import Workspace as WsModel
+    from radd.intelligence.seasonal_prep import get_upcoming_seasons as _get_seasons
 
     async with get_db_session(current.workspace_id) as db:
         ws_result = await db.execute(
@@ -132,8 +133,8 @@ async def trigger_zid_sync(
     current: Annotated[CurrentUser, Depends(require_admin)],
 ):
     """Sync products and policies from Zid store to KB."""
-    from radd.onboarding.zid_sync import sync_zid_store
     from radd.knowledge.service import KBService
+    from radd.onboarding.zid_sync import sync_zid_store
 
     async with get_db_session(current.workspace_id) as db:
         kb = KBService(db=db, workspace_id=current.workspace_id)
@@ -200,27 +201,45 @@ async def list_channels(
     request: Request,
     current: Annotated[CurrentUser, Depends(require_reviewer)],
 ):
-    """List all configured channels for this workspace (tokens masked)."""
-    from radd.db.models import Channel
+    """List all configured channels for this workspace (tokens masked). Includes platform status from settings."""
+    from radd.db.models import Channel, Workspace
     async with get_db_session(current.workspace_id) as db:
         result = await db.execute(
             select(Channel).where(Channel.workspace_id == current.workspace_id)
         )
         channels = result.scalars().all()
+        ws_result = await db.execute(
+            select(Workspace).where(Workspace.id == current.workspace_id)
+        )
+        ws = ws_result.scalar_one_or_none()
+    ws_settings = (ws.settings or {}) if ws else {}
 
-    return {
-        "channels": [
-            {
-                "id": str(ch.id),
-                "type": ch.type,
-                "name": ch.name,
-                "is_active": ch.is_active,
-                "config": {
-                    k: "***" if "token" in k.lower() or "secret" in k.lower() else v
-                    for k, v in (ch.config or {}).items()
-                },
-                "created_at": ch.created_at.isoformat() if ch.created_at else "",
-            }
-            for ch in channels
-        ]
-    }
+    items = [
+        {
+            "id": str(ch.id),
+            "type": ch.type,
+            "name": ch.name,
+            "is_active": ch.is_active,
+            "config": {
+                k: "***" if "token" in k.lower() or "secret" in k.lower() else v
+                for k, v in (ch.config or {}).items()
+            },
+            "created_at": ch.created_at.isoformat() if ch.created_at else "",
+        }
+        for ch in channels
+    ]
+
+    # Add Shopify as virtual channel if configured in workspace settings
+    platform = (ws_settings.get("platform") or "salla").lower()
+    if platform == "shopify" and ws_settings.get("shopify_domain") and ws_settings.get("shopify_access_token"):
+        if not any(c["type"] == "shopify" for c in items):
+            items.append({
+                "id": "shopify-settings",
+                "type": "shopify",
+                "name": "Shopify",
+                "is_active": True,
+                "config": {"domain": ws_settings.get("shopify_domain", "")},
+                "created_at": "",
+            })
+
+    return {"channels": items}

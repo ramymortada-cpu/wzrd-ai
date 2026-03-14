@@ -1,15 +1,16 @@
 from __future__ import annotations
+
 """Instagram DM Webhook Router."""
 import hashlib
 import hmac
 import json
 
+import structlog
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, Response, status
-from radd.limiter import limiter
+
 from radd.config import settings
 from radd.deps import get_redis
-
-import structlog
+from radd.limiter import limiter
 
 logger = structlog.get_logger()
 router = APIRouter(prefix="/webhooks/instagram", tags=["instagram"])

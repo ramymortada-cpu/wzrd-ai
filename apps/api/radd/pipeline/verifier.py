@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 NLI verifier — checks if generated response is entailed by source passages.
 Uses joeddav/xlm-roberta-large-xnli (cross-lingual NLI).

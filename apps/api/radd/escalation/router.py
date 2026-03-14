@@ -1,13 +1,13 @@
 from __future__ import annotations
+
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
-from radd.limiter import limiter
-from radd.config import settings
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import func, select
 
 from radd.auth.middleware import CurrentUser, require_agent
+from radd.config import settings
 from radd.db.models import EscalationEvent
 from radd.db.session import get_db_session
 from radd.escalation import service
@@ -16,6 +16,7 @@ from radd.escalation.schemas import (
     EscalationResolve,
     EscalationResponse,
 )
+from radd.limiter import limiter
 
 router = APIRouter(prefix="/escalations", tags=["escalations"])
 
@@ -139,9 +140,11 @@ async def resolve_escalation(
 
     # Optionally send final message to customer
     if body.send_message:
-        from radd.db.session import get_db_session as _session
         from sqlalchemy import select as _select
-        from radd.db.models import Conversation as Conv, Channel
+
+        from radd.db.models import Channel
+        from radd.db.models import Conversation as Conv
+        from radd.db.session import get_db_session as _session
         async with _session(current.workspace_id) as db2:
             conv_res = await db2.execute(_select(Conv).where(Conv.id == event.conversation_id))
             conv = conv_res.scalar_one_or_none()
@@ -153,7 +156,6 @@ async def resolve_escalation(
                     cust_res = await db2.execute(_select(Cust).where(Cust.id == conv.customer_id))
                     customer = cust_res.scalar_one_or_none()
                     if customer:
-                        import hashlib
                         # Decode phone (stored as hash — can't reverse; use channel config)
                         # In production: store encrypted phone. For MVP: skip auto-send.
                         pass

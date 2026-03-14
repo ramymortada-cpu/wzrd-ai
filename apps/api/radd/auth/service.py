@@ -1,7 +1,8 @@
 from __future__ import annotations
+
 import hashlib
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import bcrypt
 from jose import JWTError, jwt
@@ -50,7 +51,7 @@ def create_access_token(
     role: str,
     is_superadmin: bool = False,
 ) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(
+    expire = datetime.now(UTC) + timedelta(
         minutes=settings.jwt_access_token_expire_minutes
     )
     payload = {
@@ -65,7 +66,7 @@ def create_access_token(
 
 
 def create_refresh_token(user_id: uuid.UUID, workspace_id: uuid.UUID) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(days=settings.jwt_refresh_token_expire_days)
+    expire = datetime.now(UTC) + timedelta(days=settings.jwt_refresh_token_expire_days)
     payload = {
         "sub": str(user_id),
         "workspace_id": str(workspace_id),

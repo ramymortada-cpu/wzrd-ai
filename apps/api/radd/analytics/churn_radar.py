@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 RADD AI — Churn Radar v1
 Detects customers at risk of churning:
@@ -7,8 +8,9 @@ Detects customers at risk of churning:
 3. Customers with multiple recent escalations
 """
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from enum import Enum
+
 import structlog
 
 logger = structlog.get_logger()
@@ -42,8 +44,8 @@ async def scan_for_churn_risk(
     Scan all customers for churn risk signals.
     Returns list of ChurnAlert ordered by risk level.
     """
-    from sqlalchemy import select, text
-    import uuid
+
+    from sqlalchemy import text
 
     alerts = []
 
@@ -71,12 +73,12 @@ async def scan_for_churn_risk(
         )
         rows = result.fetchall()
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         for row in rows:
             last_seen = row.last_seen_at
             if last_seen and last_seen.tzinfo is None:
-                last_seen = last_seen.replace(tzinfo=timezone.utc)
+                last_seen = last_seen.replace(tzinfo=UTC)
 
             days_inactive = (now - last_seen).days if last_seen else 999
             tier = row.customer_tier or "new"
@@ -151,10 +153,12 @@ async def schedule_winback_for_at_risk(
     Called by the scheduler worker after each churn scan.
     Returns the number of win-backs scheduled.
     """
-    from radd.db.models import FollowUpQueue, Customer
-    from sqlalchemy import select
     import uuid
-    from datetime import datetime, timezone, timedelta
+    from datetime import datetime
+
+    from sqlalchemy import select
+
+    from radd.db.models import Customer, FollowUpQueue
 
     WIN_BACK_TEMPLATES = {
         "gulf": "وحشتنا! مدة ما شفناك. عندنا وصلات جديدة تناسبك 🌟 تشرّف زيارتنا؟",
@@ -206,7 +210,7 @@ async def schedule_winback_for_at_risk(
                 workspace_id=uuid.UUID(workspace_id),
                 conversation_id=conversation.id,
                 customer_id=customer.id,
-                scheduled_at=datetime.now(timezone.utc) + timedelta(hours=1),
+                scheduled_at=datetime.now(UTC) + timedelta(hours=1),
                 message_template=template,
                 status="pending",
             )

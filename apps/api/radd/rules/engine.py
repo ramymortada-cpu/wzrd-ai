@@ -9,9 +9,7 @@ RADD AI — Smart Rules Engine
 - "لما عميل يسأل عن منتج → استخدم Sales Persona"
 """
 from dataclasses import dataclass
-from typing import Optional
 from enum import Enum
-from datetime import datetime
 
 
 class TriggerType(Enum):
@@ -49,9 +47,9 @@ class SmartRule:
 @dataclass
 class RuleMatchResult:
     matched: bool
-    rule: Optional[SmartRule] = None
-    action_type: Optional[ActionType] = None
-    action_value: Optional[str] = None
+    rule: SmartRule | None = None
+    action_type: ActionType | None = None
+    action_value: str | None = None
 
 
 # ──────────────────────────────────────────────

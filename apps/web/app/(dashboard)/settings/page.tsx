@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import {
   Save, UserPlus, Eye, EyeOff, RefreshCw, Layers,
   Instagram, Code, Mic, MicOff, Smartphone, Copy, Check,
-  Webhook, Globe,
+  Webhook, Globe, Store, ShoppingBag,
 } from "lucide-react";
 import TopBar from "@/components/layout/topbar";
 import { Button } from "@/components/ui/button";
@@ -62,6 +62,22 @@ export default function SettingsPage() {
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [voiceLoading, setVoiceLoading] = useState(false);
 
+  // Pipeline v2
+  const [useIntentV2, setUseIntentV2] = useState(false);
+  const [useVerifierV2, setUseVerifierV2] = useState(false);
+  const [pipelineV2Loading, setPipelineV2Loading] = useState(false);
+
+  // Store name
+  const [storeName, setStoreName] = useState("متجرنا");
+
+  // E-commerce Platform (Salla / Shopify)
+  const [platform, setPlatform] = useState<"salla" | "shopify">("salla");
+  const [sallaStoreId, setSallaStoreId] = useState("");
+  const [sallaAccessToken, setSallaAccessToken] = useState("");
+  const [shopifyDomain, setShopifyDomain] = useState("");
+  const [shopifyAccessToken, setShopifyAccessToken] = useState("");
+  const [platformSaving, setPlatformSaving] = useState(false);
+
   // Webhook URLs / copy state
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
@@ -91,6 +107,19 @@ export default function SettingsPage() {
           setAutoThreshold(String(wsSettings.confidence_auto_threshold));
         if (wsSettings.confidence_soft_escalation_threshold)
           setSoftThreshold(String(wsSettings.confidence_soft_escalation_threshold));
+        if (typeof wsSettings.use_intent_v2 === "boolean")
+          setUseIntentV2(wsSettings.use_intent_v2);
+        if (typeof wsSettings.use_verifier_v2 === "boolean")
+          setUseVerifierV2(wsSettings.use_verifier_v2);
+        if (typeof wsSettings.voice_transcription_enabled === "boolean")
+          setVoiceEnabled(wsSettings.voice_transcription_enabled);
+        const p = String(wsSettings.platform || "salla").toLowerCase();
+        if (p === "shopify" || p === "salla") setPlatform(p as "salla" | "shopify");
+        if (wsSettings.salla_store_id) setSallaStoreId(String(wsSettings.salla_store_id));
+        if (wsSettings.salla_access_token) setSallaAccessToken(String(wsSettings.salla_access_token));
+        if (wsSettings.shopify_domain) setShopifyDomain(String(wsSettings.shopify_domain));
+        if (wsSettings.shopify_access_token) setShopifyAccessToken(String(wsSettings.shopify_access_token));
+        if (wsSettings.store_name) setStoreName(String(wsSettings.store_name));
       })
       .catch(() => setError("تعذّر تحميل الإعدادات"))
       .finally(() => setLoading(false));
@@ -171,6 +200,54 @@ export default function SettingsPage() {
       setError("تعذّر تحديث إعداد الصوت");
     } finally {
       setVoiceLoading(false);
+    }
+  }
+
+  async function handleIntentV2Toggle() {
+    setPipelineV2Loading(true);
+    try {
+      await updateSettings({ use_intent_v2: !useIntentV2 });
+      setUseIntentV2(!useIntentV2);
+      setSuccess(!useIntentV2 ? "تم تفعيل مصنف النوايا v2 (LLM)" : "تم إيقاف مصنف النوايا v2");
+    } catch {
+      setError("تعذّر تحديث إعداد Pipeline v2");
+    } finally {
+      setPipelineV2Loading(false);
+    }
+  }
+
+  async function handleVerifierV2Toggle() {
+    setPipelineV2Loading(true);
+    try {
+      await updateSettings({ use_verifier_v2: !useVerifierV2 });
+      setUseVerifierV2(!useVerifierV2);
+      setSuccess(!useVerifierV2 ? "تم تفعيل نظام التحقق v2 (NLI)" : "تم إيقاف نظام التحقق v2");
+    } catch {
+      setError("تعذّر تحديث إعداد Pipeline v2");
+    } finally {
+      setPipelineV2Loading(false);
+    }
+  }
+
+  async function handleSavePlatform() {
+    setPlatformSaving(true);
+    setError("");
+    setSuccess("");
+    try {
+      const payload: Record<string, unknown> = { platform, store_name: storeName || "متجرنا" };
+      if (platform === "salla") {
+        if (sallaStoreId) payload.salla_store_id = sallaStoreId;
+        if (sallaAccessToken) payload.salla_access_token = sallaAccessToken;
+      } else {
+        if (shopifyDomain) payload.shopify_domain = shopifyDomain;
+        if (shopifyAccessToken) payload.shopify_access_token = shopifyAccessToken;
+      }
+      await updateSettings(payload);
+      setSuccess("تم حفظ إعدادات المتجر بنجاح");
+    } catch {
+      setError("تعذّر حفظ إعدادات المتجر");
+    } finally {
+      setPlatformSaving(false);
     }
   }
 
@@ -257,6 +334,113 @@ export default function SettingsPage() {
           </Card>
         )}
 
+        {/* E-commerce Platform — Salla / Shopify */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Store className="h-4 w-4 text-primary" />
+              ربط المتجر — منصة التجارة الإلكترونية
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">اسم المتجر (يظهر في الردود)</label>
+              <Input
+                placeholder="متجرنا"
+                value={storeName}
+                onChange={(e) => setStoreName(e.target.value)}
+              />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              اختر المنصة المستخدمة لمتجرك. رَدّ سيستعلم عن حالة الطلبات تلقائياً عند سؤال العميل.
+            </p>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">المنصة</label>
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => setPlatform("salla")}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-colors ${
+                    platform === "salla" ? "border-primary bg-primary/5 text-primary" : "border-border hover:bg-muted/50"
+                  }`}
+                >
+                  <ShoppingBag className="h-4 w-4" />
+                  Salla — سلة
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPlatform("shopify")}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-colors ${
+                    platform === "shopify" ? "border-primary bg-primary/5 text-primary" : "border-border hover:bg-muted/50"
+                  }`}
+                >
+                  <Globe className="h-4 w-4" />
+                  Shopify
+                </button>
+              </div>
+            </div>
+
+            {platform === "salla" && (
+              <div className="space-y-3 pt-2 border-t">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">معرّف المتجر (اختياري)</label>
+                  <Input
+                    dir="ltr"
+                    placeholder="Store ID"
+                    value={sallaStoreId}
+                    onChange={(e) => setSallaStoreId(e.target.value)}
+                    className="font-mono text-sm"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">Salla Access Token</label>
+                  <Input
+                    type="password"
+                    dir="ltr"
+                    placeholder="Bearer token من لوحة Salla"
+                    value={sallaAccessToken}
+                    onChange={(e) => setSallaAccessToken(e.target.value)}
+                    className="font-mono text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">يُستخدم لاستعلام حالة الطلبات والشحن</p>
+                </div>
+              </div>
+            )}
+
+            {platform === "shopify" && (
+              <div className="space-y-3 pt-2 border-t">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">Shopify Domain</label>
+                  <Input
+                    dir="ltr"
+                    placeholder="mystore.myshopify.com"
+                    value={shopifyDomain}
+                    onChange={(e) => setShopifyDomain(e.target.value)}
+                    className="font-mono text-sm"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">Shopify Admin API Access Token</label>
+                  <Input
+                    type="password"
+                    dir="ltr"
+                    placeholder="shpat_xxxx..."
+                    value={shopifyAccessToken}
+                    onChange={(e) => setShopifyAccessToken(e.target.value)}
+                    className="font-mono text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">Private App مع صلاحية read_orders</p>
+                </div>
+              </div>
+            )}
+
+            <Button onClick={handleSavePlatform} disabled={platformSaving}>
+              <Save className="h-4 w-4 me-2" />
+              {platformSaving ? "جارٍ الحفظ..." : "حفظ إعدادات المتجر"}
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* Confidence thresholds */}
         <Card>
           <CardHeader>
@@ -302,6 +486,51 @@ export default function SettingsPage() {
               <Save className="h-4 w-4 me-2" />
               {saving ? "جارٍ الحفظ..." : "حفظ الإعدادات"}
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* Pipeline v2 — Intent & Verifier */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Code className="h-4 w-4 text-primary" />
+              Pipeline v2 — مصنف النوايا والتحقق
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              تفعيل الإصدارات المحسّنة من مصنف النوايا (LLM) ونظام التحقق (NLI) لتحسين دقة الردود.
+            </p>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                <div>
+                  <p className="text-sm font-medium">مصنف النوايا v2 (LLM)</p>
+                  <p className="text-xs text-muted-foreground">استخدام نموذج لغوي كبير لتصنيف النوايا بدقة أعلى</p>
+                </div>
+                <Button
+                  variant={useIntentV2 ? "default" : "outline"}
+                  size="sm"
+                  onClick={handleIntentV2Toggle}
+                  disabled={pipelineV2Loading}
+                >
+                  {useIntentV2 ? "مفعّل" : "إيقاف"}
+                </Button>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                <div>
+                  <p className="text-sm font-medium">نظام التحقق v2 (NLI)</p>
+                  <p className="text-xs text-muted-foreground">التحقق من صحة الردود باستخدام Natural Language Inference</p>
+                </div>
+                <Button
+                  variant={useVerifierV2 ? "default" : "outline"}
+                  size="sm"
+                  onClick={handleVerifierV2Toggle}
+                  disabled={pipelineV2Loading}
+                >
+                  {useVerifierV2 ? "مفعّل" : "إيقاف"}
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
 

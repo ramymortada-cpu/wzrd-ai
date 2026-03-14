@@ -103,7 +103,7 @@ export default function SuperAdminOverview() {
         {/* Refresh bar */}
         <div className="flex items-center justify-between">
           <p className="text-xs text-slate-500">
-            آخر تحديث: {lastRefresh.toLocaleTimeString("ar-SA")}
+            آخر تحديث: {lastRefresh?.toLocaleTimeString("ar-SA") ?? "—"}
           </p>
           <button
             onClick={load}

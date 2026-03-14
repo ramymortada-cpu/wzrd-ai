@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
@@ -19,7 +19,7 @@ router = APIRouter(tags=["admin-rules"])
 
 class SmartRuleCreate(BaseModel):
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     is_active: bool = True
     priority: int = 0
     triggers: list[dict] = []

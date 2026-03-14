@@ -21,9 +21,10 @@ const CHANNEL_META: Record<string, { icon: string; label: string; color: string;
   instagram: { icon: "📸", label: "Instagram DM", color: "text-pink-600", setupPath: "/settings" },
   zid: { icon: "🛒", label: "Zid — زد", color: "text-blue-600", setupPath: "/settings" },
   salla: { icon: "🏪", label: "Salla — سلة", color: "text-orange-600", setupPath: "/settings" },
+  shopify: { icon: "🛍️", label: "Shopify", color: "text-emerald-600", setupPath: "/settings" },
 };
 
-const ALL_CHANNELS = ["whatsapp", "instagram", "salla", "zid"];
+const ALL_CHANNELS = ["whatsapp", "instagram", "salla", "shopify", "zid"];
 
 export default function ChannelsPage() {
   const { data, isLoading } = useQuery({ queryKey: ["channels"], queryFn: getChannels });

@@ -1,12 +1,12 @@
 from __future__ import annotations
+
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status, Request
-from radd.limiter import limiter
-from radd.config import settings
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, status
 
 from radd.auth.middleware import CurrentUser, require_admin, require_agent, require_reviewer
+from radd.config import settings
 from radd.db.session import get_db_session
 from radd.knowledge import service
 from radd.knowledge.schemas import (
@@ -15,11 +15,11 @@ from radd.knowledge.schemas import (
     KBDocumentList,
     KBDocumentResponse,
     KBDocumentUpdate,
-    KBChunkResponse,
     TemplateCreate,
     TemplateResponse,
     TemplateUpdate,
 )
+from radd.limiter import limiter
 
 router = APIRouter(prefix="/kb", tags=["knowledge"])
 
@@ -175,6 +175,7 @@ async def update_template(
     current: Annotated[CurrentUser, Depends(require_admin)],
 ):
     from sqlalchemy import select
+
     from radd.db.models import ResponseTemplate
     async with get_db_session(current.workspace_id) as db:
         result = await db.execute(

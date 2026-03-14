@@ -10,7 +10,6 @@ If not, it will create a new user with the owner role and superadmin flag.
 """
 import asyncio
 import sys
-import uuid
 from getpass import getpass
 
 sys.path.insert(0, ".")
@@ -73,10 +72,10 @@ async def main() -> None:
             )
             db.add(user)
             await db.flush()
-            print(f"\n✅ Superadmin user created:")
+            print("\n✅ Superadmin user created:")
             print(f"   Workspace: {workspace_slug}")
             print(f"   Email:     {email}")
-            print(f"   Role:      owner + superadmin")
+            print("   Role:      owner + superadmin")
             print(f"\nLogin at /login with workspace='{workspace_slug}' then visit /superadmin")
 
 

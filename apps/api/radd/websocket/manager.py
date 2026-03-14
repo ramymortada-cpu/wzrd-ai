@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 WebSocket connection manager.
 Tracks per-workspace agent connections.
@@ -6,7 +7,7 @@ Broadcasts escalation events, conversation updates, system alerts.
 """
 import json
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Literal
 
 import structlog
@@ -23,7 +24,7 @@ class AgentConnection:
         self.user_id = user_id
         self.workspace_id = workspace_id
         self.presence: PresenceStatus = "online"
-        self.connected_at = datetime.now(timezone.utc)
+        self.connected_at = datetime.now(UTC)
 
     async def send(self, data: dict) -> bool:
         """Send JSON message. Returns False if connection is broken."""

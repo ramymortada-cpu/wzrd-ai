@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 Embedding generator using OpenAI text-embedding-3-small.
 Batch embeds chunks and upserts into Qdrant per-workspace collection.
@@ -99,7 +100,7 @@ async def delete_document_chunks(
     document_id: uuid.UUID,
 ) -> None:
     """Remove all Qdrant points for a given document."""
-    from qdrant_client.models import Filter, FieldCondition, MatchValue
+    from qdrant_client.models import FieldCondition, Filter, MatchValue
     cname = collection_name(workspace_id)
     await qdrant.delete(
         collection_name=cname,

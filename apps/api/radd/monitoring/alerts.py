@@ -12,7 +12,6 @@ import logging
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
 
 logger = logging.getLogger("radd.monitoring")
 
@@ -41,7 +40,7 @@ class Alert:
     alert_type: AlertType
     severity: AlertSeverity
     message: str
-    workspace_id: Optional[str] = None
+    workspace_id: str | None = None
     metadata: dict = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
 

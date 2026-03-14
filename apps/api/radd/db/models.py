@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import uuid
 from datetime import datetime
 
@@ -44,8 +45,8 @@ class Workspace(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-    users: Mapped[list["User"]] = relationship("User", back_populates="workspace")
-    channels: Mapped[list["Channel"]] = relationship("Channel", back_populates="workspace")
+    users: Mapped[list[User]] = relationship("User", back_populates="workspace")
+    channels: Mapped[list[Channel]] = relationship("Channel", back_populates="workspace")
 
 
 class User(Base):
@@ -68,7 +69,7 @@ class User(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-    workspace: Mapped["Workspace"] = relationship("Workspace", back_populates="users")
+    workspace: Mapped[Workspace] = relationship("Workspace", back_populates="users")
 
 
 class Customer(Base):
@@ -99,7 +100,7 @@ class Customer(Base):
     )
     created_at: Mapped[datetime] = now_utc()
 
-    conversations: Mapped[list["Conversation"]] = relationship(
+    conversations: Mapped[list[Conversation]] = relationship(
         "Conversation", back_populates="customer"
     )
 
@@ -120,8 +121,8 @@ class Channel(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-    workspace: Mapped["Workspace"] = relationship("Workspace", back_populates="channels")
-    conversations: Mapped[list["Conversation"]] = relationship(
+    workspace: Mapped[Workspace] = relationship("Workspace", back_populates="channels")
+    conversations: Mapped[list[Conversation]] = relationship(
         "Conversation", back_populates="channel"
     )
 
@@ -162,9 +163,9 @@ class Conversation(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-    customer: Mapped["Customer"] = relationship("Customer", back_populates="conversations")
-    channel: Mapped["Channel"] = relationship("Channel", back_populates="conversations")
-    messages: Mapped[list["Message"]] = relationship("Message", back_populates="conversation")
+    customer: Mapped[Customer] = relationship("Customer", back_populates="conversations")
+    channel: Mapped[Channel] = relationship("Channel", back_populates="conversations")
+    messages: Mapped[list[Message]] = relationship("Message", back_populates="conversation")
 
 
 class Message(Base):
@@ -188,7 +189,7 @@ class Message(Base):
     metadata_: Mapped[dict] = mapped_column("metadata", JSONB, server_default="{}")
     created_at: Mapped[datetime] = now_utc()
 
-    conversation: Mapped["Conversation"] = relationship("Conversation", back_populates="messages")
+    conversation: Mapped[Conversation] = relationship("Conversation", back_populates="messages")
 
 
 class KBDocument(Base):
@@ -220,7 +221,7 @@ class KBDocument(Base):
     )
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    chunks: Mapped[list["KBChunk"]] = relationship("KBChunk", back_populates="document")
+    chunks: Mapped[list[KBChunk]] = relationship("KBChunk", back_populates="document")
 
 
 class KBChunk(Base):
@@ -241,7 +242,7 @@ class KBChunk(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true")
     created_at: Mapped[datetime] = now_utc()
 
-    document: Mapped["KBDocument"] = relationship("KBDocument", back_populates="chunks")
+    document: Mapped[KBDocument] = relationship("KBDocument", back_populates="chunks")
 
 
 class ResponseTemplate(Base):

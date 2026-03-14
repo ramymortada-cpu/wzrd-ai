@@ -1,13 +1,11 @@
 from __future__ import annotations
-from datetime import datetime
+
+from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials
-from radd.limiter import limiter
-from radd.config import settings
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from radd.auth.middleware import CurrentUser, bearer_scheme, get_current_user
 from radd.auth.schemas import LoginRequest, RefreshRequest, TokenResponse, UserResponse
@@ -19,8 +17,10 @@ from radd.auth.service import (
     decode_token,
     is_token_blacklisted,
 )
+from radd.config import settings
 from radd.db.models import User, Workspace
 from radd.db.session import get_db_session
+from radd.limiter import limiter
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -76,9 +76,8 @@ async def refresh(request: Request, body: RefreshRequest):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 
     # Rotate: blacklist old refresh token, issue new pair
-    from datetime import timezone
     old_exp = payload.get("exp", 0)
-    remaining_seconds = max(0, int(old_exp - datetime.now(timezone.utc).timestamp()))
+    remaining_seconds = max(0, int(old_exp - datetime.now(UTC).timestamp()))
     if remaining_seconds > 0:
         await blacklist_token(body.refresh_token, remaining_seconds)
 
@@ -100,14 +99,13 @@ async def logout(
     Logout: blacklist both the current access token and the provided refresh token.
     Client sends: Authorization: Bearer <access_token>, body: { refresh_token }.
     """
-    from datetime import timezone
 
     # Blacklist access token — invalidates session immediately
     access_token = credentials.credentials
     try:
         payload = decode_token(access_token)
         exp = payload.get("exp", 0)
-        remaining = max(0, int(exp - datetime.now(timezone.utc).timestamp()))
+        remaining = max(0, int(exp - datetime.now(UTC).timestamp()))
         if remaining > 0:
             await blacklist_token(access_token, remaining)
     except ValueError:
@@ -117,7 +115,7 @@ async def logout(
     try:
         payload = decode_token(body.refresh_token)
         old_exp = payload.get("exp", 0)
-        remaining = max(0, int(old_exp - datetime.now(timezone.utc).timestamp()))
+        remaining = max(0, int(old_exp - datetime.now(UTC).timestamp()))
         if remaining > 0:
             await blacklist_token(body.refresh_token, remaining)
     except ValueError:

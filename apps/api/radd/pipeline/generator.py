@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 RAG generator — GPT-4.1-mini with grounded Arabic generation.
 Injects source passages + conversation history into prompt.

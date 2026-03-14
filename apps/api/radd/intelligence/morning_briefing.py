@@ -1,7 +1,6 @@
 """RADD AI — Morning Briefing Engine"""
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Optional
 
 INTENT_AR = {
     "greeting": "تحية", "order_status": "حالة الطلب", "shipping": "الشحن",
@@ -30,7 +29,7 @@ class Briefing:
     carts_recovered_sar: float = 0.0
 
 
-async def generate_briefing(db_session, wid: str, name: str) -> Optional[Briefing]:
+async def generate_briefing(db_session, wid: str, name: str) -> Briefing | None:
     from sqlalchemy import text
 
     ys = datetime.utcnow().replace(hour=0, minute=0, second=0) - timedelta(days=1)
@@ -134,7 +133,7 @@ def format_briefing(b: Briefing) -> str:
 
     # Revenue section (shown only if there's data)
     if b.revenue_event_count > 0 or b.revenue_attributed_sar > 0:
-        msg += f"\n\n💰 أثر رَدّ أمس على إيراداتك:"
+        msg += "\n\n💰 أثر رَدّ أمس على إيراداتك:"
         if b.revenue_attributed_sar > 0:
             msg += f"\n   مبيعات مُنسبة: ر.س {b.revenue_attributed_sar:,.0f}"
         if b.returns_prevented_sar > 0:
@@ -143,7 +142,7 @@ def format_briefing(b: Briefing) -> str:
             msg += f"\n   سلات مُسترجعة: ر.س {b.carts_recovered_sar:,.0f}"
         total_val = b.revenue_attributed_sar + b.returns_prevented_sar + b.carts_recovered_sar
         if total_val > 0:
-            msg += f"\n   ─────────────────────"
+            msg += "\n   ─────────────────────"
             msg += f"\n   إجمالي القيمة: ر.س {total_val:,.0f}"
 
     if b.gaps > 0:
@@ -154,7 +153,7 @@ def format_briefing(b: Briefing) -> str:
     return msg + "\n\n— رَدّ"
 
 
-async def generate_morning_briefing(db_session, workspace_id: str, workspace_name: str) -> Optional[str]:
+async def generate_morning_briefing(db_session, workspace_id: str, workspace_name: str) -> str | None:
     """Convenience wrapper used by scheduler — returns formatted string or None."""
     briefing = await generate_briefing(db_session, workspace_id, workspace_name)
     if not briefing:

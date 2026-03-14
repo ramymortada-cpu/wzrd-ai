@@ -1,15 +1,14 @@
 from __future__ import annotations
+
 """
 RADD AI — Instagram DM Support
 Handles Instagram Direct Messages via Meta Webhooks.
 Instagram uses the same Meta platform API as WhatsApp but different endpoints.
 """
-import hashlib
-import hmac
-import json
 import uuid
-import structlog
+
 import httpx
+import structlog
 
 logger = structlog.get_logger()
 
@@ -139,6 +138,7 @@ async def resolve_workspace_by_page_id(
 ) -> uuid.UUID | None:
     """Find workspace by Instagram Page ID in channel config."""
     from sqlalchemy import select
+
     from radd.db.models import Channel
 
     result = await db_session.execute(

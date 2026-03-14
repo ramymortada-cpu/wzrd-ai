@@ -1,12 +1,13 @@
 from __future__ import annotations
+
 """
 RADD AI — Seasonal Auto-Prep
 Detects upcoming seasons/holidays and prepares KB suggestions.
 "رمضان بعد 3 أسابيع. توقع 3x محادثات. أضف هذه الأسئلة للـ KB."
 """
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta
-from typing import Optional
+from datetime import date
+
 import structlog
 
 logger = structlog.get_logger()
@@ -232,6 +233,7 @@ async def generate_seasonal_kb_content(
     Uses GPT to create Arabic Q&A pairs for the season.
     """
     from openai import AsyncOpenAI
+
     from radd.config import settings
 
     client = AsyncOpenAI(api_key=settings.openai_api_key)

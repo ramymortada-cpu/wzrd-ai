@@ -18,6 +18,7 @@ import {
   Sparkles,
   Code,
   Radio,
+  UserMinus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logout } from "@/lib/api";
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
   { href: "/analytics", label: "تحليلات الأداء", icon: BarChart2 },
   { href: "/revenue", label: "العائد المالي", icon: TrendingUp },
   { href: "/radar", label: "الرادار التشغيلي", icon: Radar },
+  { href: "/churn", label: "رادار التسرب", icon: UserMinus },
   { href: "/rules", label: "قواعد ذكية", icon: Sliders },
   { href: "/knowledge", label: "قاعدة المعرفة", icon: BookOpen },
   { href: "/escalations", label: "التصعيدات", icon: AlertTriangle },

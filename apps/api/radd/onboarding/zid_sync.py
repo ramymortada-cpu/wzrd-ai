@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 RADD AI — Zid Full Integration
 Full integration with Zid e-commerce platform (زد).
@@ -7,9 +8,8 @@ Same depth as Salla Auto-Sync:
 - Store policies → KB documents
 - Orders webhook → Revenue attribution
 """
-import uuid
-import structlog
 import httpx
+import structlog
 
 logger = structlog.get_logger()
 
@@ -223,9 +223,11 @@ async def handle_zid_order_webhook(
     if event_type not in ("order.paid", "order.delivered"):
         return
 
-    from radd.db.models import RevenueEvent
-    from sqlalchemy import text
     import uuid as uuid_mod
+
+    from sqlalchemy import text
+
+    from radd.db.models import RevenueEvent
 
     order_id = str(order_data.get("id", ""))
     total = float(order_data.get("total", 0))

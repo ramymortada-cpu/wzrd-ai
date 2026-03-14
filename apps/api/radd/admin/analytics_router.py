@@ -5,7 +5,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Request
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 
 from radd.admin.analytics import get_kpis
 from radd.auth.middleware import CurrentUser, require_admin, require_reviewer
@@ -222,7 +222,11 @@ async def get_churn_radar(
     auto_winback: bool = Query(False),
 ):
     """Detect customers at churn risk. Optionally schedule win-back messages."""
-    from radd.analytics.churn_radar import scan_for_churn_risk, get_churn_summary, schedule_winback_for_at_risk
+    from radd.analytics.churn_radar import (
+        get_churn_summary,
+        scan_for_churn_risk,
+        schedule_winback_for_at_risk,
+    )
     async with get_db_session(current.workspace_id) as db:
         alerts = await scan_for_churn_risk(db, str(current.workspace_id), inactive_days)
         winback_scheduled = 0

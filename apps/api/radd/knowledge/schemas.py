@@ -1,10 +1,10 @@
 from __future__ import annotations
+
 import uuid
 from datetime import datetime
-from typing import Optional, Literal
+from typing import Literal
 
 from pydantic import BaseModel, Field
-
 
 # ─── KB Documents ─────────────────────────────────────────────────────────────
 
@@ -20,10 +20,10 @@ class KBDocumentCreate(BaseModel):
 
 
 class KBDocumentUpdate(BaseModel):
-    title: Optional[str] = Field(None, max_length=500)
-    content: Optional[str] = None
-    content_type: Optional[ContentType] = None
-    status: Optional[DocumentStatus] = None
+    title: str | None = Field(None, max_length=500)
+    content: str | None = None
+    content_type: ContentType | None = None
+    status: DocumentStatus | None = None
 
 
 class KBDocumentResponse(BaseModel):
@@ -35,7 +35,7 @@ class KBDocumentResponse(BaseModel):
     language: str
     version: int
     uploaded_by_user_id: uuid.UUID
-    approved_by_user_id: Optional[uuid.UUID]
+    approved_by_user_id: uuid.UUID | None
     created_at: datetime
     updated_at: datetime
 
@@ -61,7 +61,7 @@ class KBChunkResponse(BaseModel):
     document_id: uuid.UUID
     content: str
     chunk_index: int
-    token_count: Optional[int]
+    token_count: int | None
     is_active: bool
 
     model_config = {"from_attributes": True}
@@ -77,8 +77,8 @@ class TemplateCreate(BaseModel):
 
 
 class TemplateUpdate(BaseModel):
-    content: Optional[str] = None
-    is_active: Optional[bool] = None
+    content: str | None = None
+    is_active: bool | None = None
 
 
 class TemplateResponse(BaseModel):

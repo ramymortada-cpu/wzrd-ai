@@ -1,8 +1,6 @@
 from __future__ import annotations
-import uuid
-from typing import Optional
-from pydantic import BaseModel, EmailStr
 
+from pydantic import BaseModel, EmailStr
 
 # ─── Workspace schemas ────────────────────────────────────────────────────────
 
@@ -45,10 +43,10 @@ class WorkspaceCreate(BaseModel):
 
 
 class WorkspaceUpdate(BaseModel):
-    name: Optional[str] = None
-    plan: Optional[str] = None
-    status: Optional[str] = None
-    settings: Optional[dict] = None
+    name: str | None = None
+    plan: str | None = None
+    status: str | None = None
+    settings: dict | None = None
 
 
 # ─── User schemas ─────────────────────────────────────────────────────────────
@@ -63,7 +61,7 @@ class PlatformUser(BaseModel):
     workspace_id: str
     workspace_name: str
     workspace_slug: str
-    last_login_at: Optional[str] = None
+    last_login_at: str | None = None
     created_at: str
 
 
@@ -96,8 +94,8 @@ class PipelineConfig(BaseModel):
 
 
 class PipelineConfigUpdate(BaseModel):
-    confidence_auto_threshold: Optional[float] = None
-    confidence_soft_escalation_threshold: Optional[float] = None
+    confidence_auto_threshold: float | None = None
+    confidence_soft_escalation_threshold: float | None = None
 
 
 # ─── System health schemas ────────────────────────────────────────────────────
@@ -105,8 +103,8 @@ class PipelineConfigUpdate(BaseModel):
 class ServiceStatus(BaseModel):
     name: str
     status: str       # ok | degraded | down
-    latency_ms: Optional[float] = None
-    detail: Optional[str] = None
+    latency_ms: float | None = None
+    detail: str | None = None
 
 
 class SystemHealth(BaseModel):

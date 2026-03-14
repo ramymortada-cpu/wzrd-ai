@@ -1,29 +1,29 @@
 from contextlib import asynccontextmanager
 
+import sentry_sdk
 import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
-from radd.auth.router import router as auth_router
-from radd.admin.router import router as admin_router
-from radd.conversations.router import router as conversations_router
-from radd.escalation.router import router as escalations_router
-from radd.knowledge.router import router as kb_router
-from radd.superadmin.router import router as superadmin_router
-from radd.intelligence.router import router as intelligence_router
-from radd.webhooks.router import router as webhooks_router
-from radd.websocket.router import router as ws_router
-from radd.channels.instagram_router import router as instagram_router
-from radd.channels.zid_router import router as zid_router
-from radd.developer.router import router as developer_router
-from radd.admin.v4_router import router as admin_v4_router
-from radd.config import settings
-from radd.deps import check_db_health, check_qdrant_health, check_redis_health
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+
+from radd.admin.router import router as admin_router
+from radd.admin.v4_router import router as admin_v4_router
+from radd.auth.router import router as auth_router
+from radd.channels.instagram_router import router as instagram_router
+from radd.channels.zid_router import router as zid_router
+from radd.config import settings
+from radd.conversations.router import router as conversations_router
+from radd.deps import check_db_health, check_qdrant_health, check_redis_health
+from radd.developer.router import router as developer_router
+from radd.escalation.router import router as escalations_router
+from radd.intelligence.router import router as intelligence_router
+from radd.knowledge.router import router as kb_router
 from radd.limiter import limiter
 from radd.monitoring.sentry_and_logging import _filter_pii
-import sentry_sdk
+from radd.superadmin.router import router as superadmin_router
+from radd.webhooks.router import router as webhooks_router
+from radd.websocket.router import router as ws_router
 
 logger = structlog.get_logger()
 

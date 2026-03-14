@@ -7,35 +7,51 @@ import asyncio
 import hashlib
 import sys
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import structlog
-from sqlalchemy import func, select, update
+from sqlalchemy import select
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from radd.config import settings
-from radd.db.models import Channel, Conversation, Customer, Message, AuditLog, RevenueEvent, SmartRule as SmartRuleModel, FollowUpQueue
+from radd.customers.context_builder import build_customer_context
+from radd.customers.profile_updater import update_profile
+from radd.db.models import (
+    AuditLog,
+    Channel,
+    Conversation,
+    Customer,
+    Message,
+    Workspace,
+)
+from radd.db.models import SmartRule as SmartRuleModel
 from radd.db.session import get_db_session
 from radd.deps import get_redis
-from radd.pipeline.normalizer import normalize
-from radd.pipeline.intent import classify_intent
+from radd.personas.engine import PersonaType, build_persona_prompt, select_persona
 from radd.pipeline.dialect import detect_dialect
 from radd.pipeline.entity_extractor import entities_to_dict, extract_entities
+from radd.pipeline.intent import IntentResult
+from radd.pipeline.intent_v2 import classify_intent_llm
+from radd.pipeline.normalizer import normalize
 from radd.pipeline.orchestrator import run_pipeline_async
-from radd.customers.profile_updater import update_profile
-from radd.customers.context_builder import build_customer_context
-from radd.whatsapp.client import send_text_message
-from radd.personas.engine import select_persona, build_persona_prompt, PersonaType
 from radd.returns.prevention import detect_return_reason, generate_prevention_response
-from radd.rules.engine import evaluate_rules, apply_rule_action, DEFAULT_RULES, SmartRule as SmartRuleObj, TriggerType, ActionType
+from radd.rules.engine import (
+    DEFAULT_RULES,
+    ActionType,
+    TriggerType,
+    apply_rule_action,
+    evaluate_rules,
+)
+from radd.rules.engine import SmartRule as SmartRuleObj
 from radd.sales.engine import determine_stage
+from radd.whatsapp.client import send_text_message
 
 logger = structlog.get_logger()
 
-CONSUMER_GROUP = "radd-workers"
-CONSUMER_NAME = "worker-1"
+# CONSUMER_GROUP = "radd-workers"  # deprecated — use per-workspace groups
+CONSUMER_NAME_PREFIX = "radd-worker"
 BLOCK_MS = 5000
 SESSION_WINDOW_SECONDS = 1800  # 30 minutes
 
@@ -58,7 +74,7 @@ async def get_or_create_customer(db, workspace_id: uuid.UUID, phone: str) -> Cus
         db.add(customer)
         await db.flush()
     else:
-        customer.last_seen_at = datetime.now(timezone.utc)
+        customer.last_seen_at = datetime.now(UTC)
     return customer
 
 
@@ -66,13 +82,13 @@ async def get_or_create_conversation(
     db, workspace_id: uuid.UUID, customer: Customer, channel_id: uuid.UUID
 ) -> Conversation:
     """Get active conversation (within session window) or create new one."""
-    cutoff = datetime.now(timezone.utc).timestamp() - SESSION_WINDOW_SECONDS
+    cutoff = datetime.now(UTC).timestamp() - SESSION_WINDOW_SECONDS
     result = await db.execute(
         select(Conversation).where(
             Conversation.workspace_id == workspace_id,
             Conversation.customer_id == customer.id,
             Conversation.status == "active",
-            Conversation.last_message_at >= datetime.fromtimestamp(cutoff, tz=timezone.utc),
+            Conversation.last_message_at >= datetime.fromtimestamp(cutoff, tz=UTC),
         ).order_by(Conversation.last_message_at.desc()).limit(1)
     )
     conversation = result.scalar_one_or_none()
@@ -82,8 +98,8 @@ async def get_or_create_conversation(
             customer_id=customer.id,
             channel_id=channel_id,
             status="active",
-            first_message_at=datetime.now(timezone.utc),
-            last_message_at=datetime.now(timezone.utc),
+            first_message_at=datetime.now(UTC),
+            last_message_at=datetime.now(UTC),
         )
         db.add(conversation)
         await db.flush()
@@ -161,8 +177,15 @@ async def process_message(msg_data: dict) -> None:
         # ── Step 8: Detect dialect ────────────────────────────────────────────
         dialect = detect_dialect(normalized_text)
 
-        # ── Step 9: Classify intent (9 intents v0.2) ─────────────────────────
-        intent_result = classify_intent(normalized_text)
+        # ── Step 9: Classify intent (LLM v2) ─────────────────────────────────
+        intent_dict = await classify_intent_llm(normalized_text, redis_client=get_redis())
+        intent_name = intent_dict["intent_name"]
+        if intent_name == "shipping_inquiry":
+            intent_name = "shipping"  # template compatibility
+        intent_result = IntentResult(
+            intent=intent_name,
+            confidence=intent_dict.get("confidence", 0.95),
+        )
 
         # ── Step 10: Extract entities → store in message.metadata ────────────
         raw_entities = extract_entities(normalized_text)
@@ -186,6 +209,7 @@ async def process_message(msg_data: dict) -> None:
 
         # Fetch recent conversation history for RAG context
         from sqlalchemy import select as sa_select
+
         from radd.db.models import Message as MessageModel
         history_result = await db.execute(
             sa_select(MessageModel)
@@ -199,7 +223,7 @@ async def process_message(msg_data: dict) -> None:
         ]
 
         # ── Step 11b: V2 — Smart Rules evaluation ─────────────────────────────
-        current_hour = datetime.now(timezone.utc).hour
+        current_hour = datetime.now(UTC).hour
         current_stage = getattr(conversation, "stage", "unknown") or "unknown"
         customer_sentiment = float(customer.avg_sentiment or 0.5)
 
@@ -301,8 +325,8 @@ async def process_message(msg_data: dict) -> None:
         # ── Step 12: Run orchestrator with full context ───────────────────────
         # Force escalation if a rule demands it
         if rule_instructions.get("force_escalation"):
-            from radd.pipeline.templates import get_escalation_message
             from radd.pipeline.orchestrator import PipelineResult
+            from radd.pipeline.templates import get_escalation_message
             dial_str = dialect.dialect if hasattr(dialect, "dialect") else "gulf"
             pipeline_result = PipelineResult(
                 response_text=get_escalation_message(dial_str),
@@ -315,6 +339,12 @@ async def process_message(msg_data: dict) -> None:
             )
         else:
             override_threshold = rule_instructions.get("override_auto_threshold")
+            ws_result = await db.execute(select(Workspace).where(Workspace.id == workspace_id))
+            ws = ws_result.scalar_one_or_none()
+            ws_settings = (ws.settings or {}) if ws else {}
+            use_intent_v2 = ws_settings.get("use_intent_v2") if "use_intent_v2" in ws_settings else settings.use_intent_v2
+            use_verifier_v2 = ws_settings.get("use_verifier_v2") if "use_verifier_v2" in ws_settings else settings.use_verifier_v2
+
             from radd.deps import get_qdrant
             qdrant = get_qdrant()
             pipeline_result = await run_pipeline_async(
@@ -323,12 +353,15 @@ async def process_message(msg_data: dict) -> None:
                 db=db,
                 qdrant=qdrant,
                 conversation_context={
-                    "store_name": "متجرنا",
+                    "store_name": ws_settings.get("store_name", "متجرنا"),
                     "customer_context": customer_ctx,
                     "dialect": dialect.dialect if hasattr(dialect, "dialect") else str(dialect),
                     "intent": intent_result.intent,
                     "persona_system_prompt": persona_system_prompt,
                     "override_auto_threshold": override_threshold,
+                    "use_intent_v2": use_intent_v2,
+                    "use_verifier_v2": use_verifier_v2,
+                    "workspace_config": ws_settings,
                 },
                 conversation_history=history,
             )
@@ -359,7 +392,7 @@ async def process_message(msg_data: dict) -> None:
         conversation.dialect = pipeline_result.dialect
         conversation.confidence_score = pipeline_result.confidence
         conversation.resolution_type = pipeline_result.resolution_type
-        conversation.last_message_at = datetime.now(timezone.utc)
+        conversation.last_message_at = datetime.now(UTC)
         conversation.message_count = (conversation.message_count or 0) + 2
         conversation.stage = new_stage.value if hasattr(new_stage, "value") else str(new_stage)
         conversation.ai_persona = persona.type.value if persona else None
@@ -479,8 +512,11 @@ async def process_message(msg_data: dict) -> None:
         try:
             # Use interactive message for return prevention responses
             if prevention_response and pipeline_result.resolution_type != "escalated_hard":
-                from radd.whatsapp.interactive import build_return_prevention_message, send_interactive_message
                 from radd.returns.prevention import detect_return_reason
+                from radd.whatsapp.interactive import (
+                    build_return_prevention_message,
+                    send_interactive_message,
+                )
                 return_reason = detect_return_reason(text_body)
                 interactive_payload = build_return_prevention_message(
                     reason=str(return_reason),
@@ -513,7 +549,8 @@ async def process_message(msg_data: dict) -> None:
 
 async def run_worker():
     r = get_redis()
-    logger.info("worker.started", consumer_group=CONSUMER_GROUP, consumer=CONSUMER_NAME)
+    consumer_name = f"{CONSUMER_NAME_PREFIX}-{uuid.uuid4().hex[:8]}"
+    logger.info("worker.started", consumer=consumer_name)
 
     # Discover all active workspace stream keys on startup
     # In production: use workspace registry. For MVP: scan keys.
@@ -525,16 +562,22 @@ async def run_worker():
                 continue
 
             for stream_key in keys:
+                # Per-workspace consumer group: messages:{workspace_id} → group:{workspace_id}
+                stream_key_str = stream_key.decode("utf-8") if isinstance(stream_key, bytes) else stream_key
+                workspace_id_str = stream_key_str.split(":", 1)[1] if ":" in stream_key_str else "default"
+                consumer_group = f"group:{workspace_id_str}"
+
                 # Ensure consumer group exists
                 try:
-                    await r.xgroup_create(stream_key, CONSUMER_GROUP, id="0", mkstream=True)
-                except Exception:
-                    pass  # Group already exists
+                    await r.xgroup_create(stream_key, consumer_group, id="0", mkstream=True)
+                except Exception as e:
+                    if "BUSYGROUP" not in str(e):
+                        logger.warning("worker.xgroup_create_failed", group=consumer_group, error=str(e))
 
                 # Read new messages
                 messages = await r.xreadgroup(
-                    CONSUMER_GROUP,
-                    CONSUMER_NAME,
+                    consumer_group,
+                    consumer_name,
                     {stream_key: ">"},
                     count=10,
                     block=BLOCK_MS,
@@ -547,11 +590,13 @@ async def run_worker():
                     for msg_id, msg_data in msg_list:
                         try:
                             await process_message(msg_data)
-                            await r.xack(stream_key, CONSUMER_GROUP, msg_id)
+                            await r.xack(stream_key, consumer_group, msg_id)
                         except Exception as e:
                             logger.error("worker.message_failed", error=str(e), msg_id=msg_id)
                             try:
-                                from radd.monitoring.sentry_and_logging import capture_pipeline_error
+                                from radd.monitoring.sentry_and_logging import (
+                                    capture_pipeline_error,
+                                )
                                 data = msg_data if isinstance(msg_data, dict) else {}
                                 ws_id = data.get("workspace_id", data.get(b"workspace_id", ""))
                                 capture_pipeline_error(e, str(ws_id), "")

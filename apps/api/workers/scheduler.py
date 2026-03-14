@@ -11,7 +11,6 @@ No Celery needed — uses APScheduler with an asyncio event loop.
 import asyncio
 import sys
 from pathlib import Path
-from datetime import datetime, timezone
 
 import structlog
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -21,10 +20,10 @@ from sqlalchemy import select
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from radd.config import settings
-from radd.db.models import Workspace, User
+from radd.db.models import User, Workspace
 from radd.db.session import get_db_session
-from radd.intelligence.morning_briefing import generate_morning_briefing
 from radd.intelligence.knowledge_gaps import get_gap_summary
+from radd.intelligence.morning_briefing import generate_morning_briefing
 from radd.whatsapp.client import send_text_message
 
 logger = structlog.get_logger()

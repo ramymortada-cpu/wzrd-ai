@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 RADD AI — Image Understanding
 Analyzes customer-sent images using OpenAI Vision (GPT-4o).
@@ -8,6 +9,7 @@ Use cases:
 - Shipping label → order tracking help
 """
 import base64
+
 import structlog
 from openai import AsyncOpenAI
 

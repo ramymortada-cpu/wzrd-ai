@@ -1,7 +1,6 @@
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 # Weak keys that must never be used in production (token encryption, etc.)
 _WEAK_SECRET_KEYS = frozenset({"change-me", "radd-default-secret", ""})
 _MIN_SECRET_KEY_LEN = 32

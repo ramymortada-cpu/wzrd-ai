@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 import uuid
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, EmailStr
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 
 from radd.auth.middleware import CurrentUser, require_admin, require_reviewer
 from radd.auth.service import hash_password
@@ -23,13 +23,21 @@ class ShadowModeUpdate(BaseModel):
 
 
 class SettingsUpdate(BaseModel):
-    confidence_auto_threshold: Optional[float] = None
-    confidence_soft_escalation_threshold: Optional[float] = None
-    business_hours: Optional[dict] = None
-    store_name: Optional[str] = None
-    escalation_message_gulf: Optional[str] = None
-    escalation_message_msa: Optional[str] = None
-    voice_transcription_enabled: Optional[bool] = None
+    confidence_auto_threshold: float | None = None
+    confidence_soft_escalation_threshold: float | None = None
+    business_hours: dict | None = None
+    store_name: str | None = None
+    escalation_message_gulf: str | None = None
+    escalation_message_msa: str | None = None
+    voice_transcription_enabled: bool | None = None
+    use_intent_v2: bool | None = None
+    use_verifier_v2: bool | None = None
+    # E-commerce platform
+    platform: str | None = None  # "salla" | "shopify"
+    salla_store_id: str | None = None
+    salla_access_token: str | None = None
+    shopify_domain: str | None = None
+    shopify_access_token: str | None = None
 
 
 class UserCreate(BaseModel):
@@ -120,7 +128,7 @@ async def get_audit_log(
     current: Annotated[CurrentUser, Depends(require_admin)],
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
-    action_filter: Optional[str] = Query(None, alias="action"),
+    action_filter: str | None = Query(None, alias="action"),
 ):
     async with get_db_session(current.workspace_id) as db:
         q = select(AuditLog).where(AuditLog.workspace_id == current.workspace_id)

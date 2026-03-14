@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Optional
 
 from fastapi import HTTPException, Request
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -77,7 +76,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         return response
 
-    def _extract_workspace_id(self, request: Request) -> Optional[str]:
+    def _extract_workspace_id(self, request: Request) -> str | None:
         """يستخرج workspace_id من الـ request."""
         # من الـ JWT (في state بعد auth middleware)
         if hasattr(request, "state") and hasattr(request.state, "workspace_id"):

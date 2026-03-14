@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 WebSocket endpoint for agent real-time connection.
 Authenticates via JWT query param (browsers can't set WS headers).

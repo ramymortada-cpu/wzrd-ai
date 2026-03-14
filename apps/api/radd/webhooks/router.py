@@ -8,17 +8,15 @@ import hmac
 import json
 import uuid
 
-import redis.asyncio as aioredis
 import structlog
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, Response, status
-from radd.limiter import limiter
 from sqlalchemy import select
 
 from radd.config import settings
 from radd.db.models import Channel
 from radd.db.session import get_db_session
 from radd.deps import get_redis
-from radd.pipeline.templates import UNSUPPORTED_MEDIA_MESSAGE
+from radd.limiter import limiter
 
 logger = structlog.get_logger()
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])

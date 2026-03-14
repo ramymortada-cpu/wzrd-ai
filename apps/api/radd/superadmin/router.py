@@ -1,12 +1,12 @@
 from __future__ import annotations
+
 import time
 import uuid
-from datetime import datetime, timezone
-from typing import Annotated, Optional
+from datetime import UTC, datetime
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import func, select, text
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func, select
 
 from radd.auth.middleware import CurrentUser, require_superadmin
 from radd.auth.service import hash_password
@@ -49,7 +49,7 @@ async def list_workspaces(
     _: Annotated[CurrentUser, Depends(require_superadmin)],
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
-    status_filter: Optional[str] = Query(None, alias="status"),
+    status_filter: str | None = Query(None, alias="status"),
 ):
     """List all workspaces with usage counts."""
     async with get_db_session() as db:
@@ -73,8 +73,7 @@ async def list_workspaces(
                     select(func.count()).select_from(User).where(User.workspace_id == ws.id)
                 )
             ).scalar_one()
-            from datetime import timedelta
-            today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+            today_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
             from radd.db.models import Message
             msg_today = (
                 await db.execute(
@@ -291,9 +290,9 @@ async def list_all_users(
     _: Annotated[CurrentUser, Depends(require_superadmin)],
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
-    workspace_id: Optional[uuid.UUID] = Query(None),
-    role: Optional[str] = Query(None),
-    is_active: Optional[bool] = Query(None),
+    workspace_id: uuid.UUID | None = Query(None),
+    role: str | None = Query(None),
+    is_active: bool | None = Query(None),
 ):
     """All users across all workspaces."""
     async with get_db_session() as db:
@@ -450,7 +449,7 @@ async def get_benchmark_results(_: Annotated[CurrentUser, Depends(require_supera
 @router.get("/system")
 async def system_health(_: Annotated[CurrentUser, Depends(require_superadmin)]):
     """Real-time health status of all platform services."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     services = []
 
     # Database
@@ -534,8 +533,8 @@ async def platform_audit_log(
     _: Annotated[CurrentUser, Depends(require_superadmin)],
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
-    workspace_id: Optional[uuid.UUID] = Query(None),
-    action_filter: Optional[str] = Query(None, alias="action"),
+    workspace_id: uuid.UUID | None = Query(None),
+    action_filter: str | None = Query(None, alias="action"),
 ):
     """All audit log entries across all workspaces."""
     async with get_db_session() as db:

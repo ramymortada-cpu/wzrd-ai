@@ -632,6 +632,7 @@ export const getChurnRadar = (inactiveDays = 45, autoWinback = false) =>
     alerts: Array<{
       customer_id: string; customer_tier: string; risk_level: string;
       reason: string; days_inactive: number; total_revenue: number; suggested_action: string;
+      last_seen_at: string;
     }>;
   } & { winback_scheduled: number }>(`/admin/churn-radar?inactive_days=${inactiveDays}&auto_winback=${autoWinback}`);
 

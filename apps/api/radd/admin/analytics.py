@@ -13,17 +13,17 @@ KPI calculations for the admin dashboard.
   8. hallucination_rate        — % RAG responses with verify_confidence < 0.70
 """
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from radd.db.models import AuditLog, Conversation, EscalationEvent, Message
+from radd.db.models import Conversation, EscalationEvent, Message
 
 
 async def get_kpis(db: AsyncSession, workspace_id: uuid.UUID) -> dict[str, Any]:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     yesterday = now - timedelta(hours=24)
 

@@ -4,7 +4,6 @@ Removes/normalizes: tashkeel (diacritics), Alef variants, Ya, tatweel, whitespac
 No external dependencies — pure string operations.
 """
 import re
-import unicodedata
 
 # ─── Arabic Unicode ranges ────────────────────────────────────────────────────
 TASHKEEL = re.compile(r"[\u064B-\u065F\u0670]")  # fathah, dammah, kasrah, sukun, etc.

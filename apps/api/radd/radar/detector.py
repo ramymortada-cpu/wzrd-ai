@@ -11,8 +11,7 @@ Killer Feature #5: "رَدّ يكتشف المشكلة قبلك"
 """
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from typing import Optional
+from datetime import datetime
 from enum import Enum
 
 logger = logging.getLogger("radd.radar")
@@ -316,7 +315,7 @@ async def _detect_demand_opportunities(
 # Alert Formatting — for Dashboard and WhatsApp
 # ──────────────────────────────────────────────
 
-def format_alerts_for_whatsapp(alerts: list[RadarAlert]) -> Optional[str]:
+def format_alerts_for_whatsapp(alerts: list[RadarAlert]) -> str | None:
     """Format radar alerts for WhatsApp notification."""
     if not alerts:
         return None

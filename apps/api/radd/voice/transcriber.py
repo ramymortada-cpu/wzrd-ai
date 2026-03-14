@@ -1,10 +1,12 @@
 from __future__ import annotations
+
 """
 RADD AI — Arabic Voice Understanding
 WhatsApp voice note → Whisper transcription → Arabic text → pipeline.
 Uses tempfile to avoid holding large audio bytes in memory.
 """
 import tempfile
+
 import structlog
 from openai import AsyncOpenAI
 

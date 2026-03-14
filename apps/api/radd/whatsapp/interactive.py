@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 WhatsApp Interactive Messages — Buttons, Lists, Product Cards.
 Builds structured WhatsApp Cloud API payloads for rich messages.
@@ -115,7 +116,7 @@ def build_return_prevention_message(
     elif dialect == "egyptian":
         body = f"آسف على الإزعاج{' بخصوص ' + product_name if product_name else ''}! عندي خيارين:"
     else:
-        body = f"آسف لذلك! يمكنني مساعدتك بأحد خيارين:"
+        body = "آسف لذلك! يمكنني مساعدتك بأحد خيارين:"
 
     buttons = []
     if reason in ("wrong_size", "size_issue"):

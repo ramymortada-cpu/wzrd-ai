@@ -7,7 +7,7 @@ Usage:
     ctx = build_customer_context(customer)
     # inject ctx into orchestrator system prompt
 """
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 
 def build_customer_context(customer) -> str:
@@ -48,7 +48,7 @@ def build_customer_context(customer) -> str:
     # Recent complaint
     if customer.last_complaint_at:
         try:
-            days = (datetime.now(timezone.utc) - customer.last_complaint_at).days
+            days = (datetime.now(UTC) - customer.last_complaint_at).days
             if days <= 7:
                 parts.append(f"اشتكى قبل {days} {'يوم' if days == 1 else 'أيام'} — كن متفهماً.")
             elif days <= 30:

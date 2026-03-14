@@ -1,5 +1,6 @@
 """Voice message processing — extracted from message_worker."""
 from __future__ import annotations
+
 import uuid
 
 import structlog
@@ -34,7 +35,7 @@ async def process_voice_message(
         channel_config = get_channel_config_decrypted(channel)
         wa_token = channel_config.get("wa_api_token") or settings.wa_api_token
 
-        from radd.voice.transcriber import process_whatsapp_voice, build_voice_fallback_response
+        from radd.voice.transcriber import build_voice_fallback_response, process_whatsapp_voice
         transcription = await process_whatsapp_voice(media_id=media_id, wa_token=wa_token)
 
         if not transcription.get("success") or not transcription.get("text"):

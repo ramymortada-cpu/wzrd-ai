@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """Action protocol + dispatcher. Detects when pipeline should call external APIs."""
 from dataclasses import dataclass
 
@@ -20,15 +21,45 @@ async def detect_and_run_action(
     Check if an intent maps to an external action. If so, run it.
     Returns ActionResult if action was taken, None if no action applies.
     """
+    platform = (workspace_config.get("platform") or "salla").lower()
     salla_token = workspace_config.get("salla_access_token", "")
+    store_name = workspace_config.get("store_name") or "متجرنا"
 
     # ── Order Status ──────────────────────────────────────────────────────────
     if intent == "order_status":
-        from radd.actions.salla import extract_order_number, get_order_status, format_order_status_response
+        from radd.actions.salla import extract_order_number
+
         order_number = extract_order_number(message)
-        if not order_number or not salla_token:
+        if not order_number:
             return None
 
+        if platform == "shopify":
+            from radd.actions.shopify import (
+                ShopifyConfig,
+                format_order_response_arabic as shopify_format,
+                get_order_status as shopify_get_order_status,
+            )
+            shop_domain = workspace_config.get("shopify_domain", "")
+            shop_token = workspace_config.get("shopify_access_token", "")
+            if not shop_domain or not shop_token:
+                return None
+            config = ShopifyConfig(shop_domain=shop_domain, access_token=shop_token)
+            result = await shopify_get_order_status(order_number, config)
+            response = shopify_format(result, dialect, None, store_name)
+            return ActionResult(
+                action="order_status",
+                response_text=response,
+                data={
+                    "order_id": result.order_id,
+                    "order_number": result.order_number,
+                    "status": result.status,
+                    "error": result.error,
+                },
+            )
+
+        if not salla_token:
+            return None
+        from radd.actions.salla import format_order_status_response, get_order_status
         order_data = await get_order_status(order_number, salla_token)
         response = format_order_status_response(order_data, dialect)
         return ActionResult(action="order_status", response_text=response, data=order_data)
@@ -36,7 +67,7 @@ async def detect_and_run_action(
     # ── Shipping Tracking ─────────────────────────────────────────────────────
     if intent == "shipping":
         from radd.actions.salla import extract_order_number
-        from radd.actions.salla_advanced import track_shipment, format_tracking_response
+        from radd.actions.salla_advanced import format_tracking_response, track_shipment
         order_number = extract_order_number(message)
         if not order_number or not salla_token:
             return None

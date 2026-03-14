@@ -9,8 +9,6 @@ RADD AI — CSAT Collection
 from __future__ import annotations
 
 import logging
-from datetime import datetime
-from typing import Optional
 
 logger = logging.getLogger("radd.conversations.csat")
 
@@ -71,7 +69,7 @@ async def send_csat_request(
         logger.warning("csat.send_failed", error=str(e), conversation_id=conversation_id)
 
 
-def parse_csat_response(text: str) -> Optional[int]:
+def parse_csat_response(text: str) -> int | None:
     """
     يحلل رد العميل ويستخرج التقييم.
 

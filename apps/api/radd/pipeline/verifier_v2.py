@@ -13,7 +13,6 @@ from __future__ import annotations
 import logging
 import re
 import time
-from typing import Optional
 
 import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
@@ -35,8 +34,8 @@ BATCH_SIZE = 8  # عدد الجمل في كل batch
 # Model Loading — Singleton Pattern
 # ---------------------------------------------------------------------------
 
-_tokenizer: Optional[AutoTokenizer] = None
-_model: Optional[AutoModelForSequenceClassification] = None
+_tokenizer: AutoTokenizer | None = None
+_model: AutoModelForSequenceClassification | None = None
 _model_load_attempted: bool = False
 _model_available: bool = False
 

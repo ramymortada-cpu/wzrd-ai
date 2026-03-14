@@ -9,7 +9,6 @@ RADD AI — AI Personas System
 """
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 
 class PersonaType(Enum):

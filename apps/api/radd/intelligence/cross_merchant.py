@@ -1,12 +1,14 @@
 from __future__ import annotations
+
 """
 RADD AI — Cross-Merchant Intelligence
 Anonymized benchmarks across workspaces by sector.
 "automation rate لمتاجر العطور المماثلة: 72%. أنت عند 58%."
 All data is fully anonymized — no workspace names or IDs shared.
 """
-from dataclasses import asdict, dataclass
 import json
+from dataclasses import asdict, dataclass
+
 import structlog
 
 logger = structlog.get_logger()
@@ -60,6 +62,7 @@ async def get_sector_benchmarks(
     Cached in Redis for 1 hour to avoid heavy aggregates on every request.
     """
     from sqlalchemy import text
+
     from radd.deps import get_redis
 
     cache_key = f"benchmark:sector:{sector or 'all'}"
@@ -147,8 +150,9 @@ async def get_merchant_benchmark_report(
     Cached in Redis for 1 hour.
     """
     from sqlalchemy import text
-    from radd.utils.sql_helpers import safe_period_days
+
     from radd.deps import get_redis
+    from radd.utils.sql_helpers import safe_period_days
 
     period_days = safe_period_days(period_days, min_val=7, max_val=90)
     cache_key = f"benchmark:workspace:{workspace_id}:{period_days}"

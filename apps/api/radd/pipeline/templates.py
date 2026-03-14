@@ -1,11 +1,11 @@
 from __future__ import annotations
+
 """
 Template response engine.
 5 intents × 3 dialects (gulf, egyptian, msa) = 15 base templates.
 Parameters: {customer_name}, {order_number}, {store_name}.
 """
 from dataclasses import dataclass
-from string import Formatter
 
 # ─── Template store ───────────────────────────────────────────────────────────
 # Format: TEMPLATES[intent][dialect] = template string
@@ -76,7 +76,7 @@ def render_template(
     params = parameters or {}
     try:
         text = template.format(**params)
-    except KeyError as e:
+    except KeyError:
         # Missing parameter — use template as-is with placeholder unfilled
         text = template
 

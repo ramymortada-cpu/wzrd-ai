@@ -38,3 +38,8 @@ export function getTokenPayload(): Record<string, unknown> | null {
   if (!token) return null;
   return parseJwt(token);
 }
+
+export function getToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("radd_access_token");
+}

@@ -10,13 +10,12 @@ Run with: make seed
 import asyncio
 import hashlib
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from sqlalchemy import select, text
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
 
 from radd.auth.service import hash_password
 from radd.db.base import AsyncSessionLocal, engine
@@ -108,7 +107,7 @@ async def seed():
         db.add(channel)
 
         # ── Sample customers (5 tiers) ────────────────────────────────────────
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         sample_customers = [
             {

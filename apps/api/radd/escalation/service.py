@@ -1,10 +1,11 @@
 from __future__ import annotations
+
 """
 Escalation service.
 Builds context packages, creates escalation events, manages agent queue.
 """
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import structlog
 from sqlalchemy import select
@@ -16,7 +17,6 @@ from radd.db.models import (
     Customer,
     EscalationEvent,
     Message,
-    Ticket,
 )
 from radd.pipeline.orchestrator import PipelineResult
 
@@ -174,7 +174,7 @@ async def accept_escalation(
 ) -> EscalationEvent:
     event.status = "accepted"
     event.assigned_user_id = agent_id
-    event.accepted_at = datetime.now(timezone.utc)
+    event.accepted_at = datetime.now(UTC)
 
     # Also assign conversation
     conv_result = await db.execute(
@@ -203,7 +203,7 @@ async def resolve_escalation(
     notes: str | None = None,
 ) -> EscalationEvent:
     event.status = "resolved"
-    event.resolved_at = datetime.now(timezone.utc)
+    event.resolved_at = datetime.now(UTC)
     event.resolution_notes = notes
 
     # Mark conversation resolved
@@ -213,7 +213,7 @@ async def resolve_escalation(
     conv = conv_result.scalar_one_or_none()
     if conv:
         conv.status = "resolved"
-        conv.resolved_at = datetime.now(timezone.utc)
+        conv.resolved_at = datetime.now(UTC)
 
     db.add(AuditLog(
         workspace_id=workspace_id,

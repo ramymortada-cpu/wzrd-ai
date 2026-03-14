@@ -1,19 +1,19 @@
 from __future__ import annotations
+
 """
 Conversations API — list, detail, agent reply, status updates.
 """
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Annotated
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
-from radd.limiter import limiter
-from radd.config import settings
-from sqlalchemy import func, select, update
-from sqlalchemy.orm import selectinload
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from sqlalchemy import func, select
 
 from radd.auth.middleware import CurrentUser, require_agent, require_reviewer
+from radd.config import settings
+from radd.conversations.csat import handle_csat_response, parse_csat_response
 from radd.conversations.schemas import (
     AgentReply,
     ConversationDetail,
@@ -22,9 +22,9 @@ from radd.conversations.schemas import (
     CustomerSummary,
     MessageResponse,
 )
-from radd.db.models import Channel, Conversation, Customer, Message, AuditLog
-from radd.conversations.csat import handle_csat_response, parse_csat_response
+from radd.db.models import AuditLog, Channel, Conversation, Customer, Message
 from radd.db.session import get_db_session
+from radd.limiter import limiter
 from radd.websocket.manager import ws_manager
 
 logger = structlog.get_logger()
@@ -134,7 +134,7 @@ async def update_conversation(
         for key, value in updates.items():
             setattr(conv, key, value)
         if updates.get("status") == "resolved":
-            conv.resolved_at = datetime.now(timezone.utc)
+            conv.resolved_at = datetime.now(UTC)
 
     return ConversationSummary.model_validate(conv)
 
@@ -179,11 +179,11 @@ async def agent_reply(
         db.add(msg)
 
         # Update conversation
-        conv.last_message_at = datetime.now(timezone.utc)
+        conv.last_message_at = datetime.now(UTC)
         conv.message_count = (conv.message_count or 0) + 1
         if body.resolve:
             conv.status = "resolved"
-            conv.resolved_at = datetime.now(timezone.utc)
+            conv.resolved_at = datetime.now(UTC)
         elif conv.status == "waiting_agent":
             conv.status = "active"
 
@@ -202,8 +202,8 @@ async def agent_reply(
     if channel and customer:
         try:
             from radd.config import settings
-            from radd.whatsapp.client import send_text_message
             from radd.utils.crypto import get_channel_config_decrypted
+            from radd.whatsapp.client import send_text_message
             channel_config = get_channel_config_decrypted(channel)
 
             # Decode phone: stored as hash — need raw phone for delivery.

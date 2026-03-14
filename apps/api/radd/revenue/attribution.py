@@ -9,8 +9,7 @@ Killer Feature #3: "رَدّ يثبت لك كم كسبك"
 """
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Optional
+from datetime import datetime
 from enum import Enum
 
 logger = logging.getLogger("radd.revenue")
@@ -31,8 +30,8 @@ class RevenueEvent:
     event_type: RevenueEventType
     amount: float
     currency: str = "SAR"
-    order_id: Optional[str] = None
-    details: Optional[dict] = None
+    order_id: str | None = None
+    details: dict | None = None
     created_at: datetime = None
 
     def __post_init__(self):
@@ -117,12 +116,12 @@ async def get_revenue_summary(
     result = await db_session.execute(
         text(f"""
             SELECT
-                COALESCE(SUM(amount), 0) as total,
-                COALESCE(SUM(amount) FILTER(WHERE event_type = 'assisted_sale'), 0) as sales,
+                COALESCE(SUM(amount_sar), 0) as total,
+                COALESCE(SUM(amount_sar) FILTER(WHERE event_type = 'assisted_sale'), 0) as sales,
                 COUNT(*) FILTER(WHERE event_type = 'assisted_sale') as sales_count,
-                COALESCE(SUM(amount) FILTER(WHERE event_type = 'return_prevented'), 0) as returns,
+                COALESCE(SUM(amount_sar) FILTER(WHERE event_type = 'return_prevented'), 0) as returns,
                 COUNT(*) FILTER(WHERE event_type = 'return_prevented') as returns_count,
-                COALESCE(SUM(amount) FILTER(WHERE event_type = 'cart_recovered'), 0) as carts,
+                COALESCE(SUM(amount_sar) FILTER(WHERE event_type = 'cart_recovered'), 0) as carts,
                 COUNT(*) FILTER(WHERE event_type = 'cart_recovered') as carts_count
             FROM revenue_events
             WHERE workspace_id = :wid
@@ -164,7 +163,7 @@ def format_revenue_for_briefing(summary: RevenueSummary) -> str:
     if summary.carts_recovered > 0:
         lines.append(f"  🛒 {summary.carts_recovered_count} سلة مسترجعة بقيمة ر.س {summary.carts_recovered:,.0f}")
 
-    lines.append(f"  ─────────────")
+    lines.append("  ─────────────")
     lines.append(f"  إجمالي: ر.س {summary.total_attributed:,.0f} ({summary.roi_multiple}x العائد على الاشتراك)")
 
     return "\n".join(lines)

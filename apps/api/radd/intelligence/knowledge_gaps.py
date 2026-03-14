@@ -1,7 +1,7 @@
 """RADD AI — Knowledge Gap Intelligence"""
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
+
 
 @dataclass
 class KnowledgeGap:
@@ -19,7 +19,7 @@ async def get_knowledge_gaps(db_session, workspace_id: str, days: int = 7, limit
     result = await db_session.execute(q, {"wid": workspace_id, "di": f"{days} days", "lim": limit})
     return [KnowledgeGap(r.sq[:50], r.sq, r.cnt, r.intent or "general", r.la, workspace_id) for r in result.fetchall()]
 
-async def get_gap_summary(db_session, workspace_id: str) -> Optional[str]:
+async def get_gap_summary(db_session, workspace_id: str) -> str | None:
     gaps = await get_knowledge_gaps(db_session, workspace_id, 7, 5)
     if not gaps: return None
     total = sum(g.occurrence_count for g in gaps)

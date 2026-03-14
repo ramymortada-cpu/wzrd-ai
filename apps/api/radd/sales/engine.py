@@ -7,7 +7,6 @@ Killer Feature #4: "رَدّ يبيع من داخل المحادثة"
 """
 import logging
 from dataclasses import dataclass, field
-from typing import Optional
 from enum import Enum
 
 logger = logging.getLogger("radd.sales")
@@ -87,7 +86,7 @@ def determine_stage(
 class SalesResponse:
     response_text: str
     products_to_show: list[dict] = field(default_factory=list)
-    follow_up_after_minutes: Optional[int] = None  # جدولة متابعة
+    follow_up_after_minutes: int | None = None  # جدولة متابعة
     stage: ConversationStage = ConversationStage.INQUIRY
 
 
@@ -151,7 +150,7 @@ class SalesEngine:
         message: str,
         dialect: str,
         objection_type: str,
-        current_product: Optional[dict],
+        current_product: dict | None,
         alternatives: list[dict],
     ) -> SalesResponse:
         """Handle purchase objection (price, doubt, etc.)."""
@@ -224,9 +223,9 @@ class SalesEngine:
 
     def _format_comparison(self, p1: dict, p2: dict, dialect: str) -> str:
         intro = {
-            "gulf": f"خلني أقارن لك بين الاثنين:",
-            "egyptian": f"خليني أقارنلك بين الاتنين:",
-            "msa": f"دعني أقارن بين الاثنين:",
+            "gulf": "خلني أقارن لك بين الاثنين:",
+            "egyptian": "خليني أقارنلك بين الاتنين:",
+            "msa": "دعني أقارن بين الاثنين:",
         }
 
         lines = [
@@ -406,7 +405,7 @@ STARTER_PACKS = {
 }
 
 
-def get_starter_pack(sector: str) -> Optional[StarterPack]:
+def get_starter_pack(sector: str) -> StarterPack | None:
     """Get starter pack for a sector."""
     return STARTER_PACKS.get(sector)
 

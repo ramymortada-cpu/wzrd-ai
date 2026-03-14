@@ -8,9 +8,9 @@ import uuid
 
 sys.path.insert(0, ".")
 
+import bcrypt
 from sqlalchemy import select, text
 
-import bcrypt
 from radd.db.models import User, Workspace
 from radd.db.session import get_db_session
 
@@ -84,15 +84,15 @@ async def main() -> None:
             )
             db.add(user)
             await db.flush()
-            print(f"✅ Superadmin user created:")
+            print("✅ Superadmin user created:")
             print(f"   Email:     {SUPERADMIN_EMAIL}")
             print(f"   Password:  {SUPERADMIN_PASSWORD}")
             print(f"   Workspace: {WORKSPACE_SLUG}")
-            print(f"   Role:      owner + superadmin")
+            print("   Role:      owner + superadmin")
 
         await db.commit()
 
-    print(f"\n🚀 Done! Login at /login with:")
+    print("\n🚀 Done! Login at /login with:")
     print(f"   Workspace: {WORKSPACE_SLUG}")
     print(f"   Email:     {SUPERADMIN_EMAIL}")
     print(f"   Password:  {SUPERADMIN_PASSWORD}")

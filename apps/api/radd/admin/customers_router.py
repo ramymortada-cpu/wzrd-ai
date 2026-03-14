@@ -1,10 +1,10 @@
 """Admin customers endpoints."""
 from __future__ import annotations
 
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Request
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 
 from radd.auth.middleware import CurrentUser, require_reviewer
 from radd.config import settings
@@ -20,7 +20,7 @@ router = APIRouter(tags=["admin-customers"])
 async def list_customers(
     request: Request,
     current: Annotated[CurrentUser, Depends(require_reviewer)],
-    tier: Optional[str] = Query(None, description="Filter by tier: new, standard, returning, vip, at_risk"),
+    tier: str | None = Query(None, description="Filter by tier: new, standard, returning, vip, at_risk"),
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
 ):

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional
+
 import uuid
 from datetime import datetime
 
@@ -11,15 +11,15 @@ class EscalationResponse(BaseModel):
     workspace_id: uuid.UUID
     conversation_id: uuid.UUID
     escalation_type: str
-    reason: Optional[str]
-    confidence_at_escalation: Optional[float]
+    reason: str | None
+    confidence_at_escalation: float | None
     context_package: dict
-    assigned_user_id: Optional[uuid.UUID]
+    assigned_user_id: uuid.UUID | None
     status: str
-    rag_draft: Optional[str]
-    accepted_at: Optional[datetime]
-    resolved_at: Optional[datetime]
-    resolution_notes: Optional[str]
+    rag_draft: str | None
+    accepted_at: datetime | None
+    resolved_at: datetime | None
+    resolution_notes: str | None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -30,8 +30,8 @@ class EscalationAccept(BaseModel):
 
 
 class EscalationResolve(BaseModel):
-    notes: Optional[str] = None
-    send_message: Optional[str] = None   # Optional final message to customer
+    notes: str | None = None
+    send_message: str | None = None   # Optional final message to customer
 
 
 class EscalationQueue(BaseModel):

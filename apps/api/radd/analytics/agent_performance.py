@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 RADD AI — Agent Performance Analytics
 Measures how well each human agent handles escalated conversations.
@@ -10,6 +11,7 @@ Metrics:
 - avg_response_time_minutes
 """
 from dataclasses import dataclass
+
 import structlog
 
 logger = structlog.get_logger()
@@ -37,6 +39,7 @@ async def get_agent_performance(
     Calculate performance metrics for all agents in this workspace.
     """
     from sqlalchemy import text
+
     from radd.utils.sql_helpers import safe_period_days
 
     period_days = safe_period_days(period_days, min_val=1, max_val=365)

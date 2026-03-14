@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 Advanced Salla Actions: Cancel Order + Track Shipment
 Extends the base Salla action with write operations.
@@ -320,7 +321,7 @@ def format_tracking_response(result: dict, dialect: str = "gulf") -> str:
     url = result.get("tracking_url", "")
 
     if dialect == "gulf":
-        msg = f"شحنتك"
+        msg = "شحنتك"
         if carrier:
             msg += f" مع {carrier}"
         if tracking:
@@ -330,7 +331,7 @@ def format_tracking_response(result: dict, dialect: str = "gulf") -> str:
         if url:
             msg += f"\nتابع شحنتك مباشرة: {url}"
     elif dialect == "egyptian":
-        msg = f"شحنتك"
+        msg = "شحنتك"
         if carrier:
             msg += f" مع {carrier}"
         if tracking:
@@ -340,7 +341,7 @@ def format_tracking_response(result: dict, dialect: str = "gulf") -> str:
         if url:
             msg += f"\nتابع شحنتك: {url}"
     else:
-        msg = f"معلومات الشحن"
+        msg = "معلومات الشحن"
         if carrier:
             msg += f" ({carrier})"
         if tracking:

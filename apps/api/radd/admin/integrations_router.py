@@ -7,12 +7,12 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy import select
+from sqlalchemy import select as sa_select
 
 from radd.auth.middleware import CurrentUser, require_admin, require_reviewer
 from radd.config import settings
-from sqlalchemy import select as sa_select
-
-from radd.db.models import Conversation, Customer, EscalationEvent, Message as MsgModel, Workspace
+from radd.db.models import Conversation, Customer, EscalationEvent, Workspace
+from radd.db.models import Message as MsgModel
 from radd.db.session import get_db_session
 from radd.limiter import limiter
 
@@ -53,8 +53,8 @@ async def trigger_salla_sync(
     current: Annotated[CurrentUser, Depends(require_admin)],
 ):
     """Trigger a full Salla product + store policy sync into the KB."""
-    from radd.onboarding.salla_sync import run_full_sync
     from radd.knowledge.service import KBService
+    from radd.onboarding.salla_sync import run_full_sync
     async with get_db_session(current.workspace_id) as db:
         kb_service = KBService(db=db, workspace_id=uuid.UUID(str(current.workspace_id)))
         result = await run_full_sync(
@@ -79,8 +79,8 @@ async def apply_starter_pack(
     current: Annotated[CurrentUser, Depends(require_admin)],
 ):
     """Apply a sector-specific starter pack (pre-built KB + keywords) to this workspace."""
-    from radd.sales.engine import apply_starter_pack
     from radd.knowledge.service import KBService
+    from radd.sales.engine import apply_starter_pack
     async with get_db_session(current.workspace_id) as db:
         kb_service = KBService(db=db, workspace_id=uuid.UUID(str(current.workspace_id)))
         result = await apply_starter_pack(

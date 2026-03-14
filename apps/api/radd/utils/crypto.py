@@ -3,9 +3,9 @@ Token encryption at rest for channel configs.
 Uses Fernet (AES-128-CBC) with key derived from SECRET_KEY.
 """
 from __future__ import annotations
+
 import base64
 import hashlib
-import os
 
 from radd.config import settings
 

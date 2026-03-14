@@ -10,9 +10,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from radd.pipeline.normalizer import normalize
 from radd.pipeline.intent import classify_intent
-from radd.pipeline.dialect import detect_dialect
+from radd.pipeline.normalizer import normalize
 
 # ─── 100-query test set ───────────────────────────────────────────────────────
 # Format: (query, expected_intent)

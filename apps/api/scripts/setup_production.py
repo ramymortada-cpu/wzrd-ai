@@ -23,11 +23,7 @@ def check_env() -> list[dict]:
     for var, rules in rules_map.items():
         v = os.getenv(var, "")
         status = "pass"
-        if not v:
-            status = "FAIL"
-        elif rules.get("min") and len(v) < rules["min"]:
-            status = "FAIL"
-        elif rules.get("contains") and rules["contains"] not in v:
+        if not v or rules.get("min") and len(v) < rules["min"] or rules.get("contains") and rules["contains"] not in v:
             status = "FAIL"
         elif rules.get("starts") and not v.startswith(rules["starts"]):
             status = "WARN"
@@ -95,7 +91,7 @@ if __name__ == "__main__":
             f.write(generate_env())
         print("📄 .env.production created")
     if "--generate-nginx" in sys.argv:
-        domain = "radd.ai" if "--generate-nginx" == sys.argv[-1] else sys.argv[sys.argv.index("--generate-nginx") + 1]
+        domain = "radd.ai" if sys.argv[-1] == "--generate-nginx" else sys.argv[sys.argv.index("--generate-nginx") + 1]
         with open("nginx.prod.conf", "w") as f:
             f.write(generate_nginx(domain))
         print(f"📄 nginx.prod.conf created for {domain}")

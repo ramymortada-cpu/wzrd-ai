@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
@@ -21,8 +21,8 @@ control_router = APIRouter(prefix="/control-center", tags=["Control Center"])
 
 class AutomationStatus(BaseModel):
     is_active: bool
-    paused_at: Optional[datetime] = None
-    paused_by: Optional[str] = None
+    paused_at: datetime | None = None
+    paused_by: str | None = None
 
 
 @control_router.get("/decisions")
@@ -72,7 +72,7 @@ async def approve_review(
     request: Request,
     message_id: str,
     current: Annotated[CurrentUser, Depends(require_reviewer)],
-    modified_text: Optional[str] = None,
+    modified_text: str | None = None,
 ):
     return {"approved": message_id, "modified": modified_text is not None}
 

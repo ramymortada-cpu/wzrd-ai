@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 RADD AI — Developer API
 Public API for developers to integrate RADD into their systems.
@@ -7,17 +8,15 @@ Includes API key management + public endpoints.
 import hashlib
 import secrets
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
-from sqlalchemy import select, text
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
 
 from radd.auth.middleware import CurrentUser, require_owner
 from radd.config import settings
-from radd.db.models import AuditLog
 from radd.db.session import get_db_session
 from radd.limiter import limiter
 
@@ -113,7 +112,7 @@ async def create_api_key(
     key_prefix = full_key[:16]
 
     from datetime import timedelta
-    expires_at = datetime.now(timezone.utc) + timedelta(days=body.expires_days)
+    expires_at = datetime.now(UTC) + timedelta(days=body.expires_days)
 
     async with get_db_session(current.workspace_id) as db:
         key_id = str(uuid.uuid4())
@@ -191,7 +190,7 @@ async def _verify_api_key(request: Request) -> dict:
     if not row:
         raise HTTPException(status_code=401, detail="Invalid or revoked API key")
 
-    if row.expires_at and row.expires_at < datetime.now(timezone.utc):
+    if row.expires_at and row.expires_at < datetime.now(UTC):
         raise HTTPException(status_code=401, detail="API key expired")
 
     key_id = str(row.id)

@@ -21,6 +21,7 @@ def get_qdrant() -> AsyncQdrantClient:
 
 async def check_db_health() -> bool:
     from sqlalchemy import text
+
     from radd.db.base import engine
     try:
         async with engine.connect() as conn:

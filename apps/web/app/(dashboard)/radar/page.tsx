@@ -161,7 +161,7 @@ export default function RadarPage() {
             </div>
             <h3 className="text-lg font-semibold">كل شيء تمام!</h3>
             <p className="text-sm text-muted-foreground mt-1 max-w-xs">
-              لا توجد تنبيهات تشغيلية حالياً. استخدم زر "مسح الآن" لتحليل البيانات الحالية.
+              لا توجد تنبيهات تشغيلية حالياً. استخدم زر &quot;مسح الآن&quot; لتحليل البيانات الحالية.
             </p>
           </div>
         ) : (

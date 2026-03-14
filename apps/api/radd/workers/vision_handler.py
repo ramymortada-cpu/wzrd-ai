@@ -1,8 +1,10 @@
 """Image message processing — extracted from message_worker."""
 from __future__ import annotations
-import uuid
-from datetime import datetime, timezone
 
+import uuid
+from datetime import UTC, datetime
+
+import structlog
 from sqlalchemy import select
 
 from radd.config import settings
@@ -12,7 +14,6 @@ from radd.pipeline.dialect import detect_dialect
 from radd.utils.crypto import get_channel_config_decrypted
 from radd.whatsapp.client import send_text_message
 
-import structlog
 logger = structlog.get_logger()
 
 
@@ -70,7 +71,7 @@ async def process_image_message(
             content=response_text,
         )
         db.add(outbound)
-        conversation.last_message_at = datetime.now(timezone.utc)
+        conversation.last_message_at = datetime.now(UTC)
         conversation.message_count = (conversation.message_count or 0) + 2
         await db.flush()
 

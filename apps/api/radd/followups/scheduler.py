@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 RADD AI — Smart Follow-ups & Post-Purchase Check-in
 Schedules and sends follow-up messages:
@@ -6,9 +7,8 @@ Schedules and sends follow-up messages:
 2. Post-Purchase Check-in (delivery confirmation after 3 days)
 3. Win-back (VIP inactive for 45+ days)
 """
-import asyncio
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import UTC, datetime, timedelta
+
 import structlog
 
 logger = structlog.get_logger()
@@ -51,10 +51,11 @@ async def schedule_abandoned_sale_followup(
     delay_minutes: int = 120,
 ) -> dict:
     """Schedule a follow-up for abandoned sales conversation."""
-    from radd.db.models import FollowUpQueue
     import uuid
 
-    scheduled_at = datetime.now(timezone.utc) + timedelta(minutes=delay_minutes)
+    from radd.db.models import FollowUpQueue
+
+    scheduled_at = datetime.now(UTC) + timedelta(minutes=delay_minutes)
     template = FOLLOWUP_TEMPLATES["abandoned_sale"]["gulf"].format(
         product_name=product_name or "المنتج"
     )
@@ -88,10 +89,11 @@ async def schedule_post_purchase_checkin(
     delay_days: int = 3,
 ) -> dict:
     """Schedule a post-purchase check-in."""
-    from radd.db.models import FollowUpQueue
     import uuid
 
-    scheduled_at = datetime.now(timezone.utc) + timedelta(days=delay_days)
+    from radd.db.models import FollowUpQueue
+
+    scheduled_at = datetime.now(UTC) + timedelta(days=delay_days)
     template = FOLLOWUP_TEMPLATES["post_purchase"][dialect]
 
     followup = FollowUpQueue(
@@ -115,11 +117,13 @@ async def process_due_followups(db_session, workspace_id: str) -> list[dict]:
     Called by the APScheduler worker every 10 minutes.
     Returns list of processed follow-ups.
     """
-    from sqlalchemy import select
-    from radd.db.models import FollowUpQueue, Customer, Conversation
     import uuid
 
-    now = datetime.now(timezone.utc)
+    from sqlalchemy import select
+
+    from radd.db.models import Customer, FollowUpQueue
+
+    now = datetime.now(UTC)
 
     result = await db_session.execute(
         select(FollowUpQueue, Customer)
@@ -161,9 +165,11 @@ async def process_due_followups(db_session, workspace_id: str) -> list[dict]:
 
 async def get_followup_stats(db_session, workspace_id: str) -> dict:
     """Get follow-up statistics for the dashboard."""
-    from sqlalchemy import select, func
-    from radd.db.models import FollowUpQueue
     import uuid
+
+    from sqlalchemy import func, select
+
+    from radd.db.models import FollowUpQueue
 
     result = await db_session.execute(
         select(

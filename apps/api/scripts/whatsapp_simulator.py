@@ -274,7 +274,7 @@ async def test_webhook_endpoint():
         result1 = await send_webhook(client, dup_payload, "الرسالة الأولى (يجب قبولها)")
         result2 = await send_webhook(client, dup_payload, "الرسالة المكررة (يجب تجاهلها)")
         print(f"  ✅ الأولى: {result1['status_code']} | المكررة: {result2['status_code']}")
-        print(f"  ℹ️ كلاهما يعود 200 (ACK) لكن المكررة لن تُعالج في Redis")
+        print("  ℹ️ كلاهما يعود 200 (ACK) لكن المكررة لن تُعالج في Redis")
 
         # 5. Test non-text message
         print("\n🖼️ اختبار رسالة غير نصية (صورة)...")

@@ -1,14 +1,13 @@
 from __future__ import annotations
+
 """Zid Order Webhook Router."""
-import hashlib
-import hmac
 import json
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, Response, status
-from radd.limiter import limiter
-from radd.config import settings
-
 import structlog
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
+
+from radd.config import settings
+from radd.limiter import limiter
 
 logger = structlog.get_logger()
 router = APIRouter(prefix="/webhooks/zid", tags=["zid"])
@@ -34,9 +33,10 @@ async def receive_zid_webhook(request: Request, background_tasks: BackgroundTask
 
 
 async def _process_zid_webhook(event_type: str, payload: dict) -> None:
-    from radd.db.session import get_db_session
-    from radd.db.models import Channel
     from sqlalchemy import select
+
+    from radd.db.models import Channel
+    from radd.db.session import get_db_session
 
     # Find workspace by Zid store_id in channel config
     order_data = payload.get("order", payload.get("data", {}))

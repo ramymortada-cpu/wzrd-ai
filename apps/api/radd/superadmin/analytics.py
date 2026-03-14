@@ -1,12 +1,12 @@
 from __future__ import annotations
+
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from radd.db.models import (
-    AuditLog,
     Conversation,
     EscalationEvent,
     Message,
@@ -16,7 +16,7 @@ from radd.db.models import (
 
 async def get_platform_kpis(db: AsyncSession) -> dict:
     """Platform-wide KPIs — runs without RLS (no workspace_id set)."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     week_start = now - timedelta(days=7)
 
@@ -127,7 +127,7 @@ async def get_platform_kpis(db: AsyncSession) -> dict:
 
 async def get_workspace_detail_stats(db: AsyncSession, workspace_id: uuid.UUID) -> dict:
     """Per-workspace stats for the detail page (no RLS needed — superadmin)."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
     msg_total = (

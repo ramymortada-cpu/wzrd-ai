@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 Salla API integration.
 get_order_status: fetches real order data and formats Arabic response.

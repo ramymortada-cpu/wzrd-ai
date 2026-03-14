@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 Hybrid retrieval: Qdrant vector search + PostgreSQL BM25 + Reciprocal Rank Fusion.
 Returns top-k ranked passages with scores.
@@ -8,7 +9,7 @@ from dataclasses import dataclass, field
 
 import structlog
 from qdrant_client import AsyncQdrantClient
-from qdrant_client.models import Filter, FieldCondition, MatchValue
+from qdrant_client.models import FieldCondition, Filter, MatchValue
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 

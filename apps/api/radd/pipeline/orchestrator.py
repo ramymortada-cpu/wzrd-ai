@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 Pipeline orchestrator — Sprint 2/3 (full template + RAG path).
 Input: normalized Arabic message + conversation context + optional DB/Qdrant clients.
@@ -142,9 +143,10 @@ async def run_pipeline_async(
     dialect = dialect_result.dialect
 
     # ── 3. Classify intent ────────────────────────────────────────────────────
-    if settings.use_intent_v2:
-        from radd.pipeline.intent_v2 import classify_intent_llm
+    use_intent_v2 = context.get("use_intent_v2", settings.use_intent_v2)
+    if use_intent_v2:
         from radd.deps import get_redis
+        from radd.pipeline.intent_v2 import classify_intent_llm
         redis_client = get_redis()
         hist_str = [h.get("content", "") for h in (conversation_history or [])] if conversation_history else None
         intent_dict = await classify_intent_llm(normalized, conversation_history=hist_str, redis_client=redis_client)
@@ -206,8 +208,8 @@ async def run_pipeline_async(
             )
 
     # ── 5. RAG path ───────────────────────────────────────────────────────────
-    from radd.pipeline.retriever import retrieve
     from radd.pipeline.generator import generate_rag_response
+    from radd.pipeline.retriever import retrieve
 
     passages, c_retrieval = await retrieve(
         query=normalized,
@@ -250,7 +252,8 @@ async def run_pipeline_async(
 
     # Verify grounding
     passage_texts = [p.content for p in passages]
-    if settings.use_verifier_v2:
+    use_verifier_v2 = context.get("use_verifier_v2", settings.use_verifier_v2)
+    if use_verifier_v2:
         from radd.pipeline.verifier_v2 import verify_response_async
         c_verify, is_grounded, _details = await verify_response_async(response_text, passage_texts)
     else:

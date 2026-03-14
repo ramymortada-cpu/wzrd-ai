@@ -6,6 +6,7 @@ from slowapi.util import get_remote_address
 from radd.auth.service import decode_token
 from radd.config import settings
 
+
 def key_func(request: Request) -> str:
     """
     Determines the identifier for rate limiting.

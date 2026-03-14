@@ -1,10 +1,9 @@
 """Intelligence API router — knowledge gaps endpoint."""
+from datetime import datetime
 from typing import Annotated
-import uuid
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
-from datetime import datetime
 
 from radd.auth.middleware import CurrentUser, get_current_user
 from radd.db.session import AsyncSession, get_db

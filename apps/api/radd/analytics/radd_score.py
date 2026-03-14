@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 RADD Score — 0-100 composite score for store CS performance.
 Measures how well RADD is serving customers for this workspace.
@@ -11,6 +12,7 @@ Formula:
   Customer Happiness × 10 pts  (avg sentiment of customers)
 """
 from dataclasses import dataclass
+
 import structlog
 
 logger = structlog.get_logger()
@@ -37,6 +39,7 @@ async def calculate_radd_score(
     Calculate the RADD Score for a workspace over the last N days.
     """
     from sqlalchemy import text
+
     from radd.utils.sql_helpers import safe_period_days
 
     # Validate before interpolation into INTERVAL (no bind param support in PG INTERVAL)
@@ -139,7 +142,7 @@ def _summary_arabic(score: int, auto_rate: float, esc_rate: float, confidence: f
         return f"أداء جيد. معدل الأتمتة {auto_rate:.0%}. هناك فرصة لتحسين قاعدة المعرفة."
     if score >= 50:
         return f"أداء متوسط. معدل التصعيد {esc_rate:.0%} مرتفع. أضف محتوى لقاعدة المعرفة."
-    return f"يحتاج تحسين عاجل. قاعدة المعرفة تحتاج محتوى أكثر لتغطية استفسارات عملائك."
+    return "يحتاج تحسين عاجل. قاعدة المعرفة تحتاج محتوى أكثر لتغطية استفسارات عملائك."
 
 
 def _default_score() -> RaddScore:

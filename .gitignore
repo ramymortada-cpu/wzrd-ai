@@ -23,6 +23,7 @@ coverage.xml
 
 # ─── Node ─────────────────────────────────────────────────────────────────────
 node_modules/
+.pnpm-store/
 .next/
 .turbo/
 dist/

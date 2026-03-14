@@ -2,6 +2,7 @@
 import re
 from dataclasses import dataclass, field
 
+
 @dataclass
 class ExtractedEntities:
     order_numbers: list[str] = field(default_factory=list)
