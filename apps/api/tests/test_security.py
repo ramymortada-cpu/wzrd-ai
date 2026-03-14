@@ -51,6 +51,35 @@ class TestSqlInjectionPrevention:
             safe_period_days(91, min_val=7, max_val=90)
 
 
+# ─── Production SECRET_KEY Validation ────────────────────────────────────────
+
+class TestProductionSecretKey:
+    def test_production_rejects_weak_secret_key(self):
+        """In production, weak SECRET_KEY must raise ValueError."""
+        from radd.config import Settings
+        with pytest.raises(ValueError, match="SECRET_KEY must be set"):
+            Settings(app_env="production", secret_key="change-me")
+
+    def test_production_rejects_short_secret_key(self):
+        """In production, SECRET_KEY must be at least 32 characters."""
+        from radd.config import Settings
+        with pytest.raises(ValueError, match="at least 32"):
+            Settings(app_env="production", secret_key="a" * 20)
+
+    def test_development_allows_weak_secret_key(self):
+        """In development, weak SECRET_KEY is allowed."""
+        from radd.config import Settings
+        s = Settings(app_env="development", secret_key="change-me")
+        assert s.secret_key == "change-me"
+
+    def test_production_accepts_strong_secret_key(self):
+        """In production, strong SECRET_KEY is accepted."""
+        from radd.config import Settings
+        strong_key = "a" * 32
+        s = Settings(app_env="production", secret_key=strong_key)
+        assert s.secret_key == strong_key
+
+
 # ─── Instagram HMAC Signature ─────────────────────────────────────────────────
 
 class TestInstagramHMAC:

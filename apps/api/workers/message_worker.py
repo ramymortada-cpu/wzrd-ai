@@ -550,6 +550,13 @@ async def run_worker():
                             await r.xack(stream_key, CONSUMER_GROUP, msg_id)
                         except Exception as e:
                             logger.error("worker.message_failed", error=str(e), msg_id=msg_id)
+                            try:
+                                from radd.monitoring.sentry_and_logging import capture_pipeline_error
+                                data = msg_data if isinstance(msg_data, dict) else {}
+                                ws_id = data.get("workspace_id", data.get(b"workspace_id", ""))
+                                capture_pipeline_error(e, str(ws_id), "")
+                            except Exception:
+                                pass
 
         except asyncio.CancelledError:
             break

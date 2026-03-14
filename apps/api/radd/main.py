@@ -22,6 +22,7 @@ from radd.deps import check_db_health, check_qdrant_health, check_redis_health
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from radd.limiter import limiter
+from radd.monitoring.sentry_and_logging import _filter_pii
 import sentry_sdk
 
 logger = structlog.get_logger()
@@ -33,6 +34,8 @@ if settings.sentry_dsn:
         profiles_sample_rate=0.1,
         environment=settings.app_env,
         release=f"radd-api@{settings.app_version}",
+        before_send=_filter_pii,
+        send_default_pii=False,
     )
 
 

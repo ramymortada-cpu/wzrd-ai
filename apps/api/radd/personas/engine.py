@@ -16,6 +16,7 @@ class PersonaType(Enum):
     RECEPTIONIST = "receptionist"
     SALES = "sales"
     SUPPORT = "support"
+    COMPLAINT_HANDLER = "complaint_handler"
 
 
 @dataclass
@@ -112,6 +113,29 @@ SUPPORT_PROMPT = """أنت مسؤول دعم محترف لمتجر {store_name}.
 رد بلهجة {dialect}. كن متعاطف ومهني. لا تستخدم إيموجي عند الشكاوى الجدية."""
 
 
+COMPLAINT_HANDLER_PROMPT = """أنت متخصص شكاوى لمتجر {store_name}.
+
+## هدفك:
+الاستماع بتعاطف، فهم المشكلة، تقديم حل أو تصعيد فوري للفريق البشري.
+
+## النبرة:
+- متعاطف حقيقي — لا تدافع عن المتجر
+- اعترف بالمشكلة أولاً
+- خطوات حل واضحة ومحددة
+
+## قواعد صارمة:
+- لا تقل "ليس خطأنا" أبداً
+- صعّد فوراً إذا: شكوى متكررة، ذكر جهة رقابية، طلب تعويض
+- إذا العميل غاضب جداً → اعتذر ثم حوّل للفريق مع ملخص كامل
+- لا تقدم وعود لا تقدر تحققها
+
+## سياق العميل:
+{customer_context}
+
+## لهجة الرد:
+رد بلهجة {dialect}. كن متعاطف ومهني."""
+
+
 # ──────────────────────────────────────────────
 # Persona Configurations
 # ──────────────────────────────────────────────
@@ -141,6 +165,14 @@ PERSONAS = {
         temperature=0.2,  # أقل إبداعية — دقة في الحل
         max_turns_before_handoff=6,
     ),
+    PersonaType.COMPLAINT_HANDLER: PersonaConfig(
+        type=PersonaType.COMPLAINT_HANDLER,
+        name_ar="متخصص الشكاوى",
+        goal_ar="الاستماع وحل الشكاوى",
+        system_prompt=COMPLAINT_HANDLER_PROMPT,
+        temperature=0.2,  # دقة — لا إبداع في الشكاوى
+        max_turns_before_handoff=3,  # تصعيد أسرع
+    ),
 }
 
 
@@ -156,6 +188,9 @@ SUPPORT_INTENTS = {"order_status", "shipping", "return_policy"}
 
 # Greeting or unclear → Receptionist
 RECEPTIONIST_INTENTS = {"greeting", "general", "store_hours"}
+
+# Complaint → Complaint Handler
+COMPLAINT_INTENTS = {"complaint"}
 
 
 def select_persona(
@@ -176,6 +211,10 @@ def select_persona(
     # First interaction with no clear intent → Receptionist
     if conversation_turn <= 1 and intent in RECEPTIONIST_INTENTS:
         return PERSONAS[PersonaType.RECEPTIONIST]
+
+    # Complaint → Complaint Handler
+    if intent in COMPLAINT_INTENTS:
+        return PERSONAS[PersonaType.COMPLAINT_HANDLER]
 
     # Pre-purchase → Sales
     if is_pre_purchase or intent in SALES_INTENTS:
@@ -228,6 +267,9 @@ def get_persona_greeting(persona_type: PersonaType, dialect: str, customer_name:
         (PersonaType.SUPPORT, "gulf"): f"هلا{name_part}! وش المشكلة؟ خلني أساعدك نحلها الحين",
         (PersonaType.SUPPORT, "egyptian"): f"أهلاً{name_part}! إيه المشكلة؟ خليني أساعدك نحلها دلوقتي",
         (PersonaType.SUPPORT, "msa"): f"مرحباً{name_part}! ما المشكلة؟ سأساعدك في حلها فوراً",
+        (PersonaType.COMPLAINT_HANDLER, "gulf"): f"أعتذر عن أي إزعاج{name_part}. خلني أسمعك وأساعدك نحل الموضوع",
+        (PersonaType.COMPLAINT_HANDLER, "egyptian"): f"بنعتذر عن أي إزعاج{name_part}. خليني أسمعك وأساعدك",
+        (PersonaType.COMPLAINT_HANDLER, "msa"): f"أعتذر عن أي إزعاج{name_part}. سأستمع إليك وأساعدك في حل الموضوع",
     }
 
     return greetings.get(

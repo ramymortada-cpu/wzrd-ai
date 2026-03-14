@@ -151,6 +151,8 @@ Run with: `make benchmark`
 
 ## Production Deployment
 
+> **See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for SECRET_KEY generation, environment variables, and security checklist.
+
 ### Option A — Docker Compose on a VPS (simplest)
 
 **1. Provision a server** (Ubuntu 22.04, 4 vCPU, 8 GB RAM minimum)

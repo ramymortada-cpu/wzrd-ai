@@ -31,7 +31,7 @@ class TestPersonas:
         prompts = set()
         for p in PERSONAS.values():
             prompts.add(p.system_prompt[:50])
-        assert len(prompts) == 3  # 3 unique prompts
+        assert len(prompts) == 4  # 4 unique prompts (Receptionist, Sales, Support, Complaint Handler)
 
     def test_build_persona_prompt_injects_context(self):
         from radd.personas.engine import PERSONAS, PersonaType, build_persona_prompt
