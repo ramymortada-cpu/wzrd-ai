@@ -210,11 +210,17 @@ async def record_revenue_event(
         raise
 
 
+_ALLOWED_PERIODS = frozenset({"today", "yesterday", "this_week", "this_month"})
+_PERIOD_FILTERS = {
+    "today": "CURRENT_DATE",
+    "yesterday": "CURRENT_DATE - INTERVAL '1 day'",
+    "this_week": "DATE_TRUNC('week', CURRENT_DATE)",
+    "this_month": "DATE_TRUNC('month', CURRENT_DATE)",
+}
+
+
 def _get_period_filter(period: str) -> str:
-    filters = {
-        "today": "CURRENT_DATE",
-        "yesterday": "CURRENT_DATE - INTERVAL '1 day'",
-        "this_week": "DATE_TRUNC('week', CURRENT_DATE)",
-        "this_month": "DATE_TRUNC('month', CURRENT_DATE)",
-    }
-    return filters.get(period, filters["this_month"])
+    """Return SQL fragment for period. Only allows known values to prevent injection."""
+    if period not in _ALLOWED_PERIODS:
+        period = "this_month"
+    return _PERIOD_FILTERS[period]

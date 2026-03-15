@@ -10,6 +10,9 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
+from radd.config import settings
+from radd.webhooks.verify import verify_webhook_api_key
+
 logger = logging.getLogger("radd.webhooks.cart")
 
 router = APIRouter(prefix="/webhooks/cart", tags=["cart-webhooks"])
@@ -27,8 +30,17 @@ class AbandonedCartPayload(BaseModel):
     dialect: str = "gulf"
 
 
+def _require_webhook_auth(request: Request) -> None:
+    """Verify X-Webhook-Secret when webhook_api_key is configured."""
+    if not verify_webhook_api_key(
+        request.headers.get("X-Webhook-Secret"),
+        settings.webhook_api_key,
+    ):
+        raise HTTPException(status_code=401, detail="Invalid or missing webhook secret")
+
+
 @router.post("/abandoned")
-async def abandoned_cart_webhook(payload: AbandonedCartPayload):
+async def abandoned_cart_webhook(request: Request, payload: AbandonedCartPayload):
     """
     Trigger cart recovery funnel when a cart is abandoned.
 
@@ -36,7 +48,11 @@ async def abandoned_cart_webhook(payload: AbandonedCartPayload):
     - Salla webhook (cart.abandoned event)
     - Shopify webhook (carts/update with checkout_token)
     - Manual trigger from dashboard
+
+    When WEBHOOK_API_KEY is set, requests must include X-Webhook-Secret header.
     """
+    _require_webhook_auth(request)
+
     from radd.sales.cart_recovery import CartRecoveryFunnel
 
     if not payload.customer_phone:
@@ -63,7 +79,11 @@ async def cart_purchased_webhook(request: Request):
     Cancel active funnels when customer completes purchase.
 
     Called by Salla/Shopify order.completed webhook.
+
+    When WEBHOOK_API_KEY is set, requests must include X-Webhook-Secret header.
     """
+    _require_webhook_auth(request)
+
     try:
         body = await request.json()
     except Exception:

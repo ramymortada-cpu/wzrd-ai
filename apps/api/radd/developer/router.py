@@ -281,7 +281,7 @@ async def public_analytics(
     workspace_id = auth["workspace_id"]
     async with get_db_session(uuid.UUID(workspace_id)) as db:
         result = await db.execute(
-            text(f"""
+            text("""
                 SELECT
                     COUNT(*) total,
                     COUNT(*) FILTER(WHERE resolution_type IN ('auto_template','auto_rag')) auto_resolved,
@@ -289,9 +289,9 @@ async def public_analytics(
                     AVG(confidence_score) avg_confidence
                 FROM conversations
                 WHERE workspace_id = :wid
-                  AND created_at >= NOW() - INTERVAL '{period_days} days'
+                  AND created_at >= NOW() - make_interval(days => :period_days)
             """),
-            {"wid": workspace_id},
+            {"wid": workspace_id, "period_days": period_days},
         )
         row = result.fetchone()
 

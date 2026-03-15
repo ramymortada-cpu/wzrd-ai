@@ -102,6 +102,24 @@ class Settings(BaseSettings):
         description="Zid webhook secret for HMAC-SHA256 verification",
     )
 
+    # Cart / Shipping Webhooks — API key for generic webhook auth
+    webhook_api_key: str = Field(
+        default="",
+        description="Optional API key for cart/shipping webhooks. If set, require X-Webhook-Secret header.",
+    )
+
+    # Salla Webhook — HMAC-SHA256 (X-Salla-Signature)
+    salla_webhook_secret: str = Field(
+        default="",
+        description="Salla webhook secret for HMAC-SHA256 verification",
+    )
+
+    # Shopify Webhook — HMAC-SHA256 (X-Shopify-Hmac-SHA256)
+    shopify_webhook_secret: str = Field(
+        default="",
+        description="Shopify webhook secret for HMAC-SHA256 verification",
+    )
+
     # Alerting (slack_alert_webhook_url kept for backward compatibility)
     slack_alert_webhook_url: str = Field(
         default="",

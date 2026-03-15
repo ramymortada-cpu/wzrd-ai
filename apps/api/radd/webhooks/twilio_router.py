@@ -4,6 +4,8 @@ Twilio Webhooks — Call status updates and DTMF gather responses.
 Endpoints:
 - POST /api/v1/webhooks/twilio/call-status   — Call completed/failed/no-answer
 - POST /api/v1/webhooks/twilio/gather         — Customer pressed a digit (DTMF)
+
+When TWILIO_AUTH_TOKEN is set, validates X-Twilio-Signature on all requests.
 """
 
 from __future__ import annotations
@@ -11,11 +13,12 @@ from __future__ import annotations
 import json
 import logging
 from datetime import datetime, timezone, timedelta
-
 import redis.asyncio as aioredis
 from fastapi import APIRouter, Request
 from fastapi.responses import Response
 from sqlalchemy import select
+
+from twilio.request_validator import RequestValidator
 
 from radd.config import settings
 from radd.db.models import OutboundCall
@@ -29,6 +32,20 @@ router = APIRouter(prefix="/webhooks/twilio", tags=["twilio-webhooks"])
 # Redis key prefix for call_sid -> workspace_id lookup (set by worker when call is created)
 CALL_SID_PREFIX = "cod_shield_call_sid:"
 CALL_SID_TTL = 86400  # 24 hours
+
+
+def _validate_twilio_request(request: Request, form: dict) -> bool:
+    """Validate X-Twilio-Signature when twilio_auth_token is configured."""
+    if not settings.twilio_auth_token:
+        return True
+    signature = request.headers.get("X-Twilio-Signature", "")
+    if not signature:
+        logger.warning("Twilio webhook missing X-Twilio-Signature")
+        return False
+    # Twilio expects the full URL as requested (including query string if any)
+    url = str(request.url)
+    validator = RequestValidator(settings.twilio_auth_token)
+    return validator.validate(url, form, signature)
 
 
 async def _get_workspace_id_for_call_sid(call_sid: str) -> str | None:
@@ -57,9 +74,14 @@ async def twilio_call_status(request: Request):
     - To: destination phone number
     """
     form = await request.form()
-    call_sid = form.get("CallSid", "")
-    call_status = form.get("CallStatus", "")
-    to_number = form.get("To", "")
+    form_dict = dict(form)
+
+    if not _validate_twilio_request(request, form_dict):
+        return Response(status_code=403, content="Invalid signature")
+
+    call_sid = form_dict.get("CallSid", "")
+    call_status = form_dict.get("CallStatus", "")
+    to_number = form_dict.get("To", "")
 
     logger.info("Twilio call status: SID=%s, status=%s, to=%s", call_sid, call_status, to_number)
 
@@ -152,8 +174,13 @@ async def twilio_gather(request: Request):
     - 2: Cancel order → trigger Save the Sale
     """
     form = await request.form()
-    digits = form.get("Digits", "")
-    call_sid = form.get("CallSid", "")
+    form_dict = dict(form)
+
+    if not _validate_twilio_request(request, form_dict):
+        return Response(status_code=403, content="Invalid signature")
+
+    digits = form_dict.get("Digits", "")
+    call_sid = form_dict.get("CallSid", "")
 
     logger.info("Twilio gather: SID=%s, digits=%s", call_sid, digits)
 

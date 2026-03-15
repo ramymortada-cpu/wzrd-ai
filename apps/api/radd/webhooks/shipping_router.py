@@ -24,6 +24,13 @@ import redis.asyncio as aioredis
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
+from radd.config import settings
+from radd.webhooks.verify import (
+    verify_salla_signature,
+    verify_shopify_signature,
+    verify_webhook_api_key,
+)
+
 logger = logging.getLogger("radd.webhooks.shipping")
 
 router = APIRouter(prefix="/api/v1/webhooks/shipping", tags=["shipping-webhooks"])
@@ -106,13 +113,24 @@ class GenericShippingPayload(BaseModel):
     workspace_id: str | None = None
 
 
+def _require_webhook_auth(request: Request) -> None:
+    """Verify X-Webhook-Secret when webhook_api_key is configured."""
+    if not verify_webhook_api_key(
+        request.headers.get("X-Webhook-Secret"),
+        settings.webhook_api_key,
+    ):
+        raise HTTPException(status_code=401, detail="Invalid or missing webhook secret")
+
+
 @router.post("/generic")
 async def generic_shipping_webhook(payload: GenericShippingPayload, request: Request):
     """
     Generic shipping webhook — accepts a standardized format.
     Use this when integrating with any carrier that doesn't have a specific endpoint.
+
+    When WEBHOOK_API_KEY is set, requests must include X-Webhook-Secret header.
     """
-    from radd.config import settings
+    _require_webhook_auth(request)
 
     # Map common status strings to our standard codes
     status_mapping = {
@@ -169,17 +187,23 @@ async def salla_shipping_webhook(request: Request):
     - order.shipping.update
     - order.status.updated
 
-    Adapt the payload parsing based on actual Salla webhook format.
+    When SALLA_WEBHOOK_SECRET is set, verifies X-Salla-Signature HMAC-SHA256.
     """
     from radd.config import settings
 
+    body_bytes = await request.body()
     try:
-        body = await request.json()
-    except Exception:
+        body = json.loads(body_bytes)
+    except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="Invalid JSON")
 
-    # TODO: Add HMAC verification for Salla webhooks
-    # signature = request.headers.get("X-Salla-Signature", "")
+    if settings.salla_webhook_secret:
+        if not verify_salla_signature(
+            body_bytes,
+            request.headers.get("X-Salla-Signature"),
+            settings.salla_webhook_secret,
+        ):
+            raise HTTPException(status_code=401, detail="Invalid Salla signature")
 
     logger.info("Salla shipping webhook received: %s", json.dumps(body, ensure_ascii=False)[:500])
 
@@ -234,18 +258,24 @@ async def shopify_shipping_webhook(request: Request):
     Shopify sends events via webhook topics like:
     - fulfillments/update
     - orders/fulfilled
+
+    When SHOPIFY_WEBHOOK_SECRET is set, verifies X-Shopify-Hmac-SHA256.
     """
     from radd.config import settings
 
+    body_bytes = await request.body()
     try:
-        body = await request.json()
-    except Exception:
+        body = json.loads(body_bytes)
+    except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="Invalid JSON")
 
-    # TODO: Add HMAC verification for Shopify webhooks
-    # hmac_header = request.headers.get("X-Shopify-Hmac-SHA256", "")
-
-    logger.info("Shopify shipping webhook received: %s", json.dumps(body, ensure_ascii=False)[:500])
+    if settings.shopify_webhook_secret:
+        if not verify_shopify_signature(
+            body_bytes,
+            request.headers.get("X-Shopify-Hmac-SHA256"),
+            settings.shopify_webhook_secret,
+        ):
+            raise HTTPException(status_code=401, detail="Invalid Shopify signature")
 
     # Extract from Shopify format
     order_id = str(body.get("order_number", body.get("id", "")))

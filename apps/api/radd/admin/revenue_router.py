@@ -1,10 +1,14 @@
 """
-RADD AI — Revenue Attribution API
-===================================
+RADD AI — Revenue Attribution API (DEPRECATED)
+===============================================
 واجهة API لميزة "إثبات الإيرادات" — الميزة التي ستبيع المنتج.
 تربط المحادثات الآلية بالإيرادات المتولدة.
 
-الملف: apps/api/radd/admin/revenue.py
+DEPRECATED: This router is NOT mounted. Use instead:
+- revenue_dashboard_router: GET /api/v1/revenue/dashboard (canonical dashboard)
+- analytics_router: GET /api/v1/analytics/revenue/summary, /revenue/events
+
+Data source: radd.revenue.attribution + radd.db.models.RevenueEvent
 """
 
 from __future__ import annotations
