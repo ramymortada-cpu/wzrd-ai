@@ -124,6 +124,40 @@ async def run_pipeline_async(
     Full async pipeline: template path OR RAG path.
     Requires DB session + Qdrant client (Sprint 2+).
     """
+    try:
+        return await _run_pipeline_async_impl(
+            message, workspace_id, db, qdrant,
+            conversation_context, conversation_history,
+        )
+    except Exception as e:
+        alert_mgr = None
+        try:
+            from radd.monitoring.alerts import get_alert_manager, AlertSeverity
+            alert_mgr = get_alert_manager()
+        except Exception:
+            pass
+        if alert_mgr:
+            try:
+                await alert_mgr.fire(
+                    severity=AlertSeverity.CRITICAL,
+                    title="Pipeline Error",
+                    details=str(e),
+                    source="pipeline.orchestrator",
+                )
+            except Exception:
+                pass
+        raise
+
+
+async def _run_pipeline_async_impl(
+    message: str,
+    workspace_id,
+    db,
+    qdrant,
+    conversation_context: dict | None = None,
+    conversation_history: list[dict] | None = None,
+) -> PipelineResult:
+    """Internal implementation of run_pipeline_async."""
     context = conversation_context or {}
 
     # ── Not Arabic ────────────────────────────────────────────────────────────

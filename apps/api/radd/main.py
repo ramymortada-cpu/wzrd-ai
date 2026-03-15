@@ -14,6 +14,7 @@ from radd.channels.instagram_router import router as instagram_router
 from radd.channels.zid_router import router as zid_router
 from radd.alerts import init_alert_manager
 from radd.config import settings
+from radd.monitoring.alerts import init_alert_manager as init_slack_alert_manager
 from radd.conversations.router import router as conversations_router
 from radd.deps import check_db_health, check_qdrant_health, check_redis_health
 from radd.developer.router import router as developer_router
@@ -31,9 +32,9 @@ logger = structlog.get_logger()
 if settings.sentry_dsn:
     sentry_sdk.init(
         dsn=settings.sentry_dsn,
+        environment=settings.sentry_environment,
         traces_sample_rate=0.1,
         profiles_sample_rate=0.1,
-        environment=settings.app_env,
         release=f"radd-api@{settings.app_version}",
         before_send=_filter_pii,
         send_default_pii=False,
@@ -43,6 +44,11 @@ init_alert_manager(
     slack_webhook_url=settings.slack_alert_webhook_url,
     app_env=settings.app_env,
 )
+
+# Initialize Slack alerts for pipeline (monitoring.alerts)
+_slack_webhook = settings.slack_alert_webhook or settings.slack_alert_webhook_url
+if _slack_webhook:
+    init_slack_alert_manager(_slack_webhook)
 
 
 @asynccontextmanager

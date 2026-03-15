@@ -16,7 +16,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import TopBar from "@/components/layout/topbar";
 import KPICard from "@/components/dashboard/kpi-card";
-import OnboardingWizard from "./components/OnboardingWizard";
+import OnboardingWizard from "@/components/onboarding/onboarding-wizard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { apiFetch } from "@/lib/api";
@@ -290,6 +290,7 @@ export default function DashboardPage() {
   const [feed, setFeed] = useState<FeedEvent[]>(DEMO_FEED);
   const [loading, setLoading] = useState(true);
   const [isDemo, setIsDemo] = useState(false);
+  const [viewMode, setViewMode] = useState<"simple" | "advanced">("simple");
   const wsRef = useRef<WebSocket | null>(null);
   const feedIdRef = useRef(100);
 
@@ -426,6 +427,34 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* ── View Mode Toggle ─────────────────── */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 rounded-lg border border-border/60 p-1 bg-muted/30">
+            <button
+              type="button"
+              onClick={() => setViewMode("simple")}
+              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                viewMode === "simple"
+                  ? "bg-background shadow-sm font-medium"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              مبسط
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("advanced")}
+              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                viewMode === "advanced"
+                  ? "bg-background shadow-sm font-medium"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              متقدم
+            </button>
+          </div>
+        </div>
+
         {/* ── KPI Grid ────────────────────────── */}
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <KPICard
@@ -462,41 +491,45 @@ export default function DashboardPage() {
             deltaPositive={a.pending_escalations <= 3}
             valueClassName={a.pending_escalations > 3 ? "text-amber-600 dark:text-amber-400" : ""}
           />
-          <KPICard
-            loading={loading}
-            title="رسائل اليوم"
-            value={a.messages_today.toLocaleString("ar-SA")}
-            icon={<MessageCircle className="h-4 w-4" />}
-            delta="↑ ١٨% من أمس"
-            deltaPositive
-          />
-          <KPICard
-            loading={loading}
-            title="إيرادات بسبب رَدّ"
-            value={`${formatSAR(r.total_revenue_sar)} ر.س`}
-            icon={<DollarSign className="h-4 w-4" />}
-            delta="هذا الشهر"
-            deltaPositive
-            valueClassName="text-green-600 dark:text-green-400"
-          />
-          <KPICard
-            loading={loading}
-            title="معدل الهلوسة"
-            value={`${a.hallucination_rate.toFixed(1)}%`}
-            icon={<ShieldCheck className="h-4 w-4" />}
-            delta="↓ ٣.١% (Verifier v2)"
-            deltaPositive
-            valueClassName="text-green-600 dark:text-green-400"
-          />
-          <KPICard
-            loading={loading}
-            title="عملاء في خطر تسرب"
-            value={c.at_risk_count}
-            icon={<Users className="h-4 w-4" />}
-            delta="يحتاجون تدخل"
-            deltaPositive={false}
-            valueClassName={c.at_risk_count > 5 ? "text-amber-600 dark:text-amber-400" : ""}
-          />
+          {viewMode === "advanced" && (
+            <>
+              <KPICard
+                loading={loading}
+                title="رسائل اليوم"
+                value={a.messages_today.toLocaleString("ar-SA")}
+                icon={<MessageCircle className="h-4 w-4" />}
+                delta="↑ ١٨% من أمس"
+                deltaPositive
+              />
+              <KPICard
+                loading={loading}
+                title="إيرادات بسبب رَدّ"
+                value={`${formatSAR(r.total_revenue_sar)} ر.س`}
+                icon={<DollarSign className="h-4 w-4" />}
+                delta="هذا الشهر"
+                deltaPositive
+                valueClassName="text-green-600 dark:text-green-400"
+              />
+              <KPICard
+                loading={loading}
+                title="معدل الهلوسة"
+                value={`${a.hallucination_rate.toFixed(1)}%`}
+                icon={<ShieldCheck className="h-4 w-4" />}
+                delta="↓ ٣.١% (Verifier v2)"
+                deltaPositive
+                valueClassName="text-green-600 dark:text-green-400"
+              />
+              <KPICard
+                loading={loading}
+                title="عملاء في خطر تسرب"
+                value={c.at_risk_count}
+                icon={<Users className="h-4 w-4" />}
+                delta="يحتاجون تدخل"
+                deltaPositive={false}
+                valueClassName={c.at_risk_count > 5 ? "text-amber-600 dark:text-amber-400" : ""}
+              />
+            </>
+          )}
         </div>
 
         {/* ── Row 2: Revenue + Live Feed ───────── */}

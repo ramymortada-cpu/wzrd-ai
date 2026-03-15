@@ -1,5 +1,10 @@
+import json
+import logging
+
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+logger = logging.getLogger(__name__)
 
 # Weak keys that must never be used in production (token encryption, etc.)
 _WEAK_SECRET_KEYS = frozenset({"change-me", "radd-default-secret", ""})
@@ -17,6 +22,10 @@ class Settings(BaseSettings):
     # Application
     app_env: str = "development"
     app_version: str = "0.1.0"
+
+    # AWS Secrets Manager (production only)
+    aws_secret_name: str = "radd/production/api_secrets"
+    aws_region: str = "me-south-1"
     secret_key: str = "change-me"
     debug: bool = True
 
@@ -51,6 +60,10 @@ class Settings(BaseSettings):
 
     # Sentry
     sentry_dsn: str | None = None
+    sentry_environment: str = "development"
+
+    # Slack Alerts (CRITICAL/FATAL) — use SLACK_ALERT_WEBHOOK or SLACK_ALERT_WEBHOOK_URL
+    slack_alert_webhook: str = ""
 
     # Rate Limiting
     default_rate_limit: str = "100/minute"
@@ -83,7 +96,7 @@ class Settings(BaseSettings):
         description="Zid webhook secret for HMAC-SHA256 verification",
     )
 
-    # Alerting
+    # Alerting (slack_alert_webhook_url kept for backward compatibility)
     slack_alert_webhook_url: str = Field(
         default="",
         description="Slack Incoming Webhook URL for CRITICAL/FATAL alerts",
@@ -100,6 +113,63 @@ class Settings(BaseSettings):
     # Pipeline v2 — Intent (LLM) and Verifier (NLI). Set True to enable.
     use_intent_v2: bool = False
     use_verifier_v2: bool = False
+
+    def _load_secrets_from_aws(self) -> None:
+        """Load sensitive settings from AWS Secrets Manager in production."""
+        try:
+            import boto3
+
+            secret_name = self.aws_secret_name
+            region_name = self.aws_region
+
+            session = boto3.session.Session()
+            client = session.client(
+                service_name="secretsmanager",
+                region_name=region_name,
+            )
+
+            response = client.get_secret_value(SecretId=secret_name)
+            secrets = json.loads(response["SecretString"])
+
+            field_mapping = {
+                "DATABASE_URL": "database_url",
+                "REDIS_URL": "redis_url",
+                "OPENAI_API_KEY": "openai_api_key",
+                "SECRET_KEY": "secret_key",
+                "JWT_SECRET_KEY": "jwt_secret_key",
+                "WA_API_TOKEN": "wa_api_token",
+                "META_APP_SECRET": "meta_app_secret",
+                "SENTRY_DSN": "sentry_dsn",
+                "SLACK_ALERT_WEBHOOK": "slack_alert_webhook",
+                "SALLA_CLIENT_ID": "salla_client_id",
+                "SALLA_CLIENT_SECRET": "salla_client_secret",
+            }
+
+            loaded_count = 0
+            for aws_key, settings_field in field_mapping.items():
+                if aws_key in secrets and hasattr(self, settings_field):
+                    setattr(self, settings_field, secrets[aws_key])
+                    loaded_count += 1
+
+            logger.info(
+                "Loaded %d secrets from AWS Secrets Manager (secret=%s, region=%s)",
+                loaded_count,
+                secret_name,
+                region_name,
+            )
+
+        except ImportError:
+            logger.error("boto3 not installed — cannot load secrets from AWS")
+        except Exception as e:
+            logger.error("Failed to load secrets from AWS Secrets Manager: %s", e)
+            # Do NOT crash the app — fall back to .env values
+
+    @model_validator(mode="after")
+    def _load_aws_secrets_in_production(self) -> "Settings":
+        """Load secrets from AWS when in production."""
+        if self.app_env == "production" and self.aws_secret_name:
+            self._load_secrets_from_aws()
+        return self
 
     @model_validator(mode="after")
     def validate_production_secret_key(self) -> "Settings":

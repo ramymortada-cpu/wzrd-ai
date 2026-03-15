@@ -11,7 +11,10 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from enum import Enum
+
+import httpx
 
 logger = logging.getLogger("radd.monitoring")
 
@@ -335,3 +338,111 @@ class MetricsTracker:
         except Exception as e:
             logger.warning("metrics.get_summary_failed", error=str(e))
             return {}
+
+
+# ---------------------------------------------------------------------------
+# Slack Alerts — للـ Pipeline والأخطاء الحرجة (CURSOR_PROMPT_1)
+# ---------------------------------------------------------------------------
+
+_EMOJI = {
+    AlertSeverity.INFO: "ℹ️",
+    AlertSeverity.WARNING: "⚠️",
+    AlertSeverity.CRITICAL: "🔴",
+    AlertSeverity.FATAL: "💀",
+}
+_SLACK_SEVERITIES = {AlertSeverity.CRITICAL, AlertSeverity.FATAL}
+
+
+async def send_slack_alert(
+    webhook_url: str,
+    severity: AlertSeverity,
+    title: str,
+    details: str,
+    source: str = "radd-api",
+) -> bool:
+    """Send an alert to Slack via incoming webhook.
+    Returns True if sent successfully, False otherwise.
+    Does NOT raise — alerting should never crash the app.
+    """
+    if not webhook_url:
+        logger.warning("Slack webhook URL not configured — alert not sent")
+        return False
+
+    if severity not in _SLACK_SEVERITIES:
+        logger.debug(f"Severity {severity} below Slack threshold — skipped")
+        return False
+
+    emoji = _EMOJI.get(severity, "❓")
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+    payload = {
+        "blocks": [
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": f"{emoji} [{severity.value.upper()}] {title}",
+                },
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {"type": "mrkdwn", "text": f"*Source:*\n{source}"},
+                    {"type": "mrkdwn", "text": f"*Time:*\n{timestamp}"},
+                ],
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"```{details[:1500]}```",
+                },
+            },
+        ]
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.post(webhook_url, json=payload)
+            if resp.status_code == 200:
+                logger.info(f"Slack alert sent: {title}")
+                return True
+            else:
+                logger.error(f"Slack webhook returned {resp.status_code}: {resp.text}")
+                return False
+    except Exception as e:
+        logger.error(f"Failed to send Slack alert: {e}")
+        return False
+
+
+class SlackAlertManager:
+    """Convenience wrapper for pipeline/critical alerts."""
+
+    def __init__(self, webhook_url: str):
+        self._webhook_url = webhook_url
+
+    async def fire(
+        self,
+        severity: AlertSeverity,
+        title: str,
+        details: str,
+        source: str = "radd-api",
+    ) -> bool:
+        return await send_slack_alert(
+            self._webhook_url, severity, title, details, source
+        )
+
+
+_slack_alert_manager: SlackAlertManager | None = None
+
+
+def init_alert_manager(webhook_url: str) -> SlackAlertManager:
+    """Initialize the Slack alert manager. Call once in main.py."""
+    global _slack_alert_manager
+    _slack_alert_manager = SlackAlertManager(webhook_url)
+    return _slack_alert_manager
+
+
+def get_alert_manager() -> SlackAlertManager | None:
+    """Get the Slack alert manager. Returns None if not initialized."""
+    return _slack_alert_manager
