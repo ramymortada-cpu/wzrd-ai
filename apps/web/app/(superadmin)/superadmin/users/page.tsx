@@ -9,6 +9,7 @@ import {
   suspendSAUser,
   activateSAUser,
   resetSAUserPassword,
+  promoteSASuperadmin,
   type PlatformUser,
 } from "@/lib/api";
 
@@ -124,6 +125,15 @@ export default function SAUsersPage() {
     load();
   }
 
+  async function promote(user: PlatformUser) {
+    try {
+      await promoteSASuperadmin(user.id);
+      load();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   const filtered = search
     ? users.filter(
         (u) =>
@@ -231,6 +241,15 @@ export default function SAUsersPage() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2 justify-end">
+                          {!u.is_superadmin && (
+                            <button
+                              onClick={() => promote(u)}
+                              className="text-xs text-violet-400 hover:text-violet-300 transition-colors flex items-center gap-1"
+                            >
+                              <ShieldCheck className="h-3 w-3" />
+                              ترقية لـ superadmin
+                            </button>
+                          )}
                           <button
                             onClick={() => setResetTarget(u)}
                             className="text-xs text-slate-400 hover:text-violet-400 transition-colors"

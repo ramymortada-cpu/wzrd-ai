@@ -78,16 +78,33 @@ async def detect_and_run_action(
             return ActionResult(action="track_shipment", response_text=response, data=result)
         return None
 
-    # ── Cancel Order ──────────────────────────────────────────────────────────
-    cancel_keywords = ["ألغي", "الغاء", "إلغاء", "ابغى الغي", "ابي الغي", "عايز الغي"]
-    if any(kw in message for kw in cancel_keywords):
+    # ── Cancel Request (Save The Sale) ────────────────────────────────────────
+    if intent == "cancel_request":
         from radd.actions.salla import extract_order_number
-        from radd.actions.salla_advanced import cancel_order, format_cancel_response
-        order_number = extract_order_number(message)
-        if order_number and salla_token:
-            result = await cancel_order(order_number, salla_token)
-            response = format_cancel_response(result, dialect)
-            return ActionResult(action="cancel_order", response_text=response, data=result)
+        from radd.actions.save_the_sale import handle_cancellation_request
+
+        confirm_keywords = ["أكد الإلغاء", "أكّد الإلغاء", "نعم ألغي", "نعم الغي", "تأكيد الإلغاء", "ألغي فعلاً"]
+        if any(kw in message for kw in confirm_keywords):
+            # تأكيد صريح — تنفيذ الإلغاء الفعلي (Salla فقط — Shopify لا يدعم إلغاء عبر API بهذا الشكل)
+            order_number = extract_order_number(message)
+            if order_number and salla_token and platform == "salla":
+                from radd.actions.salla_advanced import cancel_order, format_cancel_response
+                result = await cancel_order(order_number, salla_token)
+                response = format_cancel_response(result, dialect)
+                return ActionResult(action="cancel_order", response_text=response, data=result)
+
+        # Save The Sale — عرض خيارات، لا إلغاء فعلي
+        result = await handle_cancellation_request(message, dialect, workspace_config)
+        return ActionResult(
+            action="save_the_sale",
+            response_text=result.response_text,
+            data={
+                "cancellable": result.cancellable,
+                "order_reference": result.order_reference,
+                "status": result.status,
+                "options": result.options,
+            },
+        )
 
     # ── Create Return ─────────────────────────────────────────────────────────
     return_keywords = ["أرجع", "إرجاع", "ارجع", "ابي ارجع", "ابغى ارجع", "عايز ارجع", "طلب إرجاع", "استرجاع"]

@@ -205,8 +205,8 @@ async def _run_pipeline_async_impl(
         intent = intent_result.intent
         order_number_from_entities = None  # v1 doesn't extract entities
 
-    # ── 4a. Action path (Salla order status) ─────────────────────────────────
-    if intent == "order_status":
+    # ── 4a. Action path (order status, cancel request) ────────────────────────
+    if intent in ("order_status", "cancel_request"):
         from radd.actions.base import detect_and_run_action
         workspace_config = context.get("workspace_config", {})
         action_result = await detect_and_run_action(intent, message, dialect, workspace_config)

@@ -2,11 +2,21 @@
 Integration test fixtures — real Postgres + Redis via testcontainers.
 Requires Docker. Run with: uv run pytest tests/integration/ -v
 Skip if Docker unavailable: pytest tests/integration/ -v --ignore-glob='*integration*'
+
+If DATABASE_URL points to production (e.g. Neon), unset it before running:
+  DATABASE_URL= uv run pytest tests/integration/ -v
 """
 from __future__ import annotations
 
 import os
 import uuid
+
+# Force integration tests to use testcontainers, not production .env
+# Must run before any radd import. integration_app will set the real testcontainers URL.
+def pytest_configure(config):
+    _db = os.environ.get("DATABASE_URL", "")
+    if "neon.tech" in _db or "neondb" in _db:
+        os.environ["DATABASE_URL"] = "postgresql+asyncpg://radd:radd_dev_password@localhost:5432/radd_dev"
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -18,13 +28,32 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 pytestmark = pytest.mark.integration
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _integration_env_guard():
+    """
+    Ensure integration tests don't accidentally use production DATABASE_URL.
+    If DATABASE_URL points to Neon/cloud, we'll override it in integration_app.
+    """
+    yield
+
+
 def _pg_url_to_asyncpg(url: str) -> str:
-    """Convert postgresql URL to postgresql+asyncpg:// for SQLAlchemy async driver."""
-    # Handle postgresql://, postgresql+psycopg2://, etc.
+    """Convert postgresql URL to postgresql+asyncpg:// for SQLAlchemy async driver.
+    Strips sslmode (asyncpg rejects it — uses ssl= instead).
+    """
+    from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+
     if "postgresql" in url and "asyncpg" not in url:
         idx = url.find("://")
         if idx >= 0:
-            return "postgresql+asyncpg" + url[idx:]
+            url = "postgresql+asyncpg" + url[idx:]
+    parsed = urlparse(url)
+    if parsed.query:
+        params = [
+            (k, v) for k, v in parse_qsl(parsed.query) if k.lower() not in ("sslmode", "ssl")
+        ]
+        new_query = urlencode(params) if params else ""
+        url = urlunparse(parsed._replace(query=new_query))
     return url
 
 
@@ -74,6 +103,7 @@ def integration_engine(integration_db_url):
         echo=False,
         pool_size=2,
         max_overflow=0,
+        connect_args={"ssl": False} if "asyncpg" in integration_db_url else {},
     )
 
 
@@ -139,41 +169,63 @@ async def integration_app(
     """
     FastAPI app with DB and Redis overridden to use testcontainers.
     Patches radd.db.base and radd.deps before importing the app.
-    Async to ensure engine/session use the same event loop as tests.
+    Forces DATABASE_URL to testcontainers so no env override uses production DB.
     """
-    import radd.db.base as db_base
-    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+    import os
 
-    engine = create_async_engine(
-        integration_db_url,
-        echo=False,
-        pool_size=2,
-        max_overflow=0,
-    )
-    session_factory = async_sessionmaker(
-        engine,
-        class_=AsyncSession,
-        expire_on_commit=False,
-        autoflush=False,
-    )
-    db_base.engine = engine
-    db_base.AsyncSessionLocal = session_factory
+    _prev_db = os.environ.pop("DATABASE_URL", None)
+    os.environ["DATABASE_URL"] = integration_db_url
+    # Force config reload so settings.database_url uses testcontainers
+    import importlib
+    import radd.config as config_mod
+    importlib.reload(config_mod)
+    try:
+        import radd.db.base as db_base
+        from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-    # Patch Redis before any module imports it
-    import redis.asyncio as aioredis
-    from radd import deps
-    _redis = aioredis.from_url(integration_redis_url, decode_responses=True)
-    deps.get_redis = lambda: _redis
+        engine = create_async_engine(
+            integration_db_url,
+            echo=False,
+            pool_size=2,
+            max_overflow=0,
+            connect_args={"ssl": False} if "asyncpg" in integration_db_url else {},
+        )
+        session_factory = async_sessionmaker(
+            engine,
+            class_=AsyncSession,
+            expire_on_commit=False,
+            autoflush=False,
+        )
+        db_base.engine = engine
+        db_base.AsyncSessionLocal = session_factory
+        # session module imports AsyncSessionLocal at load time — patch there too
+        import radd.db.session as session_mod
+        session_mod.AsyncSessionLocal = session_factory
 
-    # Create tables before importing app
-    from radd.db.base import Base
-    import radd.db.models  # noqa: F401 — register models
+        # Patch Redis — create fresh client per test (same event loop)
+        import redis.asyncio as aioredis
+        from radd import deps
+        _redis = aioredis.from_url(integration_redis_url, decode_responses=True)
+        _orig_get_redis = deps.get_redis
+        deps.get_redis = lambda: _redis
 
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        # Create tables before importing app
+        from radd.db.base import Base
+        import radd.db.models  # noqa: F401 — register models
 
-    from radd.main import app
-    return app
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+
+        from radd.main import app
+        try:
+            yield app
+        finally:
+            deps.get_redis = _orig_get_redis
+    finally:
+        if _prev_db is not None:
+            os.environ["DATABASE_URL"] = _prev_db
+        elif "DATABASE_URL" in os.environ:
+            del os.environ["DATABASE_URL"]
 
 
 @pytest.fixture
@@ -183,3 +235,42 @@ async def integration_app_client(integration_app):
     transport = ASGITransport(app=integration_app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
+
+
+@pytest.fixture
+async def integration_seeded_for_webhook(integration_app, integration_session_factory, integration_engine):
+    """
+    Seed Workspace + Channel with wa_phone_number_id for E2E webhook tests.
+    Uses same DB as integration_app (shared postgres_container).
+    Unique workspace per test to avoid duplicate key errors.
+    """
+    from radd.db.models import Channel, Workspace
+
+    workspace_id = uuid.uuid4()
+    phone_number_id = f"e2e_wa_{workspace_id.hex[:12]}"
+
+    async with integration_engine.begin() as conn:
+        from radd.db.base import Base
+        import radd.db.models  # noqa: F401
+        await conn.run_sync(Base.metadata.create_all)
+
+    async with integration_session_factory() as session:
+        ws = Workspace(
+            id=workspace_id,
+            name="E2E Smoke Workspace",
+            slug=f"e2e-smoke-{workspace_id.hex[:8]}",
+            plan="growth",
+            status="active",
+        )
+        session.add(ws)
+        ch = Channel(
+            workspace_id=workspace_id,
+            type="whatsapp",
+            name="E2E Channel",
+            is_active=True,
+            config={"wa_phone_number_id": phone_number_id},
+        )
+        session.add(ch)
+        await session.commit()
+
+    yield {"workspace_id": workspace_id, "phone_number_id": phone_number_id}

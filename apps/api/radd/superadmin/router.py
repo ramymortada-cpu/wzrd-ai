@@ -28,8 +28,10 @@ from radd.superadmin.schemas import (
     WorkspaceCreate,
     WorkspaceUpdate,
 )
+from radd.superadmin.workspace_router import router as workspace_router
 
 router = APIRouter(prefix="/superadmin", tags=["superadmin"])
+router.include_router(workspace_router, prefix="")
 
 
 # ─── Platform Analytics ───────────────────────────────────────────────────────

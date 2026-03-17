@@ -253,11 +253,12 @@ async def _requeue_call(call_record: OutboundCall) -> None:
 
 
 async def _schedule_whatsapp_fallback(call_record: OutboundCall) -> None:
-    """Schedule a WhatsApp message as fallback after call failure."""
+    """Schedule a WhatsApp message as fallback after 15 min (via DelayedTaskScheduler)."""
     try:
-        r = aioredis.from_url(settings.redis_url, decode_responses=True)
+        from radd.scheduler.delayed_task import DelayedTaskScheduler
 
-        task = {
+        scheduler = DelayedTaskScheduler(settings.redis_url)
+        payload = {
             "type": "cod_whatsapp_fallback",
             "workspace_id": str(call_record.workspace_id) if call_record.workspace_id else "",
             "order_id": call_record.order_id,
@@ -265,23 +266,22 @@ async def _schedule_whatsapp_fallback(call_record: OutboundCall) -> None:
             "customer_name": call_record.customer_name or "العميل",
             "store_name": call_record.store_name or "المتجر",
             "message_template": "cod_confirmation",
-            "scheduled_at": (datetime.now(timezone.utc) + timedelta(minutes=15)).isoformat(),
         }
-
-        await r.lpush("cod_shield_whatsapp", json.dumps(task, ensure_ascii=False))
-        await r.aclose()
-
-        logger.info("WhatsApp fallback scheduled for order %s (15 min)", call_record.order_id)
+        ok = await scheduler.schedule("cod_whatsapp_fallback", payload, delay_seconds=15 * 60)
+        await scheduler.close()
+        if ok:
+            logger.info("WhatsApp fallback scheduled for order %s (15 min)", call_record.order_id)
     except Exception as e:
         logger.error("Failed to schedule WhatsApp fallback: %s", e)
 
 
 async def _schedule_save_the_sale(call_record: OutboundCall) -> None:
-    """Schedule a Save the Sale WhatsApp conversation after cancellation."""
+    """Schedule a Save the Sale WhatsApp conversation after 2 min (via DelayedTaskScheduler)."""
     try:
-        r = aioredis.from_url(settings.redis_url, decode_responses=True)
+        from radd.scheduler.delayed_task import DelayedTaskScheduler
 
-        task = {
+        scheduler = DelayedTaskScheduler(settings.redis_url)
+        payload = {
             "type": "save_the_sale",
             "workspace_id": str(call_record.workspace_id) if call_record.workspace_id else "",
             "order_id": call_record.order_id,
@@ -289,12 +289,10 @@ async def _schedule_save_the_sale(call_record: OutboundCall) -> None:
             "customer_name": call_record.customer_name or "العميل",
             "store_name": call_record.store_name or "المتجر",
             "message": f"مرحباً {call_record.customer_name or 'العميل'}، لاحظنا إنك لغيت طلبك رقم {call_record.order_id}. ممكن نعرف السبب؟ لو فيه أي مشكلة نقدر نحلها لك 🙏",
-            "scheduled_at": (datetime.now(timezone.utc) + timedelta(minutes=2)).isoformat(),
         }
-
-        await r.lpush("cod_shield_whatsapp", json.dumps(task, ensure_ascii=False))
-        await r.aclose()
-
-        logger.info("Save the Sale scheduled for order %s", call_record.order_id)
+        ok = await scheduler.schedule("save_the_sale", payload, delay_seconds=2 * 60)
+        await scheduler.close()
+        if ok:
+            logger.info("Save the Sale scheduled for order %s (2 min)", call_record.order_id)
     except Exception as e:
         logger.error("Failed to schedule Save the Sale: %s", e)

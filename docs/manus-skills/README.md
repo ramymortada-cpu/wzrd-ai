@@ -16,6 +16,13 @@
 | 08 | `08_add_api_endpoint.md` | إضافة endpoint جديد في الـ API |
 | 09 | `09_run_tests.md` | تشغيل الاختبارات وإضافة اختبارات جديدة |
 | 10 | `10_add_frontend_page.md` | إضافة صفحة جديدة في الـ Dashboard |
+| 14 | `14_docker_compose_fix.md` | إضافة outbound_call_worker للإنتاج |
+| 15 | `15_save_the_sale.md` | handle_cancellation_request + اختبارات |
+| 16 | `16_channel_fallback_scheduler.md` | DelayedTaskScheduler + Twilio |
+| 17 | `17_business_health_monitoring.md` | /health/business + Heartbeat + DLQ |
+| 18 | `18_worker_refactor.md` | تفكيك message_worker لـ 3 handlers |
+| 19 | `19_e2e_smoke_test.md` | اختبار E2E من webhook لـ response |
+| 20 | `20_production_validation.md` | Pre-flight script |
 
 ## الاستخدام
 

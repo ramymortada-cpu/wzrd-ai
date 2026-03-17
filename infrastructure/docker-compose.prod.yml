@@ -80,6 +80,34 @@ services:
       api:
         condition: service_healthy
 
+  # ─── Delayed Task Worker (Channel Fallback Scheduler) ───────────────────────
+  delayed_task_worker:
+    image: ${REGISTRY:-ghcr.io/radd-ai}/radd-worker:${TAG:-latest}
+    build:
+      context: ..
+      dockerfile: infrastructure/docker/Dockerfile.worker
+    command: ["python", "-m", "workers.delayed_task_worker"]
+    <<: *api-env
+    networks: [radd_net]
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+
+  # ─── Outbound Call Worker (COD Shield) ──────────────────────────────────────
+  outbound_call_worker:
+    image: ${REGISTRY:-ghcr.io/radd-ai}/radd-worker:${TAG:-latest}
+    build:
+      context: ..
+      dockerfile: infrastructure/docker/Dockerfile.worker
+    command: ["python", "-m", "workers.outbound_call_worker"]
+    <<: *api-env
+    networks: [radd_net]
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+
   # ─── Frontend ─────────────────────────────────────────────────────────────
   web:
     image: ${REGISTRY:-ghcr.io/radd-ai}/radd-web:${TAG:-latest}

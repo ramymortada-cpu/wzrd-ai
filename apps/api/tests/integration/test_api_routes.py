@@ -35,6 +35,26 @@ async def test_ready_endpoint(integration_app_client):
 
 @pytest.mark.integration
 @pytest.mark.asyncio
+async def test_health_business_endpoint(integration_app_client):
+    """Business health endpoint returns 200 with DB, Redis, Qdrant, worker heartbeats, DLQ."""
+    client = integration_app_client
+    r = await client.get("/health/business")
+    assert r.status_code == 200
+    data = r.json()
+    assert "status" in data
+    assert data["status"] in ("ok", "degraded")
+    assert "checks" in data
+    assert "database" in data["checks"]
+    assert "redis" in data["checks"]
+    assert "qdrant" in data["checks"]
+    assert "last_message_at" in data
+    assert "outbound_worker_alive" in data
+    assert "message_worker_alive" in data
+    assert "dlq_count" in data
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
 async def test_admin_customers_requires_auth(integration_app_client):
     """Admin /customers returns 401 without token."""
     client = integration_app_client

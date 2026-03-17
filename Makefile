@@ -14,6 +14,7 @@ help:
 	@echo "  make worker    — Start message worker (Redis Streams consumer)"
 	@echo "  make worker-v2 — Start message worker v2 (scalable, per-workspace streams)"
 	@echo "  make call-worker — Start outbound call worker (COD Shield)"
+	@echo "  make delayed-worker — Start delayed task worker (Channel Fallback)"
 	@echo "  make web       — Start Next.js development server on :3000"
 	@echo "  make test      — Run all tests (pytest + vitest)"
 	@echo "  make test-api  — Run backend tests only"
@@ -21,6 +22,7 @@ help:
 	@echo "  make lint      — Lint backend (ruff) + frontend (eslint)"
 	@echo "  make typecheck — Type-check backend (mypy) + frontend (tsc)"
 	@echo "  make build     — Build production Docker images"
+	@echo "  make preflight — Run pre-flight validation (env, DB, Redis, Qdrant)"
 	@echo ""
 
 up:
@@ -56,6 +58,9 @@ worker-v2:
 call-worker:
 	cd apps/api && uv run python -m workers.outbound_call_worker
 
+delayed-worker:
+	cd apps/api && uv run python -m workers.delayed_task_worker
+
 web:
 	cd apps/web && pnpm dev
 
@@ -89,3 +94,6 @@ install:
 
 benchmark:
 	cd apps/api && uv run python scripts/benchmark.py
+
+preflight:
+	cd apps/api && uv run python scripts/preflight.py

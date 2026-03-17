@@ -129,3 +129,71 @@ async def readiness():
             "qdrant": "ok" if qdrant_ok else "fail",
         },
     }
+
+
+@app.get("/health/business", tags=["health"])
+async def health_business():
+    """Business health: DB, Redis, Qdrant, last message, worker heartbeat, DLQ. No sensitive data."""
+    db_ok = await check_db_health()
+    redis_ok = await check_redis_health()
+    qdrant_ok = await check_qdrant_health()
+
+    last_message_at = None
+    if db_ok:
+        try:
+            from sqlalchemy import text
+            from radd.db.base import engine
+
+            async with engine.connect() as conn:
+                result = await conn.execute(
+                    text("SELECT MAX(last_message_at) FROM conversations")
+                )
+                row = result.scalar_one_or_none()
+                if row and row[0]:
+                    last_message_at = row[0].isoformat()
+        except Exception:
+            pass
+
+    # Worker heartbeats + DLQ (requires Redis)
+    outbound_worker_alive = None
+    message_worker_alive = None
+    dlq_count = None
+    if redis_ok:
+        try:
+            from radd.deps import get_redis
+            r = get_redis()
+            outbound_worker_alive = await r.exists("worker:heartbeat:outbound_call")
+            message_worker_alive = await r.exists("worker:heartbeat:message")
+            dlq_count = await r.llen("cod_shield_dlq")
+            # Slack alert if DLQ > 10 (with cooldown)
+            if dlq_count and dlq_count > 10:
+                cooldown_key = "alert:dlq_full:cooldown"
+                if not await r.exists(cooldown_key):
+                    _slack = settings.slack_alert_webhook or settings.slack_alert_webhook_url
+                    if _slack:
+                        import httpx
+                        try:
+                            await httpx.post(
+                                _slack,
+                                json={"text": f"⚠️ RADD: COD Shield DLQ has {dlq_count} failed tasks (>10)"},
+                                timeout=5.0,
+                            )
+                            await r.set(cooldown_key, "1", ex=3600)  # 1h cooldown
+                        except Exception:
+                            pass
+        except Exception:
+            pass
+
+    all_ok = db_ok and redis_ok and qdrant_ok
+    return {
+        "status": "ok" if all_ok else "degraded",
+        "checks": {
+            "database": "ok" if db_ok else "fail",
+            "redis": "ok" if redis_ok else "fail",
+            "qdrant": "ok" if qdrant_ok else "fail",
+        },
+        "last_message_at": last_message_at,
+        "outbound_worker_alive": bool(outbound_worker_alive) if outbound_worker_alive is not None else None,
+        "message_worker_alive": bool(message_worker_alive) if message_worker_alive is not None else None,
+        "dlq_count": dlq_count,
+    }

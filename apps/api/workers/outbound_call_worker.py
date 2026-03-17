@@ -35,6 +35,10 @@ logger = logging.getLogger("radd.worker.outbound_call")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
 
 QUEUE_NAME = "cod_shield_calls"
+DLQ_NAME = "cod_shield_dlq"
+HEARTBEAT_KEY = "worker:heartbeat:outbound_call"
+HEARTBEAT_TTL = 90  # seconds — consider worker dead if no heartbeat in 90s
+MAX_ATTEMPTS = 3
 POLL_INTERVAL = 2  # seconds between polls when queue is empty
 
 
@@ -45,6 +49,17 @@ class OutboundCallWorker:
         self._running = True
         self._redis = None
 
+    async def _heartbeat(self):
+        """Write heartbeat to Redis for health monitoring."""
+        try:
+            await self._redis.set(
+                HEARTBEAT_KEY,
+                datetime.now(timezone.utc).isoformat(),
+                ex=HEARTBEAT_TTL,
+            )
+        except Exception as e:
+            logger.warning("Heartbeat failed: %s", e)
+
     async def start(self):
         """Main worker loop."""
         from radd.config import settings
@@ -53,6 +68,7 @@ class OutboundCallWorker:
 
         logger.info("OutboundCallWorker started — listening on '%s'", QUEUE_NAME)
 
+        last_heartbeat = 0
         while self._running:
             try:
                 result = await self._redis.brpop(QUEUE_NAME, timeout=5)
@@ -76,6 +92,12 @@ class OutboundCallWorker:
             except Exception as e:
                 logger.error("Error processing task: %s", e, exc_info=True)
                 await asyncio.sleep(POLL_INTERVAL)
+
+            # Heartbeat every 30 seconds
+            now = asyncio.get_event_loop().time()
+            if now - last_heartbeat > 30:
+                await self._heartbeat()
+                last_heartbeat = now
 
         logger.info("OutboundCallWorker stopped")
 
@@ -166,6 +188,18 @@ class OutboundCallWorker:
                             record.status = "failed"
                             record.metadata_ = {"error": result.get("error", "unknown")}
                             logger.error("Call failed for order %s: %s", order_id, result.get("error"))
+
+                            # DLQ: after MAX_ATTEMPTS failures, move to dead letter queue
+                            if attempt_count >= MAX_ATTEMPTS:
+                                task["error"] = result.get("error", "unknown")
+                                task["failed_at"] = datetime.now(timezone.utc).isoformat()
+                                await self._redis.lpush(DLQ_NAME, json.dumps(task))
+                                logger.warning("Task moved to DLQ: order=%s (attempt %d)", order_id, attempt_count)
+                            else:
+                                # Requeue with incremented attempt
+                                task["attempt_count"] = attempt_count + 1
+                                await self._redis.lpush(QUEUE_NAME, json.dumps(task))
+                                logger.info("Task requeued: order=%s (attempt %d)", order_id, attempt_count + 1)
 
                     await db.flush()
             except Exception as e:

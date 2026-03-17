@@ -461,6 +461,140 @@ export const getSAAuditLog = (params?: {
   );
 };
 
+// Promote user to superadmin
+export const promoteSASuperadmin = (userId: string) =>
+  apiFetch<void>(`/superadmin/users/${userId}/promote-superadmin`, { method: "POST" });
+
+// ─── Super Admin Workspace-Scoped (full control) ──────────────────────────────
+
+export const getSAWorkspaceChannels = (workspaceId: string) =>
+  apiFetch<{ channels: Array<{ id: string; type: string; name: string; is_active: boolean; created_at: string }> }>(
+    `/superadmin/workspaces/${workspaceId}/channels`
+  );
+
+export const getSAWorkspaceRules = (workspaceId: string) =>
+  apiFetch<{ items: Array<{ id: string; name: string; is_active: boolean; priority: number; created_at: string }> }>(
+    `/superadmin/workspaces/${workspaceId}/rules`
+  );
+
+export const createSAWorkspaceRule = (workspaceId: string, data: { name: string; description?: string; is_active?: boolean; priority?: number; triggers?: unknown[]; actions?: unknown[] }) =>
+  apiFetch<{ id: string; created: boolean }>(`/superadmin/workspaces/${workspaceId}/rules`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+export const updateSAWorkspaceRule = (workspaceId: string, ruleId: string, data: Record<string, unknown>) =>
+  apiFetch<{ updated: boolean }>(`/superadmin/workspaces/${workspaceId}/rules/${ruleId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+
+export const deleteSAWorkspaceRule = (workspaceId: string, ruleId: string) =>
+  apiFetch<void>(`/superadmin/workspaces/${workspaceId}/rules/${ruleId}`, { method: "DELETE" });
+
+export const updateSAWorkspaceChannel = (workspaceId: string, channelId: string, data: { is_active?: boolean; name?: string }) =>
+  apiFetch<{ updated: boolean }>(`/superadmin/workspaces/${workspaceId}/channels/${channelId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+
+export const deleteSAWorkspaceChannel = (workspaceId: string, channelId: string) =>
+  apiFetch<void>(`/superadmin/workspaces/${workspaceId}/channels/${channelId}`, { method: "DELETE" });
+
+export const createSAWorkspaceKBDoc = (workspaceId: string, data: { title: string; content: string; content_type?: string }) =>
+  apiFetch<{ id: string; created: boolean }>(`/superadmin/workspaces/${workspaceId}/kb/documents`, {
+    method: "POST",
+    body: JSON.stringify({ ...data, content_type: data.content_type || "general" }),
+  });
+
+export const updateSAWorkspaceKBDoc = (workspaceId: string, docId: string, data: { title?: string; content?: string; status?: string }) =>
+  apiFetch<{ updated: boolean }>(`/superadmin/workspaces/${workspaceId}/kb/documents/${docId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+
+export const deleteSAWorkspaceKBDoc = (workspaceId: string, docId: string) =>
+  apiFetch<void>(`/superadmin/workspaces/${workspaceId}/kb/documents/${docId}`, { method: "DELETE" });
+
+export const acceptSAEscalation = (workspaceId: string, escalationId: string) =>
+  apiFetch<{ id: string; status: string }>(`/superadmin/workspaces/${workspaceId}/escalations/${escalationId}/accept`, {
+    method: "POST",
+  });
+
+export const resolveSAEscalation = (workspaceId: string, escalationId: string, notes?: string) =>
+  apiFetch<{ id: string; status: string }>(`/superadmin/workspaces/${workspaceId}/escalations/${escalationId}/resolve`, {
+    method: "POST",
+    body: JSON.stringify({ notes: notes || null }),
+  });
+
+export const getSAWorkspaceKB = (workspaceId: string, params?: { page?: number; page_size?: number }) => {
+  const p = new URLSearchParams();
+  if (params?.page) p.set("page", String(params.page));
+  if (params?.page_size) p.set("page_size", String(params.page_size));
+  return apiFetch<{ items: Array<{ id: string; title: string; content_type: string; status: string }>; total: number }>(
+    `/superadmin/workspaces/${workspaceId}/kb/documents?${p.toString()}`
+  );
+};
+
+export const getSAWorkspaceRevenue = (workspaceId: string, days = 30) =>
+  apiFetch<{ total_attributed_sar: number; events_count: number; events: Array<{ id: string; event_type: string; amount_sar: number; order_id: string; created_at: string }> }>(
+    `/superadmin/workspaces/${workspaceId}/revenue?days=${days}`
+  );
+
+export const getSAWorkspaceEscalations = (workspaceId: string, params?: { status?: string; page?: number }) => {
+  const p = new URLSearchParams();
+  if (params?.status) p.set("status", params.status);
+  if (params?.page) p.set("page", String(params.page ?? 1));
+  return apiFetch<{ items: Array<{ id: string; conversation_id: string; status: string; reason: string; created_at: string }>; total: number }>(
+    `/superadmin/workspaces/${workspaceId}/escalations?${p.toString()}`
+  );
+};
+
+export const getSAWorkspaceCODShield = (workspaceId: string, days = 7) =>
+  apiFetch<{ stats: { total_calls: number; confirmed: number; cancelled: number; no_answer: number; pending: number; confirmation_rate: number }; calls: Array<{ id: string; order_id: string; status: string }> }>(
+    `/superadmin/workspaces/${workspaceId}/cod-shield?days=${days}`
+  );
+
+export const getSAWorkspaceAPIKeys = (workspaceId: string) =>
+  apiFetch<{ keys: Array<{ id: string; name: string; key_prefix: string; scopes: string[] }>; total: number }>(
+    `/superadmin/workspaces/${workspaceId}/api-keys`
+  );
+
+export const getSAWorkspaceConversations = (workspaceId: string, params?: { page?: number; status?: string }) => {
+  const p = new URLSearchParams();
+  if (params?.page) p.set("page", String(params.page ?? 1));
+  if (params?.status) p.set("status", params.status ?? "");
+  return apiFetch<{ items: Array<{ id: string; intent: string; status: string; resolution_type: string; last_message_at: string }>; total: number }>(
+    `/superadmin/workspaces/${workspaceId}/conversations?${p.toString()}`
+  );
+};
+
+export const getSAWorkspaceCustomers = (workspaceId: string, params?: { page?: number }) => {
+  const p = new URLSearchParams();
+  if (params?.page) p.set("page", String(params.page));
+  return apiFetch<{ items: Array<{ id: string; customer_tier: string; total_conversations: number; total_escalations: number; salla_total_orders: number; last_seen_at: string }>; total: number }>(
+    `/superadmin/workspaces/${workspaceId}/customers?${p.toString()}`
+  );
+};
+
+export const triggerSASallaSync = (workspaceId: string, data: { salla_token: string; salla_api_url?: string }) =>
+  apiFetch<{ synced: boolean; products_synced: number; documents_created: number }>(
+    `/superadmin/workspaces/${workspaceId}/integrations/salla/sync`,
+    { method: "POST", body: JSON.stringify(data) }
+  );
+
+export const triggerSAStarterPack = (workspaceId: string, sector: string) =>
+  apiFetch<unknown>(`/superadmin/workspaces/${workspaceId}/integrations/starter-pack`, {
+    method: "POST",
+    body: JSON.stringify({ sector }),
+  });
+
+export const triggerSAZidSync = (workspaceId: string, data: { zid_token: string; store_id?: string }) =>
+  apiFetch<unknown>(`/superadmin/workspaces/${workspaceId}/integrations/zid/sync`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
 // ─── Customers ────────────────────────────────────────────────────────────────
 export interface CustomerProfile {
   id: string;

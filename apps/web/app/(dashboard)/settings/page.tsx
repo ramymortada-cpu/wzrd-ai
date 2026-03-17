@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Save, UserPlus, Eye, EyeOff, RefreshCw, Layers,
@@ -28,7 +28,7 @@ import {
   type User,
 } from "@/lib/api";
 
-export default function SettingsPage() {
+function SettingsContent() {
   const [wsSettings, setWsSettings] = useState<WorkspaceSettings | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1050,5 +1050,20 @@ export default function SettingsPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col h-full">
+        <TopBar title="الإعدادات" />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+        </div>
+      </div>
+    }>
+      <SettingsContent />
+    </Suspense>
   );
 }
