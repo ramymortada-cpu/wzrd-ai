@@ -1,0 +1,83 @@
+{
+  "packages": [
+    {
+      "id": "clarity",
+      "name": "Clarity Package",
+      "nameAr": "باقة الوضوح",
+      "service": "Business Logic",
+      "serviceType": "starting_business_logic",
+      "price": 80000,
+      "currency": "EGP",
+      "deliverables": [
+        "Business model analysis",
+        "Offer structuring",
+        "Pricing logic",
+        "Customer journey mapping",
+        "Growth system outline"
+      ]
+    },
+    {
+      "id": "brand_foundation",
+      "name": "Brand Foundation",
+      "nameAr": "باقة بناء البراند",
+      "service": "Brand Building",
+      "serviceType": "brand_identity",
+      "price": 120000,
+      "currency": "EGP",
+      "deliverables": [
+        "Brand Strategy",
+        "Positioning",
+        "Brand Personality",
+        "Messaging Framework",
+        "Visual Identity"
+      ]
+    },
+    {
+      "id": "growth_partnership",
+      "name": "Growth Partnership",
+      "nameAr": "باقة شراكة النمو",
+      "service": "Social Performance Consultancy",
+      "serviceType": "consultation",
+      "price": 35000,
+      "currency": "EGP",
+      "deliverables": [
+        "Social strategy",
+        "Content direction",
+        "Campaign planning",
+        "Performance review",
+        "Team guidance"
+      ]
+    },
+    {
+      "id": "business_health_check",
+      "name": "Business Health Check",
+      "nameAr": "فحص صحة البيزنس",
+      "service": "Business Health Check",
+      "serviceType": "business_health_check",
+      "price": 15000,
+      "currency": "EGP",
+      "deliverables": [
+        "Brand audit report",
+        "SWOT analysis",
+        "Competitive landscape",
+        "Recommendations roadmap"
+      ]
+    },
+    {
+      "id": "business_takeoff",
+      "name": "Business Takeoff",
+      "nameAr": "باقة الانطلاق",
+      "service": "Business Takeoff",
+      "serviceType": "business_takeoff",
+      "price": 200000,
+      "currency": "EGP",
+      "deliverables": [
+        "Complete brand identity",
+        "Business logic",
+        "Marketing strategy",
+        "Launch campaign",
+        "3-month growth plan"
+      ]
+    }
+  ]
+}

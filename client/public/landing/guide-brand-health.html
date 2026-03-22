@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Audit Your Brand Health — Free Guide | WZRD AI</title>
+<meta name="description" content="The 5 pillars every brand audit must cover. Learn how to assess your positioning, messaging, offer logic, visual identity, and digital presence — for free.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="How to Audit Your Brand Health — Free Guide">
+<meta property="og:description" content="The 5 pillars every brand audit must cover. Frameworks, examples, and a self-assessment checklist.">
+<meta property="og:url" content="/guides/brand-health">
+<meta property="og:site_name" content="WZRD AI by Primo Marca">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="How to Audit Your Brand Health — Free Guide">
+<meta name="twitter:description" content="The 5 pillars every brand audit must cover. Frameworks, examples, and a self-assessment checklist.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Newsreader:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#09090b;--bg2:#111114;--bg3:#18181c;--surface:rgba(255,255,255,.03);--border:rgba(255,255,255,.06);--border-h:rgba(255,255,255,.12);--gold:#c8a24e;--gold-b:#e0b94b;--gold-d:#9a7a3a;--accent:#6d5cff;--accent2:#44ddc9;--accent-g:linear-gradient(135deg,#6d5cff,#44ddc9);--white:#f4f4f6;--text:#b0b0be;--muted:#64647a;--font:'Instrument Sans',sans-serif;--font-d:'Newsreader',Georgia,serif;--font-m:'JetBrains Mono',monospace;--font-ar:'IBM Plex Sans Arabic','Instrument Sans',sans-serif;--r:14px;--rs:8px;--t:.35s cubic-bezier(.16,1,.3,1)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{font-family:var(--font);color:var(--text);background:var(--bg);line-height:1.8;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+[dir=rtl] body,[dir=rtl] *{font-family:var(--font-ar)}
+a{text-decoration:none;color:inherit}button{cursor:pointer;border:none;background:none;font:inherit}input{font:inherit}ul{list-style:none}
+.container{max-width:780px;margin:0 auto;padding:0 24px}
+.mono{font-family:var(--font-m)}.serif{font-family:var(--font-d)}
+@keyframes fu{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.anim{opacity:0;transform:translateY(20px);transition:opacity .7s ease,transform .7s ease}.anim.v{opacity:1;transform:translateY(0)}
+.d1{transition-delay:.1s}.d2{transition-delay:.2s}
+
+/* Nav (simplified) */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:14px 0;backdrop-filter:blur(20px);background:rgba(9,9,11,.85);border-bottom:1px solid var(--border)}
+.nav-i{display:flex;align-items:center;justify-content:space-between;max-width:780px;margin:0 auto;padding:0 24px}
+.n-logo{display:flex;flex-direction:column;line-height:1}
+.n-logo b{font-family:var(--font-m);font-size:1.1rem;letter-spacing:.15em;color:var(--white)}
+.n-logo b i{font-style:normal;background:var(--accent-g);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.n-logo small{font-size:.55rem;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;margin-top:1px}
+.n-right{display:flex;gap:12px;align-items:center}
+.n-back{font-size:.8rem;color:var(--muted);transition:var(--t)}.n-back:hover{color:var(--gold)}
+.lang-t{padding:4px 10px;border-radius:14px;font-size:.65rem;font-weight:600;background:rgba(109,92,255,.08);color:var(--accent);border:1px solid rgba(109,92,255,.15)}
+
+/* Article */
+.article-hero{padding:120px 0 60px;border-bottom:1px solid var(--border)}
+.article-tag{font-family:var(--font-m);font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+.article-hero h1{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:700;color:var(--white);line-height:1.2;margin-bottom:16px}
+.article-hero .subtitle{font-size:1.05rem;color:var(--text);max-width:600px;line-height:1.8}
+.article-meta{display:flex;gap:20px;margin-top:20px;font-size:.75rem;color:var(--muted)}
+.article-meta span{display:flex;align-items:center;gap:5px}
+
+.article-body{padding:48px 0}
+.article-body h2{font-size:1.5rem;font-weight:700;color:var(--white);margin:48px 0 16px;padding-top:24px;border-top:1px solid var(--border)}
+.article-body h2:first-of-type{margin-top:0;border-top:none;padding-top:0}
+.article-body h3{font-size:1.15rem;font-weight:600;color:var(--white);margin:28px 0 10px}
+.article-body p{margin-bottom:16px;font-size:.95rem;line-height:1.9;color:var(--text)}
+.article-body strong{color:var(--white);font-weight:600}
+.article-body em{color:var(--gold);font-style:italic;font-family:var(--font-d)}
+
+/* Callout */
+.callout{padding:20px 24px;border-radius:var(--r);background:rgba(109,92,255,.04);border:1px solid rgba(109,92,255,.1);margin:24px 0;font-size:.9rem;line-height:1.8}
+.callout.gold{background:rgba(200,162,78,.04);border-color:rgba(200,162,78,.12)}
+.callout b{color:var(--white)}
+
+/* Framework box */
+.framework-box{padding:24px;border-radius:var(--r);background:var(--surface);border:1px solid var(--border);margin:24px 0}
+.framework-box h4{font-size:.95rem;font-weight:700;color:var(--white);margin-bottom:12px}
+.fw-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.fw-item:last-child{border-bottom:none}
+.fw-num{font-family:var(--font-m);font-size:.75rem;color:var(--accent);min-width:24px;padding-top:2px}
+.fw-content h5{font-size:.88rem;font-weight:600;color:var(--white);margin-bottom:2px}
+.fw-content p{font-size:.82rem;color:var(--text);margin:0;line-height:1.7}
+
+/* Checklist */
+.checklist{margin:20px 0;padding:0}
+.checklist li{display:flex;gap:10px;padding:8px 0;font-size:.88rem;color:var(--text)}
+.checklist li::before{content:'☐';color:var(--gold);font-size:1rem;flex-shrink:0}
+
+/* Download CTA */
+.download-box{padding:32px;border-radius:var(--r);background:linear-gradient(135deg,rgba(109,92,255,.06),rgba(68,221,201,.04));border:1px solid rgba(109,92,255,.12);text-align:center;margin:40px 0}
+.download-box h3{font-size:1.2rem;font-weight:700;color:var(--white);margin-bottom:8px}
+.download-box p{font-size:.9rem;color:var(--text);margin-bottom:20px}
+.dl-form{display:flex;gap:8px;max-width:420px;margin:0 auto}
+.dl-form input{flex:1;padding:12px 14px;border-radius:var(--rs);background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--white);font-size:.88rem;outline:none}
+.dl-form input::placeholder{color:var(--muted)}
+.dl-form input:focus{border-color:var(--accent)}
+.dl-form button{padding:12px 24px;border-radius:var(--rs);background:var(--gold);color:var(--bg);font-weight:700;font-size:.85rem;white-space:nowrap;transition:var(--t)}
+.dl-form button:hover{background:var(--gold-b)}
+.dl-note{font-size:.68rem;color:var(--muted);margin-top:8px}
+
+/* Next Steps */
+.next-steps{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:32px 0}
+.next-card{padding:24px;border-radius:var(--r);background:var(--surface);border:1px solid var(--border);transition:var(--t)}
+.next-card:hover{border-color:var(--border-h);transform:translateY(-2px)}
+.next-card .emoji{font-size:1.6rem;margin-bottom:8px}
+.next-card h4{font-size:.95rem;font-weight:700;color:var(--white);margin-bottom:4px}
+.next-card p{font-size:.8rem;color:var(--muted);line-height:1.6;margin-bottom:10px}
+.next-card a{font-size:.8rem;font-weight:600;color:var(--gold);transition:var(--t)}
+.next-card a:hover{color:var(--gold-b)}
+@media(max-width:600px){.next-steps{grid-template-columns:1fr}.dl-form{flex-direction:column}}
+
+/* Footer mini */
+.footer-mini{padding:32px 0;border-top:1px solid var(--border);text-align:center;font-size:.72rem;color:var(--muted)}
+.footer-mini a{color:var(--gold-d)}
+
+/* Print-friendly styles for PDF download */
+@media print {
+  nav, .footer-mini, .download-box, .next-steps, .n-right, .dl-form, .dl-note { display: none !important; }
+  body { background: #fff !important; color: #222 !important; }
+  .container { max-width: 100% !important; padding: 0 20px !important; }
+  .article-hero { padding: 40px 0 20px !important; border: none !important; }
+  .article-hero h1 { color: #111 !important; font-size: 24px !important; }
+  .article-tag { color: #8F5A31 !important; }
+  .subtitle { color: #555 !important; }
+  .article-body h2 { color: #111 !important; border-color: #ddd !important; }
+  .article-body h3 { color: #222 !important; }
+  .article-body p, .article-body li { color: #333 !important; }
+  .callout { background: #f5f5f5 !important; border-color: #ddd !important; color: #333 !important; }
+  .callout b { color: #111 !important; }
+  .callout.gold { background: #fdf8ed !important; border-color: #e8d5a8 !important; }
+  .framework-box { background: #fafafa !important; border-color: #ddd !important; }
+  .fw-num { color: #8F5A31 !important; -webkit-text-fill-color: #8F5A31 !important; }
+  .fw-content h5 { color: #111 !important; }
+  .fw-content p { color: #555 !important; }
+  .checklist li { color: #333 !important; }
+  .checklist li::before { color: #8F5A31 !important; }
+  a { color: #333 !important; }
+  /* Add WZRD AI branding to print */
+  body::before { content: 'WZRD AI by Primo Marca'; display: block; text-align: center; font-family: monospace; font-size: 14px; color: #999; margin-bottom: 10px; }
+  body::after { content: 'www.primomarca.com | Free guide — not for resale'; display: block; text-align: center; font-size: 10px; color: #bbb; margin-top: 30px; padding-top: 10px; border-top: 1px solid #eee; }
+}
+
+
+/* Light mode override */
+.light-mode { --bg: #fafaf9; --bg2: #f5f5f4; --text: #1c1917; --text2: #57534e; --text3: #a8a29e; --border: #e7e5e4; --card-bg: #ffffff; }
+.light-mode body { background: var(--bg) !important; color: var(--text) !important; }
+.light-mode nav, .light-mode .nav { background: rgba(250,250,249,.9) !important; border-color: var(--border) !important; }
+.light-mode .hero h1, .light-mode .sec-title, .light-mode h1, .light-mode h2, .light-mode h3 { color: var(--text) !important; }
+.light-mode p, .light-mode .hero p, .light-mode .sec-desc, .light-mode li { color: var(--text2) !important; }
+.light-mode .card, .light-mode .svc-card, .light-mode .faq-item, .light-mode .dual-card, .light-mode .boundaries, .light-mode .callout, .light-mode .framework-box { background: var(--card-bg) !important; border-color: var(--border) !important; }
+.light-mode .article-body { color: var(--text2) !important; }
+.light-mode .article-hero h1 { color: var(--text) !important; }
+.light-mode input, .light-mode select, .light-mode textarea { background: var(--card-bg) !important; color: var(--text) !important; border-color: var(--border) !important; }
+.light-mode .footer-mini { background: var(--bg2) !important; border-color: var(--border) !important; }
+
+</style>
+</head>
+<body>
+
+<nav><div class="nav-i">
+  <a href="/welcome" class="n-logo"><b>WZRD <i>AI</i></b><small>by Primo Marca</small></a>
+  <div class="n-right"><a href="/welcome" class="n-back" data-en="← Back" data-ar="→ رجوع">← Back</a><button class="lang-t" onclick="tl()">عربي</button></div>
+</div></nav>
+
+<article>
+
+<!-- HERO -->
+<header class="article-hero">
+<div class="container">
+  <div class="article-tag" data-en="FREE GUIDE — AUDIT" data-ar="دليل مجاني — مراجعة">FREE GUIDE — AUDIT</div>
+  <h1 data-en="How to Audit Your Brand Health" data-ar="إزاي تفحص صحة البراند بتاعك">How to Audit Your Brand Health</h1>
+  <p class="subtitle" data-en="The 5 pillars every brand audit must cover — with frameworks, examples, and a self-assessment checklist you can use today." data-ar="الـ 5 محاور اللي أي فحص براند لازم يغطيها — بأطر علمية، أمثلة، وقائمة تقييم ذاتي تقدر تستخدمها النهاردة.">The 5 pillars every brand audit must cover — with frameworks, examples, and a self-assessment checklist you can use today.</p>
+  <div class="article-meta">
+    <span>📖 <span data-en="8 min read" data-ar="8 دقائق قراءة">8 min read</span></span>
+    <span>📥 <span data-en="Free PDF included" data-ar="PDF مجاني متضمن">Free PDF included</span></span>
+  </div>
+</div>
+</header>
+
+<!-- BODY -->
+<div class="article-body">
+<div class="container">
+
+<p data-en="Most businesses invest in marketing without knowing if their brand is healthy enough to support it. It's like running ads for a restaurant with a broken kitchen — the more traffic you drive, the more damage you do." data-ar="معظم البزنسات بتستثمر في التسويق بدون ما تعرف لو البراند صحته كويسة بما يكفي يشيل التسويق. ده زي ما تعمل إعلانات لمطعم المطبخ بتاعه بايظ — كل ما توجه traffic أكتر، كل ما تعمل ضرر أكتر.">Most businesses invest in marketing without knowing if their brand is healthy enough to support it. It's like running ads for a restaurant with a broken kitchen — the more traffic you drive, the more damage you do.</p>
+
+<p data-en="A brand audit is the X-ray before the treatment. It tells you <strong>exactly</strong> where the problems are — so you fix the right things in the right order." data-ar="فحص البراند هو الأشعة قبل العلاج. بيقولك <strong>بالظبط</strong> فين المشاكل — عشان تصلح الحاجة الصح بالترتيب الصح.">A brand audit is the X-ray before the treatment. It tells you <strong>exactly</strong> where the problems are — so you fix the right things in the right order.</p>
+
+<div class="callout" data-en="<b>This guide is framework-agnostic.</b> We're not selling a specific methodology — we're showing you how brand audits work in the real world, based on established academic models (Keller, Kapferer, Sharp) and real consulting practice." data-ar="<b>الدليل ده مش مرتبط بمنهجية معينة.</b> مش بنبيع طريقة محددة — بنوريك إزاي فحص البراند بيشتغل في الواقع، بناءً على نماذج أكاديمية معروفة (Keller, Kapferer, Sharp) وممارسة استشارية حقيقية."><b>This guide is framework-agnostic.</b> We're not selling a specific methodology — we're showing you how brand audits work in the real world, based on established academic models (Keller, Kapferer, Sharp) and real consulting practice.</div>
+
+<h2 data-en="The 5 Pillars of a Brand Audit" data-ar="الـ 5 محاور لفحص البراند">The 5 Pillars of a Brand Audit</h2>
+
+<p data-en="Every serious brand audit — whether done by McKinsey, Interbrand, or a boutique studio — covers these 5 areas. Miss one and you're flying blind." data-ar="أي فحص براند جدي — سواء McKinsey أو Interbrand أو استوديو صغير — بيغطي الـ 5 محاور دول. لو فاتك واحد، أنت بتطير وأنت أعمى.">Every serious brand audit — whether done by McKinsey, Interbrand, or a boutique studio — covers these 5 areas. Miss one and you're flying blind.</p>
+
+<div class="framework-box">
+  <h4 data-en="The 5 Audit Pillars" data-ar="الـ 5 محاور">The 5 Audit Pillars</h4>
+  <div class="fw-item"><div class="fw-num">01</div><div class="fw-content"><h5 data-en="Positioning & Clarity" data-ar="التموضع والوضوح">Positioning & Clarity</h5><p data-en="Can you explain what makes you different in one sentence? Does the market understand it?" data-ar="تقدر تشرح إيه بيميّزك في جملة واحدة؟ السوق فاهم ده؟">Can you explain what makes you different in one sentence? Does the market understand it?</p></div></div>
+  <div class="fw-item"><div class="fw-num">02</div><div class="fw-content"><h5 data-en="Messaging & Consistency" data-ar="الرسالة والاتساق">Messaging & Consistency</h5><p data-en="Does every touchpoint tell the same story? Or does your Instagram say one thing and your website another?" data-ar="كل نقطة تواصل بتحكي نفس القصة؟ ولا الانستجرام بيقول حاجة والموقع حاجة تانية؟">Does every touchpoint tell the same story? Or does your Instagram say one thing and your website another?</p></div></div>
+  <div class="fw-item"><div class="fw-num">03</div><div class="fw-content"><h5 data-en="Offer Logic & Pricing" data-ar="منطق العرض والتسعير">Offer Logic & Pricing</h5><p data-en="Are your packages clear? Does the pricing make the value obvious? Or is the customer confused by too many options?" data-ar="الباكدجات واضحة؟ التسعير بيوضّح القيمة؟ ولا العميل تايه من كتر الخيارات؟">Are your packages clear? Does the pricing make the value obvious? Or is the customer confused by too many options?</p></div></div>
+  <div class="fw-item"><div class="fw-num">04</div><div class="fw-content"><h5 data-en="Visual Identity & Perception" data-ar="الهوية البصرية والإدراك">Visual Identity & Perception</h5><p data-en="Does your brand look as good as your product? Is the visual quality matching the price point?" data-ar="البراند شكله بنفس جودة المنتج؟ الجودة البصرية بتتوافق مع السعر؟">Does your brand look as good as your product? Is the visual quality matching the price point?</p></div></div>
+  <div class="fw-item"><div class="fw-num">05</div><div class="fw-content"><h5 data-en="Customer Journey & Conversion" data-ar="رحلة العميل والتحويل">Customer Journey & Conversion</h5><p data-en="Where are customers dropping off? Is the path from discovery to purchase clear and frictionless?" data-ar="فين العملاء بيوقعوا؟ المسار من الاكتشاف للشراء واضح وبدون احتكاك؟">Where are customers dropping off? Is the path from discovery to purchase clear and frictionless?</p></div></div>
+</div>
+
+<h2 data-en="Pillar 1: Positioning & Clarity" data-ar="المحور الأول: التموضع والوضوح">Pillar 1: Positioning & Clarity</h2>
+
+<p data-en="Positioning is the single most important element of your brand. It answers: <em>Why should someone choose you over every alternative — including doing nothing?</em>" data-ar="التموضع هو أهم عنصر في البراند بتاعك. بيجاوب على: <em>ليه حد يختارك أنت بدل أي بديل تاني — بما فيهم إنه ميعملش حاجة؟</em>">Positioning is the single most important element of your brand. It answers: <em>Why should someone choose you over every alternative — including doing nothing?</em></p>
+
+<h3 data-en="The Clarity Test" data-ar="اختبار الوضوح">The Clarity Test</h3>
+
+<p data-en="Ask 5 people on your team: <strong>\"What do we do differently?\"</strong> If you get 5 different answers, you have a Clarity Gap. This is the #1 brand killer — and it's invisible because everyone inside thinks they know the answer." data-ar="اسأل 5 أشخاص في فريقك: <strong>\"إحنا بنعمل إيه مختلف؟\"</strong> لو جالك 5 إجابات مختلفة، عندك فجوة وضوح. ده القاتل #1 للبراندات — وهو غير مرئي لأن كل اللي جوه فاكرين إنهم عارفين الإجابة.">Ask 5 people on your team: <strong>"What do we do differently?"</strong> If you get 5 different answers, you have a Clarity Gap. This is the #1 brand killer — and it's invisible because everyone inside thinks they know the answer.</p>
+
+<div class="callout gold" data-en="<b>Academic Framework:</b> Keller's Brand Positioning Model defines positioning as the intersection of <em>Target Audience</em> + <em>Frame of Reference</em> + <em>Points of Difference</em> + <em>Reasons to Believe</em>. If any of these is missing, your positioning has a hole." data-ar="<b>إطار أكاديمي:</b> نموذج Keller للتموضع بيعرّف التموضع كتقاطع <em>الجمهور المستهدف</em> + <em>إطار المرجعية</em> + <em>نقاط الاختلاف</em> + <em>أسباب التصديق</em>. لو أي واحدة فيهم ناقصة، التموضع بتاعك فيه ثقب."><b>Academic Framework:</b> Keller's Brand Positioning Model defines positioning as the intersection of <em>Target Audience</em> + <em>Frame of Reference</em> + <em>Points of Difference</em> + <em>Reasons to Believe</em>. If any of these is missing, your positioning has a hole.</div>
+
+<h2 data-en="Pillar 2: Messaging & Consistency" data-ar="المحور الثاني: الرسالة والاتساق">Pillar 2: Messaging & Consistency</h2>
+
+<p data-en="Your brand says something at every touchpoint — website, social media, email, DMs, sales calls, even your invoice. The question is: <strong>is it saying the same thing?</strong>" data-ar="البراند بتاعك بيقول حاجة في كل نقطة تواصل — الموقع، السوشيال، الإيميل، الرسائل، مكالمات البيع، حتى الفاتورة. السؤال: <strong>هل بيقول نفس الحاجة؟</strong>">Your brand says something at every touchpoint — website, social media, email, DMs, sales calls, even your invoice. The question is: <strong>is it saying the same thing?</strong></p>
+
+<p data-en="Inconsistent messaging is the #2 brand killer. It erodes trust because the customer's brain detects the mismatch — even if they can't articulate it. They just feel \"something's off\" and move on." data-ar="الرسالة المتذبذبة هي القاتل #2 للبراند. بتآكل الثقة لأن مخ العميل بيكتشف عدم التطابق — حتى لو مش قادر يعبّر عنه. بس بيحس إن \"فيه حاجة غلط\" وبيمشي.">Inconsistent messaging is the #2 brand killer. It erodes trust because the customer's brain detects the mismatch — even if they can't articulate it. They just feel "something's off" and move on.</p>
+
+<h2 data-en="Pillar 3: Offer Logic & Pricing" data-ar="المحور الثالث: منطق العرض والتسعير">Pillar 3: Offer Logic & Pricing</h2>
+
+<p data-en="A great product with a confusing offer is invisible. If the customer can't understand <em>what they're getting, why it's worth it, and what to do next</em> — they leave." data-ar="منتج ممتاز بعرض مش واضح = منتج غير مرئي. لو العميل مش فاهم <em>هياخد إيه، ليه يستاهل، وإيه الخطوة الجاية</em> — هيمشي.">A great product with a confusing offer is invisible. If the customer can't understand <em>what they're getting, why it's worth it, and what to do next</em> — they leave.</p>
+
+<div class="callout" data-en="<b>Common symptom:</b> You have 6+ packages and customers keep asking \"What's the difference between X and Y?\" — this means your offer structure is leaking conversions." data-ar="<b>عَرَض شائع:</b> عندك 6+ باكدجات والعملاء بيسألوا \"إيه الفرق بين X و Y؟\" — ده معناه إن هيكل العرض بتاعك بيسرّب تحويلات."><b>Common symptom:</b> You have 6+ packages and customers keep asking "What's the difference between X and Y?" — this means your offer structure is leaking conversions.</div>
+
+<h2 data-en="Pillar 4: Visual Identity & Perception" data-ar="المحور الرابع: الهوية البصرية والإدراك">Pillar 4: Visual Identity & Perception</h2>
+
+<p data-en="Your visual identity is the first 3 seconds of every interaction. Before anyone reads your copy or understands your offer, they've already decided if you \"feel premium\" or \"feel cheap\" based on visual cues alone." data-ar="الهوية البصرية هي أول 3 ثواني في كل تفاعل. قبل ما أي حد يقرأ كلامك أو يفهم عرضك، هو قرر خلاص لو أنت \"حاسسه بريميوم\" أو \"حاسسه رخيص\" بناءً على الإشارات البصرية بس.">Your visual identity is the first 3 seconds of every interaction. Before anyone reads your copy or understands your offer, they've already decided if you "feel premium" or "feel cheap" based on visual cues alone.</p>
+
+<h2 data-en="Pillar 5: Customer Journey & Conversion" data-ar="المحور الخامس: رحلة العميل والتحويل">Pillar 5: Customer Journey & Conversion</h2>
+
+<p data-en="The journey from \"I discovered this brand\" to \"I paid\" has friction points. Every point of friction is a leak — and leaks compound. If your discovery-to-purchase path has 5 friction points with 20% drop-off each, you're losing 67% of potential customers." data-ar="الرحلة من \"اكتشفت البراند ده\" لـ \"دفعت\" فيها نقاط احتكاك. كل نقطة احتكاك = تسريب. والتسريبات بتتراكم. لو مسار الاكتشاف-للشراء عنده 5 نقاط احتكاك بنسبة 20% خسارة في كل واحدة، أنت بتخسر 67% من العملاء المحتملين.">The journey from "I discovered this brand" to "I paid" has friction points. Every point of friction is a leak — and leaks compound. If your discovery-to-purchase path has 5 friction points with 20% drop-off each, you're losing 67% of potential customers.</p>
+
+<h2 data-en="Self-Assessment Checklist" data-ar="قائمة التقييم الذاتي">Self-Assessment Checklist</h2>
+
+<p data-en="Use this to score your brand right now. Be honest — the point is clarity, not comfort." data-ar="استخدم ده تقيّم البراند بتاعك دلوقتي. كن صادق — الهدف الوضوح، مش الراحة.">Use this to score your brand right now. Be honest — the point is clarity, not comfort.</p>
+
+<ul class="checklist">
+  <li data-en="I can explain our differentiation in one sentence" data-ar="أقدر أشرح تميّزنا في جملة واحدة">I can explain our differentiation in one sentence</li>
+  <li data-en="My team would give the same answer to 'what makes us different?'" data-ar="فريقي هيدي نفس الإجابة لو سألتهم 'إيه اللي بيميّزنا؟'">My team would give the same answer to "what makes us different?"</li>
+  <li data-en="Our social profiles, website, and sales materials tell the same story" data-ar="بروفايلات السوشيال والموقع ومواد المبيعات بتحكي نفس القصة">Our social profiles, website, and sales materials tell the same story</li>
+  <li data-en="A new customer can understand our offer in under 30 seconds" data-ar="عميل جديد يقدر يفهم عرضنا في أقل من 30 ثانية">A new customer can understand our offer in under 30 seconds</li>
+  <li data-en="Our pricing feels justified — not explained or defended" data-ar="التسعير بتاعنا بيحسسك إنه مبرر — مش محتاج شرح أو دفاع">Our pricing feels justified — not explained or defended</li>
+  <li data-en="Our visual identity matches the quality of our product/service" data-ar="الهوية البصرية بتتوافق مع جودة المنتج/الخدمة">Our visual identity matches the quality of our product/service</li>
+  <li data-en="We know exactly where customers drop off in their journey" data-ar="عارفين بالظبط فين العملاء بيوقعوا في رحلتهم">We know exactly where customers drop off in their journey</li>
+  <li data-en="Our inquiry-to-sale conversion rate is above 20%" data-ar="معدل التحويل من استفسار لبيع فوق 20%">Our inquiry-to-sale conversion rate is above 20%</li>
+</ul>
+
+<div class="callout gold" data-en="<b>Scoring:</b> 7-8 checked = Strong foundation. 4-6 = Needs focused work. 0-3 = Critical — you're likely leaving significant revenue on the table." data-ar="<b>التقييم:</b> 7-8 ✓ = أساس قوي. 4-6 = محتاج شغل مركّز. 0-3 = حرج — غالباً بتسيب إيرادات كبيرة على الترابيزة."><b>Scoring:</b> 7-8 checked = Strong foundation. 4-6 = Needs focused work. 0-3 = Critical — you're likely leaving significant revenue on the table.</div>
+
+<!-- DOWNLOAD CTA (Lead Magnet #2) -->
+<div class="download-box">
+  <h3 data-en="📥 Download the Full Guide (PDF)" data-ar="📥 حمّل الدليل الكامل (PDF)">📥 Download the Full Guide (PDF)</h3>
+  <p data-en="The complete Brand Health Audit framework — 5 pillars, scoring templates, real examples, and action plan template. Free." data-ar="إطار فحص صحة البراند الكامل — 5 محاور، نماذج تقييم، أمثلة حقيقية، ونموذج خطة عمل. مجاناً.">The complete Brand Health Audit framework — 5 pillars, scoring templates, real examples, and action plan template. Free.</p>
+  <div class="dl-form">
+    <input type="email" id="dlEmail" maxlength="255" data-placeholder-en="Your email" data-placeholder-ar="إيميلك" placeholder="Your email">
+    <button onclick="downloadPDF()" data-en="Get the PDF" data-ar="حمّل الـ PDF">Get the PDF</button>
+  </div>
+  <p class="dl-note" data-en="Instant download. No spam." data-ar="تحميل فوري. بدون سبام.">Instant download. No spam.</p>
+</div>
+
+<h2 data-en="What's Next?" data-ar="إيه الخطوة الجاية؟">What's Next?</h2>
+
+<p data-en="Now you know the 5 pillars. The question is: where does <em>your</em> brand actually stand?" data-ar="دلوقتي عرفت الـ 5 محاور. السؤال: البراند <em>بتاعك</em> واقف فين بالظبط؟">Now you know the 5 pillars. The question is: where does <em>your</em> brand actually stand?</p>
+
+<div class="next-steps">
+  <div class="next-card">
+    <div class="emoji">🤖</div>
+    <h4 data-en="Let AI check for you" data-ar="خلّي الذكاء يفحصلك">Let AI check for you</h4>
+    <p data-en="Get 100 free credits and run a Brand Diagnosis in 30 seconds." data-ar="خد 100 نقطة مجاناً وشغّل تشخيص البراند في 30 ثانية.">Get 100 free credits and run a Brand Diagnosis in 30 seconds.</p>
+    <a href="/welcome" data-en="Get free credits →" data-ar="خد نقط مجانية →">Get free credits →</a>
+  </div>
+  <div class="next-card">
+    <div class="emoji">📖</div>
+    <h4 data-en="Keep learning" data-ar="كمّل تعلّم">Keep learning</h4>
+    <p data-en="Read our guide on Offer Logic — why smart products fail to sell." data-ar="اقرأ دليلنا عن منطق العرض — ليه منتجات ذكية بتفشل تبيع.">Read our guide on Offer Logic — why smart products fail to sell.</p>
+    <a href="/guides/offer-logic" data-en="Read next guide →" data-ar="اقرأ الدليل التالي →">Read next guide →</a>
+  </div>
+</div>
+
+</div></div>
+</article>
+
+<div class="footer-mini">
+  <div class="container">
+    <p>© 2026 <a href="/welcome">WZRD AI</a> by Primo Marca · <a href="/services-info" data-en="View Services" data-ar="شوف الخدمات">View Services</a></p>
+  </div>
+</div>
+
+<script>
+// Theme toggle — dark (default) / light
+(function() {
+  const saved = localStorage.getItem('wzrd-theme');
+  if (saved === 'light') document.documentElement.classList.add('light-mode');
+  
+  window.toggleTheme = function() {
+    const isLight = document.documentElement.classList.toggle('light-mode');
+    localStorage.setItem('wzrd-theme', isLight ? 'light' : 'dark');
+  };
+})();
+</script>
+<script>
+let cl='en';function tl(){cl=cl==='en'?'ar':'en';document.documentElement.lang=cl;document.documentElement.dir=cl==='ar'?'rtl':'ltr';document.querySelectorAll('[data-en]').forEach(e=>{const t=e.getAttribute('data-'+cl);if(t)e.innerHTML=t});document.querySelectorAll('[data-placeholder-en]').forEach(e=>{e.placeholder=e.getAttribute('data-placeholder-'+cl)||e.placeholder});document.querySelectorAll('.lang-t').forEach(b=>{b.textContent=cl==='ar'?'English':'عربي'})}
+const ob=new IntersectionObserver(e=>{e.forEach(n=>{if(n.isIntersecting)n.target.classList.add('v')})},{threshold:.1});document.querySelectorAll('.anim').forEach(e=>ob.observe(e));
+function downloadPDF(){
+  const e=document.getElementById('dlEmail').value.trim();
+  if(!e||!e.includes('@')){alert(cl==='ar'?'يرجى إدخال إيميل صحيح':'Please enter a valid email');return}
+  const btn=document.querySelector('.dl-form button');
+  btn.disabled=true;btn.textContent=cl==='ar'?'جاري الإرسال...':'Sending...';
+  fetch('/api/trpc/tools.downloadGuide',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({json:{email:e,guideName:'brand-health'}})
+  })
+  .then(r=>r.json())
+  .then(data=>{
+    const result=data?.result?.data?.json;
+    if(result?.success){
+      // Open print dialog for PDF save
+      alert(cl==='ar'?'تم! اضغط Ctrl+P أو ⌘+P لحفظ كـ PDF 📥':'Done! Press Ctrl+P or ⌘+P to save as PDF 📥');
+      setTimeout(() => window.print(), 500);
+    } else {
+      alert(cl==='ar'?'تم! حمّل الدليل من الرابط':'Done! Download the guide');
+    }
+    btn.disabled=false;btn.textContent=cl==='ar'?'حمّل الـ PDF':'Get the PDF';
+  })
+  .catch(()=>{
+    alert(cl==='ar'?'تم تسجيل إيميلك. الدليل هيوصلك قريب.':'Email registered. Guide will be sent shortly.');
+    btn.disabled=false;btn.textContent=cl==='ar'?'حمّل الـ PDF':'Get the PDF';
+  });
+}
+</script>
+<script>
+// Auth-aware: show logout if logged in
+(function() {
+  const hasSess = document.cookie.includes('app_session_id=');
+  if (hasSess) {
+    const nav = document.querySelector('.n-links') || document.querySelector('.n-right');
+    if (nav) {
+      const btn = document.createElement('a');
+      btn.href = '#';
+      btn.textContent = 'Logout';
+      btn.style.cssText = 'color:#ff6b6b;font-size:12px;cursor:pointer;margin-left:12px';
+      btn.onclick = function(e) {
+        e.preventDefault();
+        document.cookie = 'app_session_id=;path=/;max-age=0';
+        window.location.href = '/welcome';
+      };
+      nav.appendChild(btn);
+    }
+  }
+})();
+</script>
+</body>
+</html>

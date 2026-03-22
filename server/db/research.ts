@@ -1,0 +1,13 @@
+import { eq, desc, and, like } from "drizzle-orm";
+import { researchCache, InsertResearchCache, ResearchCache, researchReports, InsertResearchReport, ResearchReport as ResearchReportRow } from "../../drizzle/schema";
+import { getDb } from "./index";
+
+export async function getCachedResearch(cacheKey: string): Promise<ResearchCache | null> { const db = await getDb(); if (!db) return null; const rows = await db.select().from(researchCache).where(eq(researchCache.cacheKey, cacheKey)).limit(1); return rows[0] || null; }
+export async function setCachedResearch(data: InsertResearchCache): Promise<void> { const db = await getDb(); if (!db) return; await db.insert(researchCache).values(data); }
+export async function getResearchCacheByIndustryMarket(industry: string, market: string): Promise<ResearchCache[]> { const db = await getDb(); if (!db) return []; return db.select().from(researchCache).where(and(eq(researchCache.industry, industry), eq(researchCache.market, market))).orderBy(desc(researchCache.createdAt)).limit(20); }
+export async function createResearchReport(data: InsertResearchReport): Promise<number> { const db = await getDb(); if (!db) return 0; const result = await db.insert(researchReports).values(data); return Number(result[0].insertId); }
+export async function getResearchReportById(id: number): Promise<ResearchReportRow | null> { const db = await getDb(); if (!db) return null; const rows = await db.select().from(researchReports).where(eq(researchReports.id, id)).limit(1); return rows[0] || null; }
+export async function getResearchReportsByClient(clientId: number): Promise<ResearchReportRow[]> { const db = await getDb(); if (!db) return []; return db.select().from(researchReports).where(eq(researchReports.clientId, clientId)).orderBy(desc(researchReports.createdAt)); }
+export async function getAllResearchReports(): Promise<ResearchReportRow[]> { const db = await getDb(); if (!db) return []; return db.select().from(researchReports).orderBy(desc(researchReports.createdAt)).limit(200); }
+export async function updateResearchReport(id: number, data: Partial<InsertResearchReport>): Promise<void> { const db = await getDb(); if (!db) return; await db.update(researchReports).set(data).where(eq(researchReports.id, id)); }
+export async function getResearchStats() { const db = await getDb(); if (!db) return { totalReports: 0, totalSources: 0, industries: [] as string[] }; const reports = await db.select().from(researchReports).limit(500); return { totalReports: reports.length, totalSources: reports.reduce((sum: number, r: any) => sum + (r.totalSources || 0), 0), industries: Array.from(new Set(reports.map((r: any) => r.industry).filter(Boolean))) }; }

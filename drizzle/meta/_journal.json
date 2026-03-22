@@ -1,0 +1,90 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1773818944427,
+      "tag": "0000_peaceful_richard_fisk",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1773819130205,
+      "tag": "0001_spicy_zodiak",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1773824250188,
+      "tag": "0002_stale_frank_castle",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1773859511766,
+      "tag": "0003_needy_lionheart",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1773885218915,
+      "tag": "0004_sticky_the_initiative",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1773886502899,
+      "tag": "0005_pretty_quasimodo",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1773889710384,
+      "tag": "0006_dapper_infant_terrible",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1773891536726,
+      "tag": "0007_tough_warbird",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1773893091894,
+      "tag": "0008_same_white_tiger",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1773908322290,
+      "tag": "0009_strong_wild_pack",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1773909725893,
+      "tag": "0010_stale_excalibur",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1774171331906,
+      "tag": "0011_cynical_vance_astro",
+      "breakpoints": true
+    }
+  ]
+}

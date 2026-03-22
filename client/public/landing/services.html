@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Services — WZRD AI by Primo Marca</title>
+<meta name="description" content="AUDIT. BUILD. TAKEOFF. Three service tiers for founders and SMEs in Egypt & Saudi. AI-assisted or done-for-you.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Services — AUDIT / BUILD / TAKEOFF | WZRD AI">
+<meta property="og:description" content="Project-based brand work for founders and SMEs in Egypt & Saudi. Clear scope, clear deliverables, clear finish lines.">
+<meta property="og:url" content="/services-info">
+<meta property="og:site_name" content="WZRD AI by Primo Marca">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Services — AUDIT / BUILD / TAKEOFF | WZRD AI">
+<meta name="twitter:description" content="Project-based brand work for founders and SMEs in Egypt & Saudi. Clear scope, clear deliverables, clear finish lines.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Newsreader:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#09090b;--bg2:#111114;--surface:rgba(255,255,255,.03);--border:rgba(255,255,255,.06);--border-h:rgba(255,255,255,.12);--gold:#c8a24e;--gold-b:#e0b94b;--gold-d:#9a7a3a;--accent:#6d5cff;--accent2:#44ddc9;--accent-g:linear-gradient(135deg,#6d5cff,#44ddc9);--white:#f4f4f6;--text:#b0b0be;--muted:#64647a;--font:'Instrument Sans',sans-serif;--font-d:'Newsreader',Georgia,serif;--font-m:'JetBrains Mono',monospace;--font-ar:'IBM Plex Sans Arabic','Instrument Sans',sans-serif;--r:14px;--rs:8px;--t:.35s cubic-bezier(.16,1,.3,1)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}body{font-family:var(--font);color:var(--text);background:var(--bg);line-height:1.7;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+[dir=rtl] body,[dir=rtl] *{font-family:var(--font-ar)}a{text-decoration:none;color:inherit}button{cursor:pointer;border:none;background:none;font:inherit}ul{list-style:none}
+.container{max-width:1100px;margin:0 auto;padding:0 24px}.mono{font-family:var(--font-m)}
+.anim{opacity:0;transform:translateY(20px);transition:opacity .7s ease,transform .7s ease}.anim.v{opacity:1;transform:translateY(0)}.d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}
+
+/* Nav */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:14px 0;backdrop-filter:blur(20px);background:rgba(9,9,11,.85);border-bottom:1px solid var(--border)}
+.nav-i{display:flex;align-items:center;justify-content:space-between}
+.n-logo{display:flex;flex-direction:column;line-height:1}.n-logo b{font-family:var(--font-m);font-size:1.2rem;letter-spacing:.15em;color:var(--white)}.n-logo b i{font-style:normal;background:var(--accent-g);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}.n-logo small{font-size:.55rem;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;margin-top:1px}
+.n-right{display:flex;gap:16px;align-items:center}.n-link{font-size:.82rem;color:var(--muted);transition:var(--t)}.n-link:hover{color:var(--gold)}
+.lang-t{padding:4px 10px;border-radius:14px;font-size:.65rem;font-weight:600;background:rgba(109,92,255,.08);color:var(--accent);border:1px solid rgba(109,92,255,.15)}
+.n-cta{padding:7px 16px;border-radius:30px;font-size:.78rem;font-weight:600;background:var(--gold);color:var(--bg);transition:var(--t)}.n-cta:hover{background:var(--gold-b)}
+
+/* Hero */
+.s-hero{padding:130px 0 70px;text-align:center;position:relative;overflow:hidden}
+.s-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 30%,rgba(109,92,255,.06),transparent 60%)}
+.s-hero h1{font-size:clamp(2.2rem,5vw,3.4rem);font-weight:700;color:var(--white);line-height:1.15;margin-bottom:16px;position:relative;z-index:2}
+.s-hero .sub{font-size:1.05rem;color:var(--text);max-width:560px;margin:0 auto 28px;position:relative;z-index:2;line-height:1.8}
+.s-hero .principle{font-family:var(--font-d);font-style:italic;font-size:1.1rem;color:var(--gold);position:relative;z-index:2;margin-bottom:24px}
+.hero-btns{display:flex;gap:12px;justify-content:center;position:relative;z-index:2;flex-wrap:wrap}
+.btn-p{padding:14px 28px;border-radius:40px;background:var(--gold);color:var(--bg);font-weight:700;font-size:.9rem;transition:var(--t)}.btn-p:hover{background:var(--gold-b);transform:translateY(-1px)}
+.btn-g{padding:14px 28px;border-radius:40px;border:1px solid var(--border);color:var(--text);font-weight:500;font-size:.9rem;transition:var(--t)}.btn-g:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Tier selector */
+.tier-nav{display:flex;justify-content:center;gap:4px;padding:4px;background:var(--surface);border:1px solid var(--border);border-radius:40px;max-width:480px;margin:0 auto 60px}
+.tier-btn{flex:1;padding:10px 20px;border-radius:36px;font-size:.85rem;font-weight:600;color:var(--muted);transition:var(--t);text-align:center}
+.tier-btn.active{background:var(--gold);color:var(--bg)}
+.tier-btn:hover:not(.active){color:var(--white)}
+
+/* Section */
+.section{padding:80px 0}.sec-alt{background:var(--bg2)}
+.sec-label{font-family:var(--font-m);font-size:.65rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.sec-title{font-size:clamp(1.8rem,3.5vw,2.5rem);font-weight:700;line-height:1.15;color:var(--white);margin-bottom:14px}
+.sec-desc{font-size:1rem;color:var(--text);max-width:540px;line-height:1.8}
+
+/* Tier header */
+.tier-header{display:flex;align-items:baseline;gap:16px;margin-bottom:8px}
+.tier-num{font-family:var(--font-m);font-size:.7rem;padding:4px 12px;border-radius:16px;font-weight:700;letter-spacing:.1em}
+.tier-num.audit{background:rgba(109,92,255,.1);color:var(--accent)}
+.tier-num.build{background:rgba(200,162,78,.1);color:var(--gold)}
+.tier-num.takeoff{background:rgba(68,221,201,.1);color:var(--accent2)}
+
+/* Service cards */
+.svc-grid{display:grid;gap:20px;margin-top:32px}
+.svc-grid-2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.svc{padding:32px;border-radius:var(--r);background:var(--surface);border:1px solid var(--border);transition:var(--t);display:flex;flex-direction:column}
+.svc:hover{border-color:var(--border-h);transform:translateY(-3px)}
+.svc-name{font-size:1.3rem;font-weight:700;color:var(--white);margin-bottom:4px}
+.svc-tagline{font-family:var(--font-d);font-style:italic;font-size:.88rem;color:var(--gold-d);margin-bottom:14px}
+.svc-desc{font-size:.88rem;color:var(--text);line-height:1.8;margin-bottom:16px}
+.svc-label{font-family:var(--font-m);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;margin-top:auto}
+.svc-list{margin-bottom:16px}
+.svc-list li{font-size:.82rem;color:var(--text);padding:5px 0;display:flex;gap:8px}
+.svc-list li::before{content:'→';color:var(--gold);font-family:var(--font-m);flex-shrink:0}
+.svc-best{margin-top:12px;padding:12px 16px;border-radius:var(--rs);background:rgba(109,92,255,.03);border:1px solid rgba(109,92,255,.06)}
+.svc-best-title{font-size:.7rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.svc-best p{font-size:.78rem;color:var(--muted);line-height:1.6;margin:0}
+
+/* WZRD AI badge on service */
+.wzrd-tag{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-m);font-size:.6rem;padding:3px 10px;border-radius:12px;background:rgba(109,92,255,.06);border:1px solid rgba(109,92,255,.1);color:var(--accent);margin-bottom:12px}
+
+/* Featured card */
+.svc.featured{background:linear-gradient(135deg,rgba(109,92,255,.06),rgba(68,221,201,.03));border-color:rgba(109,92,255,.15)}
+.svc.featured:hover{border-color:rgba(109,92,255,.3)}
+
+/* Dual path CTA */
+.dual-cta{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:60px}
+.dual-card{padding:32px;border-radius:var(--r);text-align:center;transition:var(--t)}
+.dual-card:hover{transform:translateY(-3px)}
+.dual-card.diy{background:rgba(109,92,255,.04);border:1px solid rgba(109,92,255,.12)}
+.dual-card.dfy{background:rgba(200,162,78,.04);border:1px solid rgba(200,162,78,.12)}
+.dual-card .emoji{font-size:2.4rem;margin-bottom:10px}
+.dual-card h3{font-size:1.2rem;font-weight:700;color:var(--white);margin-bottom:6px}
+.dual-card p{font-size:.88rem;color:var(--text);line-height:1.7;margin-bottom:16px}
+.dual-btn{display:inline-block;padding:12px 28px;border-radius:40px;font-weight:700;font-size:.88rem;transition:var(--t)}
+.dual-card.diy .dual-btn{background:var(--accent);color:#fff}
+.dual-card.diy .dual-btn:hover{box-shadow:0 0 24px rgba(109,92,255,.35)}
+.dual-card.dfy .dual-btn{background:var(--gold);color:var(--bg)}
+.dual-card.dfy .dual-btn:hover{box-shadow:0 0 24px rgba(200,162,78,.35)}
+@media(max-width:768px){.dual-cta{grid-template-columns:1fr}}
+
+/* Boundaries */
+.boundaries{max-width:600px;margin:60px auto 0;padding:24px;border-radius:var(--r);border:1px solid var(--border);text-align:center}
+.boundaries h4{font-size:.9rem;font-weight:700;color:var(--white);margin-bottom:6px}
+.boundaries p{font-size:.82rem;color:var(--muted);line-height:1.7}
+
+/* FAQ */
+.faq{max-width:700px;margin:0 auto}
+.faq-item{padding:20px 0;border-bottom:1px solid var(--border)}
+.faq-q{font-size:.95rem;font-weight:600;color:var(--white);cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.faq-q::after{content:'+';font-family:var(--font-m);font-size:1.2rem;color:var(--muted);transition:var(--t)}
+.faq-item.open .faq-q::after{content:'−';color:var(--accent)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .4s ease}
+.faq-item.open .faq-a{max-height:200px}
+.faq-a p{font-size:.88rem;color:var(--text);line-height:1.8;padding-top:10px}
+
+/* Footer */
+.footer-mini{padding:32px 0;border-top:1px solid var(--border);text-align:center;font-size:.72rem;color:var(--muted)}
+.footer-mini a{color:var(--gold-d)}
+
+/* Light mode override */
+.light-mode { --bg: #fafaf9; --bg2: #f5f5f4; --text: #1c1917; --text2: #57534e; --text3: #a8a29e; --border: #e7e5e4; --card-bg: #ffffff; }
+.light-mode body { background: var(--bg) !important; color: var(--text) !important; }
+.light-mode nav, .light-mode .nav { background: rgba(250,250,249,.9) !important; border-color: var(--border) !important; }
+.light-mode .hero h1, .light-mode .sec-title, .light-mode h1, .light-mode h2, .light-mode h3 { color: var(--text) !important; }
+.light-mode p, .light-mode .hero p, .light-mode .sec-desc, .light-mode li { color: var(--text2) !important; }
+.light-mode .card, .light-mode .svc-card, .light-mode .faq-item, .light-mode .dual-card, .light-mode .boundaries, .light-mode .callout, .light-mode .framework-box { background: var(--card-bg) !important; border-color: var(--border) !important; }
+.light-mode .article-body { color: var(--text2) !important; }
+.light-mode .article-hero h1 { color: var(--text) !important; }
+.light-mode input, .light-mode select, .light-mode textarea { background: var(--card-bg) !important; color: var(--text) !important; border-color: var(--border) !important; }
+.light-mode .footer-mini { background: var(--bg2) !important; border-color: var(--border) !important; }
+
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav><div class="container nav-i">
+  <a href="/welcome" class="n-logo"><b>WZRD <i>AI</i></b><small data-en="by Primo Marca" data-ar="من بريمو ماركا">by Primo Marca</small></a>
+  <div class="n-right">
+    <a href="/welcome" class="n-link" data-en="Home" data-ar="الرئيسية">Home</a>
+    <a href="#audit" class="n-link">AUDIT</a>
+    <a href="#build" class="n-link">BUILD</a>
+    <a href="#takeoff" class="n-link">TAKEOFF</a>
+    <button class="lang-t" onclick="tl()">عربي</button>
+    <a href="/welcome" class="n-cta" data-en="100 Free Credits" data-ar="100 نقطة مجاناً">100 Free Credits</a>
+  </div>
+</div></nav>
+
+<!-- HERO -->
+<section class="s-hero">
+<div class="container">
+  <h1 data-en='We don't manage feeds.<br>We <span style="color:var(--gold)">engineer systems</span>.' data-ar='إحنا لا ندير صفحات.<br>إحنا <span style="color:var(--gold)">نبني أنظمة</span>.'>We don't manage feeds.<br>We <span style="color:var(--gold)">engineer systems</span>.</h1>
+  <p class="sub" data-en="Project-based brand work for founders and SMEs in Egypt & Saudi — with clear scope, clear deliverables, and clear finish lines." data-ar="خدمات براند Project-based للمؤسسين والـ SMEs في مصر والسعودية — بنطاق واضح، مخرجات واضحة، ونهاية واضحة.">Project-based brand work for founders and SMEs in Egypt & Saudi — with clear scope, clear deliverables, and clear finish lines.</p>
+  <p class="principle" data-en="Most businesses don't need more content. They need more clarity." data-ar="معظم البزنسات مش محتاجة محتوى أكتر. محتاجة وضوح أكتر.">"Most businesses don't need more content. They need more clarity."</p>
+  <div class="hero-btns">
+    <a href="https://wa.me/WHATSAPP_NUMBER" class="btn-p" data-en="Book a Clarity Call" data-ar="احجز جلسة وضوح">Book a Clarity Call</a>
+    <a href="#audit" class="btn-g" data-en="Explore the 3 Tiers" data-ar="تصفح الـ 3 مستويات">Explore the 3 Tiers</a>
+  </div>
+</div>
+</section>
+
+<!-- TIER SELECTOR -->
+<div class="container" style="padding-top:20px">
+  <div class="tier-nav">
+    <a href="#audit" class="tier-btn active" data-en="AUDIT" data-ar="مراجعة">AUDIT</a>
+    <a href="#build" class="tier-btn" data-en="BUILD" data-ar="بناء">BUILD</a>
+    <a href="#takeoff" class="tier-btn" data-en="TAKEOFF" data-ar="إقلاع">TAKEOFF</a>
+  </div>
+</div>
+
+<!-- TIER 1: AUDIT -->
+<section class="section" id="audit">
+<div class="container">
+  <div class="tier-header anim"><span class="tier-num audit">TIER 01</span></div>
+  <h2 class="sec-title anim d1" data-en="AUDIT — Find the bottleneck before you spend more." data-ar="مراجعة — اعرف عنق الزجاجة قبل ما تصرف أكتر.">AUDIT — Find the bottleneck before you spend more.</h2>
+  <p class="sec-desc anim d2" data-en="Audits locate leaks in positioning, messaging, offer logic, and conversion." data-ar="المراجعات بتلاقي التسريب في: التموضع، الرسالة، العرض، والتحويل.">Audits locate leaks in positioning, messaging, offer logic, and conversion.</p>
+
+  <div class="svc-grid svc-grid-2">
+    <div class="svc anim">
+      <div class="wzrd-tag">⚡ WZRD AI AVAILABLE</div>
+      <div class="svc-name" data-en="Clarity Session" data-ar="جلسة الوضوح">Clarity Session</div>
+      <div class="svc-tagline" data-en="Identify the real problem. Fast." data-ar="حدد المشكلة الحقيقية. بسرعة.">Identify the real problem. Fast.</div>
+      <p class="svc-desc" data-en="A focused strategy session to identify the real problem and the fastest path forward." data-ar="جلسة استراتيجية مركّزة لتحديد المشكلة الحقيقية وأسرع طريق للحل.">A focused strategy session to identify the real problem and the fastest path forward.</p>
+      <div class="svc-label" data-en="YOU GET" data-ar="هتطلع بـ">YOU GET</div>
+      <ul class="svc-list">
+        <li data-en="Diagnosis summary (what's wrong / what matters)" data-ar="ملخص تشخيص (إيه الغلط / إيه المهم)">Diagnosis summary (what's wrong / what matters)</li>
+        <li data-en="Priority map (what to fix first)" data-ar="خريطة أولويات (نبدأ بإيه)">Priority map (what to fix first)</li>
+        <li data-en="7–14 day action plan" data-ar="خطة عمل 7-14 يوم">7–14 day action plan</li>
+      </ul>
+      <div class="svc-best"><div class="svc-best-title" data-en="BEST FOR" data-ar="مناسب لـ">BEST FOR</div><p data-en="Too many options · Unclear next step · Need high-leverage direction fast" data-ar="خيارات كتير · مش عارف تبدأ منين · محتاج اتجاه سريع عالي الأثر">Too many options · Unclear next step · Need high-leverage direction fast</p></div>
+    </div>
+
+    <div class="svc anim d1">
+      <div class="wzrd-tag">⚡ WZRD AI AVAILABLE</div>
+      <div class="svc-name" data-en="Full Health Check" data-ar="فحص صحة شامل">Full Health Check</div>
+      <div class="svc-tagline" data-en="The X-ray for your business." data-ar="الأشعة للبيزنس بتاعك.">The X-ray for your business.</div>
+      <p class="svc-desc" data-en="A sharp audit of positioning, offer clarity, digital presence, website, and customer journey — to locate all friction and leakage points." data-ar="مراجعة حادة للتموضع، وضوح العرض، الحضور الرقمي، الموقع، ورحلة العميل — لتحديد كل نقاط الاحتكاك والتسريب.">A sharp audit of positioning, offer clarity, digital presence, website, and customer journey — to locate all friction and leakage points.</p>
+      <div class="svc-label" data-en="YOU GET" data-ar="هتطلع بـ">YOU GET</div>
+      <ul class="svc-list">
+        <li data-en="Positioning & messaging audit" data-ar="مراجعة التموضع والرسالة">Positioning & messaging audit</li>
+        <li data-en="Offer clarity + pricing logic check" data-ar="فحص وضوح العرض + منطق التسعير">Offer clarity + pricing logic check</li>
+        <li data-en="Digital presence + website audit" data-ar="فحص الحضور الرقمي + الموقع">Digital presence + website audit</li>
+        <li data-en="Customer journey friction map" data-ar="خريطة احتكاك رحلة العميل">Customer journey friction map</li>
+        <li data-en="Prioritized fixes + 30-day quick wins" data-ar="إصلاحات مرتبة + quick wins أول 30 يوم">Prioritized fixes + 30-day quick wins</li>
+      </ul>
+      <div class="svc-best"><div class="svc-best-title" data-en="BEST FOR" data-ar="مناسب لـ">BEST FOR</div><p data-en="Growth is expensive · Low-quality leads · Weak conversion despite effort" data-ar="النمو غالي · الليدز ضعيفة · التحويل ضعيف رغم المجهود">Growth is expensive · Low-quality leads · Weak conversion despite effort</p></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- TIER 2: BUILD -->
+<section class="section sec-alt" id="build">
+<div class="container">
+  <div class="tier-header anim"><span class="tier-num build">TIER 02</span></div>
+  <h2 class="sec-title anim d1" data-en="BUILD — Design the system that makes premium possible." data-ar="بناء — ابني النظام اللي يخلي الـ Premium ممكن.">BUILD — Design the system that makes premium possible.</h2>
+  <p class="sec-desc anim d2" data-en="This tier builds your brand foundation: logic, message, and identity." data-ar="المستوى ده بيبني أساس البراند: منطق، رسالة، وهوية.">This tier builds your brand foundation: logic, message, and identity.</p>
+
+  <div class="svc-grid svc-grid-2">
+    <div class="svc anim">
+      <div class="wzrd-tag">⚡ WZRD AI DIRECTION</div>
+      <div class="svc-name" data-en="Starting Business Logic" data-ar="منطق العرض">Starting Business Logic</div>
+      <div class="svc-tagline" data-en="Before branding, fix the logic of selling." data-ar="قبل البراندينج، ثبّت منطق البيع.">Before branding, fix the logic of selling.</div>
+      <p class="svc-desc" data-en="We structure your ICP, offers, pricing logic, and message architecture — the commercial foundation before any visual design." data-ar="بنحدد الشريحة، ننظّم العروض، منطق التسعير، وبنية الرسائل — الأساس التجاري قبل أي تصميم بصري.">We structure your ICP, offers, pricing logic, and message architecture — the commercial foundation before any visual design.</p>
+      <div class="svc-label" data-en="YOU GET" data-ar="هتطلع بـ">YOU GET</div>
+      <ul class="svc-list">
+        <li data-en="ICP focus + segmentation" data-ar="تحديد الشريحة + تقسيم">ICP focus + segmentation</li>
+        <li data-en="Offer structure + pricing logic" data-ar="هيكلة العرض + منطق التسعير">Offer structure + pricing logic</li>
+        <li data-en="Proof & objections map" data-ar="خريطة الإثباتات والاعتراضات">Proof & objections map</li>
+        <li data-en="Message architecture (key lines that sell)" data-ar="بنية الرسائل (الجُمل اللي بتبيع)">Message architecture (key lines that sell)</li>
+      </ul>
+      <div class="svc-best"><div class="svc-best-title" data-en="BEST FOR" data-ar="مناسب لـ">BEST FOR</div><p data-en="New business · Pivot · Market entry (Egypt/Saudi)" data-ar="مشروع جديد · تغيير اتجاه · دخول سوق (مصر/السعودية)">New business · Pivot · Market entry (Egypt/Saudi)</p></div>
+    </div>
+
+    <div class="svc anim d1">
+      <div class="wzrd-tag">⚡ WZRD AI DIRECTION</div>
+      <div class="svc-name" data-en="Brand Identity" data-ar="هوية البراند">Brand Identity</div>
+      <div class="svc-tagline" data-en="Not a logo. A Marca." data-ar="مش لوجو. ماركا.">Not a logo. A Marca.</div>
+      <p class="svc-desc" data-en="A cohesive identity system built for longevity and premium perception — positioning, visual system, tone of voice, and guidelines." data-ar="نظام هوية متماسك مبني للاستمرارية والإحساس البريميوم — تموضع، نظام بصري، نبرة كلام، ودليل.">A cohesive identity system built for longevity and premium perception — positioning, visual system, tone of voice, and guidelines.</p>
+      <div class="svc-label" data-en="YOU GET" data-ar="هتطلع بـ">YOU GET</div>
+      <ul class="svc-list">
+        <li data-en="Light brand foundation (positioning + messaging)" data-ar="أساس براند مختصر (تموضع + رسائل)">Light brand foundation (positioning + messaging)</li>
+        <li data-en="Visual identity system (logo, colors, type, layout)" data-ar="نظام هوية بصري (لوجو، ألوان، خطوط، تخطيط)">Visual identity system (logo, colors, type, layout)</li>
+        <li data-en="Tone of voice rules" data-ar="قواعد نبرة الكلام">Tone of voice rules</li>
+        <li data-en="Brand guidelines (lite, scalable)" data-ar="دليل البراند (مختصر، قابل للتوسع)">Brand guidelines (lite, scalable)</li>
+      </ul>
+      <div class="svc-best"><div class="svc-best-title" data-en="BEST FOR" data-ar="مناسب لـ">BEST FOR</div><p data-en="Generic look · Inconsistent presence · Brand feels cheaper than product" data-ar="شكل عام · حضور غير متسق · البراند حاسسه أرخص من المنتج">Generic look · Inconsistent presence · Brand feels cheaper than product</p></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- TIER 3: TAKEOFF -->
+<section class="section" id="takeoff">
+<div class="container">
+  <div class="tier-header anim"><span class="tier-num takeoff">TIER 03</span></div>
+  <h2 class="sec-title anim d1" data-en="TAKEOFF — Launch-ready authority. Built to last." data-ar="إقلاع — جاهزية إطلاق بسلطة. مبنية لتستمر.">TAKEOFF — Launch-ready authority. Built to last.</h2>
+
+  <div class="svc-grid" style="max-width:600px">
+    <div class="svc featured anim">
+      <div class="wzrd-tag">⚡ WZRD AI DIRECTION + PRIMO MARCA EXECUTION</div>
+      <div class="svc-name" data-en="Business Takeoff" data-ar="باكدج الإقلاع">Business Takeoff</div>
+      <div class="svc-tagline" data-en="Offer Logic Sprint + Marca Identity System — the complete package." data-ar="منطق العرض + نظام الهوية (Marca) — الباكدج الكاملة.">Offer Logic Sprint + Marca Identity System — the complete package.</div>
+      <p class="svc-desc" data-en="We build the offer logic, then translate it into an identity system that holds. Everything you need to launch with authority." data-ar="بنبني منطق العرض، وبعدين نترجمه لنظام هوية يمسك ويعيش. كل اللي محتاجه تطلق بسلطة.">We build the offer logic, then translate it into an identity system that holds. Everything you need to launch with authority.</p>
+      <div class="svc-label" data-en="FULL PACKAGE" data-ar="الباكدج الكاملة">FULL PACKAGE</div>
+      <ul class="svc-list">
+        <li data-en="ICP + offer structure + pricing logic" data-ar="شريحة + هيكلة العرض + منطق التسعير">ICP + offer structure + pricing logic</li>
+        <li data-en="Messaging pillars + key selling lines" data-ar="أعمدة الرسائل + الجُمل الأساسية">Messaging pillars + key selling lines</li>
+        <li data-en="Full Marca identity system + guidelines" data-ar="نظام هوية Marca كامل + دليل">Full Marca identity system + guidelines</li>
+        <li data-en="Execution handoff pack for your team" data-ar="ملف تسليم جاهز للتنفيذ للفريق">Execution handoff pack for your team</li>
+      </ul>
+      <div class="svc-best"><div class="svc-best-title" data-en="BEST FOR" data-ar="مناسب لـ">BEST FOR</div><p data-en="New brand launch · Premium rebuild · Market entry/relaunch in Egypt & Saudi" data-ar="إطلاق براند جديد · إعادة تأسيس بريميوم · دخول/إعادة إطلاق في مصر والسعودية">New brand launch · Premium rebuild · Market entry/relaunch in Egypt & Saudi</p></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- DUAL CTA -->
+<section class="section sec-alt">
+<div class="container">
+  <h2 class="sec-title anim" style="text-align:center" data-en="How do you want to work?" data-ar="عايز تشتغل إزاي؟">How do you want to work?</h2>
+  <p class="sec-desc anim d1" style="text-align:center;margin:0 auto 8px" data-en="Two paths. Same premium quality." data-ar="مسارين. نفس الجودة.">Two paths. Same premium quality.</p>
+
+  <div class="dual-cta">
+    <div class="dual-card diy anim">
+      <div class="emoji">🤖</div>
+      <h3 data-en="DIY with WZRD AI" data-ar="افعلها بنفسك مع WZRD AI">DIY with WZRD AI</h3>
+      <p data-en="Use AI tools to diagnose, get direction, and build at your own pace. Buy credits as you need them." data-ar="استخدم أدوات الذكاء تشخّص، تاخد اتجاه، وتبني بالسرعة بتاعتك. اشتري نقط على حسب حاجتك.">Use AI tools to diagnose, get direction, and build at your own pace. Buy credits as you need them.</p>
+      <a href="/welcome" class="dual-btn" data-en="Start with 100 Free Credits" data-ar="ابدأ بـ 100 نقطة مجانية">Start with 100 Free Credits</a>
+    </div>
+    <div class="dual-card dfy anim d1">
+      <div class="emoji">🤝</div>
+      <h3 data-en="Done-for-you by Primo Marca" data-ar="اسيبها لبريمو ماركا">Done-for-you by Primo Marca</h3>
+      <p data-en="We handle everything — strategy, identity, execution. You review and approve. Clear scope, clear finish line." data-ar="إحنا بنعمل كل حاجة — استراتيجية، هوية، تنفيذ. أنت بتراجع وتوافق. نطاق واضح، نهاية واضحة.">We handle everything — strategy, identity, execution. You review and approve. Clear scope, clear finish line.</p>
+      <a href="https://wa.me/WHATSAPP_NUMBER" class="dual-btn" data-en="Book a Clarity Call" data-ar="احجز جلسة وضوح">Book a Clarity Call</a>
+    </div>
+  </div>
+
+  <!-- Boundaries -->
+  <div class="boundaries anim">
+    <h4 data-en="🚫 What we don't do" data-ar="🚫 اللي مش بنعمله">🚫 What we don't do</h4>
+    <p data-en="We do not provide daily social media management or follower-growth services. We build systems. We protect authority." data-ar="إحنا لا نقدم إدارة يومية للسوشيال أو خدمات زيادة متابعين. إحنا بنبني أنظمة. وبنحمي السلطة.">We do not provide daily social media management or follower-growth services. We build systems. We protect authority.</p>
+  </div>
+
+  <!-- Premium filter -->
+  <div class="boundaries anim" style="border-color:rgba(200,162,78,.15);margin-top:16px">
+    <h4 style="color:var(--gold)" data-en="Investment Level" data-ar="مستوى الاستثمار">Investment Level</h4>
+    <p data-en="Our projects are designed for established businesses and serious founders ready to invest in their brand as a strategic asset. Engagements typically start from five figures (EGP). If you're unsure whether this is the right fit — book a free Clarity Call and we'll tell you honestly." data-ar="مشاريعنا مصممة للبزنسات القائمة والمؤسسين الجادين المستعدين يستثمروا في البراند بتاعهم كأصل استراتيجي. المشاريع عادةً بتبدأ من خمس أرقام (جنيه). لو مش متأكد إن ده المناسب ليك — احجز جلسة وضوح مجانية وهنقولك بصراحة.">Our projects are designed for established businesses and serious founders ready to invest in their brand as a strategic asset. Engagements typically start from five figures (EGP). If you're unsure whether this is the right fit — book a free Clarity Call and we'll tell you honestly.</p>
+  </div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="section">
+<div class="container">
+  <h2 class="sec-title anim" style="text-align:center" data-en="Questions" data-ar="أسئلة">Questions</h2>
+  <div class="faq" style="margin-top:32px">
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q" data-en="Do you manage social media daily?" data-ar="هل بتديروا السوشيال يومياً؟">Do you manage social media daily?</div>
+      <div class="faq-a"><p data-en="No. We build the system and direction. Execution is done by your team or specialist partners. We guide for precision — we don't post." data-ar="لا. إحنا بنبني النظام والاتجاه. التنفيذ بيكون بواسطة فريقك أو شركاء متخصصين. بنوجّه للدقة — مش بننزل بوستات.">No. We build the system and direction. Execution is done by your team or specialist partners. We guide for precision — we don't post.</p></div>
+    </div>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q" data-en="Should I start with Audit or Takeoff?" data-ar="أبدأ بـ Audit ولا Takeoff؟">Should I start with Audit or Takeoff?</div>
+      <div class="faq-a"><p data-en="If you don't know the root cause of the problem → Audit. If you're building from scratch → Build. If you're ready to launch with authority → Takeoff." data-ar="لو مش عارف السبب الحقيقي → Audit. لو بتبني من الصفر → Build. لو جاهز تطلق بسلطة → Takeoff.">If you don't know the root cause of the problem → Audit. If you're building from scratch → Build. If you're ready to launch with authority → Takeoff.</p></div>
+    </div>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q" data-en="Is this suitable for Egypt and Saudi?" data-ar="ده مناسب لمصر والسعودية؟">Is this suitable for Egypt and Saudi?</div>
+      <div class="faq-a"><p data-en="Yes. We write messaging fit for both markets' culture, while maintaining the same premium standard." data-ar="أيوه. بنكتب رسائل مناسبة لثقافة السوقين، مع الحفاظ على نفس المعيار البريميوم.">Yes. We write messaging fit for both markets' culture, while maintaining the same premium standard.</p></div>
+    </div>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q" data-en="What's the difference between WZRD AI credits and done-for-you?" data-ar="إيه الفرق بين WZRD AI credits والـ done-for-you؟">What's the difference between WZRD AI credits and done-for-you?</div>
+      <div class="faq-a"><p data-en="WZRD AI gives you AI-powered diagnosis and initial direction at low cost. Done-for-you means Primo Marca's team handles strategy, design, and execution end-to-end." data-ar="WZRD AI بيديك تشخيص واتجاه مبدئي بالذكاء الاصطناعي بتكلفة قليلة. الـ done-for-you يعني فريق بريمو ماركا بيشتغل على الاستراتيجية والتصميم والتنفيذ من الألف للياء.">WZRD AI gives you AI-powered diagnosis and initial direction at low cost. Done-for-you means Primo Marca's team handles strategy, design, and execution end-to-end.</p></div>
+    </div>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q" data-en="How much do your services cost?" data-ar="خدماتكم بكام؟">How much do your services cost?</div>
+      <div class="faq-a"><p data-en="Pricing depends on scope. We don't do one-size-fits-all — each project is scoped based on your actual situation. That said, engagements typically start from five figures (EGP). The Clarity Call is free — we'll assess your needs and give you an honest recommendation, even if that means telling you we're not the right fit." data-ar="التسعير بيعتمد على النطاق. مش بنعمل مقاس واحد للكل — كل مشروع بيتحدد بناءً على وضعك الفعلي. المشاريع عادةً بتبدأ من خمس أرقام (جنيه). جلسة الوضوح مجانية — هنقيّم احتياجاتك ونديك توصية صادقة، حتى لو ده يعني إننا نقولك إننا مش المناسبين ليك.">Pricing depends on scope. We don't do one-size-fits-all — each project is scoped based on your actual situation. That said, engagements typically start from five figures (EGP). The Clarity Call is free — we'll assess your needs and give you an honest recommendation, even if that means telling you we're not the right fit.</p></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- FOOTER -->
+<div class="footer-mini"><div class="container">
+  <p>© 2026 <a href="/welcome">WZRD AI</a> by Primo Marca · <i style="color:var(--gold-d)">"Marks Fade, MARCAS Don't."</i></p>
+</div></div>
+
+<script>
+// Theme toggle — dark (default) / light
+(function() {
+  const saved = localStorage.getItem('wzrd-theme');
+  if (saved === 'light') document.documentElement.classList.add('light-mode');
+  
+  window.toggleTheme = function() {
+    const isLight = document.documentElement.classList.toggle('light-mode');
+    localStorage.setItem('wzrd-theme', isLight ? 'light' : 'dark');
+  };
+})();
+</script>
+<script>
+
+// ═══ SITE CONFIG — Change these values ═══
+const SITE_CONFIG = {
+  whatsapp: '201XXXXXXXXX', // ← غيّر ده لرقمك الحقيقي (مثال: 201234567890)
+  email: 'hello@primomarca.com',
+  website: 'https://www.primomarca.com',
+};
+// Update all WhatsApp links on page load
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('a[href*="WHATSAPP_NUMBER"]').forEach(a => {
+    a.href = 'https://wa.me/' + SITE_CONFIG.whatsapp;
+  });
+});
+
+let cl='en';function tl(){cl=cl==='en'?'ar':'en';document.documentElement.lang=cl;document.documentElement.dir=cl==='ar'?'rtl':'ltr';document.querySelectorAll('[data-en]').forEach(e=>{const t=e.getAttribute('data-'+cl);if(t)e.innerHTML=t});document.querySelectorAll('[data-placeholder-en]').forEach(e=>{e.placeholder=e.getAttribute('data-placeholder-'+cl)||e.placeholder});document.querySelectorAll('.lang-t').forEach(b=>{b.textContent=cl==='ar'?'English':'عربي'})}
+const ob=new IntersectionObserver(e=>{e.forEach(n=>{if(n.isIntersecting)n.target.classList.add('v')})},{threshold:.1});document.querySelectorAll('.anim').forEach(e=>ob.observe(e));
+</script>
+<script>
+// Auth-aware: show logout if logged in
+(function() {
+  const hasSess = document.cookie.includes('app_session_id=');
+  if (hasSess) {
+    const nav = document.querySelector('.n-links') || document.querySelector('.n-right');
+    if (nav) {
+      const btn = document.createElement('a');
+      btn.href = '#';
+      btn.textContent = 'Logout';
+      btn.style.cssText = 'color:#ff6b6b;font-size:12px;cursor:pointer;margin-left:12px';
+      btn.onclick = function(e) {
+        e.preventDefault();
+        document.cookie = 'app_session_id=;path=/;max-age=0';
+        window.location.href = '/welcome';
+      };
+      nav.appendChild(btn);
+    }
+  }
+})();
+</script>
+</body>
+</html>

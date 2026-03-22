@@ -1,0 +1,40 @@
+CREATE TABLE `knowledge_entries` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`title` varchar(500) NOT NULL,
+	`content` text NOT NULL,
+	`category` enum('case_study','framework','lesson_learned','market_insight','competitor_intel','client_pattern','methodology','template','general') NOT NULL DEFAULT 'general',
+	`industry` varchar(255),
+	`market` varchar(100),
+	`clientId` int,
+	`projectId` int,
+	`source` enum('manual','research_import','ai_generated','conversation_extract') NOT NULL DEFAULT 'manual',
+	`sourceId` int,
+	`tags` json,
+	`isActive` int NOT NULL DEFAULT 1,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `knowledge_entries_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `pipeline_runs` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`clientId` int NOT NULL,
+	`projectId` int,
+	`serviceType` enum('business_health_check','starting_business_logic','brand_identity','business_takeoff','consultation') NOT NULL,
+	`status` enum('pending','researching','diagnosing','strategizing','generating','reviewing','completed','failed','paused') NOT NULL DEFAULT 'pending',
+	`currentStep` int DEFAULT 0,
+	`totalSteps` int DEFAULT 5,
+	`researchOutput` json,
+	`diagnosisOutput` text,
+	`strategyOutput` text,
+	`deliverablesOutput` json,
+	`proposalOutput` json,
+	`startedAt` timestamp,
+	`completedAt` timestamp,
+	`errorMessage` text,
+	`autoApprove` int DEFAULT 0,
+	`approvedSteps` json,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `pipeline_runs_id` PRIMARY KEY(`id`)
+);

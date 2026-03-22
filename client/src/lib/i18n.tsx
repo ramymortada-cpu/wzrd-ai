@@ -1,0 +1,707 @@
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+
+type Locale = "en" | "ar";
+type Dir = "ltr" | "rtl";
+
+interface I18nContextType {
+  locale: Locale;
+  dir: Dir;
+  t: (key: string) => string;
+  setLocale: (locale: Locale) => void;
+  toggleLocale: () => void;
+}
+
+const I18nContext = createContext<I18nContextType | undefined>(undefined);
+
+const translations: Record<Locale, Record<string, string>> = {
+  en: {
+    // Navigation
+    "nav.dashboard": "Dashboard",
+    "nav.clients": "Clients",
+    "nav.projects": "Projects",
+    "nav.deliverables": "Deliverables",
+    "nav.notes": "Notes & Insights",
+    "nav.financials": "Financials",
+    "nav.ai": "AI Engine",
+    "nav.analytics": "Analytics",
+    "nav.proposals": "Proposals",
+    "nav.playbooks": "Playbooks",
+    "nav.onboarding": "Onboarding",
+    "nav.portal": "Client Portal",
+    "nav.research": "Research Engine",
+    "nav.knowledge": "Knowledge Base",
+    "nav.pipeline": "Autonomous Pipeline",
+    "nav.brandTwin": "Brand Digital Twin",
+    "nav.leads": "Leads",
+    "nav.salesFunnel": "Sales Funnel",
+    "nav.signOut": "Sign out",
+    "nav.signIn": "Sign in",
+    "nav.commandCenter": "Wzrd AI",
+
+    // Leads
+    "leads.title": "Lead Management",
+    "leads.subtitle": "Track and manage potential clients from Brand Health Quick-Check",
+    "leads.new": "New",
+    "leads.contacted": "Contacted",
+    "leads.qualified": "Qualified",
+    "leads.proposalSent": "Proposal Sent",
+    "leads.converted": "Converted",
+    "leads.lost": "Lost",
+    "leads.hot": "Hot",
+    "leads.warm": "Warm",
+    "leads.cold": "Cold",
+    "leads.score": "Score",
+    "leads.recommended": "Recommended Service",
+    "leads.estimatedValue": "Est. Value",
+    "leads.convertToClient": "Convert to Client",
+    "leads.viewDiagnosis": "View Diagnosis",
+    "leads.noLeads": "No leads yet. Share your Brand Health Quick-Check link to start capturing leads.",
+    "leads.totalLeads": "Total Leads",
+    "leads.hotLeads": "Hot Leads",
+    "leads.pipelineValue": "Pipeline Value",
+    "leads.conversionRate": "Conversion Rate",
+
+    // Sales Funnel
+    "funnel.title": "Sales Funnel",
+    "funnel.subtitle": "Track leads through the conversion pipeline",
+    "funnel.overview": "Funnel Overview",
+    "funnel.revenue": "Revenue Tracking",
+    "funnel.proposals": "Active Proposals",
+
+    // Dashboard
+    "dashboard.title": "Dashboard",
+    "dashboard.welcome": "Welcome back",
+    "dashboard.totalClients": "Total Clients",
+    "dashboard.activeProjects": "Active Projects",
+    "dashboard.completedProjects": "Completed",
+    "dashboard.totalRevenue": "Revenue Collected",
+    "dashboard.pendingRevenue": "Pending Revenue",
+    "dashboard.overdueRevenue": "Overdue",
+    "dashboard.recentProjects": "Recent Projects",
+    "dashboard.quickActions": "Quick Actions",
+    "dashboard.newClient": "New Client",
+    "dashboard.newProject": "New Project",
+    "dashboard.aiAssistant": "AI Assistant",
+    "dashboard.viewPlaybooks": "View Playbooks",
+    "dashboard.noProjects": "No projects yet. Create your first project to get started.",
+    "dashboard.pipeline": "Project Pipeline",
+
+    // Clients
+    "clients.title": "Clients",
+    "clients.addNew": "Add Client",
+    "clients.name": "Name",
+    "clients.company": "Company",
+    "clients.email": "Email",
+    "clients.phone": "Phone",
+    "clients.market": "Market",
+    "clients.industry": "Industry",
+    "clients.website": "Website",
+    "clients.status": "Status",
+    "clients.notes": "Notes",
+    "clients.noClients": "No clients yet. Add your first client to get started.",
+    "clients.search": "Search clients...",
+    "clients.editClient": "Edit Client",
+    "clients.deleteClient": "Delete Client",
+    "clients.deleteConfirm": "Are you sure you want to delete this client?",
+    "clients.viewDetails": "View Details",
+
+    // Client Detail
+    "clientDetail.title": "Client Overview",
+    "clientDetail.projects": "Projects",
+    "clientDetail.notes": "Notes",
+    "clientDetail.payments": "Payments",
+    "clientDetail.info": "Client Information",
+    "clientDetail.addNote": "Add Note",
+    "clientDetail.addPayment": "Add Payment",
+    "clientDetail.noProjects": "No projects for this client yet.",
+    "clientDetail.noNotes": "No notes yet.",
+    "clientDetail.noPayments": "No payments recorded.",
+    "clientDetail.aiAnalysis": "AI Analysis",
+
+    // Projects
+    "projects.title": "Projects",
+    "projects.addNew": "New Project",
+    "projects.name": "Project Name",
+    "projects.client": "Client",
+    "projects.service": "Service Type",
+    "projects.stage": "Stage",
+    "projects.status": "Status",
+    "projects.price": "Price",
+    "projects.noProjects": "No projects yet. Create your first project to get started.",
+    "projects.search": "Search projects...",
+    "projects.viewDetails": "View Details",
+    "projects.description": "Description",
+
+    // Project Detail
+    "projectDetail.title": "Project Details",
+    "projectDetail.deliverables": "Deliverables",
+    "projectDetail.timeline": "Timeline",
+    "projectDetail.generateAll": "Generate All with AI",
+    "projectDetail.generateOne": "Generate with AI",
+    "projectDetail.editContent": "Edit Content",
+    "projectDetail.viewContent": "View Content",
+    "projectDetail.moveStage": "Advance Stage",
+    "projectDetail.addContext": "Add Context for AI",
+    "projectDetail.noDeliverables": "No deliverables yet.",
+
+    // Deliverables
+    "deliverables.title": "All Deliverables",
+    "deliverables.noDeliverables": "No deliverables found.",
+    "deliverables.filterByStatus": "Filter by status",
+    "deliverables.all": "All",
+    "deliverables.subtitle": "Manage all project deliverables with PDF generation, image creation, and quality gates",
+    "deliverable.pending": "Pending",
+    "deliverable.in_progress": "In Progress",
+    "deliverable.ai_generated": "AI Generated",
+    "deliverable.review": "In Review",
+    "deliverable.approved": "Approved",
+    "deliverable.delivered": "Delivered",
+
+    // Notes
+    "notes.title": "Notes & Insights",
+    "notes.addNew": "Add Note",
+    "notes.noteTitle": "Title",
+    "notes.content": "Content",
+    "notes.category": "Category",
+    "notes.client": "Client",
+    "notes.project": "Project",
+    "notes.noNotes": "No notes yet. Add your first note.",
+    "notes.analyzeAll": "Analyze All with AI",
+    "notes.search": "Search notes...",
+
+    // Financials
+    "financials.title": "Financials",
+    "financials.subtitle": "Track revenue, payments, and financial performance",
+    "financials.addPayment": "Add Payment",
+    "financials.totalRevenue": "Total Revenue",
+    "financials.totalCollected": "Total Collected",
+    "financials.collected": "Collected",
+    "financials.totalPending": "Total Pending",
+    "financials.pendingAmount": "Pending",
+    "financials.totalOverdue": "Total Overdue",
+    "financials.overdue": "Overdue",
+    "financials.recentPayments": "Recent Payments",
+    "financials.noPayments": "No payments recorded yet.",
+    "financials.amount": "Amount",
+    "financials.status": "Status",
+    "financials.description": "Description",
+    "financials.dueDate": "Due Date",
+    "financials.paidDate": "Paid Date",
+    "financials.markPaid": "Mark as Paid",
+    "financials.byService": "Revenue by Service",
+    "financials.byMarket": "Revenue by Market",
+
+    // AI Engine
+    "ai.title": "AI Engine",
+    "ai.subtitle": "Powered by Wzrd AI Methodology",
+    "ai.startWorkflow": "Start Guided Workflow",
+    "ai.freeChat": "Free Chat",
+    "ai.selectService": "Select a service to begin",
+    "ai.typeMessage": "Type your message...",
+    "ai.send": "Send",
+    "ai.thinking": "Thinking...",
+    "ai.guidedMode": "Guided Workflow",
+    "ai.chatMode": "Free Chat",
+    "ai.selectClient": "Select Client",
+    "ai.selectProject": "Select Project",
+    "ai.step": "Step",
+    "ai.of": "of",
+    "ai.nextStep": "Next Step",
+    "ai.previousStep": "Previous",
+    "ai.complete": "Complete",
+    "ai.generateDeliverable": "Generate Deliverable",
+    "ai.savedToProject": "Saved to project deliverables",
+
+    // Playbooks
+    "playbooks.title": "Service Playbooks",
+    "playbooks.subtitle": "Execution frameworks for each service",
+    "playbooks.stages": "Stages",
+    "playbooks.steps": "Steps",
+    "playbooks.deliverable": "Deliverable",
+
+    // Statuses
+    "status.lead": "Lead",
+    "status.active": "Active",
+    "status.completed": "Completed",
+    "status.paused": "Paused",
+    "status.cancelled": "Cancelled",
+    "status.pending": "Pending",
+    "status.in_progress": "In Progress",
+    "status.ai_generated": "AI Generated",
+    "status.review": "In Review",
+    "status.approved": "Approved",
+    "status.delivered": "Delivered",
+    "status.paid": "Paid",
+    "status.overdue": "Overdue",
+
+    // Stages
+    "stage.diagnose": "Diagnose",
+    "stage.design": "Design",
+    "stage.deploy": "Deploy",
+    "stage.optimize": "Optimize",
+    "stage.completed": "Completed",
+
+    // Markets
+    "market.ksa": "Saudi Arabia",
+    "market.egypt": "Egypt",
+    "market.uae": "UAE",
+    "market.other": "Other",
+
+    // Services
+    "service.business_health_check": "Business Health Check",
+    "service.starting_business_logic": "Starting Business Logic",
+    "service.brand_identity": "Brand Identity",
+    "service.business_takeoff": "Business Takeoff",
+    "service.consultation": "Consultation",
+
+    // Categories
+    "category.diagnostic": "Diagnostic",
+    "category.strategic": "Strategic",
+    "category.meeting": "Meeting",
+    "category.insight": "Insight",
+    "category.general": "General",
+
+    // Common
+    "common.save": "Save",
+    "common.cancel": "Cancel",
+    "common.delete": "Delete",
+    "common.edit": "Edit",
+    "common.create": "Create",
+    "common.close": "Close",
+    "common.loading": "Loading...",
+    "common.error": "Something went wrong",
+    "common.success": "Success",
+    "common.confirm": "Confirm",
+    "common.back": "Back",
+    "common.next": "Next",
+    "common.search": "Search...",
+    "common.noResults": "No results found",
+    "common.viewAll": "View All",
+    "common.egp": "EGP",
+    "common.optional": "Optional",
+    "common.required": "Required",
+    "common.all": "All",
+
+    // Payment statuses
+    "payment.pending": "Pending",
+    "payment.paid": "Paid",
+    "payment.overdue": "Overdue",
+    "payment.cancelled": "Cancelled",
+    "payment.partial": "Partial",
+
+    // Proposals
+    "proposals.title": "Proposals",
+    "proposals.subtitle": "Generate professional proposals for clients",
+    "proposals.addNew": "New Proposal",
+    "proposals.noProposals": "No proposals yet. Generate your first proposal.",
+    "proposals.search": "Search proposals...",
+    "proposals.selectClient": "Select a client",
+    "proposals.selectService": "Select a service",
+    "proposals.proposalTitle": "Proposal Title",
+    "proposals.language": "Language",
+    "proposals.customNotes": "Additional Notes for AI",
+    "proposals.customNotesHint": "Any specific context or requirements for this proposal...",
+    "proposals.generating": "Generating proposal with AI...",
+    "proposals.generate": "Generate Proposal",
+    "proposals.preview": "Preview",
+    "proposals.download": "Download PDF",
+    "proposals.edit": "Edit",
+    "proposals.regenerate": "Regenerate",
+    "proposals.regenerateSection": "Regenerate Section",
+    "proposals.status": "Status",
+    "proposals.draft": "Draft",
+    "proposals.sent": "Sent",
+    "proposals.accepted": "Accepted",
+    "proposals.rejected": "Rejected",
+    "proposals.markSent": "Mark as Sent",
+    "proposals.markAccepted": "Mark as Accepted",
+    "proposals.markRejected": "Mark as Rejected",
+    "proposals.executiveSummary": "Executive Summary",
+    "proposals.clientBackground": "Client Background",
+    "proposals.serviceDescription": "Service Description",
+    "proposals.methodology": "Our Methodology",
+    "proposals.deliverables": "Deliverables",
+    "proposals.timeline": "Timeline",
+    "proposals.investment": "Investment",
+    "proposals.whyPrimoMarca": "Why Wzrd AI",
+    "proposals.terms": "Terms & Conditions",
+    "proposals.deleteConfirm": "Are you sure you want to delete this proposal?",
+    "proposals.english": "English",
+    "proposals.arabic": "Arabic",
+
+    // Projects extra
+    "projects.selectClient": "Select a client",
+  },
+  ar: {
+    // Navigation
+    "nav.dashboard": "لوحة التحكم",
+    "nav.clients": "العملاء",
+    "nav.projects": "المشاريع",
+    "nav.deliverables": "المخرجات",
+    "nav.notes": "الملاحظات والرؤى",
+    "nav.financials": "المالية",
+    "nav.ai": "محرك الذكاء",
+    "nav.analytics": "التحليلات",
+    "nav.proposals": "العروض",
+    "nav.playbooks": "أدلة التنفيذ",
+    "nav.onboarding": "تسجيل العملاء",
+    "nav.portal": "بوابة العميل",
+    "nav.research": "محرك البحث",
+    "nav.knowledge": "قاعدة المعرفة",
+    "nav.pipeline": "خط الإنتاج الذاتي",
+    "nav.brandTwin": "التوأم الرقمي",
+    "nav.leads": "العملاء المحتملين",
+    "nav.salesFunnel": "قمع المبيعات",
+    "nav.signOut": "تسجيل الخروج",
+    "nav.signIn": "تسجيل الدخول",
+    "nav.commandCenter": "Wzrd AI",
+
+    // Leads
+    "leads.title": "إدارة العملاء المحتملين",
+    "leads.subtitle": "تتبع وإدارة العملاء المحتملين من فحص صحة العلامة التجارية",
+    "leads.new": "جديد",
+    "leads.contacted": "تم التواصل",
+    "leads.qualified": "مؤهل",
+    "leads.proposalSent": "تم إرسال العرض",
+    "leads.converted": "تم التحويل",
+    "leads.lost": "مفقود",
+    "leads.hot": "ساخن",
+    "leads.warm": "دافئ",
+    "leads.cold": "بارد",
+    "leads.score": "التقييم",
+    "leads.recommended": "الخدمة الموصى بها",
+    "leads.estimatedValue": "القيمة المقدرة",
+    "leads.convertToClient": "تحويل لعميل",
+    "leads.viewDiagnosis": "عرض التشخيص",
+    "leads.noLeads": "لا يوجد عملاء محتملين بعد. شارك رابط فحص صحة العلامة التجارية لبدء التقاط العملاء.",
+    "leads.totalLeads": "إجمالي العملاء المحتملين",
+    "leads.hotLeads": "عملاء ساخنين",
+    "leads.pipelineValue": "قيمة خط الأنابيب",
+    "leads.conversionRate": "معدل التحويل",
+
+    // Sales Funnel
+    "funnel.title": "قمع المبيعات",
+    "funnel.subtitle": "تتبع العملاء المحتملين عبر مراحل التحويل",
+    "funnel.overview": "نظرة عامة على القمع",
+    "funnel.revenue": "تتبع الإيرادات",
+    "funnel.proposals": "العروض النشطة",
+
+    // Dashboard
+    "dashboard.title": "لوحة التحكم",
+    "dashboard.welcome": "مرحباً بعودتك",
+    "dashboard.totalClients": "إجمالي العملاء",
+    "dashboard.activeProjects": "المشاريع النشطة",
+    "dashboard.completedProjects": "المكتملة",
+    "dashboard.totalRevenue": "الإيرادات المحصلة",
+    "dashboard.pendingRevenue": "الإيرادات المعلقة",
+    "dashboard.overdueRevenue": "متأخرة",
+    "dashboard.recentProjects": "أحدث المشاريع",
+    "dashboard.quickActions": "إجراءات سريعة",
+    "dashboard.newClient": "عميل جديد",
+    "dashboard.newProject": "مشروع جديد",
+    "dashboard.aiAssistant": "مساعد الذكاء",
+    "dashboard.viewPlaybooks": "عرض الأدلة",
+    "dashboard.noProjects": "لا توجد مشاريع بعد. أنشئ أول مشروع للبدء.",
+    "dashboard.pipeline": "خط أنابيب المشاريع",
+
+    // Clients
+    "clients.title": "العملاء",
+    "clients.addNew": "إضافة عميل",
+    "clients.name": "الاسم",
+    "clients.company": "الشركة",
+    "clients.email": "البريد الإلكتروني",
+    "clients.phone": "الهاتف",
+    "clients.market": "السوق",
+    "clients.industry": "القطاع",
+    "clients.website": "الموقع الإلكتروني",
+    "clients.status": "الحالة",
+    "clients.notes": "ملاحظات",
+    "clients.noClients": "لا يوجد عملاء بعد. أضف أول عميل للبدء.",
+    "clients.search": "بحث في العملاء...",
+    "clients.editClient": "تعديل العميل",
+    "clients.deleteClient": "حذف العميل",
+    "clients.deleteConfirm": "هل أنت متأكد من حذف هذا العميل؟",
+    "clients.viewDetails": "عرض التفاصيل",
+
+    // Client Detail
+    "clientDetail.title": "نظرة عامة على العميل",
+    "clientDetail.projects": "المشاريع",
+    "clientDetail.notes": "الملاحظات",
+    "clientDetail.payments": "المدفوعات",
+    "clientDetail.info": "معلومات العميل",
+    "clientDetail.addNote": "إضافة ملاحظة",
+    "clientDetail.addPayment": "إضافة دفعة",
+    "clientDetail.noProjects": "لا توجد مشاريع لهذا العميل بعد.",
+    "clientDetail.noNotes": "لا توجد ملاحظات بعد.",
+    "clientDetail.noPayments": "لا توجد مدفوعات مسجلة.",
+    "clientDetail.aiAnalysis": "تحليل الذكاء الاصطناعي",
+
+    // Projects
+    "projects.title": "المشاريع",
+    "projects.addNew": "مشروع جديد",
+    "projects.name": "اسم المشروع",
+    "projects.client": "العميل",
+    "projects.service": "نوع الخدمة",
+    "projects.stage": "المرحلة",
+    "projects.status": "الحالة",
+    "projects.price": "السعر",
+    "projects.noProjects": "لا توجد مشاريع بعد. أنشئ أول مشروع للبدء.",
+    "projects.search": "بحث في المشاريع...",
+    "projects.viewDetails": "عرض التفاصيل",
+    "projects.description": "الوصف",
+
+    // Project Detail
+    "projectDetail.title": "تفاصيل المشروع",
+    "projectDetail.deliverables": "المخرجات",
+    "projectDetail.timeline": "الجدول الزمني",
+    "projectDetail.generateAll": "توليد الكل بالذكاء الاصطناعي",
+    "projectDetail.generateOne": "توليد بالذكاء الاصطناعي",
+    "projectDetail.editContent": "تعديل المحتوى",
+    "projectDetail.viewContent": "عرض المحتوى",
+    "projectDetail.moveStage": "تقدم المرحلة",
+    "projectDetail.addContext": "إضافة سياق للذكاء الاصطناعي",
+    "projectDetail.noDeliverables": "لا توجد مخرجات بعد.",
+
+    // Deliverables
+    "deliverables.title": "جميع المخرجات",
+    "deliverables.noDeliverables": "لا توجد مخرجات.",
+    "deliverables.filterByStatus": "تصفية حسب الحالة",
+    "deliverables.all": "الكل",
+    "deliverables.subtitle": "إدارة جميع مخرجات المشاريع مع توليد PDF وإنشاء الصور وبوابات الجودة",
+    "deliverable.pending": "قيد الانتظار",
+    "deliverable.in_progress": "قيد التنفيذ",
+    "deliverable.ai_generated": "مُولّد بالذكاء الاصطناعي",
+    "deliverable.review": "قيد المراجعة",
+    "deliverable.approved": "معتمد",
+    "deliverable.delivered": "تم التسليم",
+
+    // Notes
+    "notes.title": "الملاحظات والرؤى",
+    "notes.addNew": "إضافة ملاحظة",
+    "notes.noteTitle": "العنوان",
+    "notes.content": "المحتوى",
+    "notes.category": "التصنيف",
+    "notes.client": "العميل",
+    "notes.project": "المشروع",
+    "notes.noNotes": "لا توجد ملاحظات بعد. أضف أول ملاحظة.",
+    "notes.analyzeAll": "تحليل الكل بالذكاء الاصطناعي",
+    "notes.search": "بحث في الملاحظات...",
+
+    // Financials
+    "financials.title": "المالية",
+    "financials.subtitle": "تتبع الإيرادات والمدفوعات والأداء المالي",
+    "financials.addPayment": "إضافة دفعة",
+    "financials.totalRevenue": "إجمالي الإيرادات",
+    "financials.totalCollected": "إجمالي المحصل",
+    "financials.collected": "المحصل",
+    "financials.totalPending": "إجمالي المعلق",
+    "financials.pendingAmount": "المعلق",
+    "financials.totalOverdue": "إجمالي المتأخر",
+    "financials.overdue": "المتأخر",
+    "financials.recentPayments": "أحدث المدفوعات",
+    "financials.noPayments": "لا توجد مدفوعات مسجلة بعد.",
+    "financials.amount": "المبلغ",
+    "financials.status": "الحالة",
+    "financials.description": "الوصف",
+    "financials.dueDate": "تاريخ الاستحقاق",
+    "financials.paidDate": "تاريخ الدفع",
+    "financials.markPaid": "تحديد كمدفوع",
+    "financials.byService": "الإيرادات حسب الخدمة",
+    "financials.byMarket": "الإيرادات حسب السوق",
+
+    // AI Engine
+    "ai.title": "محرك الذكاء الاصطناعي",
+    "ai.subtitle": "مدعوم بمنهجية Wzrd AI",
+    "ai.startWorkflow": "بدء سير العمل الموجه",
+    "ai.freeChat": "محادثة حرة",
+    "ai.selectService": "اختر خدمة للبدء",
+    "ai.typeMessage": "اكتب رسالتك...",
+    "ai.send": "إرسال",
+    "ai.thinking": "جاري التفكير...",
+    "ai.guidedMode": "سير عمل موجه",
+    "ai.chatMode": "محادثة حرة",
+    "ai.selectClient": "اختر العميل",
+    "ai.selectProject": "اختر المشروع",
+    "ai.step": "خطوة",
+    "ai.of": "من",
+    "ai.nextStep": "الخطوة التالية",
+    "ai.previousStep": "السابق",
+    "ai.complete": "إكمال",
+    "ai.generateDeliverable": "توليد المخرج",
+    "ai.savedToProject": "تم الحفظ في مخرجات المشروع",
+
+    // Playbooks
+    "playbooks.title": "أدلة تنفيذ الخدمات",
+    "playbooks.subtitle": "أطر التنفيذ لكل خدمة",
+    "playbooks.stages": "المراحل",
+    "playbooks.steps": "الخطوات",
+    "playbooks.deliverable": "المخرج",
+
+    // Statuses
+    "status.lead": "عميل محتمل",
+    "status.active": "نشط",
+    "status.completed": "مكتمل",
+    "status.paused": "متوقف",
+    "status.cancelled": "ملغي",
+    "status.pending": "قيد الانتظار",
+    "status.in_progress": "قيد التنفيذ",
+    "status.ai_generated": "مولد بالذكاء",
+    "status.review": "قيد المراجعة",
+    "status.approved": "معتمد",
+    "status.delivered": "تم التسليم",
+    "status.paid": "مدفوع",
+    "status.overdue": "متأخر",
+
+    // Stages
+    "stage.diagnose": "التشخيص",
+    "stage.design": "التصميم",
+    "stage.deploy": "النشر",
+    "stage.optimize": "التحسين",
+    "stage.completed": "مكتمل",
+
+    // Markets
+    "market.ksa": "السعودية",
+    "market.egypt": "مصر",
+    "market.uae": "الإمارات",
+    "market.other": "أخرى",
+
+    // Services
+    "service.business_health_check": "فحص صحة الأعمال",
+    "service.starting_business_logic": "تأسيس المنطق التجاري",
+    "service.brand_identity": "هوية العلامة التجارية",
+    "service.business_takeoff": "انطلاقة الأعمال",
+    "service.consultation": "استشارة",
+
+    // Categories
+    "category.diagnostic": "تشخيصي",
+    "category.strategic": "استراتيجي",
+    "category.meeting": "اجتماع",
+    "category.insight": "رؤية",
+    "category.general": "عام",
+
+    // Common
+    "common.save": "حفظ",
+    "common.cancel": "إلغاء",
+    "common.delete": "حذف",
+    "common.edit": "تعديل",
+    "common.create": "إنشاء",
+    "common.close": "إغلاق",
+    "common.loading": "جاري التحميل...",
+    "common.error": "حدث خطأ ما",
+    "common.success": "تم بنجاح",
+    "common.confirm": "تأكيد",
+    "common.back": "رجوع",
+    "common.next": "التالي",
+    "common.search": "بحث...",
+    "common.noResults": "لا توجد نتائج",
+    "common.viewAll": "عرض الكل",
+    "common.egp": "ج.م",
+    "common.optional": "اختياري",
+    "common.required": "مطلوب",
+    "common.all": "الكل",
+
+    // Payment statuses
+    "payment.pending": "قيد الانتظار",
+    "payment.paid": "مدفوع",
+    "payment.overdue": "متأخر",
+    "payment.cancelled": "ملغي",
+    "payment.partial": "جزئي",
+
+    // Proposals
+    "proposals.title": "العروض",
+    "proposals.subtitle": "إنشاء عروض احترافية للعملاء",
+    "proposals.addNew": "عرض جديد",
+    "proposals.noProposals": "لا توجد عروض بعد. أنشئ أول عرض.",
+    "proposals.search": "بحث في العروض...",
+    "proposals.selectClient": "اختر عميل",
+    "proposals.selectService": "اختر خدمة",
+    "proposals.proposalTitle": "عنوان العرض",
+    "proposals.language": "اللغة",
+    "proposals.customNotes": "ملاحظات إضافية للذكاء الاصطناعي",
+    "proposals.customNotesHint": "أي سياق أو متطلبات محددة لهذا العرض...",
+    "proposals.generating": "جاري إنشاء العرض بالذكاء الاصطناعي...",
+    "proposals.generate": "إنشاء العرض",
+    "proposals.preview": "معاينة",
+    "proposals.download": "تحميل PDF",
+    "proposals.edit": "تعديل",
+    "proposals.regenerate": "إعادة التوليد",
+    "proposals.regenerateSection": "إعادة توليد القسم",
+    "proposals.status": "الحالة",
+    "proposals.draft": "مسودة",
+    "proposals.sent": "مرسل",
+    "proposals.accepted": "مقبول",
+    "proposals.rejected": "مرفوض",
+    "proposals.markSent": "تحديد كمرسل",
+    "proposals.markAccepted": "تحديد كمقبول",
+    "proposals.markRejected": "تحديد كمرفوض",
+    "proposals.executiveSummary": "الملخص التنفيذي",
+    "proposals.clientBackground": "خلفية العميل",
+    "proposals.serviceDescription": "وصف الخدمة",
+    "proposals.methodology": "منهجيتنا",
+    "proposals.deliverables": "المخرجات",
+    "proposals.timeline": "الجدول الزمني",
+    "proposals.investment": "الاستثمار",
+    "proposals.whyPrimoMarca": "لماذا Wzrd AI",
+    "proposals.terms": "الشروط والأحكام",
+    "proposals.deleteConfirm": "هل أنت متأكد من حذف هذا العرض؟",
+    "proposals.english": "الإنجليزية",
+    "proposals.arabic": "العربية",
+
+    // Projects extra
+    "projects.selectClient": "اختر عميل",
+  },
+};
+
+export function I18nProvider({ children }: { children: React.ReactNode }) {
+  const [locale, setLocaleState] = useState<Locale>(() => {
+    const saved = localStorage.getItem("primo-locale");
+    return (saved as Locale) || "en";
+  });
+
+  const dir: Dir = locale === "ar" ? "rtl" : "ltr";
+
+  const setLocale = useCallback((newLocale: Locale) => {
+    setLocaleState(newLocale);
+    localStorage.setItem("primo-locale", newLocale);
+  }, []);
+
+  const toggleLocale = useCallback(() => {
+    setLocale(locale === "en" ? "ar" : "en");
+  }, [locale, setLocale]);
+
+  const t = useCallback(
+    (key: string) => {
+      return translations[locale][key] || translations["en"][key] || key;
+    },
+    [locale]
+  );
+
+  useEffect(() => {
+    document.documentElement.dir = dir;
+    document.documentElement.lang = locale;
+    if (locale === "ar") {
+      document.documentElement.classList.add("rtl");
+    } else {
+      document.documentElement.classList.remove("rtl");
+    }
+  }, [locale, dir]);
+
+  return (
+    <I18nContext.Provider value={{ locale, dir, t, setLocale, toggleLocale }}>
+      {children}
+    </I18nContext.Provider>
+  );
+}
+
+export function useI18n() {
+  const context = useContext(I18nContext);
+  if (!context) {
+    throw new Error("useI18n must be used within I18nProvider");
+  }
+  return context;
+}
+
+export function useDir() {
+  const { dir } = useI18n();
+  return dir;
+}
