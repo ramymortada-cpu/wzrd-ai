@@ -233,7 +233,7 @@ var o=new IntersectionObserver(function(e){e.forEach(function(x){if(x.isIntersec
 document.querySelectorAll('.fi').forEach(function(el){o.observe(el)});
 window.addEventListener('scroll',function(){document.getElementById('nav').classList.toggle('scrolled',window.scrollY>20)});
 
-var l=(function(){var s=localStorage.getItem('wzrd-locale');return(s==='en'||s==='ar')?s:'ar';})();
+var l=localStorage.getItem('wzrd-locale')||'ar';
 function apply(){
  document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';
  document.body.classList.toggle('en-mode',l==='en');
@@ -243,7 +243,7 @@ function apply(){
  if(dots.length){if(l==='ar'){dots[0].textContent='١';dots[1].textContent='٢';dots[2].textContent='٣'}else{dots[0].textContent='1';dots[1].textContent='2';dots[2].textContent='3'}}
 }
 function tl(){l=l==='ar'?'en':'ar';localStorage.setItem('wzrd-locale',l);apply()}
-document.addEventListener('DOMContentLoaded',apply);
+apply();
 
 (function(){if(document.cookie.includes('app_session_id=')){document.querySelectorAll('[href="/signup"]').forEach(function(e){e.setAttribute('href','/tools');e.innerHTML=l==='ar'?'روح للأدوات':'Go to Tools'})}})();
 </script>
