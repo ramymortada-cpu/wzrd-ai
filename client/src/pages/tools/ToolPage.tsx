@@ -251,12 +251,33 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
         <div className="max-w-2xl mx-auto px-6 py-16">
           <button onClick={() => navigate('/tools')} className="text-xs text-zinc-500 dark:text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 mb-8 transition">{t('wzrd.backTools')}</button>
 
-          <div className="text-center mb-10">
-            <div className={`inline-flex items-center justify-center w-28 h-28 rounded-full bg-gradient-to-br ${scoreColor(result.score)} mb-4`}>
-              <span className="text-4xl font-bold text-zinc-950 font-mono">{result.score}</span>
+          <div className="mb-10" dir="ltr">
+            <h2 className="text-2xl font-bold text-center">{locale === 'ar' && config.nameAr ? config.nameAr : config.name}</h2>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 text-center mt-1">{displayScoreLabel} · {result.creditsUsed} {t('wzrd.creditsUsed')} · {result.creditsRemaining} {t('wzrd.remaining')}</p>
+
+            {/* Score gauge */}
+            <div className="mt-6 max-w-xl mx-auto">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <span className="text-2xl font-mono font-semibold text-zinc-700 dark:text-zinc-200">{result.score}/100</span>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                  result.score >= 70 ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' :
+                  result.score >= 40 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' :
+                  'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
+                }`}>
+                  {displayScoreLabel}
+                </span>
+              </div>
+              <div className="relative h-2 rounded-full bg-gradient-to-r from-red-500 via-amber-500 to-green-500 overflow-visible">
+                <div
+                  className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border-2 border-zinc-300 dark:border-zinc-600 shadow-md"
+                  style={{ left: `${result.score}%`, transform: 'translate(-50%, -50%)' }}
+                />
+              </div>
+              <div className="flex justify-between mt-1.5 text-[10px] font-mono text-zinc-500 dark:text-zinc-400">
+                <span>0</span>
+                <span>100</span>
+              </div>
             </div>
-            <h2 className="text-2xl font-bold">{locale === 'ar' && config.nameAr ? config.nameAr : config.name}</h2>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">{displayScoreLabel} · {result.creditsUsed} {t('wzrd.creditsUsed')} · {result.creditsRemaining} {t('wzrd.remaining')}</p>
           </div>
 
           <div className="space-y-3 mb-8">
