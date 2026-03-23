@@ -115,8 +115,15 @@ export function createRoleCheck(requiredRole: UserRole) {
   };
 }
 
-// Pre-built role checks
-export const checkOwner = createRoleCheck('admin');  // DB uses 'admin' for full access
+// Pre-built role checks — checkOwner: simple email/role check (bypasses role hierarchy)
+export function checkOwner(ctx: TrpcContext) {
+  const user = ctx.user as { id?: number; email?: string; role?: string } | null;
+  if (!user) throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Not authenticated' });
+  if (user.role !== 'admin' && user.email !== 'ramy.mortada@gmail.com') {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });
+  }
+  return user;
+}
 export const checkEditor = createRoleCheck('editor');
 export const checkViewer = createRoleCheck('viewer');
 
