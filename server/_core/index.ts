@@ -115,7 +115,12 @@ async function startServer() {
     serveStatic(app);
   }
 
-  const preferredPort = parseInt(process.env.PORT || "3000");
+  const preferredPort = parseInt(process.env.PORT || "3000", 10);
+  const port = process.env.PORT ? preferredPort : await findAvailablePort(preferredPort);
+
+  if (!process.env.PORT && port !== preferredPort) {
+    logger.info({ preferredPort, port }, 'Preferred port busy, using alternative');
+  }
 
   // === PAYMOB WEBHOOK (before error handler) ===
   try {
@@ -126,14 +131,9 @@ async function startServer() {
   // === GLOBAL ERROR HANDLER (must be LAST middleware) ===
   app.use(expressErrorHandler);
 
-  const port = await findAvailablePort(preferredPort);
-
-  if (port !== preferredPort) {
-    console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
-  }
-
-  server.listen(port, () => {
-    logger.info({ port }, `Server running on http://localhost:${port}/`);
+  // Bind to 0.0.0.0 for Railway/Docker — required for external health checks
+  server.listen(port, "0.0.0.0", () => {
+    logger.info({ port }, `Server running on http://0.0.0.0:${port}/`);
 
     // === POST-STARTUP TASKS (non-blocking) ===
     setTimeout(async () => {
