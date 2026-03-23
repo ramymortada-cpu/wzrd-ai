@@ -62,42 +62,44 @@ function exportCSV(filename: string, headers: string[], rows: string[][]) {
   link.click();
 }
 
+type T = (ar: string, en: string) => string;
+
 // ═══════════════════════════════════════
 // OVERVIEW TAB
 // ═══════════════════════════════════════
-function OverviewTab() {
+function OverviewTab({ t }: { t: T }) {
   const [data, setData] = useState<Record<string, any> | null>(null);
   useEffect(() => { api('wzrdAdmin.dashboard').then(setData); }, []);
 
-  if (!data) return <p className="text-gray-500 text-sm animate-pulse">جاري التحميل...</p>;
+  if (!data) return <p className="text-gray-500 text-sm animate-pulse">{t('جاري التحميل...', 'Loading...')}</p>;
 
   return (
     <div>
-      <h3 className="text-lg font-bold mb-4">WZRD AI Overview</h3>
+      <h3 className="text-lg font-bold mb-4">WZRD AI {t('نظرة عامة', 'Overview')}</h3>
       
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <StatCard label="Total Signups" value={data.users?.total || 0} sub={`+${data.users?.today || 0} today`} color="text-indigo-600" />
-        <StatCard label="This Week" value={data.users?.thisWeek || 0} color="text-cyan-400" />
-        <StatCard label="Tool Runs" value={data.tools?.totalRuns || 0} sub={`Avg score: ${data.tools?.avgScore || '—'}`} color="text-amber-600" />
-        <StatCard label="Newsletter Subs" value={data.newsletter?.subscribers || 0} color="text-green-600" />
+        <StatCard label={t('إجمالي التسجيلات', 'Total Signups')} value={data.users?.total || 0} sub={`+${data.users?.today || 0} ${t('النهاردة', 'today')}`} color="text-indigo-600" />
+        <StatCard label={t('هذا الأسبوع', 'This Week')} value={data.users?.thisWeek || 0} color="text-cyan-400" />
+        <StatCard label={t('عمليات التشخيص', 'Tool Runs')} value={data.tools?.totalRuns || 0} sub={`${t('متوسط النتيجة', 'Avg score')}: ${data.tools?.avgScore || '—'}`} color="text-amber-600" />
+        <StatCard label={t('مشتركين النشرة', 'Newsletter Subs')} value={data.newsletter?.subscribers || 0} color="text-green-600" />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-        <StatCard label="Credits Issued" value={(data.credits?.totalIssued || 0).toLocaleString()} color="text-emerald-400" />
-        <StatCard label="Credits Used" value={(data.credits?.totalUsed || 0).toLocaleString()} color="text-red-600" />
-        <StatCard label="Credit Revenue" value={`${(data.revenue?.totalCreditsRevenue || 0).toLocaleString()} credits`} color="text-amber-600" />
+        <StatCard label={t('كريدت صادر', 'Credits Issued')} value={(data.credits?.totalIssued || 0).toLocaleString()} color="text-emerald-400" />
+        <StatCard label={t('كريدت مستخدم', 'Credits Used')} value={(data.credits?.totalUsed || 0).toLocaleString()} color="text-red-600" />
+        <StatCard label={t('إيرادات الكريدت', 'Credit Revenue')} value={`${(data.revenue?.totalCreditsRevenue || 0).toLocaleString()} ${t('كريدت', 'credits')}`} color="text-amber-600" />
       </div>
 
       {data.tools?.topTools?.length > 0 && (
         <div>
-          <h4 className="text-sm font-bold text-gray-600 mb-2">Top Tools</h4>
+          <h4 className="text-sm font-bold text-gray-600 mb-2">{t('أكتر الأدوات استخداماً', 'Top Tools')}</h4>
           <div className="space-y-2">
-            {data.tools.topTools.map((t: any) => (
-              <div key={t.tool} className="flex items-center justify-between p-3 rounded-lg border border-gray-200 bg-white">
-                <span className="text-sm font-medium">{t.tool?.replace(/_/g, ' ')}</span>
+            {data.tools.topTools.map((item: any) => (
+              <div key={item.tool} className="flex items-center justify-between p-3 rounded-lg border border-gray-200 bg-white">
+                <span className="text-sm font-medium">{item.tool?.replace(/_/g, ' ')}</span>
                 <div className="flex gap-4">
-                  <span className="text-xs text-gray-500">{t.uses} runs</span>
-                  <span className="text-xs text-amber-600">{t.creditsSpent} credits</span>
+                  <span className="text-xs text-gray-500">{item.uses} {t('عملية', 'runs')}</span>
+                  <span className="text-xs text-amber-600">{item.creditsSpent} {t('كريدت', 'credits')}</span>
                 </div>
               </div>
             ))}
@@ -111,7 +113,7 @@ function OverviewTab() {
 // ═══════════════════════════════════════
 // USERS TAB
 // ═══════════════════════════════════════
-function UsersTab() {
+function UsersTab({ t }: { t: T }) {
   const [data, setData] = useState<{ users: any[]; total: number } | null>(null);
   const [search, setSearch] = useState('');
   const [addingCredits, setAddingCredits] = useState<number | null>(null);
@@ -141,33 +143,33 @@ function UsersTab() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold">Public Users <span className="text-gray-500 text-sm font-normal">({data?.total || 0})</span></h3>
+        <h3 className="text-lg font-bold">{t('المستخدمين', 'Public Users')} <span className="text-gray-500 text-sm font-normal">({data?.total || 0})</span></h3>
         <div className="flex items-center gap-2">
           <button onClick={() => {
             if (!data?.users?.length) return;
             exportCSV('wzrd-users',
-              ['Name', 'Email', 'Company', 'Industry', 'Credits', 'Newsletter', 'Signed Up'],
+              [t('الاسم', 'Name'), t('البريد', 'Email'), t('الشركة', 'Company'), t('المجال', 'Industry'), t('الكريدت', 'Credits'), t('النشرة', 'Newsletter'), t('تاريخ التسجيل', 'Signed Up')],
               data.users.map((u: any) => [u.name, u.email, u.company, u.industry, u.credits, u.newsletterOptIn ? 'Yes' : 'No', new Date(u.createdAt).toLocaleDateString()])
             );
           }} className="px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-600 hover:text-white transition">
-            ↓ CSV
+            ↓ {t('تصدير CSV', 'Export CSV')}
           </button>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name, email, company..."
-            className="px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm text-white placeholder:text-gray-400 w-64 outline-none focus:border-indigo-500" />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t('بحث عن مستخدم...', 'Search users...')}
+            className="px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 w-64 outline-none focus:border-indigo-500" />
         </div>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-xs text-gray-500 border-b border-gray-200">
-              <th className="pb-2 pr-4">Name</th>
-              <th className="pb-2 pr-4">Email</th>
-              <th className="pb-2 pr-4">Company</th>
-              <th className="pb-2 pr-4">Industry</th>
-              <th className="pb-2 pr-4 text-right">Credits</th>
-              <th className="pb-2 pr-4">Newsletter</th>
-              <th className="pb-2 pr-4">Signed Up</th>
-              <th className="pb-2">Actions</th>
+              <th className="pb-2 pr-4">{t('الاسم', 'Name')}</th>
+              <th className="pb-2 pr-4">{t('البريد', 'Email')}</th>
+              <th className="pb-2 pr-4">{t('الشركة', 'Company')}</th>
+              <th className="pb-2 pr-4">{t('المجال', 'Industry')}</th>
+              <th className="pb-2 pr-4 text-right">{t('الكريدت', 'Credits')}</th>
+              <th className="pb-2 pr-4">{t('النشرة', 'Newsletter')}</th>
+              <th className="pb-2 pr-4">{t('تاريخ التسجيل', 'Joined')}</th>
+              <th className="pb-2">{t('إجراءات', 'Actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -186,23 +188,23 @@ function UsersTab() {
                     <div className="flex items-center gap-1">
                       <input type="number" value={creditsAmount} onChange={e => setCreditsAmount(e.target.value)} 
                         className="w-16 px-2 py-1 rounded bg-gray-50 border border-gray-300 text-xs outline-none" />
-                      <button onClick={() => handleAddCredits(u.id)} className="px-2 py-1 rounded bg-green-50 text-green-600 text-xs hover:bg-green-100">Add</button>
+                      <button onClick={() => handleAddCredits(u.id)} className="px-2 py-1 rounded bg-green-50 text-green-600 text-xs hover:bg-green-100">{t('إضافة', 'Add')}</button>
                       <button onClick={() => setAddingCredits(null)} className="px-2 py-1 rounded text-gray-400 text-xs hover:text-gray-600">✕</button>
                     </div>
                   ) : (
                     <button onClick={() => { setAddingCredits(u.id); setAddResult(''); }} 
                       className="px-2 py-1 rounded bg-amber-50 text-amber-600 text-xs hover:bg-amber-100 transition">
-                      + Credits
+                      + {t('كريدت', 'Credits')}
                     </button>
                   )}
-                  <button onClick={async () => { if(confirm('حذف المستخدم ده؟')) { await apiMutation('wzrdAdmin.deleteUser', { userId: u.id }); api('wzrdAdmin.users', { search: undefined, limit: 50, offset: 0 }).then(setData); }}} className="px-2 py-1 rounded text-red-400 text-xs hover:text-red-600 hover:bg-red-50 transition">🗑</button>
+                  <button onClick={async () => { if(confirm(t('حذف المستخدم ده؟', 'Delete this user?'))) { await apiMutation('wzrdAdmin.deleteUser', { userId: u.id }); api('wzrdAdmin.users', { search: undefined, limit: 50, offset: 0 }).then(setData); }}} className="px-2 py-1 rounded text-red-400 text-xs hover:text-red-600 hover:bg-red-50 transition">🗑</button>
                   </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-        {(!data?.users?.length) && <p className="text-gray-400 text-sm py-8 text-center">No users yet</p>}
+        {(!data?.users?.length) && <p className="text-gray-400 text-sm py-8 text-center">{t('مفيش مستخدمين لسه', 'No users yet')}</p>}
       </div>
     </div>
   );
@@ -211,7 +213,7 @@ function UsersTab() {
 // ═══════════════════════════════════════
 // CREDITS TAB
 // ═══════════════════════════════════════
-function CreditsTab() {
+function CreditsTab({ t }: { t: T }) {
   const [data, setData] = useState<{ transactions: any[]; total: number } | null>(null);
   const [filter, setFilter] = useState('all');
 
@@ -227,25 +229,34 @@ function CreditsTab() {
     admin: 'text-purple-400 bg-purple-400/10',
   };
 
+  const filterLabels: Record<string, string> = {
+    all: t('الكل', 'All'),
+    signup_bonus: t('مكافأة تسجيل', 'signup bonus'),
+    purchase: t('شراء', 'purchase'),
+    tool_usage: t('استخدام أداة', 'tool usage'),
+    refund: t('استرجاع', 'refund'),
+    admin: t('أدمن', 'admin'),
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold">Credit Transactions <span className="text-gray-500 text-sm font-normal">({data?.total || 0})</span></h3>
+        <h3 className="text-lg font-bold">{t('الكريدت', 'Credits')} <span className="text-gray-500 text-sm font-normal">({data?.total || 0})</span></h3>
         <div className="flex items-center gap-2">
           <button onClick={() => {
             if (!data?.transactions?.length) return;
             exportCSV('wzrd-credits',
               ['ID', 'User ID', 'Amount', 'Balance', 'Type', 'Tool', 'Reason', 'Date'],
-              data.transactions.map((t: any) => [t.id, t.userId, t.amount, t.balance, t.type, t.toolName, t.reason, new Date(t.createdAt).toLocaleDateString()])
+              data.transactions.map((tr: any) => [tr.id, tr.userId, tr.amount, tr.balance, tr.type, tr.toolName, tr.reason, new Date(tr.createdAt).toLocaleDateString()])
             );
           }} className="px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-600 hover:text-white transition">
-            ↓ CSV
+            ↓ {t('تصدير CSV', 'Export CSV')}
           </button>
           <div className="flex gap-1">
-          {['all', 'signup_bonus', 'purchase', 'tool_usage', 'refund', 'admin'].map(t => (
-            <button key={t} onClick={() => setFilter(t)}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition ${filter === t ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-gray-50 text-gray-500 hover:text-indigo-600'}`}>
-              {t === 'all' ? 'All' : t.replace(/_/g, ' ')}
+          {['all', 'signup_bonus', 'purchase', 'tool_usage', 'refund', 'admin'].map(f => (
+            <button key={f} onClick={() => setFilter(f)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition ${filter === f ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-gray-50 text-gray-500 hover:text-indigo-600'}`}>
+              {filterLabels[f] || f.replace(/_/g, ' ')}
             </button>
           ))}
           </div>
@@ -267,7 +278,7 @@ function CreditsTab() {
             </div>
           </div>
         ))}
-        {(!data?.transactions?.length) && <p className="text-gray-400 text-sm py-8 text-center">No transactions yet</p>}
+        {(!data?.transactions?.length) && <p className="text-gray-400 text-sm py-8 text-center">{t('مفيش معاملات لسه', 'No transactions yet')}</p>}
       </div>
     </div>
   );
@@ -294,8 +305,8 @@ function DailyUsageChart({ data }: { data: Array<{ date: string; runs: number; c
             labelStyle={{ color: '#a1a1aa' }}
             itemStyle={{ color: '#818cf8' }}
           />
-          <Bar dataKey="runs" fill="#818cf8" radius={[3, 3, 0, 0]} name="Tool Runs" />
-          <Bar dataKey="credits" fill="#c8a24e40" radius={[3, 3, 0, 0]} name="Credits" />
+          <Bar dataKey="runs" fill="#818cf8" radius={[3, 3, 0, 0]} name="runs" />
+          <Bar dataKey="credits" fill="#c8a24e40" radius={[3, 3, 0, 0]} name="credits" />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -305,7 +316,7 @@ function DailyUsageChart({ data }: { data: Array<{ date: string; runs: number; c
 // ═══════════════════════════════════════
 // TOOLS TAB
 // ═══════════════════════════════════════
-function ToolsTab() {
+function ToolsTab({ t }: { t: T }) {
   const [data, setData] = useState<{ tools: any[]; dailyUsage: any[] } | null>(null);
   useEffect(() => { api('wzrdAdmin.toolStats').then(setData); }, []);
 
@@ -316,27 +327,27 @@ function ToolsTab() {
 
   return (
     <div>
-      <h3 className="text-lg font-bold mb-4">Tool Usage Analytics</h3>
+      <h3 className="text-lg font-bold mb-4">{t('تحليلات استخدام الأدوات', 'Tool Usage Analytics')}</h3>
       
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-        {(data?.tools || []).map((t: any) => (
-          <div key={t.name} className="p-4 rounded-xl border border-gray-200 bg-white">
+        {(data?.tools || []).map((tool: any) => (
+          <div key={tool.name} className="p-4 rounded-xl border border-gray-200 bg-white">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xl">{toolIcons[t.name] || '🔧'}</span>
-              <span className="text-sm font-medium capitalize">{t.name?.replace(/_/g, ' ')}</span>
+              <span className="text-xl">{toolIcons[tool.name] || '🔧'}</span>
+              <span className="text-sm font-medium capitalize">{tool.name?.replace(/_/g, ' ')}</span>
             </div>
-            <p className="text-2xl font-bold font-mono text-indigo-600">{t.runs}</p>
-            <p className="text-xs text-gray-400">{t.creditsSpent} credits spent</p>
+            <p className="text-2xl font-bold font-mono text-indigo-600">{tool.runs}</p>
+            <p className="text-xs text-gray-400">{tool.creditsSpent} {t('كريدت', 'credits')}</p>
           </div>
         ))}
       </div>
 
       {data?.dailyUsage?.length ? (
         <div>
-          <h4 className="text-sm font-bold text-gray-600 mb-2">Daily Usage (30 days)</h4>
+          <h4 className="text-sm font-bold text-gray-600 mb-2">{t('الاستخدام اليومي (30 يوم)', 'Daily Usage (30 days)')}</h4>
           <DailyUsageChart data={data.dailyUsage} />
         </div>
-      ) : <p className="text-gray-400 text-sm">No usage data yet</p>}
+      ) : <p className="text-gray-400 text-sm">{t('مفيش بيانات استخدام لسه', 'No usage data yet')}</p>}
     </div>
   );
 }
@@ -344,13 +355,13 @@ function ToolsTab() {
 // ═══════════════════════════════════════
 // PAYMENTS TAB
 // ═══════════════════════════════════════
-function PaymentsTab() {
+function PaymentsTab({ t }: { t: T }) {
   const [data, setData] = useState<{ payments: any[]; total: number } | null>(null);
   useEffect(() => { api('wzrdAdmin.payments').then(setData); }, []);
 
   return (
     <div>
-      <h3 className="text-lg font-bold mb-4">Payments <span className="text-gray-500 text-sm font-normal">({data?.total || 0})</span></h3>
+      <h3 className="text-lg font-bold mb-4">{t('سجل المدفوعات', 'Payment Log')} <span className="text-gray-500 text-sm font-normal">({data?.total || 0})</span></h3>
       <div className="space-y-2">
         {(data?.payments || []).map((p: any) => {
           let meta: any = {};
@@ -368,7 +379,7 @@ function PaymentsTab() {
             </div>
           );
         })}
-        {(!data?.payments?.length) && <p className="text-gray-400 text-sm py-8 text-center">No payments yet</p>}
+        {(!data?.payments?.length) && <p className="text-gray-400 text-sm py-8 text-center">{t('مفيش مدفوعات لسه', 'No payments yet')}</p>}
       </div>
     </div>
   );
@@ -377,7 +388,7 @@ function PaymentsTab() {
 // ═══════════════════════════════════════
 // WEBHOOKS TAB
 // ═══════════════════════════════════════
-function WebhooksTab() {
+function WebhooksTab({ t }: { t: T }) {
   const [data, setData] = useState<{ events: any[] } | null>(null);
   useEffect(() => { api('wzrdAdmin.webhookLog').then(setData); }, []);
 
@@ -390,7 +401,7 @@ function WebhooksTab() {
 
   return (
     <div>
-      <h3 className="text-lg font-bold mb-4">Paymob Webhook Events <span className="text-gray-500 text-sm font-normal">({data?.events?.length || 0})</span></h3>
+      <h3 className="text-lg font-bold mb-4">{t('سجل الإشعارات', 'Webhook Events')} <span className="text-gray-500 text-sm font-normal">({data?.events?.length || 0})</span></h3>
       
       {(data?.events?.length || 0) === 0 ? (
         <div className="text-center py-12">
@@ -429,7 +440,7 @@ function WebhooksTab() {
 // ═══════════════════════════════════════
 // CONFIG TAB
 // ═══════════════════════════════════════
-function ConfigTab() {
+function ConfigTab({ t }: { t: T }) {
   const [config, setConfig] = useState<Record<string, any> | null>(null);
   const [testEmail, setTestEmail] = useState('');
   const [testResult, setTestResult] = useState('');
@@ -477,32 +488,32 @@ function ConfigTab() {
 
   return (
     <div>
-      <h3 className="text-lg font-bold mb-4">WZRD AI Configuration</h3>
+      <h3 className="text-lg font-bold mb-4">WZRD AI {t('الإعدادات', 'Config')}</h3>
 
       {/* System Status */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <div className={`p-3 rounded-lg border text-center ${config?.groqConfigured ? 'border-green-500/30 bg-green-500/5' : 'border-red-500/30 bg-red-500/5'}`}>
-          <p className="text-xs text-gray-500">Groq LLM</p>
-          <p className={`text-sm font-bold ${config?.groqConfigured ? 'text-green-600' : 'text-red-600'}`}>{config?.groqConfigured ? '✅ Active' : '❌ Not Set'}</p>
+          <p className="text-xs text-gray-500">Groq</p>
+          <p className={`text-sm font-bold ${config?.groqConfigured ? 'text-green-600' : 'text-red-600'}`}>{config?.groqConfigured ? t('مفعّل', 'Configured') : t('غير مفعّل', 'Not configured')}</p>
         </div>
         <div className={`p-3 rounded-lg border text-center ${config?.claudeConfigured ? 'border-green-500/30 bg-green-500/5' : 'border-gray-200 bg-white'}`}>
-          <p className="text-xs text-gray-500">Claude LLM</p>
-          <p className={`text-sm font-bold ${config?.claudeConfigured ? 'text-green-600' : 'text-gray-400'}`}>{config?.claudeConfigured ? '✅ Active' : '— Optional'}</p>
+          <p className="text-xs text-gray-500">Claude</p>
+          <p className={`text-sm font-bold ${config?.claudeConfigured ? 'text-green-600' : 'text-gray-400'}`}>{config?.claudeConfigured ? t('مفعّل', 'Configured') : '— Optional'}</p>
         </div>
         <div className={`p-3 rounded-lg border text-center ${config?.paymobConfigured ? 'border-green-500/30 bg-green-500/5' : 'border-red-500/30 bg-red-500/5'}`}>
           <p className="text-xs text-gray-500">Paymob</p>
-          <p className={`text-sm font-bold ${config?.paymobConfigured ? 'text-green-600' : 'text-red-600'}`}>{config?.paymobConfigured ? '✅ Active' : '❌ Not Set'}</p>
+          <p className={`text-sm font-bold ${config?.paymobConfigured ? 'text-green-600' : 'text-red-600'}`}>{config?.paymobConfigured ? t('مفعّل', 'Configured') : t('غير مفعّل', 'Not configured')}</p>
         </div>
         <div className={`p-3 rounded-lg border text-center ${config?.emailProvider !== 'none' ? 'border-green-500/30 bg-green-500/5' : 'border-red-500/30 bg-red-500/5'}`}>
-          <p className="text-xs text-gray-500">Email</p>
-          <p className={`text-sm font-bold ${config?.emailProvider !== 'none' ? 'text-green-600' : 'text-red-600'}`}>{config?.emailProvider !== 'none' ? `✅ ${config?.emailProvider}` : '❌ Not Set'}</p>
+          <p className="text-xs text-gray-500">{t('البريد', 'Email')}</p>
+          <p className={`text-sm font-bold ${config?.emailProvider !== 'none' ? 'text-green-600' : 'text-red-600'}`}>{config?.emailProvider !== 'none' ? t('مفعّل', 'Configured') : t('غير مفعّل', 'Not configured')}</p>
         </div>
       </div>
 
       {/* Tool Costs (editable) */}
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-2">
-          <h4 className="text-sm font-bold text-gray-600">Tool Costs (credits)</h4>
+          <h4 className="text-sm font-bold text-gray-600">{t('تكلفة الأدوات', 'Tool Costs')} ({t('كريدت', 'credits')})</h4>
           {costSaved && <span className="text-xs text-green-600">{costSaved}</span>}
         </div>
         <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
@@ -543,42 +554,42 @@ function ConfigTab() {
       {/* Actions */}
       <div className="space-y-4">
         <div className="p-4 rounded-xl border border-gray-200 bg-white">
-          <h4 className="text-sm font-bold mb-2">🧪 Test Email</h4>
+          <h4 className="text-sm font-bold mb-2">🧪 {t('إرسال بريد تجريبي', 'Test Email')}</h4>
           <div className="flex gap-2">
             <input value={testEmail} onChange={e => setTestEmail(e.target.value)} placeholder="your@email.com"
-              className="flex-1 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm outline-none" />
-            <button onClick={handleTestEmail} className="px-4 py-2 rounded-lg bg-indigo-500 text-white text-sm font-bold hover:bg-indigo-400 transition">Send</button>
+              className="flex-1 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm text-gray-900 outline-none" />
+            <button onClick={handleTestEmail} className="px-4 py-2 rounded-lg bg-indigo-500 text-white text-sm font-bold hover:bg-indigo-400 transition">{t('إرسال', 'Send')}</button>
           </div>
           {testResult && <p className="text-xs text-gray-600 mt-2">{testResult}</p>}
         </div>
 
         <div className="p-4 rounded-xl border border-gray-200 bg-white">
-          <h4 className="text-sm font-bold mb-2">🤖 Ping LLM Provider</h4>
+          <h4 className="text-sm font-bold mb-2">🤖 {t('اختبار الـ AI', 'Ping LLM')}</h4>
           <button onClick={handlePing} className="px-4 py-2 rounded-lg bg-cyan-500 text-white text-sm font-bold hover:bg-cyan-400 transition">Ping</button>
           {pingResult && <p className="text-xs text-gray-600 mt-2">{pingResult}</p>}
         </div>
 
         <div className="p-4 rounded-xl border border-gray-200 bg-white">
-          <h4 className="text-sm font-bold mb-2">📬 Send Newsletter Now</h4>
-          <button onClick={handleNewsletter} className="px-4 py-2 rounded-lg bg-amber-500 text-gray-900 text-sm font-bold hover:bg-amber-400 transition">Send to All Subscribers</button>
+          <h4 className="text-sm font-bold mb-2">📬 {t('إرسال النشرة', 'Send Newsletter')}</h4>
+          <button onClick={handleNewsletter} className="px-4 py-2 rounded-lg bg-amber-500 text-gray-900 text-sm font-bold hover:bg-amber-400 transition">{t('إرسال لكل المشتركين', 'Send to All Subscribers')}</button>
           {nlResult && <p className="text-xs text-gray-600 mt-2">{nlResult}</p>}
         </div>
 
-        <EmailStatsSection />
+        <EmailStatsSection t={t} />
       </div>
     </div>
   );
 }
 
 /** Email analytics mini-panel */
-function EmailStatsSection() {
+function EmailStatsSection({ t }: { t: T }) {
   const [stats, setStats] = useState<any>(null);
   useEffect(() => { api('wzrdAdmin.emailStats').then(setStats); }, []);
 
   if (!stats) return null;
   return (
     <div className="mt-6">
-      <h4 className="text-sm font-bold text-gray-600 mb-3">📧 Email Analytics</h4>
+      <h4 className="text-sm font-bold text-gray-600 mb-3">📧 {t('تحليلات البريد', 'Email Analytics')}</h4>
       <div className="grid grid-cols-3 gap-3 mb-4">
         <StatCard label="Sent" value={stats.totalSent} color="text-green-600" />
         <StatCard label="Failed" value={stats.totalFailed} color="text-red-600" />
@@ -625,7 +636,7 @@ function EmailStatsSection() {
 // ═══════════════════════════════════════
 // CMS TAB — Homepage + Site Settings
 // ═══════════════════════════════════════
-function CmsTab() {
+function CmsTab({ t }: { t: T }) {
   const [sc, setSc] = useState<any>(null);
   const [saving, setSaving] = useState('');
 
@@ -647,40 +658,40 @@ function CmsTab() {
     setTimeout(() => setSaving(''), 2000);
   };
 
-  if (!sc) return <p className="text-gray-500 text-sm animate-pulse">جاري التحميل...</p>;
+  if (!sc) return <p className="text-gray-500 text-sm animate-pulse">{t('جاري التحميل...', 'Loading...')}</p>;
 
   const Field = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
     <div>
       <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{label}</label>
       <input value={value || ''} onChange={e => onChange(e.target.value)}
-        className="w-full px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm text-white outline-none focus:border-indigo-500" />
+        className="w-full px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm text-gray-900 outline-none focus:border-indigo-500" />
     </div>
   );
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold">Content Management</h3>
+        <h3 className="text-lg font-bold">{t('إدارة المحتوى', 'Content Management')}</h3>
         {saving && <span className="text-xs text-green-600">{saving}</span>}
       </div>
 
       {/* Homepage */}
       <div className="mb-6 p-5 rounded-2xl border border-gray-200 bg-white">
-        <h4 className="text-sm font-bold text-gray-600 mb-3">🏠 Homepage</h4>
+        <h4 className="text-sm font-bold text-gray-600 mb-3">🏠 {t('الصفحة الرئيسية', 'Homepage')}</h4>
         <div className="grid grid-cols-2 gap-3 mb-3">
-          <Field label="Hero Title (EN)" value={sc.homepage.heroTitle} onChange={v => setSc({...sc, homepage: {...sc.homepage, heroTitle: v}})} />
-          <Field label="Hero Title (AR)" value={sc.homepage.heroTitleAr} onChange={v => setSc({...sc, homepage: {...sc.homepage, heroTitleAr: v}})} />
+          <Field label={t('عنوان الهيرو (EN)', 'Hero Title (EN)')} value={sc.homepage.heroTitle} onChange={v => setSc({...sc, homepage: {...sc.homepage, heroTitle: v}})} />
+          <Field label={t('عنوان الهيرو (AR)', 'Hero Title (AR)')} value={sc.homepage.heroTitleAr} onChange={v => setSc({...sc, homepage: {...sc.homepage, heroTitleAr: v}})} />
           <Field label="Subtitle (EN)" value={sc.homepage.heroSubtitle} onChange={v => setSc({...sc, homepage: {...sc.homepage, heroSubtitle: v}})} />
           <Field label="Subtitle (AR)" value={sc.homepage.heroSubtitleAr} onChange={v => setSc({...sc, homepage: {...sc.homepage, heroSubtitleAr: v}})} />
           <Field label="CTA Text (EN)" value={sc.homepage.ctaText} onChange={v => setSc({...sc, homepage: {...sc.homepage, ctaText: v}})} />
           <Field label="CTA Text (AR)" value={sc.homepage.ctaTextAr} onChange={v => setSc({...sc, homepage: {...sc.homepage, ctaTextAr: v}})} />
         </div>
-        <button onClick={saveHomepage} className="px-4 py-2 rounded-lg bg-indigo-500 text-white text-sm font-bold hover:bg-indigo-400 transition">Save Homepage</button>
+        <button onClick={saveHomepage} className="px-4 py-2 rounded-lg bg-indigo-500 text-white text-sm font-bold hover:bg-indigo-400 transition">{t('حفظ الرئيسية', 'Save Homepage')}</button>
       </div>
 
       {/* Site Settings */}
       <div className="p-5 rounded-2xl border border-gray-200 bg-white">
-        <h4 className="text-sm font-bold text-gray-600 mb-3">🌐 Site Settings</h4>
+        <h4 className="text-sm font-bold text-gray-600 mb-3">🌐 {t('إعدادات الموقع', 'Site Settings')}</h4>
         <div className="grid grid-cols-2 gap-3 mb-3">
           <Field label="Company Name" value={sc.site.companyName} onChange={v => setSc({...sc, site: {...sc.site, companyName: v}})} />
           <Field label="WhatsApp" value={sc.site.whatsapp} onChange={v => setSc({...sc, site: {...sc.site, whatsapp: v}})} />
@@ -691,12 +702,12 @@ function CmsTab() {
           <Field label="Tagline (EN)" value={sc.site.taglineEn} onChange={v => setSc({...sc, site: {...sc.site, taglineEn: v}})} />
           <Field label="Tagline (AR)" value={sc.site.taglineAr} onChange={v => setSc({...sc, site: {...sc.site, taglineAr: v}})} />
         </div>
-        <button onClick={saveSite} className="px-4 py-2 rounded-lg bg-indigo-500 text-white text-sm font-bold hover:bg-indigo-400 transition">Save Settings</button>
+        <button onClick={saveSite} className="px-4 py-2 rounded-lg bg-indigo-500 text-white text-sm font-bold hover:bg-indigo-400 transition">{t('حفظ الإعدادات', 'Save Settings')}</button>
       </div>
 
       {/* Services */}
       <div className="mt-6 p-5 rounded-2xl border border-gray-200 bg-white">
-        <h4 className="text-sm font-bold text-gray-600 mb-3">📦 Services</h4>
+        <h4 className="text-sm font-bold text-gray-600 mb-3">📦 {t('الخدمات', 'Services')}</h4>
         <div className="space-y-2">
           {sc.services?.services?.map((svc: any) => (
             <div key={svc.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-200/50">
@@ -709,7 +720,7 @@ function CmsTab() {
                 await apiMutation('wzrdAdmin.updateService', { serviceId: svc.id, enabled: newEnabled });
                 setSc({...sc, services: {...sc.services, services: sc.services.services.map((s: any) => s.id === svc.id ? {...s, enabled: newEnabled} : s)}});
               }} className={`px-3 py-1 rounded-full text-xs font-bold ${svc.enabled ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
-                {svc.enabled ? 'Active' : 'Disabled'}
+                {svc.enabled ? t('نشط', 'Active') : t('معطّل', 'Disabled')}
               </button>
             </div>
           ))}
@@ -722,7 +733,7 @@ function CmsTab() {
 // ═══════════════════════════════════════
 // PROMPTS TAB — AI tool system prompts
 // ═══════════════════════════════════════
-function PromptsTab() {
+function PromptsTab({ t }: { t: T }) {
   const [sc, setSc] = useState<any>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
@@ -739,15 +750,15 @@ function PromptsTab() {
     setTimeout(() => setSaving(''), 2000);
   };
 
-  if (!sc) return <p className="text-gray-500 text-sm animate-pulse">جاري التحميل...</p>;
+  if (!sc) return <p className="text-gray-500 text-sm animate-pulse">{t('جاري التحميل...', 'Loading...')}</p>;
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold">AI Tool Prompts</h3>
+        <h3 className="text-lg font-bold">{t('أوامر أدوات الـ AI', 'AI Tool Prompts')}</h3>
         {saving && <span className="text-xs text-green-600">{saving}</span>}
       </div>
-      <p className="text-xs text-gray-500 mb-4">Edit the system prompt each AI tool uses. Changes take effect immediately.</p>
+      <p className="text-xs text-gray-500 mb-4">{t('عدّل الأمر اللي كل أداة بتستخدمه. التعديلات بتطبق فوراً.', 'Edit the system prompt each AI tool uses. Changes take effect immediately.')}</p>
 
       <div className="space-y-3">
         {sc.prompts?.map((p: any) => (
@@ -756,7 +767,7 @@ function PromptsTab() {
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold">{p.toolName}</span>
                 <span className={`text-[10px] px-2 py-0.5 rounded-full ${p.enabled ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
-                  {p.enabled ? 'Active' : 'Disabled'}
+                  {p.enabled ? t('نشط', 'Active') : t('معطّل', 'Disabled')}
                 </span>
               </div>
               <div className="flex gap-2">
@@ -764,10 +775,10 @@ function PromptsTab() {
                   await apiMutation('wzrdAdmin.updatePrompt', { toolId: p.toolId, enabled: !p.enabled });
                   setSc({...sc, prompts: sc.prompts.map((x: any) => x.toolId === p.toolId ? {...x, enabled: !x.enabled} : x)});
                 }} className="text-xs text-gray-500 hover:text-amber-600 transition">
-                  {p.enabled ? 'Disable' : 'Enable'}
+                  {p.enabled ? t('تعطيل', 'Disable') : t('تفعيل', 'Enable')}
                 </button>
                 <button onClick={() => { setEditing(p.toolId); setDraft(p.systemPrompt); }} className="text-xs text-indigo-600 hover:text-indigo-600 transition">
-                  Edit Prompt
+                  {t('تعديل', 'Edit Prompt')}
                 </button>
               </div>
             </div>
@@ -777,8 +788,8 @@ function PromptsTab() {
                 <textarea value={draft} onChange={e => setDraft(e.target.value)} rows={6}
                   className="w-full px-3 py-2 rounded-lg bg-gray-50 border border-indigo-200 text-xs text-gray-700 font-mono outline-none resize-y" />
                 <div className="flex gap-2 mt-2">
-                  <button onClick={() => savePrompt(p.toolId)} className="px-3 py-1.5 rounded-lg bg-green-500/20 text-green-600 text-xs font-bold">Save</button>
-                  <button onClick={() => setEditing(null)} className="px-3 py-1.5 rounded-lg text-gray-500 text-xs">Cancel</button>
+                  <button onClick={() => savePrompt(p.toolId)} className="px-3 py-1.5 rounded-lg bg-green-500/20 text-green-600 text-xs font-bold">{t('حفظ', 'Save')}</button>
+                  <button onClick={() => setEditing(null)} className="px-3 py-1.5 rounded-lg text-gray-500 text-xs">{t('إلغاء', 'Cancel')}</button>
                 </div>
               </div>
             ) : (
@@ -794,7 +805,7 @@ function PromptsTab() {
 // ═══════════════════════════════════════
 // TEAM TAB — Internal users
 // ═══════════════════════════════════════
-function TeamTab() {
+function TeamTab({ t }: { t: T }) {
   const [data, setData] = useState<{ team: any[] } | null>(null);
   useEffect(() => { api('wzrdAdmin.teamList').then(setData); }, []);
 
@@ -805,7 +816,7 @@ function TeamTab() {
 
   return (
     <div>
-      <h3 className="text-lg font-bold mb-4">Team Members <span className="text-gray-500 text-sm font-normal">({data?.team?.length || 0})</span></h3>
+      <h3 className="text-lg font-bold mb-4">{t('أعضاء الفريق', 'Team Members')} <span className="text-gray-500 text-sm font-normal">({data?.team?.length || 0})</span></h3>
 
       <div className="space-y-2">
         {(data?.team || []).map((u: any) => (
@@ -817,14 +828,14 @@ function TeamTab() {
             <div className="flex items-center gap-3">
               <select value={u.role} onChange={e => changeRole(u.id, e.target.value)}
                 className="px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-xs text-white outline-none">
-                <option value="admin">Admin</option>
-                <option value="user">User</option>
+                <option value="admin">{t('أدمن', 'Admin')}</option>
+                <option value="user">{t('مستخدم', 'User')}</option>
               </select>
               <span className="text-xs text-gray-400">{new Date(u.createdAt).toLocaleDateString()}</span>
             </div>
           </div>
         ))}
-        {(!data?.team?.length) && <p className="text-gray-400 text-sm py-8 text-center">No team members yet</p>}
+        {(!data?.team?.length) && <p className="text-gray-400 text-sm py-8 text-center">{t('مفيش أعضاء لسه', 'No team members yet')}</p>}
       </div>
     </div>
   );
@@ -833,7 +844,7 @@ function TeamTab() {
 // ═══════════════════════════════════════
 // AGENCY TAB — Clients + Projects overview
 // ═══════════════════════════════════════
-function AgencyTab() {
+function AgencyTab({ t }: { t: T }) {
   const [clientsList, setClientsList] = useState<any>(null);
   const [projectsList, setProjectsList] = useState<any>(null);
   const [view, setView] = useState<'clients' | 'projects'>('clients');
@@ -848,9 +859,9 @@ function AgencyTab() {
   useEffect(() => { reload(); }, []);
 
   const addClient = async () => {
-    if (!form.name) { setMsg('الاسم مطلوب'); return; }
+    if (!form.name) { setMsg(t('الاسم مطلوب', 'Name required')); return; }
     await apiMutation('wzrdAdmin.addClient', form);
-    setForm({}); setShowForm(false); setMsg('✅ تم الإضافة'); reload();
+    setForm({}); setShowForm(false); setMsg('✅ ' + t('تم الإضافة', 'Added')); reload();
     setTimeout(() => setMsg(''), 2000);
   };
 
@@ -861,37 +872,37 @@ function AgencyTab() {
   };
 
   const deleteClient = async (id: number) => {
-    if (!confirm('حذف العميل ده؟')) return;
+    if (!confirm(t('حذف العميل ده؟', 'Delete this client?'))) return;
     await apiMutation('wzrdAdmin.deleteClient', { id });
     reload();
   };
 
   const addProject = async () => {
-    if (!form.projectName || !form.clientId) { setMsg('الاسم والعميل مطلوبين'); return; }
+    if (!form.projectName || !form.clientId) { setMsg(t('الاسم والعميل مطلوبين', 'Name and client required')); return; }
     await apiMutation('wzrdAdmin.addProject', {
       name: form.projectName,
       clientId: parseInt(form.clientId),
       serviceType: form.serviceType || 'consultation',
     });
-    setForm({}); setShowForm(false); setMsg('✅ تم الإضافة'); reload();
+    setForm({}); setShowForm(false); setMsg('✅ ' + t('تم الإضافة', 'Added')); reload();
     setTimeout(() => setMsg(''), 2000);
   };
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold">Agency <span className="text-gray-400 text-sm font-normal">إدارة العملاء والمشاريع</span></h3>
+        <h3 className="text-lg font-bold">{t('الوكالة', 'Agency')} <span className="text-gray-400 text-sm font-normal">{t('إدارة العملاء والمشاريع', 'Clients & Projects')}</span></h3>
         <div className="flex gap-2">
           <div className="flex gap-1">
             <button onClick={() => setView('clients')} className={`px-4 py-1.5 rounded-full text-xs font-medium transition ${view === 'clients' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
-              العملاء ({clientsList?.total || 0})
+              {t('العملاء', 'Clients')} ({clientsList?.total || 0})
             </button>
             <button onClick={() => setView('projects')} className={`px-4 py-1.5 rounded-full text-xs font-medium transition ${view === 'projects' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
-              المشاريع ({projectsList?.total || 0})
+              {t('المشاريع', 'Projects')} ({projectsList?.total || 0})
             </button>
           </div>
           <button onClick={() => { setShowForm(!showForm); setForm({}); }} className="px-4 py-1.5 rounded-full text-xs font-bold bg-green-600 text-white hover:bg-green-500 transition">
-            + {view === 'clients' ? 'عميل جديد' : 'مشروع جديد'}
+            + {view === 'clients' ? t('عميل جديد', 'New Client') : t('مشروع جديد', 'New Project')}
           </button>
         </div>
       </div>
@@ -901,7 +912,7 @@ function AgencyTab() {
       {/* Add Form */}
       {showForm && view === 'clients' && (
         <div className="p-5 rounded-xl border border-indigo-200 bg-indigo-50/50 mb-4 space-y-3">
-          <h4 className="text-sm font-bold text-indigo-700">إضافة عميل جديد</h4>
+          <h4 className="text-sm font-bold text-indigo-700">{t('إضافة عميل جديد', 'Add New Client')}</h4>
           <div className="grid grid-cols-2 gap-3">
             <input placeholder="الاسم *" value={form.name || ''} onChange={e => setForm({...form, name: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-indigo-400" />
             <input placeholder="اسم الشركة" value={form.companyName || ''} onChange={e => setForm({...form, companyName: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-indigo-400" />
@@ -914,15 +925,15 @@ function AgencyTab() {
           </div>
           <textarea placeholder="ملاحظات" value={form.notes || ''} onChange={e => setForm({...form, notes: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-indigo-400" rows={2} />
           <div className="flex gap-2">
-            <button onClick={addClient} className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-500">إضافة</button>
-            <button onClick={() => setShowForm(false)} className="px-4 py-2 rounded-lg text-gray-500 text-sm">إلغاء</button>
+            <button onClick={addClient} className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-500">{t('إضافة', 'Add')}</button>
+            <button onClick={() => setShowForm(false)} className="px-4 py-2 rounded-lg text-gray-500 text-sm">{t('إلغاء', 'Cancel')}</button>
           </div>
         </div>
       )}
 
       {showForm && view === 'projects' && (
         <div className="p-5 rounded-xl border border-indigo-200 bg-indigo-50/50 mb-4 space-y-3">
-          <h4 className="text-sm font-bold text-indigo-700">إضافة مشروع جديد</h4>
+          <h4 className="text-sm font-bold text-indigo-700">{t('إضافة مشروع جديد', 'Add New Project')}</h4>
           <div className="grid grid-cols-2 gap-3">
             <input placeholder="اسم المشروع *" value={form.projectName || ''} onChange={e => setForm({...form, projectName: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-indigo-400" />
             <select value={form.clientId || ''} onChange={e => setForm({...form, clientId: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none">
@@ -938,8 +949,8 @@ function AgencyTab() {
             </select>
           </div>
           <div className="flex gap-2">
-            <button onClick={addProject} className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-500">إضافة</button>
-            <button onClick={() => setShowForm(false)} className="px-4 py-2 rounded-lg text-gray-500 text-sm">إلغاء</button>
+            <button onClick={addProject} className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-500">{t('إضافة', 'Add')}</button>
+            <button onClick={() => setShowForm(false)} className="px-4 py-2 rounded-lg text-gray-500 text-sm">{t('إلغاء', 'Cancel')}</button>
           </div>
         </div>
       )}
@@ -970,7 +981,7 @@ function AgencyTab() {
               </div>
             </div>
           ))}
-          {(!clientsList?.clients?.length) && <p className="text-gray-400 text-sm py-8 text-center">مفيش عملاء لسه</p>}
+          {(!clientsList?.clients?.length) && <p className="text-gray-400 text-sm py-8 text-center">{t('مفيش عملاء لسه', 'No clients yet')}</p>}
         </div>
       ) : (
         <div className="space-y-2">
@@ -987,7 +998,7 @@ function AgencyTab() {
               </div>
             </div>
           ))}
-          {(!projectsList?.projects?.length) && <p className="text-gray-400 text-sm py-8 text-center">مفيش مشاريع لسه</p>}
+          {(!projectsList?.projects?.length) && <p className="text-gray-400 text-sm py-8 text-center">{t('مفيش مشاريع لسه', 'No projects yet')}</p>}
         </div>
       )}
     </div>
@@ -997,25 +1008,34 @@ function AgencyTab() {
 // ═══════════════════════════════════════
 // MAIN PAGE
 // ═══════════════════════════════════════
-const TABS: Array<{ id: Tab; label: string; icon: string }> = [
-  { id: 'overview', label: 'Overview', icon: '📊' },
-  { id: 'cms', label: 'CMS', icon: '📝' },
-  { id: 'agency', label: 'Agency', icon: '🏢' },
-  { id: 'users', label: 'Users', icon: '👥' },
-  { id: 'credits', label: 'Credits', icon: '⚡' },
-  { id: 'tools', label: 'Tools', icon: '🔬' },
-  { id: 'prompts', label: 'Prompts', icon: '🧠' },
-  { id: 'team', label: 'Team', icon: '👔' },
-  { id: 'payments', label: 'Payments', icon: '💳' },
-  { id: 'webhooks', label: 'Webhooks', icon: '🔔' },
-  { id: 'config', label: 'Config', icon: '⚙️' },
+const TABS: Array<{ id: Tab; labelAr: string; labelEn: string; icon: string }> = [
+  { id: 'overview', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: '📊' },
+  { id: 'cms', labelAr: 'المحتوى', labelEn: 'CMS', icon: '📝' },
+  { id: 'agency', labelAr: 'الوكالة', labelEn: 'Agency', icon: '🏢' },
+  { id: 'users', labelAr: 'المستخدمين', labelEn: 'Users', icon: '👥' },
+  { id: 'credits', labelAr: 'الكريدت', labelEn: 'Credits', icon: '⚡' },
+  { id: 'tools', labelAr: 'الأدوات', labelEn: 'Tools', icon: '🔬' },
+  { id: 'prompts', labelAr: 'الأوامر', labelEn: 'Prompts', icon: '🧠' },
+  { id: 'team', labelAr: 'الفريق', labelEn: 'Team', icon: '👔' },
+  { id: 'payments', labelAr: 'المدفوعات', labelEn: 'Payments', icon: '💳' },
+  { id: 'webhooks', labelAr: 'الإشعارات', labelEn: 'Webhooks', icon: '🔔' },
+  { id: 'config', labelAr: 'الإعدادات', labelEn: 'Config', icon: '⚙️' },
 ];
 
 export default function WzrdAdmin() {
   const [tab, setTab] = useState<Tab>('overview');
+  const [locale, setLocale] = useState<'ar' | 'en'>(() =>
+    (typeof window !== 'undefined' && (localStorage.getItem('wzrd-admin-locale') as 'ar' | 'en')) || 'ar'
+  );
+  const t: T = (ar, en) => locale === 'ar' ? ar : en;
+  const toggleLocale = () => {
+    const next = locale === 'ar' ? 'en' : 'ar';
+    setLocale(next);
+    localStorage.setItem('wzrd-admin-locale', next);
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
+    <div dir={locale === 'ar' ? 'rtl' : 'ltr'} className="min-h-screen bg-gray-50 text-gray-900 font-sans">
       {/* Header */}
       <div className="border-b border-gray-200 bg-white backdrop-blur-xl shadow-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
@@ -1023,37 +1043,40 @@ export default function WzrdAdmin() {
             <span className="font-mono text-lg font-bold tracking-wider">
               WZRD <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-indigo-500">AI</span>
             </span>
-            <span className="text-xs bg-red-50 text-red-600 border border-red-200 px-2 py-0.5 rounded-full font-bold">ADMIN</span>
+            <span className="text-xs bg-red-50 text-red-600 border border-red-200 px-2 py-0.5 rounded-full font-bold">{t('أدمن', 'ADMIN')}</span>
+            <button onClick={toggleLocale} className="text-[11px] px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200 font-medium transition" title={locale === 'ar' ? 'Switch to English' : 'التبديل للعربية'}>
+              {locale === 'ar' ? 'EN' : 'ع'}
+            </button>
           </div>
-          <a href="/" className="text-xs text-gray-500 hover:text-amber-600 transition">← Dashboard</a>
+          <a href="/" className="text-xs text-gray-500 hover:text-amber-600 transition">{t('← لوحة التحكم', '← Dashboard')}</a>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto px-6 py-6">
         {/* Tab bar */}
         <div className="flex gap-1 mb-6 overflow-x-auto pb-2">
-          {TABS.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)}
+          {TABS.map(tabItem => (
+            <button key={tabItem.id} onClick={() => setTab(tabItem.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition ${
-                tab === t.id ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-gray-50 text-gray-500 hover:text-white hover:bg-gray-100'
+                tab === tabItem.id ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-gray-50 text-gray-500 hover:text-white hover:bg-gray-100'
               }`}>
-              <span>{t.icon}</span> {t.label}
+              <span>{tabItem.icon}</span> {locale === 'ar' ? tabItem.labelAr : tabItem.labelEn}
             </button>
           ))}
         </div>
 
         {/* Tab content */}
-        {tab === 'overview' && <OverviewTab />}
-        {tab === 'cms' && <CmsTab />}
-        {tab === 'agency' && <AgencyTab />}
-        {tab === 'users' && <UsersTab />}
-        {tab === 'credits' && <CreditsTab />}
-        {tab === 'tools' && <ToolsTab />}
-        {tab === 'prompts' && <PromptsTab />}
-        {tab === 'team' && <TeamTab />}
-        {tab === 'payments' && <PaymentsTab />}
-        {tab === 'webhooks' && <WebhooksTab />}
-        {tab === 'config' && <ConfigTab />}
+        {tab === 'overview' && <OverviewTab t={t} />}
+        {tab === 'cms' && <CmsTab t={t} />}
+        {tab === 'agency' && <AgencyTab t={t} />}
+        {tab === 'users' && <UsersTab t={t} />}
+        {tab === 'credits' && <CreditsTab t={t} />}
+        {tab === 'tools' && <ToolsTab t={t} />}
+        {tab === 'prompts' && <PromptsTab t={t} />}
+        {tab === 'team' && <TeamTab t={t} />}
+        {tab === 'payments' && <PaymentsTab t={t} />}
+        {tab === 'webhooks' && <WebhooksTab t={t} />}
+        {tab === 'config' && <ConfigTab t={t} />}
       </div>
     </div>
   );
