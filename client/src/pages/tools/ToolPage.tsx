@@ -69,95 +69,278 @@ const severityColor = (s: string) => s === 'high' ? 'text-red-400 border-red-400
 const scoreColor = (s: number) => s >= 70 ? 'from-green-400 to-cyan-400' : s >= 40 ? 'from-amber-400 to-orange-400' : 'from-red-400 to-pink-400';
 
 // ═══════════════════════════════════════
-// PROCESSING ANIMATION — shows analysis steps
+// PROCESSING — professional timeline-based analysis (15s min)
 // ═══════════════════════════════════════
-const ANALYSIS_STEPS = [
-  { label: 'جاري تحليل بيانات البراند...', labelEn: 'Analyzing brand data...', duration: 1500 },
-  { label: 'فحص وضوح التموضع...', labelEn: 'Checking positioning clarity...', duration: 2000 },
-  { label: 'تقييم اتساق الرسائل...', labelEn: 'Evaluating messaging consistency...', duration: 2000 },
-  { label: 'مراجعة هيكل العرض...', labelEn: 'Reviewing offer structure...', duration: 1800 },
-  { label: 'تحليل الهوية البصرية...', labelEn: 'Analyzing visual identity...', duration: 1500 },
-  { label: 'فحص رحلة العميل...', labelEn: 'Checking customer journey...', duration: 1800 },
-  { label: 'إنشاء التوصيات...', labelEn: 'Generating recommendations...', duration: 2000 },
-];
+const ANALYSIS_STAGES = [
+  {
+    title: 'قراءة البيانات المدخلة',
+    titleEn: 'Reading Input Data',
+    tag: undefined,
+    substeps: ['تم استلام بيانات الشركة والمجال والسوق', 'جاري تجهيز البيانات للتحليل...'],
+    substepsEn: ['Company and market data received', 'Preparing data for analysis...'],
+    duration: 1500,
+  },
+  {
+    title: 'تحليل وضوح التموضع',
+    titleEn: 'Positioning Clarity Analysis',
+    tag: "Keller's CBBE Framework",
+    substeps: ['بنقارن التموضع بتاعك بمعايير السوق', 'بنشوف لو فيه Clarity Gap أو Positioning Trap', 'بنقيس مدى وضوح القيمة المقدمة...'],
+    substepsEn: ['Comparing positioning against market standards', 'Checking for Clarity Gap or Positioning Trap', 'Measuring value proposition clarity...'],
+    duration: 2500,
+  },
+  {
+    title: 'فحص اتساق الرسائل',
+    titleEn: 'Messaging Consistency Audit',
+    tag: 'Cross-Channel Analysis',
+    substeps: ['بنراجع التاجلاين والبايو والرسالة الأساسية', 'بنقيس الاتساق عبر القنوات المختلفة', 'بنحدد أي تناقضات في الرسائل...'],
+    substepsEn: ['Reviewing tagline, bio, and core message', 'Measuring cross-channel consistency', 'Identifying messaging contradictions...'],
+    duration: 2000,
+  },
+  {
+    title: 'تقييم منطق العرض والتسعير',
+    titleEn: 'Offer & Pricing Logic',
+    tag: 'Behavioral Economics',
+    substeps: ['بنحلل هيكل الباكدجات والتسعير', 'بنطبق مبادئ الـ Anchoring والـ Decoy Effect', 'بنقيم قوة الـ Proof Stack...'],
+    substepsEn: ['Analyzing package structure and pricing', 'Applying Anchoring and Decoy Effect principles', 'Evaluating Proof Stack strength...'],
+    duration: 2000,
+  },
+  {
+    title: 'تحليل الهوية البصرية',
+    titleEn: 'Visual Identity Analysis',
+    tag: "Kapferer's Prism",
+    substeps: ['بنراجع اللوجو والألوان والتايبوغرافي', 'بنقيس تماسك الهوية البصرية عبر القنوات...'],
+    substepsEn: ['Reviewing logo, colors, and typography', 'Measuring visual identity cohesion across channels...'],
+    duration: 1800,
+  },
+  {
+    title: 'فحص رحلة العميل',
+    titleEn: 'Customer Journey Mapping',
+    tag: 'Touchpoint Analysis',
+    substeps: ['بنتتبع رحلة العميل من أول ما يعرفك لحد ما يشتري', 'بنحدد نقاط الاحتكاك والضعف...'],
+    substepsEn: ['Tracing journey from awareness to purchase', 'Identifying friction points and drop-offs...'],
+    duration: 1800,
+  },
+  {
+    title: 'حساب النتيجة النهائية',
+    titleEn: 'Calculating Final Score',
+    tag: undefined,
+    substeps: ['بنجمع نتائج الـ 5 محاور', 'بنحسب الـ weighted score الإجمالي...'],
+    substepsEn: ['Aggregating results from 5 pillars', 'Computing weighted total score...'],
+    duration: 1500,
+  },
+  {
+    title: 'إنشاء التوصيات المخصصة',
+    titleEn: 'Generating Custom Recommendations',
+    tag: undefined,
+    substeps: ['بنحدد أهم المشاكل حسب الأولوية', 'بنكتب توصيات مخصصة لحالتك...', 'جاري تجهيز التقرير النهائي...'],
+    substepsEn: ['Prioritizing critical issues', 'Writing recommendations for your case...', 'Preparing final report...'],
+    duration: 2000,
+  },
+] as const;
 
-function ProcessingScreen({ toolName, locale }: { toolName: string; locale: 'en' | 'ar' }) {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [progress, setProgress] = useState(0);
+const TOTAL_DURATION = ANALYSIS_STAGES.reduce((s, st) => s + st.duration, 0); // ~15.1s
+
+function TypewriterSubstep({ text, visible = true }: { text: string; visible?: boolean }) {
+  const [charsShown, setCharsShown] = useState(0);
 
   useEffect(() => {
-    // Progress bar animation
-    const progressInterval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 95) return 95; // Never hit 100 until done
-        return prev + 0.5;
+    if (!visible) {
+      setCharsShown(0);
+      return;
+    }
+    const target = text.length;
+    if (target === 0) return;
+    const step = Math.max(1, Math.ceil(target / 12));
+    const interval = setInterval(() => {
+      setCharsShown(prev => {
+        if (prev >= target) {
+          clearInterval(interval);
+          return target;
+        }
+        return Math.min(prev + step, target);
       });
-    }, 100);
+    }, 40);
+    return () => clearInterval(interval);
+  }, [text, visible]);
 
-    // Step progression
-    let stepTimeout: ReturnType<typeof setTimeout>;
-    const advanceStep = (step: number) => {
-      if (step >= ANALYSIS_STEPS.length) return;
-      setCurrentStep(step);
-      stepTimeout = setTimeout(() => advanceStep(step + 1), ANALYSIS_STEPS[step].duration);
-    };
-    advanceStep(0);
+  if (!visible) return null;
+  const display = text.slice(0, charsShown);
+  return (
+    <span className="block text-xs text-zinc-400 mt-1">
+      {'> '}{display}
+      {charsShown < text.length && <span className="inline-block w-0.5 h-3 ml-0.5 bg-indigo-400 animate-pulse align-middle" />}
+    </span>
+  );
+}
+
+function ProcessingScreen({ toolName, locale }: { toolName: string; locale: 'en' | 'ar' }) {
+  const [stageIndex, setStageIndex] = useState(0);
+  const [substepIndex, setSubstepIndex] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
+
+  const stage = ANALYSIS_STAGES[stageIndex];
+  const substeps = stage ? (locale === 'ar' ? stage.substeps : stage.substepsEn) : [];
+  const displaySubstep = substeps[substepIndex];
+
+  useEffect(() => {
+    if (isComplete) {
+      setProgress(100);
+      return;
+    }
+    if (!stage) return;
+
+    // Substep advance every 500ms
+    const substepTimer = setInterval(() => {
+      setSubstepIndex(prev => {
+        if (prev < substeps.length - 1) return prev + 1;
+        return prev;
+      });
+    }, 500);
+
+    // Stage advance after duration
+    const stageTimer = setTimeout(() => {
+      setStageIndex(prev => {
+        if (prev >= ANALYSIS_STAGES.length - 1) {
+          setIsComplete(true);
+          return prev;
+        }
+        return prev + 1;
+      });
+      setSubstepIndex(0);
+    }, stage.duration);
 
     return () => {
-      clearInterval(progressInterval);
-      clearTimeout(stepTimeout);
+      clearInterval(substepTimer);
+      clearTimeout(stageTimer);
     };
-  }, []);
+  }, [stageIndex, isComplete]);
+
+  // Progress bar: smooth over total duration
+  useEffect(() => {
+    const start = Date.now();
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - start;
+      const pct = isComplete ? 100 : Math.min(99, (elapsed / TOTAL_DURATION) * 100);
+      setProgress(prev => (pct > prev ? pct : prev));
+    }, 100);
+    return () => clearInterval(interval);
+  }, [isComplete]);
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white flex flex-col">
-      <WzrdPublicHeader showCredits={false} />
-      <div className="flex-1 flex items-center justify-center px-6">
-        <div className="max-w-md mx-auto text-center w-full">
-          <div className="relative mx-auto w-24 h-24 mb-8">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-500/20 to-cyan-500/20 animate-pulse" />
-            <div className="absolute inset-2 rounded-full bg-gradient-to-br from-indigo-500/10 to-cyan-500/10 animate-ping" style={{ animationDuration: '2s' }} />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-4xl animate-bounce" style={{ animationDuration: '2s' }}>🧠</span>
-            </div>
-          </div>
+    <div className="min-h-screen bg-zinc-950 text-white flex flex-col">
+      {/* Subtle particle background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(99,102,241,0.12),transparent)]" />
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 rounded-full bg-indigo-400/30 animate-pulse"
+            style={{
+              left: `${(i * 7) % 100}%`,
+              top: `${(i * 11) % 100}%`,
+              animationDelay: `${i * 0.2}s`,
+            }}
+          />
+        ))}
+      </div>
 
-          <h2 className="text-lg font-bold mb-2">{toolName}</h2>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-8">{locale === 'ar' ? 'WZRD AI بيحلل البيانات بتاعتك...' : 'WZRD AI is analyzing your data...'}</p>
+      <div className="relative z-10">
+        <WzrdPublicHeader showCredits={false} />
+      </div>
 
-          <div className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full mb-8 overflow-hidden">
+      <div className="relative z-10 flex-1 flex flex-col items-center px-6 py-8">
+        <div className="max-w-md w-full">
+          <h2 className="text-center text-lg font-bold mb-1" dir="rtl">
+            {locale === 'ar' ? '🧠 WZRD AI يحلل البراند بتاعك' : '🧠 WZRD AI is analyzing your brand'}
+          </h2>
+          <div className="w-full h-1.5 bg-zinc-800 rounded-full mb-8 overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-indigo-500 via-cyan-500 to-amber-500 rounded-full transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
 
-          {/* Steps */}
-        <div className="space-y-3 text-right" dir="rtl">
-          {ANALYSIS_STEPS.map((step, i) => (
-            <div
-              key={i}
-              className={`flex items-center gap-3 transition-all duration-500 ${
-                i < currentStep ? 'opacity-40' : i === currentStep ? 'opacity-100' : 'opacity-0'
-              }`}
-            >
-              {i < currentStep ? (
-                <span className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-green-600 dark:text-green-400 text-xs">✓</span>
-                </span>
-              ) : i === currentStep ? (
-                <span className="w-5 h-5 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin flex-shrink-0" />
-              ) : (
-                <span className="w-5 h-5 rounded-full bg-zinc-200 dark:bg-zinc-800 flex-shrink-0" />
-              )}
-              <span className={`text-sm ${i === currentStep ? 'text-zinc-900 dark:text-white font-medium' : 'text-zinc-500 dark:text-zinc-500'}`}>
-                {locale === 'ar' ? step.label : step.labelEn}
-              </span>
-            </div>
-          ))}
-        </div>
+          {/* Vertical timeline - RTL right-aligned */}
+          <div className="space-y-0" dir="rtl">
+            {ANALYSIS_STAGES.map((s, i) => {
+              const isDone = i < stageIndex || isComplete;
+              const isActive = i === stageIndex && !isComplete;
+              const isWaiting = i > stageIndex;
+              const title = locale === 'ar' ? s.title : s.titleEn;
 
-          <p className="text-[10px] text-zinc-500 dark:text-zinc-700 mt-12 tracking-widest">POWERED BY WZRD AI</p>
+              return (
+                <div
+                  key={i}
+                  className={`relative flex gap-4 transition-opacity duration-300 ${
+                    isWaiting ? 'opacity-50' : 'opacity-100'
+                  }`}
+                >
+                  {/* Connector line (except last) */}
+                  {i < ANALYSIS_STAGES.length - 1 && (
+                    <div
+                      className="absolute top-6 bottom-0 w-px bg-zinc-700 -translate-x-1/2"
+                      style={{ right: '11px' }}
+                    />
+                  )}
+
+                  {/* Dot */}
+                  <div className="flex-shrink-0 mt-1" style={{ width: 24 }}>
+                    {isDone ? (
+                      <span className="flex w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400/50 items-center justify-center">
+                        <span className="text-emerald-400 text-[10px]">✓</span>
+                      </span>
+                    ) : isActive ? (
+                      <span className="flex w-6 h-6 rounded-full bg-indigo-500/30 border-2 border-indigo-400 items-center justify-center animate-pulse ring-4 ring-indigo-400/20">
+                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                      </span>
+                    ) : (
+                      <span className="flex w-6 h-6 rounded-full bg-zinc-700 border border-zinc-600" />
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0 pb-6">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`text-sm font-medium ${isActive ? 'text-white' : 'text-zinc-300'}`}>
+                        {title}
+                        {i === stageIndex && !isComplete && (
+                          <span className="text-zinc-500 font-normal mr-1">...</span>
+                        )}
+                      </span>
+                      {isDone && <span className="text-emerald-400 text-xs">✓</span>}
+                      {s.tag && (isActive || isDone) && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+                          {s.tag}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Substeps - only for active stage */}
+                    {isActive && substeps.length > 0 && (
+                      <div className="mt-2 space-y-0.5">
+                        {substeps.slice(0, substepIndex + 1).map((sub, j) =>
+                          j < substepIndex ? (
+                            <span key={j} className="block text-xs text-zinc-400 mt-1">{'> '}{sub}</span>
+                          ) : (
+                            <TypewriterSubstep key={j} text={sub} visible />
+                          )
+                        )}
+                      </div>
+                    )}
+
+                    {isComplete && i === ANALYSIS_STAGES.length - 1 && (
+                      <p className="text-xs text-zinc-400 mt-1">
+                        {locale === 'ar' ? '> جاري تجهيز التقرير النهائي...' : '> Preparing your final report...'}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="text-[10px] text-zinc-600 text-center mt-10 tracking-widest">POWERED BY WZRD AI</p>
         </div>
       </div>
     </div>
@@ -188,8 +371,8 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
     setLoading(true);
     setError('');
 
-    // Minimum 8 seconds processing time so user sees the full animation
-    const minDelay = new Promise(resolve => setTimeout(resolve, 8000));
+    // Minimum 15 seconds so the timeline animation completes (consulting feel)
+    const minDelay = new Promise(resolve => setTimeout(resolve, Math.max(15000, TOTAL_DURATION)));
 
     try {
       const [, res] = await Promise.all([
