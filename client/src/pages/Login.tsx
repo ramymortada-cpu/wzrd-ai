@@ -27,9 +27,7 @@ export default function Login() {
       const result = data?.result?.data?.json ?? data?.result?.data;
       if (result?.success) {
         setStep('code');
-        if (result?.devCode) {
-          setCode(result.devCode); // Pre-fill OTP when returned (EMAIL_PROVIDER=none)
-        }
+        if (result?.devCode) setCode(result.devCode);
       } else {
         setError(toErrorString(result?.message, 'Failed to send code.'));
       }
@@ -64,56 +62,59 @@ export default function Login() {
     }
   };
 
+  const inputClass = "w-full px-4 py-3.5 rounded-xl bg-white dark:bg-white/5 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-600 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition";
+
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+    <div className="min-h-screen bg-gradient-to-b from-indigo-50/50 via-white to-white dark:bg-zinc-950">
       <WzrdPublicHeader showCredits={false} />
-      <div className="flex items-center justify-center px-4 pt-16 pb-8">
-        <div className="w-full max-w-sm">
-          <div className="bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-lg shadow-zinc-200/50 dark:shadow-none p-6">
+      <div className="flex items-center justify-center px-4 pt-20 pb-12">
+        <div className="w-full max-w-md">
+          <div className="rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xl p-8">
             {step === 'email' ? (
               <>
-                <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-1">{t('wzrd.welcomeBack')}</h2>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">{t('wzrd.enterEmailSendCode')}</p>
-                {error && <p className="text-red-600 dark:text-red-400 text-sm mb-4 p-3 rounded-lg bg-red-500/5 dark:bg-red-400/5 border border-red-500/10 dark:border-red-400/10">{error}</p>}
-                <input
-                  type="email" value={email} onChange={e => setEmail(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && requestCode()}
-                  placeholder="your@email.com"
-                  className="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white placeholder:text-zinc-500 dark:placeholder-zinc-600 text-sm outline-none focus:border-indigo-500 mb-4"
-                />
+                <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">{t('wzrd.welcomeBack')}</h2>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-6">{t('wzrd.enterEmailSendCode')}</p>
+                {error && <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm">{error}</div>}
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">Email</label>
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && requestCode()} placeholder="your@email.com" className={inputClass}
+                  />
+                </div>
                 <button onClick={requestCode} disabled={loading || !email}
-                  className="w-full py-3 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-bold text-sm disabled:opacity-50 hover:opacity-90 transition">
+                  className="w-full py-4 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white font-bold text-base hover:from-indigo-700 hover:to-indigo-600 hover:-translate-y-0.5 transition disabled:opacity-50">
                   {loading ? t('wzrd.sending') : t('wzrd.sendLoginCode')}
                 </button>
               </>
             ) : (
               <>
-                <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-1">{t('wzrd.checkEmail')}</h2>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">{t('wzrd.sentCodeTo')}</p>
-                <p className="text-sm text-indigo-600 dark:text-indigo-400 font-medium mb-6">{email}</p>
-                {error && <p className="text-red-600 dark:text-red-400 text-sm mb-4 p-3 rounded-lg bg-red-500/5 dark:bg-red-400/5 border border-red-500/10 dark:border-red-400/10">{error}</p>}
-                <input
-                  type="text" value={code} onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  onKeyDown={e => e.key === 'Enter' && verifyCode()}
-                  placeholder="000000" maxLength={6}
-                  className="w-full px-4 py-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white text-center text-2xl font-mono tracking-[0.5em] placeholder:text-zinc-500 dark:placeholder-zinc-700 outline-none focus:border-indigo-500 mb-4"
-                  autoFocus
-                />
+                <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">{t('wzrd.checkEmail')}</h2>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-1">{t('wzrd.sentCodeTo')}</p>
+                <p className="text-sm text-indigo-600 dark:text-indigo-400 font-semibold mb-6">{email}</p>
+                {error && <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm">{error}</div>}
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">Code</label>
+                  <input type="text" value={code} onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    onKeyDown={e => e.key === 'Enter' && verifyCode()} placeholder="000000" maxLength={6}
+                    className="w-full px-4 py-4 rounded-xl bg-white dark:bg-white/5 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white text-center text-2xl font-mono tracking-[0.5em] focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                    autoFocus
+                  />
+                </div>
                 <button onClick={verifyCode} disabled={loading || code.length !== 6}
-                  className="w-full py-3 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-bold text-sm disabled:opacity-50 hover:opacity-90 transition">
+                  className="w-full py-4 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white font-bold text-base hover:from-indigo-700 hover:to-indigo-600 hover:-translate-y-0.5 transition disabled:opacity-50">
                   {loading ? t('wzrd.verifying') : t('wzrd.verifyLogin')}
                 </button>
                 <button onClick={() => { setStep('email'); setCode(''); setError(''); }}
-                  className="w-full mt-3 text-xs text-zinc-500 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-400 transition">
+                  className="w-full mt-4 text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
                   ← {t('wzrd.useDifferentEmail')}
                 </button>
               </>
             )}
           </div>
 
-          <p className="text-center text-sm text-zinc-500 dark:text-zinc-600 mt-6">
+          <p className="text-center text-sm text-zinc-600 dark:text-zinc-500 mt-8">
             {t('wzrd.noAccount')}{' '}
-            <a href="/signup" className="text-amber-600 dark:text-amber-500 hover:underline font-medium">{t('wzrd.getCredits')}</a>
+            <a href="/signup" className="text-indigo-600 dark:text-indigo-400 hover:underline font-semibold">{t('wzrd.getCredits')}</a>
           </p>
         </div>
       </div>

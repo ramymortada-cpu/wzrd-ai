@@ -14,13 +14,10 @@ export default function WzrdPublicHeader({ credits, showCredits = true }: WzrdPu
   const { theme, toggleTheme, switchable } = useTheme();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-zinc-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-zinc-950/80 border-b border-zinc-100 dark:border-zinc-800">
       <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-        {/* Logo — left */}
-        <a
-          href="/tools"
-          className="flex items-baseline gap-1 shrink-0"
-        >
+        {/* Logo */}
+        <a href="/tools" className="flex items-baseline gap-1 shrink-0">
           <span className="text-lg font-bold tracking-wider font-mono text-zinc-900 dark:text-white">
             WZRD
           </span>
@@ -51,16 +48,11 @@ export default function WzrdPublicHeader({ credits, showCredits = true }: WzrdPu
           </a>
         </nav>
 
-        {/* Right: language + theme + credits */}
+        {/* Right: credits pill + theme + language */}
         <div className="flex items-center gap-3 shrink-0">
           {showCredits && credits != null && (
-            <div className="flex items-center gap-2 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 px-4 py-2">
-              <span className="font-mono text-sm font-bold text-amber-600 dark:text-amber-400">
-                {locale === "ar" ? toArabicNumerals(credits) : credits}
-              </span>
-              <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                {t("wzrd.credits")}
-              </span>
+            <div className="rounded-full px-4 py-1.5 font-mono text-sm font-semibold bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-500/20">
+              {locale === "ar" ? toArabicNumerals(credits) : credits} {t("wzrd.credits")}
             </div>
           )}
           {switchable && toggleTheme && (
@@ -82,7 +74,7 @@ export default function WzrdPublicHeader({ credits, showCredits = true }: WzrdPu
           )}
           <button
             onClick={toggleLocale}
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition"
+            className="px-3 py-1.5 rounded-full text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition"
           >
             {locale === "ar" ? "EN" : "ع"}
           </button>

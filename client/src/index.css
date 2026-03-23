@@ -126,9 +126,9 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
-  /* RTL font override */
+  /* RTL font override — premium Arabic stack */
   html[dir="rtl"] body {
-    font-family: "IBM Plex Sans Arabic", "Inter", system-ui, sans-serif;
+    font-family: "IBM Plex Sans Arabic", "Tajawal", -apple-system, sans-serif;
   }
 
   html[dir="ltr"] body {

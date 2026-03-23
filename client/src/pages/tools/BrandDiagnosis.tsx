@@ -33,5 +33,11 @@ export default function BrandDiagnosis() {
       { name: 'biggestChallenge', label: 'Biggest brand challenge', labelAr: 'أكبر تحدي بتواجهه في البراند بتاعك؟', type: 'textarea', placeholder: "What's the main problem?", placeholderAr: 'إيه أكبر تحدي؟', required: true, maxLength: 1000 },
       { name: 'previousBranding', label: 'Have you done branding before?', labelAr: 'هل عملت branding قبل كده؟', type: 'select', options: [...PREVIOUS_BRANDING] },
     ],
+    fieldSections: [
+      { title: 'Company basics', titleAr: 'معلومات الشركة الأساسية', fieldNames: ['companyName', 'industry', 'market', 'yearsInBusiness', 'teamSize'] },
+      { title: 'Digital presence', titleAr: 'التواجد الرقمي', fieldNames: ['website', 'socialMedia'] },
+      { title: 'Positioning & audience', titleAr: 'التموضع والجمهور', fieldNames: ['currentPositioning', 'targetAudience'] },
+      { title: 'Current situation', titleAr: 'الوضع الحالي', fieldNames: ['monthlyRevenue', 'biggestChallenge', 'previousBranding'] },
+    ],
   }} />;
 }

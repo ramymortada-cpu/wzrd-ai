@@ -16,7 +16,6 @@ interface ToolInfo {
   route: string;
 }
 
-// Route mapping (backend doesn't know React routes)
 const ROUTE_MAP: Record<string, string> = {
   brand_diagnosis: '/tools/brand-diagnosis',
   offer_check: '/tools/offer-check',
@@ -26,7 +25,6 @@ const ROUTE_MAP: Record<string, string> = {
   launch_readiness: '/tools/launch-readiness',
 };
 
-// Fallback if meta fetch fails
 const FALLBACK_TOOLS: ToolInfo[] = [
   { id: 'brand_diagnosis', name: 'Brand Diagnosis', nameAr: 'تشخيص البراند', desc: 'Health score + top issues. The starting point.', descAr: 'نتيجة صحة + أهم المشاكل. نقطة البداية.', icon: '🔬', color: '#6d5cff', cost: 20, route: '/tools/brand-diagnosis' },
   { id: 'offer_check', name: 'Offer Logic Check', nameAr: 'فحص منطق العرض', desc: 'Is your offer clear? Pricing logical?', descAr: 'العرض واضح؟ التسعير منطقي؟', icon: '📦', color: '#c8a24e', cost: 25, route: '/tools/offer-check' },
@@ -48,7 +46,6 @@ export default function Tools() {
       .then(d => setCredits(d.result?.data?.json?.credits ?? d.result?.data?.credits ?? 0))
       .catch(() => setCredits(0));
 
-    // Fetch tool metadata from backend (with fallback)
     fetch('/api/trpc/tools.meta')
       .then(r => r.json())
       .then(d => {
@@ -60,28 +57,29 @@ export default function Tools() {
           })));
         }
       })
-      .catch(() => {}); // Keep fallback
+      .catch(() => {});
   }, []);
 
+  const heroTitle = locale === 'ar' ? 'أدوات التحليل الذكي' : 'AI Toolkit';
+
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white">
+    <div className="min-h-screen bg-gradient-to-b from-indigo-50/50 via-white to-white dark:bg-zinc-950 text-zinc-900 dark:text-white">
       <WzrdPublicHeader credits={credits} />
-      <div className="max-w-5xl mx-auto px-6 py-12">
-        {/* Onboarding banner — shows for new users (credits = 100 = untouched) */}
+
+      {/* Hero section */}
+      <div className="max-w-5xl mx-auto px-6 pt-16 pb-12">
         {credits === 100 && (
-          <div className="mb-8 p-6 rounded-2xl border border-indigo-500/20 dark:border-indigo-500/20 bg-gradient-to-r from-indigo-500/5 to-cyan-500/5 dark:from-indigo-500/5 dark:to-cyan-500/5 shadow-sm">
+          <div className="mb-8 p-6 rounded-2xl border border-indigo-200 dark:border-indigo-500/20 bg-gradient-to-r from-indigo-500/5 to-cyan-500/5 dark:from-indigo-500/5 dark:to-cyan-500/5 shadow-sm">
             <div className="flex items-start gap-4">
               <span className="text-3xl">🎉</span>
               <div>
                 <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-1">{t('wzrd.welcomeStart')}</h3>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed mb-3">
-                  {t('wzrd.youHaveCredits')}
-                </p>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed mb-3">{t('wzrd.youHaveCredits')}</p>
                 <div className="flex gap-3 flex-wrap">
-                  <button onClick={() => navigate('/tools/brand-diagnosis')} className="px-4 py-2 rounded-full bg-indigo-500 text-white text-sm font-semibold hover:bg-indigo-400 transition">
+                  <button onClick={() => navigate('/tools/brand-diagnosis')} className="px-4 py-2 rounded-full bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-500 transition hover:-translate-y-0.5">
                     🔬 {t('wzrd.startDiagnosis')}
                   </button>
-                  <button onClick={() => { const el = document.getElementById('tools-grid'); el?.scrollIntoView({ behavior: 'smooth' }); }} className="px-4 py-2 rounded-full border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 text-sm hover:text-zinc-900 dark:hover:text-white transition">
+                  <button onClick={() => document.getElementById('tools-grid')?.scrollIntoView({ behavior: 'smooth' })} className="px-4 py-2 rounded-full border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 text-sm hover:text-zinc-900 dark:hover:text-white transition">
                     {t('wzrd.browseTools')}
                   </button>
                 </div>
@@ -90,20 +88,19 @@ export default function Tools() {
           </div>
         )}
 
-        {/* Purchase success banner */}
         {typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('purchase') === 'success' && (
           <div className="mb-8 p-4 rounded-xl border border-green-500/20 bg-green-500/5 dark:bg-green-500/10 text-center">
             <p className="text-green-600 dark:text-green-400 font-semibold">✅ {t('wzrd.paymentSuccess')}</p>
           </div>
         )}
 
-        <div className="mb-10">
-          <p className="font-mono text-xs text-indigo-500 dark:text-indigo-400 tracking-widest mb-2">// AI_TOOLS</p>
-          <h2 className="text-3xl font-bold text-zinc-900 dark:text-white mb-3">{t('wzrd.aiToolkit')}</h2>
-          <p className="text-zinc-600 dark:text-zinc-400 max-w-lg">{t('wzrd.eachToolDesc')}</p>
+        <div className="text-center mb-14">
+          <h2 className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">{heroTitle}</h2>
+          <p className="text-zinc-600 dark:text-zinc-400 max-w-xl mx-auto text-base leading-relaxed">{t('wzrd.eachToolDesc')}</p>
         </div>
 
-        <div id="tools-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Tools grid — 2-col desktop, 1-col mobile */}
+        <div id="tools-grid" className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {tools.map(tool => {
             const canAfford = credits !== null && credits >= tool.cost;
             return (
@@ -111,21 +108,29 @@ export default function Tools() {
                 key={tool.id}
                 onClick={() => canAfford && navigate(tool.route)}
                 disabled={!canAfford}
-                className={`text-left p-6 rounded-2xl border transition group shadow-sm ${
+                className={`text-left p-8 rounded-2xl border transition-all duration-300 group shadow-md ${
                   canAfford
-                    ? 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/30 hover:border-amber-500/30 hover:-translate-y-1 cursor-pointer'
-                    : 'border-zinc-200 dark:border-zinc-800/50 bg-zinc-100/50 dark:bg-zinc-900/10 opacity-50 cursor-not-allowed'
+                    ? 'bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 hover:shadow-xl hover:-translate-y-1 hover:border-indigo-300 dark:hover:border-indigo-500/40 cursor-pointer'
+                    : 'bg-zinc-50/50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800/50 opacity-60 cursor-not-allowed'
                 }`}
               >
-                <div className="text-3xl mb-3">{tool.icon}</div>
-                <h3 className="text-base font-bold mb-1 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">{locale === 'ar' ? tool.nameAr : tool.name}</h3>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-4 leading-relaxed">{locale === 'ar' ? tool.descAr : tool.desc}</p>
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs" style={{ color: tool.color || '#44ddc9' }}>~{locale === 'ar' ? toArabicNumerals(tool.cost) : tool.cost} {t('wzrd.credits')}</span>
+                <div className="text-4xl mb-5">{tool.icon}</div>
+                <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">
+                  {locale === 'ar' ? tool.nameAr : tool.name}
+                </h3>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6 leading-relaxed" style={{ lineHeight: 1.7 }}>
+                  {locale === 'ar' ? tool.descAr : tool.desc}
+                </p>
+                <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20">
+                  <span className="font-mono text-sm font-semibold text-indigo-600 dark:text-indigo-400">
+                    {locale === 'ar' ? toArabicNumerals(tool.cost) : tool.cost} {t('wzrd.credits')}
+                  </span>
                   {canAfford ? (
-                    <span className="text-xs text-amber-600 dark:text-amber-400">{t('wzrd.run')}</span>
+                    <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
+                      {t('wzrd.run')} →
+                    </span>
                   ) : (
-                    <span className="text-xs text-red-500 dark:text-red-400">{t('wzrd.notEnoughCredits')}</span>
+                    <span className="text-sm text-red-500 dark:text-red-400">{t('wzrd.notEnoughCredits')}</span>
                   )}
                 </div>
               </button>
@@ -133,13 +138,12 @@ export default function Tools() {
           })}
         </div>
 
-        {/* Buy more credits CTA */}
         {credits !== null && credits < 20 && (
-          <div className="mt-10 p-6 rounded-2xl border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 text-center">
+          <div className="mt-12 p-8 rounded-2xl border border-amber-200 dark:border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 text-center">
             <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">{t('wzrd.needMoreCredits')}</h3>
             <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">{t('wzrd.buyCreditsDesc')}</p>
             <div className="flex gap-3 justify-center">
-              <a href="/pricing" className="px-6 py-2.5 rounded-full bg-amber-500 text-zinc-950 text-sm font-bold hover:-translate-y-0.5 transition">{t('wzrd.buyCredits')}</a>
+              <a href="/pricing" className="px-6 py-2.5 rounded-full bg-amber-500 text-zinc-950 text-sm font-bold hover:-translate-y-0.5 transition shadow-md">{t('wzrd.buyCredits')}</a>
               <a href="https://wa.me/201000000000" target="_blank" rel="noreferrer" className="px-6 py-2.5 rounded-full border border-zinc-300 dark:border-zinc-700 text-sm hover:border-amber-500 transition">{t('wzrd.talkToPrimo')}</a>
             </div>
           </div>

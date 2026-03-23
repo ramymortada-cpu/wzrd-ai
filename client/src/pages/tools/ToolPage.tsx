@@ -27,6 +27,8 @@ export interface ToolConfig {
   description: string;
   descriptionAr?: string;
   fields: ToolField[];
+  /** Optional: group fields into sections. If omitted, all fields in one block. */
+  fieldSections?: Array<{ title: string; titleAr?: string; fieldNames: string[] }>;
   guideUrl: string;
   guideTitle: string;
   intro?: {
@@ -493,7 +495,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
     const displayNextStepTitle = isAr && nextStepTitleMap[result.nextStep?.title ?? ''] ? t(nextStepTitleMap[result.nextStep.title]) : (result.nextStep?.title ?? '');
     const displayTier = isAr && result.serviceRecommendation && tierMap[result.serviceRecommendation.tier] ? t(tierMap[result.serviceRecommendation.tier]) : (result.serviceRecommendation?.tier ?? '');
     return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white">
+      <div className="min-h-screen bg-gradient-to-b from-indigo-50/50 via-white to-white dark:bg-zinc-950 text-zinc-900 dark:text-white">
         <WzrdPublicHeader showCredits={false} />
         <div className="max-w-2xl mx-auto px-6 py-16">
           <button onClick={() => navigate('/tools')} className="text-xs text-zinc-500 dark:text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 mb-8 transition">{t('wzrd.backTools')}</button>
@@ -577,85 +579,107 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
     );
   }
 
+  // Group fields for rendering — sections or single block
+  const fieldGroups = config.fieldSections
+    ? config.fieldSections.map(sec => ({
+        title: sec.title,
+        titleAr: sec.titleAr,
+        fields: sec.fieldNames.map(n => config.fields.find(f => f.name === n)).filter(Boolean) as ToolField[],
+      }))
+    : [{ title: '', titleAr: '', fields: config.fields }];
+
+  const inputClass = "w-full px-4 py-3.5 rounded-xl bg-white dark:bg-white/5 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-600 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition shadow-sm";
+  const labelClass = "block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2";
+
   // ═══ FORM VIEW ═══
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white">
+    <div className="min-h-screen bg-gradient-to-b from-indigo-50/50 via-white to-white dark:bg-zinc-950 text-zinc-900 dark:text-white">
       <WzrdPublicHeader showCredits={false} />
-      <div className="max-w-lg mx-auto px-6 py-16">
-        <button onClick={() => navigate('/tools')} className="text-xs text-zinc-500 dark:text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 mb-8 transition">{t('wzrd.backTools')}</button>
+      <div className="max-w-2xl mx-auto px-6 py-16">
+        <button onClick={() => navigate('/tools')} className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 mb-8 transition">{t('wzrd.backTools')}</button>
 
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-4 mb-8">
           <span className="text-4xl">{config.icon}</span>
           <div>
-            <h1 className="text-xl font-bold">{locale === 'ar' && config.nameAr ? config.nameAr : config.name}</h1>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">{locale === 'ar' && config.descriptionAr ? config.descriptionAr : config.description} · ~{locale === 'ar' ? toArabicNumerals(config.cost) : config.cost} {t('wzrd.credits')}</p>
+            <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">{locale === 'ar' && config.nameAr ? config.nameAr : config.name}</h1>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">{locale === 'ar' && config.descriptionAr ? config.descriptionAr : config.description} · ~{locale === 'ar' ? toArabicNumerals(config.cost) : config.cost} {t('wzrd.credits')}</p>
           </div>
         </div>
 
         {config.intro && (
-          <div className="mb-8 p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/20 shadow-sm">
-            <h2 className="text-base font-bold mb-2">{locale === 'ar' && config.intro.headlineAr ? config.intro.headlineAr : config.intro.headline}</h2>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed mb-4">{locale === 'ar' && config.intro.bodyAr ? config.intro.bodyAr : config.intro.body}</p>
+          <div className="mb-8 p-6 rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm">
+            <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">{locale === 'ar' && config.intro.headlineAr ? config.intro.headlineAr : config.intro.headline}</h2>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed mb-4" style={{ lineHeight: 1.7 }}>{locale === 'ar' && config.intro.bodyAr ? config.intro.bodyAr : config.intro.body}</p>
             <div className="mb-3">
-              <p className="text-[10px] font-bold text-zinc-600 dark:text-zinc-500 uppercase tracking-wider mb-2">{t('wzrd.whatItMeasures')}</p>
+              <p className="text-xs font-bold text-zinc-600 dark:text-zinc-500 uppercase tracking-wider mb-2">{t('wzrd.whatItMeasures')}</p>
               <div className="flex flex-wrap gap-1.5">
                 {(locale === 'ar' && config.intro.measuresAr ? config.intro.measuresAr : config.intro.measures).map((m, i) => (
-                  <span key={i} className="text-[11px] text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800/60 px-2 py-0.5 rounded-full">{m}</span>
+                  <span key={i} className="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 rounded-full">{m}</span>
                 ))}
               </div>
             </div>
-            <p className="text-xs text-amber-600 dark:text-amber-400/80 leading-relaxed">
+            <p className="text-sm text-amber-600 dark:text-amber-400/90 leading-relaxed">
               {locale === 'ar' && config.intro.bestForAr ? config.intro.bestForAr : (<><span className="font-bold">{t('wzrd.bestFor')}</span> {config.intro.bestFor}</>)}
             </p>
           </div>
         )}
 
         {error && (
-          <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm">{error}</div>
+          <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm">{error}</div>
         )}
 
-        <div className="space-y-4">
-          {config.fields.map(field => {
-            const fieldLabel = locale === 'ar' && field.labelAr ? field.labelAr : field.label;
-            const fieldPlaceholder = locale === 'ar' && field.placeholderAr ? field.placeholderAr : field.placeholder;
-            return (
-            <div key={field.name}>
-              <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">{fieldLabel}</label>
-              {field.type === 'textarea' ? (
-                <textarea
-                  placeholder={fieldPlaceholder} maxLength={field.maxLength || 1000} rows={3}
-                  className="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-600 text-sm outline-none focus:border-indigo-500 transition resize-none"
-                  value={(formData[field.name] as string) || ''} onChange={e => updateField(field.name, e.target.value)}
-                />
-              ) : field.type === 'select' ? (
-                <select
-                  className="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white text-sm outline-none focus:border-indigo-500 transition"
-                  value={(formData[field.name] as string) || ''} onChange={e => updateField(field.name, e.target.value)}
-                >
-                  <option value="">{t('wzrd.select')}</option>
-                  {field.options?.map(o => (
-                    <option key={o.value} value={o.value}>{locale === 'ar' && o.labelAr ? o.labelAr : o.label}</option>
-                  ))}
-                </select>
-              ) : field.type === 'checkbox' ? (
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" className="accent-indigo-500" checked={!!formData[field.name]} onChange={e => updateField(field.name, e.target.checked)} />
-                  <span className="text-sm text-zinc-600 dark:text-zinc-400">{fieldPlaceholder}</span>
-                </label>
-              ) : (
-                <input
-                  type="text" placeholder={fieldPlaceholder} maxLength={field.maxLength || 255}
-                  className="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-600 text-sm outline-none focus:border-indigo-500 transition"
-                  value={(formData[field.name] as string) || ''} onChange={e => updateField(field.name, e.target.value)}
-                />
-              )}
+        {fieldGroups.map((group, gi) => (
+          <div key={gi} className="mb-6 p-6 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-sm">
+            {group.title && (
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">
+                {locale === 'ar' && group.titleAr ? group.titleAr : group.title}
+              </h3>
+            )}
+            <div className="space-y-4">
+              {group.fields.map(field => {
+                const fieldLabel = locale === 'ar' && field.labelAr ? field.labelAr : field.label;
+                const fieldPlaceholder = locale === 'ar' && field.placeholderAr ? field.placeholderAr : field.placeholder;
+                return (
+                  <div key={field.name}>
+                    <label className={labelClass}>{fieldLabel}</label>
+                    {field.type === 'textarea' ? (
+                      <textarea
+                        placeholder={fieldPlaceholder} maxLength={field.maxLength || 1000} rows={3}
+                        className={`${inputClass} resize-none`}
+                        value={(formData[field.name] as string) || ''} onChange={e => updateField(field.name, e.target.value)}
+                      />
+                    ) : field.type === 'select' ? (
+                      <select
+                        className={inputClass}
+                        value={(formData[field.name] as string) || ''} onChange={e => updateField(field.name, e.target.value)}
+                      >
+                        <option value="">{t('wzrd.select')}</option>
+                        {field.options?.map(o => (
+                          <option key={o.value} value={o.value}>{locale === 'ar' && o.labelAr ? o.labelAr : o.label}</option>
+                        ))}
+                      </select>
+                    ) : field.type === 'checkbox' ? (
+                      <label className="flex items-center gap-2">
+                        <input type="checkbox" className="accent-indigo-500 w-4 h-4" checked={!!formData[field.name]} onChange={e => updateField(field.name, e.target.checked)} />
+                        <span className="text-sm text-zinc-600 dark:text-zinc-400">{fieldPlaceholder}</span>
+                      </label>
+                    ) : (
+                      <input
+                        type="text" placeholder={fieldPlaceholder} maxLength={field.maxLength || 255}
+                        className={inputClass}
+                        value={(formData[field.name] as string) || ''} onChange={e => updateField(field.name, e.target.value)}
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          );})}
-        </div>
+          </div>
+        ))}
 
         {/* Resources — collapsible section */}
         <Collapsible className="mt-6" defaultOpen={false}>
-          <CollapsibleTrigger className="flex items-center gap-2 w-full py-3 px-4 rounded-xl border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-600 dark:text-zinc-400 hover:border-indigo-500/50 hover:bg-zinc-50 dark:hover:bg-zinc-900/30 transition text-right">
+          <CollapsibleTrigger className="flex items-center gap-2 w-full py-4 px-5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-sm text-zinc-600 dark:text-zinc-400 hover:border-indigo-500/50 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/5 transition text-right shadow-sm">
             <span>📎</span>
             <span>{locale === 'ar' ? 'أضف روابط ومصادر إضافية' : 'Additional Resources (optional)'}</span>
           </CollapsibleTrigger>
@@ -762,9 +786,9 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
 
         <button
           onClick={handleSubmit} disabled={loading}
-          className="w-full mt-6 py-3.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-400 text-zinc-950 font-bold text-sm transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-amber-500/20 disabled:opacity-50"
+          className="w-full mt-8 py-4 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white font-bold text-base transition hover:from-indigo-700 hover:to-indigo-600 hover:-translate-y-0.5 hover:shadow-xl disabled:opacity-50"
         >
-          {t('wzrd.analyze')} — {locale === 'ar' ? toArabicNumerals(config.cost) : config.cost} {t('wzrd.credits')}
+          🧠 {locale === 'ar' ? 'ابدأ التحليل' : t('wzrd.analyze')} — {locale === 'ar' ? toArabicNumerals(config.cost) : config.cost} {t('wzrd.credits')}
         </button>
       </div>
     </div>
