@@ -4,6 +4,7 @@
  * This replaces the monolithic 3,200-line routers.ts file.
  * Each domain has its own router file < 200 lines.
  */
+// Build: force-rebuild-20260323
 
 import { router } from "../_core/trpc";
 import { systemRouter } from "../_core/systemRouter";
