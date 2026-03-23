@@ -1,9 +1,10 @@
 import ToolPage from './ToolPage';
 export default function OfferCheck() {
   return <ToolPage config={{
-    id: 'offer_check', name: 'Offer Logic Check', icon: '📦', cost: 25,
+    id: 'offer_check', name: 'Offer Logic Check', nameAr: 'فحص منطق العرض', icon: '📦', cost: 25,
     endpoint: 'tools.offerCheck',
     description: 'Is your offer structure clear and your pricing logical?',
+    descriptionAr: 'هل عرضك واضح وتسعيرك منطقي؟',
     guideUrl: '/guides/offer-logic', guideTitle: 'Offer Logic 101',
     intro: {
       headline: 'Find out why smart products fail to sell',

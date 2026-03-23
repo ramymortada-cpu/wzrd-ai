@@ -1,9 +1,10 @@
 import ToolPage from './ToolPage';
 export default function MessageCheck() {
   return <ToolPage config={{
-    id: 'message_check', name: 'Message Check', icon: '💬', cost: 20,
+    id: 'message_check', name: 'Message Check', nameAr: 'فحص الرسالة', icon: '💬', cost: 20,
     endpoint: 'tools.messageCheck',
     description: 'Is your messaging consistent, clear, and differentiated?',
+    descriptionAr: 'هل رسالتك متسقة وواضحة ومميزة؟',
     guideUrl: '/guides/brand-identity', guideTitle: 'What Is Brand Identity',
     intro: {
       headline: 'Are you saying the same thing everywhere?',

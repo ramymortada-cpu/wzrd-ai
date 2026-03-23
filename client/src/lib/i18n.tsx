@@ -772,7 +772,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "wzrd.letPrimoHandle": "خلي Primo Marca ينفذ كل حاجة — استراتيجية، هوية، تنفيذ.",
     "wzrd.bookClarityCall": "احجز جلسة استشارة",
     "wzrd.viewServices": "الخدمات",
-    "wzrd.backTools": "← رجوع للأدوات",
+    "wzrd.backTools": "رجوع للأدوات →",
     "wzrd.analyze": "حلل",
     "wzrd.creditsUsed": "كريديت مستخدم",
     "wzrd.remaining": "متبقي",

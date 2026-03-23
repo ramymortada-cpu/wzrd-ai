@@ -1,9 +1,10 @@
 import ToolPage from './ToolPage';
 export default function LaunchReadiness() {
   return <ToolPage config={{
-    id: 'launch_readiness', name: 'Launch Readiness', icon: '🚀', cost: 30,
+    id: 'launch_readiness', name: 'Launch Readiness', nameAr: 'جاهزية الإطلاق', icon: '🚀', cost: 30,
     endpoint: 'tools.launchReadiness',
     description: 'How ready are you to go to market?',
+    descriptionAr: 'أد إيه أنت جاهز تنزل السوق؟',
     guideUrl: '/services-info', guideTitle: 'Business Takeoff Package',
     intro: {
       headline: 'Are you actually ready to launch?',

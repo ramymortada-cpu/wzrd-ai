@@ -18,10 +18,12 @@ export interface ToolField {
 export interface ToolConfig {
   id: string;
   name: string;
+  nameAr?: string;
   icon: string;
   cost: number;
   endpoint: string;
   description: string;
+  descriptionAr?: string;
   fields: ToolField[];
   guideUrl: string;
   guideTitle: string;
@@ -220,7 +222,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
 
   // ═══ PROCESSING VIEW ═══
   if (loading) {
-    return <ProcessingScreen toolName={config.name} locale={locale} />;
+    return <ProcessingScreen toolName={locale === 'ar' && config.nameAr ? config.nameAr : config.name} locale={locale} />;
   }
 
   // ═══ RESULT VIEW ═══
@@ -237,7 +239,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
             <div className={`inline-flex items-center justify-center w-28 h-28 rounded-full bg-gradient-to-br ${scoreColor(result.score)} mb-4`}>
               <span className="text-4xl font-bold text-zinc-950 font-mono">{result.score}</span>
             </div>
-            <h2 className="text-2xl font-bold">{config.name}</h2>
+            <h2 className="text-2xl font-bold">{locale === 'ar' && config.nameAr ? config.nameAr : config.name}</h2>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">{result.label} · {result.creditsUsed} {t('wzrd.creditsUsed')} · {result.creditsRemaining} {t('wzrd.remaining')}</p>
           </div>
 
@@ -301,8 +303,8 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
         <div className="flex items-center gap-3 mb-6">
           <span className="text-4xl">{config.icon}</span>
           <div>
-            <h1 className="text-xl font-bold">{config.name}</h1>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">{config.description} · ~{config.cost} {t('wzrd.credits')}</p>
+            <h1 className="text-xl font-bold">{locale === 'ar' && config.nameAr ? config.nameAr : config.name}</h1>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">{locale === 'ar' && config.descriptionAr ? config.descriptionAr : config.description} · ~{config.cost} {t('wzrd.credits')}</p>
           </div>
         </div>
 
