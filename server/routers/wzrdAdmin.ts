@@ -16,7 +16,7 @@ import { checkOwner } from "../_core/authorization";
 import { z } from "zod";
 import { logger } from "../_core/logger";
 import { eq, desc, sql, and, like } from "drizzle-orm";
-import { users, creditTransactions } from "../../drizzle/schema";
+import { users, creditTransactions, clients, projects } from "../../drizzle/schema";
 import { getDb } from "../db/index";
 import { TOOL_COSTS, SIGNUP_BONUS, getCreditStats, updateToolCost } from "../db/credits";
 
@@ -350,5 +350,188 @@ export const wzrdAdminRouter = router({
     } catch {
       return { events: [] };
     }
+  }),
+
+  // ═══════════════════════════════════════
+  // CMS — Homepage + Services content
+  // ═══════════════════════════════════════
+
+  /** Get full site config (CMS + settings + prompts) */
+  siteConfig: protectedProcedure.query(({ ctx }) => {
+    checkOwner(ctx);
+    const { getSiteConfig } = require('../siteConfig');
+    return getSiteConfig();
+  }),
+
+  /** Update homepage content */
+  updateHomepage: protectedProcedure
+    .input(z.object({
+      heroTitle: z.string().max(200).optional(),
+      heroTitleAr: z.string().max(200).optional(),
+      heroSubtitle: z.string().max(500).optional(),
+      heroSubtitleAr: z.string().max(500).optional(),
+      ctaText: z.string().max(100).optional(),
+      ctaTextAr: z.string().max(100).optional(),
+      ctaUrl: z.string().max(200).optional(),
+      showSignupForm: z.boolean().optional(),
+    }))
+    .mutation(({ input, ctx }) => {
+      checkOwner(ctx);
+      const { updateHomepage } = require('../siteConfig');
+      return { success: true, homepage: updateHomepage(input) };
+    }),
+
+  /** Update site settings */
+  updateSiteSettings: protectedProcedure
+    .input(z.object({
+      companyName: z.string().max(100).optional(),
+      whatsapp: z.string().max(20).optional(),
+      email: z.string().max(100).optional(),
+      instagram: z.string().max(100).optional(),
+      linkedin: z.string().max(100).optional(),
+      website: z.string().max(200).optional(),
+      taglineEn: z.string().max(200).optional(),
+      taglineAr: z.string().max(200).optional(),
+    }))
+    .mutation(({ input, ctx }) => {
+      checkOwner(ctx);
+      const { updateSiteSettings } = require('../siteConfig');
+      return { success: true, site: updateSiteSettings(input) };
+    }),
+
+  /** Update a service */
+  updateService: protectedProcedure
+    .input(z.object({
+      serviceId: z.string().max(50),
+      nameEn: z.string().max(100).optional(),
+      nameAr: z.string().max(100).optional(),
+      descEn: z.string().max(500).optional(),
+      descAr: z.string().max(500).optional(),
+      enabled: z.boolean().optional(),
+    }))
+    .mutation(({ input, ctx }) => {
+      checkOwner(ctx);
+      const { updateService } = require('../siteConfig');
+      const { serviceId, ...updates } = input;
+      return { success: updateService(serviceId, updates) };
+    }),
+
+  // ═══════════════════════════════════════
+  // PROMPTS — AI tool system prompts
+  // ═══════════════════════════════════════
+
+  /** Update an AI tool's system prompt */
+  updatePrompt: protectedProcedure
+    .input(z.object({
+      toolId: z.string().max(50),
+      systemPrompt: z.string().max(5000).optional(),
+      enabled: z.boolean().optional(),
+    }))
+    .mutation(({ input, ctx }) => {
+      checkOwner(ctx);
+      const { updateToolPrompt } = require('../siteConfig');
+      const { toolId, ...updates } = input;
+      return { success: updateToolPrompt(toolId, updates) };
+    }),
+
+  // ═══════════════════════════════════════
+  // TEAM — Internal users management
+  // ═══════════════════════════════════════
+
+  /** List all internal users (agency team) */
+  teamList: protectedProcedure.query(async ({ ctx }) => {
+    checkOwner(ctx);
+    const db = await getDb();
+    if (!db) return { team: [] };
+
+    const rows = await db.select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      role: users.role,
+      createdAt: users.createdAt,
+    })
+      .from(users)
+      .where(sql`signupSource IS NULL OR signupSource != 'website'`)
+      .orderBy(desc(users.createdAt))
+      .limit(50);
+
+    return { team: rows };
+  }),
+
+  /** Update team member role */
+  updateTeamRole: protectedProcedure
+    .input(z.object({
+      userId: z.number().int(),
+      role: z.enum(['user', 'admin']),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      checkOwner(ctx);
+      const db = await getDb();
+      if (!db) return { success: false };
+      await db.update(users).set({ role: input.role }).where(eq(users.id, input.userId));
+      return { success: true };
+    }),
+
+  // ═══════════════════════════════════════
+  // AGENCY — Clients + Projects overview
+  // ═══════════════════════════════════════
+
+  /** All agency clients overview */
+  agencyClients: protectedProcedure.query(async ({ ctx }) => {
+    checkOwner(ctx);
+    const db = await getDb();
+    if (!db) return { clients: [], total: 0 };
+
+    const rows = await db.select({
+      id: clients.id,
+      name: clients.name,
+      email: clients.email,
+      company: clients.companyName,
+      industry: clients.industry,
+      status: clients.status,
+      createdAt: clients.createdAt,
+    })
+      .from(clients)
+      .orderBy(desc(clients.createdAt))
+      .limit(100);
+
+    const [count] = await db.select({ count: sql<number>`count(*)` }).from(clients);
+
+    return { clients: rows, total: count?.count || 0 };
+  }),
+
+  /** All projects overview */
+  agencyProjects: protectedProcedure.query(async ({ ctx }) => {
+    checkOwner(ctx);
+    const db = await getDb();
+    if (!db) return { projects: [], total: 0, byStatus: {} };
+
+    const rows = await db.select({
+      id: projects.id,
+      name: projects.name,
+      status: projects.status,
+      stage: projects.stage,
+      clientId: projects.clientId,
+      createdAt: projects.createdAt,
+      updatedAt: projects.updatedAt,
+    })
+      .from(projects)
+      .orderBy(desc(projects.updatedAt))
+      .limit(100);
+
+    const [count] = await db.select({ count: sql<number>`count(*)` }).from(projects);
+
+    const byStatus: Record<string, number> = {};
+    rows.forEach((p: { status: string | null }) => { byStatus[p.status || 'unknown'] = (byStatus[p.status || 'unknown'] || 0) + 1; });
+
+    return { projects: rows, total: count?.count || 0, byStatus };
+  }),
+
+  /** Reset site config to defaults */
+  resetSiteConfig: protectedProcedure.mutation(({ ctx }) => {
+    checkOwner(ctx);
+    const { resetConfig } = require('../siteConfig');
+    return { success: true, config: resetConfig() };
   }),
 });

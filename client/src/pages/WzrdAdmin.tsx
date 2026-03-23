@@ -12,7 +12,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
-type Tab = 'overview' | 'users' | 'credits' | 'tools' | 'payments' | 'webhooks' | 'config';
+type Tab = 'overview' | 'users' | 'credits' | 'tools' | 'payments' | 'webhooks' | 'cms' | 'prompts' | 'team' | 'agency' | 'config';
 
 async function api(endpoint: string, input?: Record<string, unknown>) {
   const url = input
@@ -616,13 +616,302 @@ function EmailStatsSection() {
 }
 
 // ═══════════════════════════════════════
+// CMS TAB — Homepage + Site Settings
+// ═══════════════════════════════════════
+function CmsTab() {
+  const [sc, setSc] = useState<any>(null);
+  const [saving, setSaving] = useState('');
+
+  useEffect(() => { api('wzrdAdmin.siteConfig').then(setSc); }, []);
+
+  const saveHomepage = async () => {
+    if (!sc) return;
+    setSaving('Saving...');
+    await apiMutation('wzrdAdmin.updateHomepage', sc.homepage);
+    setSaving('✅ Saved');
+    setTimeout(() => setSaving(''), 2000);
+  };
+
+  const saveSite = async () => {
+    if (!sc) return;
+    setSaving('Saving...');
+    await apiMutation('wzrdAdmin.updateSiteSettings', sc.site);
+    setSaving('✅ Saved');
+    setTimeout(() => setSaving(''), 2000);
+  };
+
+  if (!sc) return <p className="text-zinc-500 text-sm">Loading...</p>;
+
+  const Field = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
+    <div>
+      <label className="block text-[10px] font-bold text-zinc-600 uppercase tracking-wider mb-1">{label}</label>
+      <input value={value || ''} onChange={e => onChange(e.target.value)}
+        className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-sm text-white outline-none focus:border-indigo-500" />
+    </div>
+  );
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold">Content Management</h3>
+        {saving && <span className="text-xs text-green-400">{saving}</span>}
+      </div>
+
+      {/* Homepage */}
+      <div className="mb-6 p-5 rounded-2xl border border-zinc-800 bg-zinc-900/20">
+        <h4 className="text-sm font-bold text-zinc-400 mb-3">🏠 Homepage</h4>
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <Field label="Hero Title (EN)" value={sc.homepage.heroTitle} onChange={v => setSc({...sc, homepage: {...sc.homepage, heroTitle: v}})} />
+          <Field label="Hero Title (AR)" value={sc.homepage.heroTitleAr} onChange={v => setSc({...sc, homepage: {...sc.homepage, heroTitleAr: v}})} />
+          <Field label="Subtitle (EN)" value={sc.homepage.heroSubtitle} onChange={v => setSc({...sc, homepage: {...sc.homepage, heroSubtitle: v}})} />
+          <Field label="Subtitle (AR)" value={sc.homepage.heroSubtitleAr} onChange={v => setSc({...sc, homepage: {...sc.homepage, heroSubtitleAr: v}})} />
+          <Field label="CTA Text (EN)" value={sc.homepage.ctaText} onChange={v => setSc({...sc, homepage: {...sc.homepage, ctaText: v}})} />
+          <Field label="CTA Text (AR)" value={sc.homepage.ctaTextAr} onChange={v => setSc({...sc, homepage: {...sc.homepage, ctaTextAr: v}})} />
+        </div>
+        <button onClick={saveHomepage} className="px-4 py-2 rounded-lg bg-indigo-500 text-white text-sm font-bold hover:bg-indigo-400 transition">Save Homepage</button>
+      </div>
+
+      {/* Site Settings */}
+      <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/20">
+        <h4 className="text-sm font-bold text-zinc-400 mb-3">🌐 Site Settings</h4>
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <Field label="Company Name" value={sc.site.companyName} onChange={v => setSc({...sc, site: {...sc.site, companyName: v}})} />
+          <Field label="WhatsApp" value={sc.site.whatsapp} onChange={v => setSc({...sc, site: {...sc.site, whatsapp: v}})} />
+          <Field label="Email" value={sc.site.email} onChange={v => setSc({...sc, site: {...sc.site, email: v}})} />
+          <Field label="Instagram" value={sc.site.instagram} onChange={v => setSc({...sc, site: {...sc.site, instagram: v}})} />
+          <Field label="LinkedIn" value={sc.site.linkedin} onChange={v => setSc({...sc, site: {...sc.site, linkedin: v}})} />
+          <Field label="Website" value={sc.site.website} onChange={v => setSc({...sc, site: {...sc.site, website: v}})} />
+          <Field label="Tagline (EN)" value={sc.site.taglineEn} onChange={v => setSc({...sc, site: {...sc.site, taglineEn: v}})} />
+          <Field label="Tagline (AR)" value={sc.site.taglineAr} onChange={v => setSc({...sc, site: {...sc.site, taglineAr: v}})} />
+        </div>
+        <button onClick={saveSite} className="px-4 py-2 rounded-lg bg-indigo-500 text-white text-sm font-bold hover:bg-indigo-400 transition">Save Settings</button>
+      </div>
+
+      {/* Services */}
+      <div className="mt-6 p-5 rounded-2xl border border-zinc-800 bg-zinc-900/20">
+        <h4 className="text-sm font-bold text-zinc-400 mb-3">📦 Services</h4>
+        <div className="space-y-2">
+          {sc.services?.services?.map((svc: any) => (
+            <div key={svc.id} className="flex items-center justify-between p-3 rounded-lg border border-zinc-800/50">
+              <div>
+                <p className="text-sm font-medium">{svc.nameEn} <span className="text-zinc-500">/ {svc.nameAr}</span></p>
+                <p className="text-[10px] text-zinc-600 uppercase">{svc.tier} tier</p>
+              </div>
+              <button onClick={async () => {
+                const newEnabled = !svc.enabled;
+                await apiMutation('wzrdAdmin.updateService', { serviceId: svc.id, enabled: newEnabled });
+                setSc({...sc, services: {...sc.services, services: sc.services.services.map((s: any) => s.id === svc.id ? {...s, enabled: newEnabled} : s)}});
+              }} className={`px-3 py-1 rounded-full text-xs font-bold ${svc.enabled ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
+                {svc.enabled ? 'Active' : 'Disabled'}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════
+// PROMPTS TAB — AI tool system prompts
+// ═══════════════════════════════════════
+function PromptsTab() {
+  const [sc, setSc] = useState<any>(null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [draft, setDraft] = useState('');
+  const [saving, setSaving] = useState('');
+
+  useEffect(() => { api('wzrdAdmin.siteConfig').then(setSc); }, []);
+
+  const savePrompt = async (toolId: string) => {
+    setSaving('Saving...');
+    await apiMutation('wzrdAdmin.updatePrompt', { toolId, systemPrompt: draft });
+    setSc({...sc, prompts: sc.prompts.map((p: any) => p.toolId === toolId ? {...p, systemPrompt: draft} : p)});
+    setEditing(null);
+    setSaving('✅');
+    setTimeout(() => setSaving(''), 2000);
+  };
+
+  if (!sc) return <p className="text-zinc-500 text-sm">Loading...</p>;
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold">AI Tool Prompts</h3>
+        {saving && <span className="text-xs text-green-400">{saving}</span>}
+      </div>
+      <p className="text-xs text-zinc-500 mb-4">Edit the system prompt each AI tool uses. Changes take effect immediately.</p>
+
+      <div className="space-y-3">
+        {sc.prompts?.map((p: any) => (
+          <div key={p.toolId} className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/20">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold">{p.toolName}</span>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full ${p.enabled ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
+                  {p.enabled ? 'Active' : 'Disabled'}
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={async () => {
+                  await apiMutation('wzrdAdmin.updatePrompt', { toolId: p.toolId, enabled: !p.enabled });
+                  setSc({...sc, prompts: sc.prompts.map((x: any) => x.toolId === p.toolId ? {...x, enabled: !x.enabled} : x)});
+                }} className="text-xs text-zinc-500 hover:text-amber-400 transition">
+                  {p.enabled ? 'Disable' : 'Enable'}
+                </button>
+                <button onClick={() => { setEditing(p.toolId); setDraft(p.systemPrompt); }} className="text-xs text-indigo-400 hover:text-indigo-300 transition">
+                  Edit Prompt
+                </button>
+              </div>
+            </div>
+
+            {editing === p.toolId ? (
+              <div>
+                <textarea value={draft} onChange={e => setDraft(e.target.value)} rows={6}
+                  className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-indigo-500/30 text-xs text-zinc-300 font-mono outline-none resize-y" />
+                <div className="flex gap-2 mt-2">
+                  <button onClick={() => savePrompt(p.toolId)} className="px-3 py-1.5 rounded-lg bg-green-500/20 text-green-400 text-xs font-bold">Save</button>
+                  <button onClick={() => setEditing(null)} className="px-3 py-1.5 rounded-lg text-zinc-500 text-xs">Cancel</button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-zinc-600 font-mono leading-relaxed line-clamp-3">{p.systemPrompt}</p>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════
+// TEAM TAB — Internal users
+// ═══════════════════════════════════════
+function TeamTab() {
+  const [data, setData] = useState<{ team: any[] } | null>(null);
+  useEffect(() => { api('wzrdAdmin.teamList').then(setData); }, []);
+
+  const changeRole = async (userId: number, role: string) => {
+    await apiMutation('wzrdAdmin.updateTeamRole', { userId, role });
+    setData(prev => prev ? { team: prev.team.map(u => u.id === userId ? {...u, role} : u) } : prev);
+  };
+
+  return (
+    <div>
+      <h3 className="text-lg font-bold mb-4">Team Members <span className="text-zinc-500 text-sm font-normal">({data?.team?.length || 0})</span></h3>
+
+      <div className="space-y-2">
+        {(data?.team || []).map((u: any) => (
+          <div key={u.id} className="flex items-center justify-between p-4 rounded-xl border border-zinc-800 bg-zinc-900/20">
+            <div>
+              <p className="text-sm font-medium">{u.name || 'Unnamed'}</p>
+              <p className="text-xs text-zinc-500">{u.email}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <select value={u.role} onChange={e => changeRole(u.id, e.target.value)}
+                className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white outline-none">
+                <option value="admin">Admin</option>
+                <option value="user">User</option>
+              </select>
+              <span className="text-xs text-zinc-600">{new Date(u.createdAt).toLocaleDateString()}</span>
+            </div>
+          </div>
+        ))}
+        {(!data?.team?.length) && <p className="text-zinc-600 text-sm py-8 text-center">No team members yet</p>}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════
+// AGENCY TAB — Clients + Projects overview
+// ═══════════════════════════════════════
+function AgencyTab() {
+  const [clients, setClients] = useState<any>(null);
+  const [projects, setProjects] = useState<any>(null);
+  const [view, setView] = useState<'clients' | 'projects'>('clients');
+
+  useEffect(() => {
+    api('wzrdAdmin.agencyClients').then(setClients);
+    api('wzrdAdmin.agencyProjects').then(setProjects);
+  }, []);
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold">Agency Overview</h3>
+        <div className="flex gap-1">
+          <button onClick={() => setView('clients')} className={`px-4 py-1.5 rounded-full text-xs font-medium transition ${view === 'clients' ? 'bg-indigo-500 text-white' : 'bg-zinc-900 text-zinc-500'}`}>
+            Clients ({clients?.total || 0})
+          </button>
+          <button onClick={() => setView('projects')} className={`px-4 py-1.5 rounded-full text-xs font-medium transition ${view === 'projects' ? 'bg-indigo-500 text-white' : 'bg-zinc-900 text-zinc-500'}`}>
+            Projects ({projects?.total || 0})
+          </button>
+        </div>
+      </div>
+
+      {/* Project status summary */}
+      {projects?.byStatus && Object.keys(projects.byStatus).length > 0 && (
+        <div className="grid grid-cols-4 gap-2 mb-4">
+          {Object.entries(projects.byStatus).map(([status, count]) => (
+            <StatCard key={status} label={status} value={count as number} color={status === 'active' ? 'text-green-400' : status === 'completed' ? 'text-indigo-400' : 'text-zinc-400'} />
+          ))}
+        </div>
+      )}
+
+      {view === 'clients' ? (
+        <div className="space-y-2">
+          {(clients?.clients || []).map((c: any) => (
+            <div key={c.id} className="flex items-center justify-between p-4 rounded-xl border border-zinc-800 bg-zinc-900/20">
+              <div>
+                <p className="text-sm font-medium">{c.name}</p>
+                <p className="text-xs text-zinc-500">{c.company || c.email} · {c.industry || 'No industry'}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className={`text-xs px-2 py-0.5 rounded-full ${c.status === 'active' ? 'bg-green-500/10 text-green-400' : c.status === 'completed' ? 'bg-indigo-500/10 text-indigo-400' : 'bg-zinc-800 text-zinc-500'}`}>
+                  {c.status}
+                </span>
+                <span className="text-xs text-zinc-600">{new Date(c.createdAt).toLocaleDateString()}</span>
+              </div>
+            </div>
+          ))}
+          {(!clients?.clients?.length) && <p className="text-zinc-600 text-sm py-8 text-center">No clients yet</p>}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {(projects?.projects || []).map((p: any) => (
+            <div key={p.id} className="flex items-center justify-between p-4 rounded-xl border border-zinc-800 bg-zinc-900/20">
+              <div>
+                <p className="text-sm font-medium">{p.name}</p>
+                <p className="text-xs text-zinc-500">Stage: {p.stage} · Client #{p.clientId}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className={`text-xs px-2 py-0.5 rounded-full ${p.status === 'active' ? 'bg-green-500/10 text-green-400' : p.status === 'completed' ? 'bg-indigo-500/10 text-indigo-400' : p.status === 'cancelled' ? 'bg-red-500/10 text-red-400' : 'bg-zinc-800 text-zinc-500'}`}>
+                  {p.status}
+                </span>
+                <span className="text-xs text-zinc-600">{new Date(p.updatedAt).toLocaleDateString()}</span>
+              </div>
+            </div>
+          ))}
+          {(!projects?.projects?.length) && <p className="text-zinc-600 text-sm py-8 text-center">No projects yet</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════
 // MAIN PAGE
 // ═══════════════════════════════════════
 const TABS: Array<{ id: Tab; label: string; icon: string }> = [
   { id: 'overview', label: 'Overview', icon: '📊' },
+  { id: 'cms', label: 'CMS', icon: '📝' },
+  { id: 'agency', label: 'Agency', icon: '🏢' },
   { id: 'users', label: 'Users', icon: '👥' },
   { id: 'credits', label: 'Credits', icon: '⚡' },
   { id: 'tools', label: 'Tools', icon: '🔬' },
+  { id: 'prompts', label: 'Prompts', icon: '🧠' },
+  { id: 'team', label: 'Team', icon: '👔' },
   { id: 'payments', label: 'Payments', icon: '💳' },
   { id: 'webhooks', label: 'Webhooks', icon: '🔔' },
   { id: 'config', label: 'Config', icon: '⚙️' },
@@ -661,9 +950,13 @@ export default function WzrdAdmin() {
 
         {/* Tab content */}
         {tab === 'overview' && <OverviewTab />}
+        {tab === 'cms' && <CmsTab />}
+        {tab === 'agency' && <AgencyTab />}
         {tab === 'users' && <UsersTab />}
         {tab === 'credits' && <CreditsTab />}
         {tab === 'tools' && <ToolsTab />}
+        {tab === 'prompts' && <PromptsTab />}
+        {tab === 'team' && <TeamTab />}
         {tab === 'payments' && <PaymentsTab />}
         {tab === 'webhooks' && <WebhooksTab />}
         {tab === 'config' && <ConfigTab />}
