@@ -69,14 +69,19 @@ interface ToolResult {
 const severityColor = (s: string) => s === 'high' ? 'text-red-400 border-red-400/20 bg-red-400/5' : s === 'medium' ? 'text-amber-400 border-amber-400/20 bg-amber-400/5' : 'text-green-400 border-green-400/20 bg-green-400/5';
 const scoreColor = (s: number) => s >= 70 ? 'from-green-400 to-cyan-400' : s >= 40 ? 'from-amber-400 to-orange-400' : 'from-red-400 to-pink-400';
 
-// Resources section — URLs + file upload
-const RESOURCE_URL_FIELDS = [
-  { name: 'instagramUrl', label: 'Instagram URL', labelAr: 'رابط Instagram', placeholder: 'https://instagram.com/...' },
-  { name: 'facebookUrl', label: 'Facebook URL', labelAr: 'رابط Facebook', placeholder: 'https://facebook.com/...' },
-  { name: 'linkedinUrl', label: 'LinkedIn URL', labelAr: 'رابط LinkedIn', placeholder: 'https://linkedin.com/...' },
-  { name: 'tiktokUrl', label: 'TikTok URL', labelAr: 'رابط TikTok', placeholder: 'https://tiktok.com/...' },
-  { name: 'websiteUrl', label: 'Website URL', labelAr: 'رابط الموقع', placeholder: 'https://...' },
-  { name: 'otherUrl', label: 'Other URL (Google Business, Behance, etc.)', labelAr: 'رابط تاني (Google Business, Behance)', placeholder: 'https://...' },
+// Resources — platform options for dynamic link list
+const PLATFORM_OPTIONS = [
+  { value: 'instagram', label: 'Instagram', labelAr: 'Instagram' },
+  { value: 'facebook', label: 'Facebook', labelAr: 'Facebook' },
+  { value: 'linkedin', label: 'LinkedIn', labelAr: 'LinkedIn' },
+  { value: 'tiktok', label: 'TikTok', labelAr: 'TikTok' },
+  { value: 'x', label: 'X (Twitter)', labelAr: 'X (Twitter)' },
+  { value: 'youtube', label: 'YouTube', labelAr: 'YouTube' },
+  { value: 'google_business', label: 'Google Business', labelAr: 'Google Business' },
+  { value: 'behance', label: 'Behance', labelAr: 'Behance' },
+  { value: 'dribbble', label: 'Dribbble', labelAr: 'Dribbble' },
+  { value: 'website', label: 'Website', labelAr: 'Website' },
+  { value: 'other', label: 'Other', labelAr: 'أخرى' },
 ] as const;
 
 const ACCEPTED_FILE_TYPES = '.pdf,.docx,.doc,.png,.jpg,.jpeg';
@@ -388,10 +393,22 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
   const [error, setError] = useState('');
   const [uploadedFile, setUploadedFile] = useState<{ file: File; text: string } | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [socialLinks, setSocialLinks] = useState<Array<{ platform: string; url: string }>>([]);
 
   const updateField = (name: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
+
+  // Sync socialLinks to formData (stored as JSON)
+  useEffect(() => {
+    setFormData(prev => ({ ...prev, socialLinks: JSON.stringify(socialLinks) }));
+  }, [socialLinks]);
+
+  const addSocialLink = () => setSocialLinks(prev => [...prev, { platform: 'instagram', url: '' }]);
+  const updateSocialLink = (i: number, field: 'platform' | 'url', value: string) => {
+    setSocialLinks(prev => prev.map((l, j) => (j === i ? { ...l, [field]: value } : l)));
+  };
+  const removeSocialLink = (i: number) => setSocialLinks(prev => prev.filter((_, j) => j !== i));
 
   const handleFileUpload = useCallback(async (file: File) => {
     setUploading(true);
@@ -552,7 +569,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
             </a>
           </div>
 
-          <button onClick={() => { setResult(null); setFormData({}); setUploadedFile(null); }} className="w-full mt-6 py-3 rounded-full border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-600 dark:text-zinc-400 hover:border-indigo-500 transition">
+          <button onClick={() => { setResult(null); setFormData({}); setUploadedFile(null); setSocialLinks([]); }} className="w-full mt-6 py-3 rounded-full border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-600 dark:text-zinc-400 hover:border-indigo-500 transition">
             {t('wzrd.runAgain')}
           </button>
         </div>
@@ -643,23 +660,47 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
             <span>{locale === 'ar' ? 'أضف روابط ومصادر إضافية' : 'Additional Resources (optional)'}</span>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="mt-4 space-y-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
-              {RESOURCE_URL_FIELDS.map(({ name, label, labelAr, placeholder }) => {
-                const fieldLabel = locale === 'ar' ? labelAr : label;
-                return (
-                  <div key={name}>
-                    <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1">{fieldLabel}</label>
-                    <input
-                      type="url"
-                      placeholder={placeholder}
-                      maxLength={500}
-                      className="w-full px-4 py-2.5 rounded-lg bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-600 text-sm outline-none focus:border-indigo-500 transition"
-                      value={(formData[name] as string) || ''}
-                      onChange={e => updateField(name, e.target.value)}
-                    />
-                  </div>
-                );
-              })}
+            <div className="mt-4 space-y-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+              <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">
+                {locale === 'ar' ? 'روابط ومصادر إضافية' : 'Additional Links'}
+              </p>
+              {socialLinks.map((link, i) => (
+                <div key={i} className="flex gap-2 items-start">
+                  <select
+                    value={link.platform}
+                    onChange={e => updateSocialLink(i, 'platform', e.target.value)}
+                    className="flex-shrink-0 w-36 px-3 py-2.5 rounded-lg bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white text-sm outline-none focus:border-indigo-500 transition"
+                  >
+                    {PLATFORM_OPTIONS.map(o => (
+                      <option key={o.value} value={o.value}>{locale === 'ar' ? o.labelAr : o.label}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="url"
+                    placeholder="https://..."
+                    maxLength={500}
+                    className="flex-1 min-w-0 px-3 py-2.5 rounded-lg bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-600 text-sm outline-none focus:border-indigo-500 transition"
+                    value={link.url}
+                    onChange={e => updateSocialLink(i, 'url', e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeSocialLink(i)}
+                    className="flex-shrink-0 p-2 rounded-lg text-zinc-500 hover:text-red-500 hover:bg-red-500/10 transition"
+                    title={locale === 'ar' ? 'حذف' : 'Remove'}
+                  >
+                    🗑
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addSocialLink}
+                className="flex items-center gap-1.5 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 py-1.5 px-2 rounded-lg hover:bg-indigo-500/10 transition"
+              >
+                <span>+</span>
+                <span>{locale === 'ar' ? 'أضف رابط' : 'Add link'}</span>
+              </button>
 
               {/* File upload */}
               <div>
