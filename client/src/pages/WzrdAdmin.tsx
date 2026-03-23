@@ -181,19 +181,22 @@ function UsersTab() {
                 <td className="py-2 pr-4">{u.newsletterOptIn ? <span className="text-green-600 text-xs">✓</span> : <span className="text-gray-400 text-xs">—</span>}</td>
                 <td className="py-2 pr-4 text-gray-400 text-xs">{new Date(u.createdAt).toLocaleDateString()}</td>
                 <td className="py-2">
+                  <div className="flex items-center gap-1">
                   {addingCredits === u.id ? (
                     <div className="flex items-center gap-1">
                       <input type="number" value={creditsAmount} onChange={e => setCreditsAmount(e.target.value)} 
-                        className="w-16 px-2 py-1 rounded bg-gray-50 border border-gray-300 text-xs text-white outline-none" />
-                      <button onClick={() => handleAddCredits(u.id)} className="px-2 py-1 rounded bg-green-500/20 text-green-600 text-xs hover:bg-green-500/30">Add</button>
+                        className="w-16 px-2 py-1 rounded bg-gray-50 border border-gray-300 text-xs outline-none" />
+                      <button onClick={() => handleAddCredits(u.id)} className="px-2 py-1 rounded bg-green-50 text-green-600 text-xs hover:bg-green-100">Add</button>
                       <button onClick={() => setAddingCredits(null)} className="px-2 py-1 rounded text-gray-400 text-xs hover:text-gray-600">✕</button>
                     </div>
                   ) : (
                     <button onClick={() => { setAddingCredits(u.id); setAddResult(''); }} 
-                      className="px-2 py-1 rounded bg-amber-50 text-amber-600 text-xs hover:bg-amber-500/20 transition">
+                      className="px-2 py-1 rounded bg-amber-50 text-amber-600 text-xs hover:bg-amber-100 transition">
                       + Credits
                     </button>
                   )}
+                  <button onClick={async () => { if(confirm('حذف المستخدم ده؟')) { await apiMutation('wzrdAdmin.deleteUser', { userId: u.id }); api('wzrdAdmin.users', { search: undefined, limit: 50, offset: 0 }).then(setData); }}} className="px-2 py-1 rounded text-red-400 text-xs hover:text-red-600 hover:bg-red-50 transition">🗑</button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -831,73 +834,160 @@ function TeamTab() {
 // AGENCY TAB — Clients + Projects overview
 // ═══════════════════════════════════════
 function AgencyTab() {
-  const [clients, setClients] = useState<any>(null);
-  const [projects, setProjects] = useState<any>(null);
+  const [clientsList, setClientsList] = useState<any>(null);
+  const [projectsList, setProjectsList] = useState<any>(null);
   const [view, setView] = useState<'clients' | 'projects'>('clients');
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState<Record<string, string>>({});
+  const [msg, setMsg] = useState('');
 
-  useEffect(() => {
-    api('wzrdAdmin.agencyClients').then(setClients);
-    api('wzrdAdmin.agencyProjects').then(setProjects);
-  }, []);
+  const reload = () => {
+    api('wzrdAdmin.agencyClients').then(setClientsList);
+    api('wzrdAdmin.agencyProjects').then(setProjectsList);
+  };
+  useEffect(() => { reload(); }, []);
+
+  const addClient = async () => {
+    if (!form.name) { setMsg('الاسم مطلوب'); return; }
+    await apiMutation('wzrdAdmin.addClient', form);
+    setForm({}); setShowForm(false); setMsg('✅ تم الإضافة'); reload();
+    setTimeout(() => setMsg(''), 2000);
+  };
+
+  const updateStatus = async (id: number, status: string, type: 'client' | 'project') => {
+    if (type === 'client') await apiMutation('wzrdAdmin.updateClient', { id, status });
+    else await apiMutation('wzrdAdmin.updateProject', { id, status });
+    reload();
+  };
+
+  const deleteClient = async (id: number) => {
+    if (!confirm('حذف العميل ده؟')) return;
+    await apiMutation('wzrdAdmin.deleteClient', { id });
+    reload();
+  };
+
+  const addProject = async () => {
+    if (!form.projectName || !form.clientId) { setMsg('الاسم والعميل مطلوبين'); return; }
+    await apiMutation('wzrdAdmin.addProject', {
+      name: form.projectName,
+      clientId: parseInt(form.clientId),
+      serviceType: form.serviceType || 'consultation',
+    });
+    setForm({}); setShowForm(false); setMsg('✅ تم الإضافة'); reload();
+    setTimeout(() => setMsg(''), 2000);
+  };
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold">Agency Overview</h3>
-        <div className="flex gap-1">
-          <button onClick={() => setView('clients')} className={`px-4 py-1.5 rounded-full text-xs font-medium transition ${view === 'clients' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-gray-50 text-gray-500'}`}>
-            Clients ({clients?.total || 0})
-          </button>
-          <button onClick={() => setView('projects')} className={`px-4 py-1.5 rounded-full text-xs font-medium transition ${view === 'projects' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-gray-50 text-gray-500'}`}>
-            Projects ({projects?.total || 0})
+        <h3 className="text-lg font-bold">Agency <span className="text-gray-400 text-sm font-normal">إدارة العملاء والمشاريع</span></h3>
+        <div className="flex gap-2">
+          <div className="flex gap-1">
+            <button onClick={() => setView('clients')} className={`px-4 py-1.5 rounded-full text-xs font-medium transition ${view === 'clients' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
+              العملاء ({clientsList?.total || 0})
+            </button>
+            <button onClick={() => setView('projects')} className={`px-4 py-1.5 rounded-full text-xs font-medium transition ${view === 'projects' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
+              المشاريع ({projectsList?.total || 0})
+            </button>
+          </div>
+          <button onClick={() => { setShowForm(!showForm); setForm({}); }} className="px-4 py-1.5 rounded-full text-xs font-bold bg-green-600 text-white hover:bg-green-500 transition">
+            + {view === 'clients' ? 'عميل جديد' : 'مشروع جديد'}
           </button>
         </div>
       </div>
 
-      {/* Project status summary */}
-      {projects?.byStatus && Object.keys(projects.byStatus).length > 0 && (
+      {msg && <p className="text-sm text-green-600 mb-3">{msg}</p>}
+
+      {/* Add Form */}
+      {showForm && view === 'clients' && (
+        <div className="p-5 rounded-xl border border-indigo-200 bg-indigo-50/50 mb-4 space-y-3">
+          <h4 className="text-sm font-bold text-indigo-700">إضافة عميل جديد</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <input placeholder="الاسم *" value={form.name || ''} onChange={e => setForm({...form, name: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-indigo-400" />
+            <input placeholder="اسم الشركة" value={form.companyName || ''} onChange={e => setForm({...form, companyName: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-indigo-400" />
+            <input placeholder="البريد الإلكتروني" value={form.email || ''} onChange={e => setForm({...form, email: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-indigo-400" />
+            <input placeholder="رقم الهاتف" value={form.phone || ''} onChange={e => setForm({...form, phone: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-indigo-400" />
+            <input placeholder="المجال" value={form.industry || ''} onChange={e => setForm({...form, industry: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-indigo-400" />
+            <select value={form.market || 'egypt'} onChange={e => setForm({...form, market: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none">
+              <option value="egypt">مصر</option><option value="ksa">السعودية</option><option value="uae">الإمارات</option><option value="other">أخرى</option>
+            </select>
+          </div>
+          <textarea placeholder="ملاحظات" value={form.notes || ''} onChange={e => setForm({...form, notes: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-indigo-400" rows={2} />
+          <div className="flex gap-2">
+            <button onClick={addClient} className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-500">إضافة</button>
+            <button onClick={() => setShowForm(false)} className="px-4 py-2 rounded-lg text-gray-500 text-sm">إلغاء</button>
+          </div>
+        </div>
+      )}
+
+      {showForm && view === 'projects' && (
+        <div className="p-5 rounded-xl border border-indigo-200 bg-indigo-50/50 mb-4 space-y-3">
+          <h4 className="text-sm font-bold text-indigo-700">إضافة مشروع جديد</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <input placeholder="اسم المشروع *" value={form.projectName || ''} onChange={e => setForm({...form, projectName: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-indigo-400" />
+            <select value={form.clientId || ''} onChange={e => setForm({...form, clientId: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none">
+              <option value="">اختر العميل *</option>
+              {(clientsList?.clients || []).map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+            <select value={form.serviceType || 'consultation'} onChange={e => setForm({...form, serviceType: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none">
+              <option value="business_health_check">فحص صحة البراند</option>
+              <option value="brand_identity">هوية بصرية</option>
+              <option value="starting_business_logic">إطار رسائل</option>
+              <option value="business_takeoff">نظام إطلاق</option>
+              <option value="consultation">استشارة</option>
+            </select>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={addProject} className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-500">إضافة</button>
+            <button onClick={() => setShowForm(false)} className="px-4 py-2 rounded-lg text-gray-500 text-sm">إلغاء</button>
+          </div>
+        </div>
+      )}
+
+      {/* Status summary */}
+      {projectsList?.byStatus && Object.keys(projectsList.byStatus).length > 0 && (
         <div className="grid grid-cols-4 gap-2 mb-4">
-          {Object.entries(projects.byStatus).map(([status, count]) => (
+          {Object.entries(projectsList.byStatus).map(([status, count]) => (
             <StatCard key={status} label={status} value={count as number} color={status === 'active' ? 'text-green-600' : status === 'completed' ? 'text-indigo-600' : 'text-gray-600'} />
           ))}
         </div>
       )}
 
+      {/* Lists */}
       {view === 'clients' ? (
         <div className="space-y-2">
-          {(clients?.clients || []).map((c: any) => (
-            <div key={c.id} className="flex items-center justify-between p-4 rounded-xl border border-gray-200 bg-white">
+          {(clientsList?.clients || []).map((c: any) => (
+            <div key={c.id} className="flex items-center justify-between p-4 rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition">
               <div>
-                <p className="text-sm font-medium">{c.name}</p>
-                <p className="text-xs text-gray-500">{c.company || c.email} · {c.industry || 'No industry'}</p>
+                <p className="text-sm font-medium">{c.name} {c.company && <span className="text-gray-400">· {c.company}</span>}</p>
+                <p className="text-xs text-gray-500">{c.email || ''} · {c.industry || ''}</p>
               </div>
-              <div className="flex items-center gap-3">
-                <span className={`text-xs px-2 py-0.5 rounded-full ${c.status === 'active' ? 'bg-green-50 text-green-600' : c.status === 'completed' ? 'bg-indigo-50 text-indigo-600' : 'bg-gray-100 text-gray-500'}`}>
-                  {c.status}
-                </span>
-                <span className="text-xs text-gray-400">{new Date(c.createdAt).toLocaleDateString()}</span>
+              <div className="flex items-center gap-2">
+                <select value={c.status} onChange={e => updateStatus(c.id, e.target.value, 'client')} className="px-2 py-1 rounded-lg border border-gray-200 text-xs outline-none">
+                  <option value="lead">Lead</option><option value="active">Active</option><option value="completed">Completed</option><option value="paused">Paused</option>
+                </select>
+                <button onClick={() => deleteClient(c.id)} className="text-xs text-red-400 hover:text-red-600 transition">🗑</button>
               </div>
             </div>
           ))}
-          {(!clients?.clients?.length) && <p className="text-gray-400 text-sm py-8 text-center">No clients yet</p>}
+          {(!clientsList?.clients?.length) && <p className="text-gray-400 text-sm py-8 text-center">مفيش عملاء لسه</p>}
         </div>
       ) : (
         <div className="space-y-2">
-          {(projects?.projects || []).map((p: any) => (
-            <div key={p.id} className="flex items-center justify-between p-4 rounded-xl border border-gray-200 bg-white">
+          {(projectsList?.projects || []).map((p: any) => (
+            <div key={p.id} className="flex items-center justify-between p-4 rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition">
               <div>
                 <p className="text-sm font-medium">{p.name}</p>
-                <p className="text-xs text-gray-500">Stage: {p.stage} · Client #{p.clientId}</p>
+                <p className="text-xs text-gray-500">المرحلة: {p.stage} · عميل #{p.clientId}</p>
               </div>
-              <div className="flex items-center gap-3">
-                <span className={`text-xs px-2 py-0.5 rounded-full ${p.status === 'active' ? 'bg-green-50 text-green-600' : p.status === 'completed' ? 'bg-indigo-50 text-indigo-600' : p.status === 'cancelled' ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
-                  {p.status}
-                </span>
-                <span className="text-xs text-gray-400">{new Date(p.updatedAt).toLocaleDateString()}</span>
+              <div className="flex items-center gap-2">
+                <select value={p.status} onChange={e => updateStatus(p.id, e.target.value, 'project')} className="px-2 py-1 rounded-lg border border-gray-200 text-xs outline-none">
+                  <option value="active">Active</option><option value="paused">Paused</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option>
+                </select>
               </div>
             </div>
           ))}
-          {(!projects?.projects?.length) && <p className="text-gray-400 text-sm py-8 text-center">No projects yet</p>}
+          {(!projectsList?.projects?.length) && <p className="text-gray-400 text-sm py-8 text-center">مفيش مشاريع لسه</p>}
         </div>
       )}
     </div>

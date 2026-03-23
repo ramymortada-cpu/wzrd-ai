@@ -534,4 +534,224 @@ export const wzrdAdminRouter = router({
     const { resetConfig } = require('../siteConfig');
     return { success: true, config: resetConfig() };
   }),
+
+  // ═══════════════════════════════════════
+  // CLIENTS CRUD
+  // ═══════════════════════════════════════
+
+  addClient: protectedProcedure
+    .input(z.object({
+      name: z.string().max(255),
+      companyName: z.string().max(255).optional(),
+      email: z.string().max(320).optional(),
+      phone: z.string().max(50).optional(),
+      market: z.enum(['ksa', 'egypt', 'uae', 'other']).optional(),
+      industry: z.string().max(255).optional(),
+      website: z.string().max(500).optional(),
+      notes: z.string().max(5000).optional(),
+      status: z.enum(['lead', 'active', 'completed', 'paused']).optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      checkOwner(ctx);
+      const db = await getDb();
+      if (!db) return { success: false, error: 'No DB' };
+      const result = await db.insert(clients).values({
+        name: input.name,
+        companyName: input.companyName || null,
+        email: input.email || null,
+        phone: input.phone || null,
+        market: input.market || 'egypt',
+        industry: input.industry || null,
+        website: input.website || null,
+        notes: input.notes || null,
+        status: input.status || 'lead',
+      });
+      return { success: true, id: result[0]?.insertId };
+    }),
+
+  updateClient: protectedProcedure
+    .input(z.object({
+      id: z.number().int(),
+      name: z.string().max(255).optional(),
+      companyName: z.string().max(255).optional(),
+      email: z.string().max(320).optional(),
+      phone: z.string().max(50).optional(),
+      market: z.enum(['ksa', 'egypt', 'uae', 'other']).optional(),
+      industry: z.string().max(255).optional(),
+      website: z.string().max(500).optional(),
+      notes: z.string().max(5000).optional(),
+      status: z.enum(['lead', 'active', 'completed', 'paused']).optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      checkOwner(ctx);
+      const db = await getDb();
+      if (!db) return { success: false };
+      const { id, ...updates } = input;
+      const cleanUpdates: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(updates)) { if (v !== undefined) cleanUpdates[k] = v; }
+      if (Object.keys(cleanUpdates).length > 0) {
+        await db.update(clients).set(cleanUpdates).where(eq(clients.id, id));
+      }
+      return { success: true };
+    }),
+
+  deleteClient: protectedProcedure
+    .input(z.object({ id: z.number().int() }))
+    .mutation(async ({ input, ctx }) => {
+      checkOwner(ctx);
+      const db = await getDb();
+      if (!db) return { success: false };
+      await db.update(clients).set({ deletedAt: new Date() }).where(eq(clients.id, input.id));
+      return { success: true };
+    }),
+
+  // ═══════════════════════════════════════
+  // PROJECTS CRUD
+  // ═══════════════════════════════════════
+
+  addProject: protectedProcedure
+    .input(z.object({
+      clientId: z.number().int(),
+      name: z.string().max(255),
+      serviceType: z.enum(['business_health_check', 'starting_business_logic', 'brand_identity', 'business_takeoff', 'consultation']),
+      stage: z.enum(['diagnose', 'design', 'deploy', 'optimize', 'completed']).optional(),
+      status: z.enum(['active', 'paused', 'completed', 'cancelled']).optional(),
+      price: z.string().max(20).optional(),
+      currency: z.string().max(10).optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      checkOwner(ctx);
+      const db = await getDb();
+      if (!db) return { success: false };
+      const result = await db.insert(projects).values({
+        clientId: input.clientId,
+        name: input.name,
+        serviceType: input.serviceType,
+        stage: input.stage || 'diagnose',
+        status: input.status || 'active',
+        price: input.price || null,
+        currency: input.currency || 'EGP',
+      });
+      return { success: true, id: result[0]?.insertId };
+    }),
+
+  updateProject: protectedProcedure
+    .input(z.object({
+      id: z.number().int(),
+      name: z.string().max(255).optional(),
+      stage: z.enum(['diagnose', 'design', 'deploy', 'optimize', 'completed']).optional(),
+      status: z.enum(['active', 'paused', 'completed', 'cancelled']).optional(),
+      price: z.string().max(20).optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      checkOwner(ctx);
+      const db = await getDb();
+      if (!db) return { success: false };
+      const { id, ...updates } = input;
+      const cleanUpdates: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(updates)) { if (v !== undefined) cleanUpdates[k] = v; }
+      if (Object.keys(cleanUpdates).length > 0) {
+        await db.update(projects).set(cleanUpdates).where(eq(projects.id, id));
+      }
+      return { success: true };
+    }),
+
+  // ═══════════════════════════════════════
+  // USER MANAGEMENT
+  // ═══════════════════════════════════════
+
+  deleteUser: protectedProcedure
+    .input(z.object({ userId: z.number().int() }))
+    .mutation(async ({ input, ctx }) => {
+      checkOwner(ctx);
+      const db = await getDb();
+      if (!db) return { success: false };
+      // Don't allow deleting yourself
+      const u = ctx.user as { id?: number } | null;
+      if (u?.id === input.userId) return { success: false, error: 'Cannot delete yourself' };
+      await db.delete(users).where(eq(users.id, input.userId));
+      return { success: true };
+    }),
+
+  // ═══════════════════════════════════════
+  // TOOL RUN RESULTS (history)
+  // ═══════════════════════════════════════
+
+  toolRunHistory: protectedProcedure
+    .input(z.object({ limit: z.number().int().max(200).optional() }))
+    .query(async ({ input, ctx }) => {
+      checkOwner(ctx);
+      const db = await getDb();
+      if (!db) return { runs: [] };
+
+      const rows = await db.select({
+        id: creditTransactions.id,
+        userId: creditTransactions.userId,
+        type: creditTransactions.type,
+        toolName: creditTransactions.toolName,
+        amount: creditTransactions.amount,
+        createdAt: creditTransactions.createdAt,
+      })
+        .from(creditTransactions)
+        .where(eq(creditTransactions.type, 'tool_usage'))
+        .orderBy(desc(creditTransactions.createdAt))
+        .limit(input?.limit || 50);
+
+      return { runs: rows };
+    }),
+
+  // ═══════════════════════════════════════
+  // NEWSLETTER SUBSCRIBERS
+  // ═══════════════════════════════════════
+
+  subscribersList: protectedProcedure.query(async ({ ctx }) => {
+    checkOwner(ctx);
+    const db = await getDb();
+    if (!db) return { subscribers: [] };
+
+    const rows = await db.select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      createdAt: users.createdAt,
+    })
+      .from(users)
+      .where(eq(users.newsletterOptIn, 1))
+      .orderBy(desc(users.createdAt))
+      .limit(200);
+
+    return { subscribers: rows };
+  }),
+
+  removeSubscriber: protectedProcedure
+    .input(z.object({ userId: z.number().int() }))
+    .mutation(async ({ input, ctx }) => {
+      checkOwner(ctx);
+      const db = await getDb();
+      if (!db) return { success: false };
+      await db.update(users).set({ newsletterOptIn: 0 }).where(eq(users.id, input.userId));
+      return { success: true };
+    }),
+
+  // ═══════════════════════════════════════
+  // ADMIN ACTIVITY LOG
+  // ═══════════════════════════════════════
+
+  activityLog: protectedProcedure.query(async ({ ctx }) => {
+    checkOwner(ctx);
+    // For now, return LLM usage log as activity proxy
+    const db = await getDb();
+    if (!db) return { activities: [] };
+
+    try {
+      const { llmUsageLog } = await import('../../drizzle/schema');
+      const rows = await db.select()
+        .from(llmUsageLog)
+        .orderBy(desc(llmUsageLog.createdAt))
+        .limit(50);
+      return { activities: rows };
+    } catch {
+      return { activities: [] };
+    }
+  }),
 });
