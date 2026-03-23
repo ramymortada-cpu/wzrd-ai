@@ -13,7 +13,7 @@
  * 4. Report is stored and can be re-downloaded
  */
 
-import { protectedProcedure, router } from "../_core/trpc";
+import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { logger } from "../_core/logger";
 import { invokeClaude } from "../_core/llmProviders";
@@ -130,8 +130,8 @@ async function deductPremiumCredits(userId: number, amount: number, tool: string
 
 export const premiumRouter = router({
 
-  /** Get premium pricing */
-  pricing: protectedProcedure.query(() => PREMIUM_PRICES),
+  /** Get premium pricing (public — show on landing/tools) */
+  pricing: publicProcedure.query(() => PREMIUM_PRICES),
 
   /** Generate premium full report */
   generateReport: protectedProcedure
@@ -215,8 +215,8 @@ export const premiumRouter = router({
       }
     }),
 
-  /** Check if Claude is available */
-  status: protectedProcedure.query(() => {
+  /** Check if Claude is available (public — for tools CTA) */
+  status: publicProcedure.query(() => {
     const { ENV } = require('../_core/env');
     return {
       claudeAvailable: !!ENV.claudeApiKey,
