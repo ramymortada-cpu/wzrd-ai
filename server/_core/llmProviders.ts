@@ -178,16 +178,17 @@ const PROVIDER_ROUTING: Record<string, LLMProvider> = {
   quality: 'groq',
   default: 'groq',
 
-  // Claude — smart, premium, client-facing
-  proposal: 'claude',
-  diagnosis: 'claude',
-  deliverable: 'claude',
+  // All use Groq when Claude key not set
+  proposal: 'groq',
+  diagnosis: 'groq',
+  deliverable: 'groq',
 };
 
 /**
  * Pick the right provider based on context.
  */
 export function routeToProvider(context: string): LLMProvider {
+  if (!ENV.claudeApiKey) return 'groq';
   // If only one provider is configured, use that one
   if (ENV.groqApiKey && !ENV.claudeApiKey) return 'groq';
   if (ENV.claudeApiKey && !ENV.groqApiKey) return 'claude';
