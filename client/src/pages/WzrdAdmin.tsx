@@ -1,13 +1,6 @@
 /**
  * WZRD AI Admin — manages the public WZRD AI system.
- * 
- * Tabs:
- * 1. Overview — key metrics dashboard
- * 2. Users — public signups list + search
- * 3. Credits — transaction log + filters
- * 4. Tools — usage analytics per tool
- * 5. Payments — purchase log
- * 6. Config — system config + newsletter + test email
+ * Sidebar nav, bilingual, improved UX.
  */
 import { useState, useEffect, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -37,14 +30,77 @@ async function apiMutation(endpoint: string, input?: Record<string, unknown>) {
   return data?.result?.data?.json ?? data?.result?.data ?? null;
 }
 
+function timeAgo(date: Date) {
+  const s = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (s < 60) return 'now';
+  if (s < 3600) return `${Math.floor(s / 60)}m`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h`;
+  return `${Math.floor(s / 86400)}d`;
+}
+
 // ═══════════════════════════════════════
-// STAT CARD
+// SHARED COMPONENTS
 // ═══════════════════════════════════════
-function StatCard({ label, value, sub, color = 'text-gray-900' }: { label: string; value: string | number; sub?: string; color?: string }) {
+function LoadingSkeleton() {
   return (
-    <div className="p-4 rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition">
-      <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-1">{label}</p>
-      <p className={`text-2xl font-bold font-mono ${color}`}>{value}</p>
+    <div className="space-y-4 animate-pulse">
+      <div className="h-8 bg-gray-200 rounded w-1/3" />
+      <div className="grid grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-24 bg-gray-200 rounded-xl" />
+        ))}
+      </div>
+      <div className="h-48 bg-gray-200 rounded-xl" />
+    </div>
+  );
+}
+
+function StatusBadge({ status, t }: { status: string; t: (ar: string, en: string) => string }) {
+  const map: Record<string, { ar: string; en: string; cls: string }> = {
+    active: { ar: 'نشط', en: 'Active', cls: 'bg-green-100 text-green-700' },
+    paused: { ar: 'متوقف', en: 'Paused', cls: 'bg-amber-100 text-amber-700' },
+    completed: { ar: 'مكتمل', en: 'Completed', cls: 'bg-blue-100 text-blue-700' },
+    cancelled: { ar: 'ملغي', en: 'Cancelled', cls: 'bg-red-100 text-red-700' },
+    lead: { ar: 'ليد', en: 'Lead', cls: 'bg-gray-100 text-gray-600' },
+  };
+  const m = map[status] || { ar: status, en: status, cls: 'bg-gray-100 text-gray-600' };
+  return <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ${m.cls}`}>{t(m.ar, m.en)}</span>;
+}
+
+function EmptyState({ icon, message }: { icon: string; message: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <span className="text-5xl mb-4 opacity-50">{icon}</span>
+      <p className="text-gray-500 text-sm">{message}</p>
+    </div>
+  );
+}
+
+function Toast({ message, onDismiss }: { message: string; onDismiss: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onDismiss, 3000);
+    return () => clearTimeout(t);
+  }, [onDismiss]);
+  return (
+    <div className="fixed top-0 left-0 right-0 z-[100] bg-green-600 text-white py-3 px-6 text-center text-sm font-medium shadow-lg">
+      {message}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════
+// STAT CARD — icon, accent border, gradient, count-up
+// ═══════════════════════════════════════
+function StatCard({ label, value, sub, icon, accent = 'border-l-indigo-500', gradient = 'from-indigo-50/50 to-white' }: {
+  label: string; value: string | number; sub?: string; icon: string; accent?: string; gradient?: string;
+}) {
+  return (
+    <div className={`p-5 rounded-xl border border-gray-200 bg-gradient-to-br ${gradient} shadow-sm hover:shadow-md transition-all border-l-4 ${accent}`}>
+      <div className="flex items-center gap-2 mb-1">
+        <span className="text-xl">{icon}</span>
+        <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">{label}</p>
+      </div>
+      <p className="text-2xl font-bold font-mono text-gray-900">{typeof value === 'number' ? value.toLocaleString() : value}</p>
       {sub && <p className="text-[10px] text-gray-400 mt-1">{sub}</p>}
     </div>
   );
@@ -69,33 +125,50 @@ type T = (ar: string, en: string) => string;
 // ═══════════════════════════════════════
 function OverviewTab({ t }: { t: T }) {
   const [data, setData] = useState<Record<string, any> | null>(null);
+  const [recentRuns, setRecentRuns] = useState<{ runs: any[] } | null>(null);
   useEffect(() => { api('wzrdAdmin.dashboard').then(setData); }, []);
+  useEffect(() => { api('wzrdAdmin.toolRunHistory', { limit: 5 }).then(setRecentRuns); }, []);
 
-  if (!data) return <p className="text-gray-500 text-sm animate-pulse">{t('جاري التحميل...', 'Loading...')}</p>;
+  if (!data) return <LoadingSkeleton />;
 
   return (
-    <div>
-      <h3 className="text-lg font-bold mb-4">WZRD AI {t('نظرة عامة', 'Overview')}</h3>
-      
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <StatCard label={t('إجمالي التسجيلات', 'Total Signups')} value={data.users?.total || 0} sub={`+${data.users?.today || 0} ${t('النهاردة', 'today')}`} color="text-indigo-600" />
-        <StatCard label={t('هذا الأسبوع', 'This Week')} value={data.users?.thisWeek || 0} color="text-cyan-400" />
-        <StatCard label={t('عمليات التشخيص', 'Tool Runs')} value={data.tools?.totalRuns || 0} sub={`${t('متوسط النتيجة', 'Avg score')}: ${data.tools?.avgScore || '—'}`} color="text-amber-600" />
-        <StatCard label={t('مشتركين النشرة', 'Newsletter Subs')} value={data.newsletter?.subscribers || 0} color="text-green-600" />
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatCard label={t('إجمالي التسجيلات', 'Total Signups')} value={data.users?.total || 0} sub={`+${data.users?.today || 0} ${t('النهاردة', 'today')}`} icon="👥" accent="border-l-indigo-500" gradient="from-indigo-50/50 to-white" />
+        <StatCard label={t('هذا الأسبوع', 'This Week')} value={data.users?.thisWeek || 0} icon="📅" accent="border-l-cyan-500" gradient="from-cyan-50/50 to-white" />
+        <StatCard label={t('عمليات التشخيص', 'Tool Runs')} value={data.tools?.totalRuns || 0} sub={`${t('متوسط النتيجة', 'Avg score')}: ${data.tools?.avgScore || '—'}`} icon="🔬" accent="border-l-amber-500" gradient="from-amber-50/50 to-white" />
+        <StatCard label={t('مشتركين النشرة', 'Newsletter Subs')} value={data.newsletter?.subscribers || 0} icon="📬" accent="border-l-green-500" gradient="from-green-50/50 to-white" />
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <StatCard label={t('كريدت صادر', 'Credits Issued')} value={data.credits?.totalIssued || 0} icon="⚡" accent="border-l-emerald-500" gradient="from-emerald-50/50 to-white" />
+        <StatCard label={t('كريدت مستخدم', 'Credits Used')} value={data.credits?.totalUsed || 0} icon="📉" accent="border-l-red-500" gradient="from-red-50/50 to-white" />
+        <StatCard label={t('إيرادات الكريدت', 'Credit Revenue')} value={`${(data.revenue?.totalCreditsRevenue || 0).toLocaleString()} ${t('كريدت', 'credits')}`} icon="💰" accent="border-l-amber-500" gradient="from-amber-50/50 to-white" />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-        <StatCard label={t('كريدت صادر', 'Credits Issued')} value={(data.credits?.totalIssued || 0).toLocaleString()} color="text-emerald-400" />
-        <StatCard label={t('كريدت مستخدم', 'Credits Used')} value={(data.credits?.totalUsed || 0).toLocaleString()} color="text-red-600" />
-        <StatCard label={t('إيرادات الكريدت', 'Credit Revenue')} value={`${(data.revenue?.totalCreditsRevenue || 0).toLocaleString()} ${t('كريدت', 'credits')}`} color="text-amber-600" />
-      </div>
+      {(recentRuns?.runs?.length ?? 0) > 0 && (
+        <div className="p-5 rounded-xl border border-gray-200 bg-white shadow-sm">
+          <h4 className="text-sm font-bold text-gray-600 mb-3">{t('آخر النشاطات', 'Recent Activity')}</h4>
+          <div className="space-y-2">
+            {recentRuns!.runs.slice(0, 5).map((r: any) => (
+              <div key={r.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                <div>
+                  <span className="text-sm font-medium">User #{r.userId}</span>
+                  <span className="text-gray-500 mx-2">·</span>
+                  <span className="text-sm text-gray-600">{r.toolName?.replace(/_/g, ' ')}</span>
+                </div>
+                <span className="text-xs text-gray-400">{timeAgo(new Date(r.createdAt))} ago</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {data.tools?.topTools?.length > 0 && (
-        <div>
-          <h4 className="text-sm font-bold text-gray-600 mb-2">{t('أكتر الأدوات استخداماً', 'Top Tools')}</h4>
+        <div className="p-5 rounded-xl border border-gray-200 bg-white shadow-sm">
+          <h4 className="text-sm font-bold text-gray-600 mb-3">{t('أكتر الأدوات استخداماً', 'Top Tools')}</h4>
           <div className="space-y-2">
             {data.tools.topTools.map((item: any) => (
-              <div key={item.tool} className="flex items-center justify-between p-3 rounded-lg border border-gray-200 bg-white">
+              <div key={item.tool} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition">
                 <span className="text-sm font-medium">{item.tool?.replace(/_/g, ' ')}</span>
                 <div className="flex gap-4">
                   <span className="text-xs text-gray-500">{item.uses} {t('عملية', 'runs')}</span>
@@ -113,16 +186,19 @@ function OverviewTab({ t }: { t: T }) {
 // ═══════════════════════════════════════
 // USERS TAB
 // ═══════════════════════════════════════
+const PAGE_SIZE = 20;
+
 function UsersTab({ t }: { t: T }) {
   const [data, setData] = useState<{ users: any[]; total: number } | null>(null);
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(0);
   const [addingCredits, setAddingCredits] = useState<number | null>(null);
   const [creditsAmount, setCreditsAmount] = useState('50');
   const [addResult, setAddResult] = useState('');
 
   const load = useCallback(() => {
-    api('wzrdAdmin.users', { search: search || undefined, limit: 50, offset: 0 }).then(setData);
-  }, [search]);
+    api('wzrdAdmin.users', { search: search || undefined, limit: PAGE_SIZE, offset: page * PAGE_SIZE }).then(setData);
+  }, [search, page]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -158,10 +234,10 @@ function UsersTab({ t }: { t: T }) {
             className="px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 w-64 outline-none focus:border-indigo-500" />
         </div>
       </div>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-xs text-gray-500 border-b border-gray-200">
+            <tr className="text-left text-xs text-gray-500 bg-gray-50 border-b border-gray-200">
               <th className="pb-2 pr-4">{t('الاسم', 'Name')}</th>
               <th className="pb-2 pr-4">{t('البريد', 'Email')}</th>
               <th className="pb-2 pr-4">{t('الشركة', 'Company')}</th>
@@ -173,8 +249,8 @@ function UsersTab({ t }: { t: T }) {
             </tr>
           </thead>
           <tbody>
-            {(data?.users || []).map((u: any) => (
-              <tr key={u.id} className="border-b border-gray-200/50 hover:bg-white">
+            {(data?.users || []).map((u: any, i: number) => (
+              <tr key={u.id} className={`border-b border-gray-100 hover:bg-gray-50 transition ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
                 <td className="py-2 pr-4 font-medium">{u.name || '—'}</td>
                 <td className="py-2 pr-4 text-gray-600">{u.email}</td>
                 <td className="py-2 pr-4 text-gray-500">{u.company || '—'}</td>
@@ -197,14 +273,23 @@ function UsersTab({ t }: { t: T }) {
                       + {t('كريدت', 'Credits')}
                     </button>
                   )}
-                  <button onClick={async () => { if(confirm(t('حذف المستخدم ده؟', 'Delete this user?'))) { await apiMutation('wzrdAdmin.deleteUser', { userId: u.id }); api('wzrdAdmin.users', { search: undefined, limit: 50, offset: 0 }).then(setData); }}} className="px-2 py-1 rounded text-red-400 text-xs hover:text-red-600 hover:bg-red-50 transition">🗑</button>
+                  <button onClick={async () => { if(confirm(t('حذف المستخدم ده؟', 'Delete this user?'))) { await apiMutation('wzrdAdmin.deleteUser', { userId: u.id }); load(); }}} className="px-2 py-1 rounded text-red-400 text-xs hover:text-red-600 hover:bg-red-50 transition">🗑</button>
                   </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-        {(!data?.users?.length) && <p className="text-gray-400 text-sm py-8 text-center">{t('مفيش مستخدمين لسه', 'No users yet')}</p>}
+        {(!data?.users?.length) && <EmptyState icon="👥" message={t('مفيش مستخدمين لسه', 'No users yet')} />}
+        {data && data.total > PAGE_SIZE && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50">
+            <span className="text-xs text-gray-500">{t('صفحة', 'Page')} {page + 1} / {Math.ceil(data.total / PAGE_SIZE)}</span>
+            <div className="flex gap-2">
+              <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0} className="px-3 py-1 rounded bg-white border border-gray-200 text-xs disabled:opacity-50">{t('السابق', 'Previous')}</button>
+              <button onClick={() => setPage(p => p + 1)} disabled={(page + 1) * PAGE_SIZE >= data.total} className="px-3 py-1 rounded bg-white border border-gray-200 text-xs disabled:opacity-50">{t('التالي', 'Next')}</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -278,7 +363,7 @@ function CreditsTab({ t }: { t: T }) {
             </div>
           </div>
         ))}
-        {(!data?.transactions?.length) && <p className="text-gray-400 text-sm py-8 text-center">{t('مفيش معاملات لسه', 'No transactions yet')}</p>}
+        {(!data?.transactions?.length) && <EmptyState icon="⚡" message={t('مفيش معاملات لسه', 'No transactions yet')} />}
       </div>
     </div>
   );
@@ -379,7 +464,7 @@ function PaymentsTab({ t }: { t: T }) {
             </div>
           );
         })}
-        {(!data?.payments?.length) && <p className="text-gray-400 text-sm py-8 text-center">{t('مفيش مدفوعات لسه', 'No payments yet')}</p>}
+        {(!data?.payments?.length) && <EmptyState icon="💳" message={t('مفيش مدفوعات لسه', 'No payments yet')} />}
       </div>
     </div>
   );
@@ -591,9 +676,9 @@ function EmailStatsSection({ t }: { t: T }) {
     <div className="mt-6">
       <h4 className="text-sm font-bold text-gray-600 mb-3">📧 {t('تحليلات البريد', 'Email Analytics')}</h4>
       <div className="grid grid-cols-3 gap-3 mb-4">
-        <StatCard label="Sent" value={stats.totalSent} color="text-green-600" />
-        <StatCard label="Failed" value={stats.totalFailed} color="text-red-600" />
-        <StatCard label="Skipped" value={stats.totalSkipped} color="text-gray-500" />
+        <StatCard label="Sent" value={stats.totalSent} icon="✓" accent="border-l-green-500" gradient="from-green-50/50 to-white" />
+        <StatCard label="Failed" value={stats.totalFailed} icon="✕" accent="border-l-red-500" gradient="from-red-50/50 to-white" />
+        <StatCard label="Skipped" value={stats.totalSkipped} icon="—" accent="border-l-gray-400" gradient="from-gray-50 to-white" />
       </div>
       {Object.keys(stats.byTemplate || {}).length > 0 && (
         <div className="mb-4">
@@ -636,7 +721,7 @@ function EmailStatsSection({ t }: { t: T }) {
 // ═══════════════════════════════════════
 // CMS TAB — Homepage + Site Settings
 // ═══════════════════════════════════════
-function CmsTab({ t }: { t: T }) {
+function CmsTab({ t, onSuccess }: { t: T; onSuccess?: () => void }) {
   const [sc, setSc] = useState<any>(null);
   const [saving, setSaving] = useState('');
 
@@ -647,6 +732,7 @@ function CmsTab({ t }: { t: T }) {
     setSaving('Saving...');
     await apiMutation('wzrdAdmin.updateHomepage', sc.homepage);
     setSaving('✅ Saved');
+    onSuccess?.();
     setTimeout(() => setSaving(''), 2000);
   };
 
@@ -655,6 +741,7 @@ function CmsTab({ t }: { t: T }) {
     setSaving('Saving...');
     await apiMutation('wzrdAdmin.updateSiteSettings', sc.site);
     setSaving('✅ Saved');
+    onSuccess?.();
     setTimeout(() => setSaving(''), 2000);
   };
 
@@ -664,7 +751,7 @@ function CmsTab({ t }: { t: T }) {
     <div>
       <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{label}</label>
       <input value={value || ''} onChange={e => onChange(e.target.value)}
-        className="w-full px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm text-gray-900 outline-none focus:border-indigo-500" />
+        className="w-full px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
     </div>
   );
 
@@ -736,8 +823,10 @@ function CmsTab({ t }: { t: T }) {
 function PromptsTab({ t }: { t: T }) {
   const [sc, setSc] = useState<any>(null);
   const [editing, setEditing] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [draft, setDraft] = useState('');
   const [saving, setSaving] = useState('');
+  const [testResult, setTestResult] = useState('');
 
   useEffect(() => { api('wzrdAdmin.siteConfig').then(setSc); }, []);
 
@@ -750,7 +839,12 @@ function PromptsTab({ t }: { t: T }) {
     setTimeout(() => setSaving(''), 2000);
   };
 
-  if (!sc) return <p className="text-gray-500 text-sm animate-pulse">{t('جاري التحميل...', 'Loading...')}</p>;
+  const handleTest = () => {
+    setTestResult(t('جاري الاختبار... (قريباً)', 'Testing... (coming soon)'));
+    setTimeout(() => setTestResult(''), 2000);
+  };
+
+  if (!sc) return <LoadingSkeleton />;
 
   return (
     <div>
@@ -762,38 +856,43 @@ function PromptsTab({ t }: { t: T }) {
 
       <div className="space-y-3">
         {sc.prompts?.map((p: any) => (
-          <div key={p.toolId} className="p-4 rounded-xl border border-gray-200 bg-white">
-            <div className="flex items-center justify-between mb-2">
+          <div key={p.toolId} className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <button onClick={() => setExpanded(prev => ({ ...prev, [p.toolId]: !prev[p.toolId] }))} className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition text-left">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold">{p.toolName}</span>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full ${p.enabled ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full ${p.enabled ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                   {p.enabled ? t('نشط', 'Active') : t('معطّل', 'Disabled')}
                 </span>
+                <span className="text-[10px] text-gray-400">({(p.systemPrompt?.length || 0)} {t('حرف', 'chars')})</span>
               </div>
-              <div className="flex gap-2">
-                <button onClick={async () => {
-                  await apiMutation('wzrdAdmin.updatePrompt', { toolId: p.toolId, enabled: !p.enabled });
-                  setSc({...sc, prompts: sc.prompts.map((x: any) => x.toolId === p.toolId ? {...x, enabled: !x.enabled} : x)});
-                }} className="text-xs text-gray-500 hover:text-amber-600 transition">
-                  {p.enabled ? t('تعطيل', 'Disable') : t('تفعيل', 'Enable')}
-                </button>
-                <button onClick={() => { setEditing(p.toolId); setDraft(p.systemPrompt); }} className="text-xs text-indigo-600 hover:text-indigo-600 transition">
-                  {t('تعديل', 'Edit Prompt')}
-                </button>
-              </div>
-            </div>
-
-            {editing === p.toolId ? (
-              <div>
-                <textarea value={draft} onChange={e => setDraft(e.target.value)} rows={6}
-                  className="w-full px-3 py-2 rounded-lg bg-gray-50 border border-indigo-200 text-xs text-gray-700 font-mono outline-none resize-y" />
-                <div className="flex gap-2 mt-2">
-                  <button onClick={() => savePrompt(p.toolId)} className="px-3 py-1.5 rounded-lg bg-green-500/20 text-green-600 text-xs font-bold">{t('حفظ', 'Save')}</button>
-                  <button onClick={() => setEditing(null)} className="px-3 py-1.5 rounded-lg text-gray-500 text-xs">{t('إلغاء', 'Cancel')}</button>
+              <span className="text-gray-400">{expanded[p.toolId] ? '▼' : '▶'}</span>
+            </button>
+            {expanded[p.toolId] && (
+              <div className="p-4 pt-0 border-t border-gray-100">
+                <div className="flex gap-2 mb-2">
+                  <button onClick={async () => { await apiMutation('wzrdAdmin.updatePrompt', { toolId: p.toolId, enabled: !p.enabled }); setSc({...sc, prompts: sc.prompts.map((x: any) => x.toolId === p.toolId ? {...x, enabled: !x.enabled} : x)}); }} className="text-xs text-gray-500 hover:text-amber-600 transition">
+                    {p.enabled ? t('تعطيل', 'Disable') : t('تفعيل', 'Enable')}
+                  </button>
+                  <button onClick={() => { setEditing(p.toolId); setDraft(p.systemPrompt); }} className="text-xs text-indigo-600 hover:text-indigo-600 transition">
+                    {t('تعديل', 'Edit Prompt')}
+                  </button>
                 </div>
+                {editing === p.toolId ? (
+                  <div>
+                    <textarea value={draft} onChange={e => setDraft(e.target.value)} rows={8}
+                      className="w-full px-3 py-2 rounded-lg bg-gray-50 border border-indigo-200 text-xs text-gray-700 font-mono outline-none focus:ring-2 focus:ring-indigo-500 resize-y" />
+                    <p className="text-[10px] text-gray-400 mt-1">{draft.length} {t('حرف', 'chars')}</p>
+                    <div className="flex gap-2 mt-2">
+                      <button onClick={() => savePrompt(p.toolId)} className="px-3 py-1.5 rounded-lg bg-green-500/20 text-green-600 text-xs font-bold">{t('حفظ', 'Save')}</button>
+                      <button onClick={handleTest} className="px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-600 text-xs font-bold">{t('اختبار', 'Test')}</button>
+                      <button onClick={() => setEditing(null)} className="px-3 py-1.5 rounded-lg text-gray-500 text-xs">{t('إلغاء', 'Cancel')}</button>
+                    </div>
+                    {testResult && <p className="text-xs text-gray-500 mt-2">{testResult}</p>}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-500 font-mono leading-relaxed whitespace-pre-wrap">{p.systemPrompt}</p>
+                )}
               </div>
-            ) : (
-              <p className="text-xs text-gray-400 font-mono leading-relaxed line-clamp-3">{p.systemPrompt}</p>
             )}
           </div>
         ))}
@@ -844,7 +943,7 @@ function TeamTab({ t }: { t: T }) {
 // ═══════════════════════════════════════
 // AGENCY TAB — Clients + Projects overview
 // ═══════════════════════════════════════
-function AgencyTab({ t }: { t: T }) {
+function AgencyTab({ t, onSuccess }: { t: T; onSuccess?: () => void }) {
   const [clientsList, setClientsList] = useState<any>(null);
   const [projectsList, setProjectsList] = useState<any>(null);
   const [view, setView] = useState<'clients' | 'projects'>('clients');
@@ -861,7 +960,7 @@ function AgencyTab({ t }: { t: T }) {
   const addClient = async () => {
     if (!form.name) { setMsg(t('الاسم مطلوب', 'Name required')); return; }
     await apiMutation('wzrdAdmin.addClient', form);
-    setForm({}); setShowForm(false); setMsg('✅ ' + t('تم الإضافة', 'Added')); reload();
+    setForm({}); setShowForm(false); setMsg('✅ ' + t('تم الإضافة', 'Added')); onSuccess?.(); reload();
     setTimeout(() => setMsg(''), 2000);
   };
 
@@ -884,7 +983,7 @@ function AgencyTab({ t }: { t: T }) {
       clientId: parseInt(form.clientId),
       serviceType: form.serviceType || 'consultation',
     });
-    setForm({}); setShowForm(false); setMsg('✅ ' + t('تم الإضافة', 'Added')); reload();
+    setForm({}); setShowForm(false); setMsg('✅ ' + t('تم الإضافة', 'Added')); onSuccess?.(); reload();
     setTimeout(() => setMsg(''), 2000);
   };
 
@@ -914,11 +1013,11 @@ function AgencyTab({ t }: { t: T }) {
         <div className="p-5 rounded-xl border border-indigo-200 bg-indigo-50/50 mb-4 space-y-3">
           <h4 className="text-sm font-bold text-indigo-700">{t('إضافة عميل جديد', 'Add New Client')}</h4>
           <div className="grid grid-cols-2 gap-3">
-            <input placeholder="الاسم *" value={form.name || ''} onChange={e => setForm({...form, name: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-indigo-400" />
-            <input placeholder="اسم الشركة" value={form.companyName || ''} onChange={e => setForm({...form, companyName: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-indigo-400" />
-            <input placeholder="البريد الإلكتروني" value={form.email || ''} onChange={e => setForm({...form, email: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-indigo-400" />
-            <input placeholder="رقم الهاتف" value={form.phone || ''} onChange={e => setForm({...form, phone: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-indigo-400" />
-            <input placeholder="المجال" value={form.industry || ''} onChange={e => setForm({...form, industry: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-indigo-400" />
+            <input placeholder="الاسم *" value={form.name || ''} onChange={e => setForm({...form, name: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+            <input placeholder="اسم الشركة" value={form.companyName || ''} onChange={e => setForm({...form, companyName: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+            <input placeholder="البريد الإلكتروني" value={form.email || ''} onChange={e => setForm({...form, email: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+            <input placeholder="رقم الهاتف" value={form.phone || ''} onChange={e => setForm({...form, phone: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+            <input placeholder="المجال" value={form.industry || ''} onChange={e => setForm({...form, industry: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
             <select value={form.market || 'egypt'} onChange={e => setForm({...form, market: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none">
               <option value="egypt">مصر</option><option value="ksa">السعودية</option><option value="uae">الإمارات</option><option value="other">أخرى</option>
             </select>
@@ -935,7 +1034,7 @@ function AgencyTab({ t }: { t: T }) {
         <div className="p-5 rounded-xl border border-indigo-200 bg-indigo-50/50 mb-4 space-y-3">
           <h4 className="text-sm font-bold text-indigo-700">{t('إضافة مشروع جديد', 'Add New Project')}</h4>
           <div className="grid grid-cols-2 gap-3">
-            <input placeholder="اسم المشروع *" value={form.projectName || ''} onChange={e => setForm({...form, projectName: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-indigo-400" />
+            <input placeholder="اسم المشروع *" value={form.projectName || ''} onChange={e => setForm({...form, projectName: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
             <select value={form.clientId || ''} onChange={e => setForm({...form, clientId: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none">
               <option value="">اختر العميل *</option>
               {(clientsList?.clients || []).map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -959,7 +1058,7 @@ function AgencyTab({ t }: { t: T }) {
       {projectsList?.byStatus && Object.keys(projectsList.byStatus).length > 0 && (
         <div className="grid grid-cols-4 gap-2 mb-4">
           {Object.entries(projectsList.byStatus).map(([status, count]) => (
-            <StatCard key={status} label={status} value={count as number} color={status === 'active' ? 'text-green-600' : status === 'completed' ? 'text-indigo-600' : 'text-gray-600'} />
+            <StatCard key={status} label={t(status === 'active' ? 'نشط' : status === 'completed' ? 'مكتمل' : status === 'paused' ? 'متوقف' : status === 'cancelled' ? 'ملغي' : status, status)} value={count as number} icon="📊" accent={status === 'active' ? 'border-l-green-500' : status === 'completed' ? 'border-l-blue-500' : 'border-l-gray-400'} gradient={status === 'active' ? 'from-green-50/50 to-white' : status === 'completed' ? 'from-blue-50/50 to-white' : 'from-gray-50 to-white'} />
           ))}
         </div>
       )}
@@ -974,8 +1073,8 @@ function AgencyTab({ t }: { t: T }) {
                 <p className="text-xs text-gray-500">{c.email || ''} · {c.industry || ''}</p>
               </div>
               <div className="flex items-center gap-2">
-                <select value={c.status} onChange={e => updateStatus(c.id, e.target.value, 'client')} className="px-2 py-1 rounded-lg border border-gray-200 text-xs outline-none">
-                  <option value="lead">Lead</option><option value="active">Active</option><option value="completed">Completed</option><option value="paused">Paused</option>
+                <select value={c.status} onChange={e => updateStatus(c.id, e.target.value, 'client')} className="px-2 py-1 rounded-full border border-gray-200 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option value="lead">{t('ليد', 'Lead')}</option><option value="active">{t('نشط', 'Active')}</option><option value="completed">{t('مكتمل', 'Completed')}</option><option value="paused">{t('متوقف', 'Paused')}</option>
                 </select>
                 <button onClick={() => deleteClient(c.id)} className="text-xs text-red-400 hover:text-red-600 transition">🗑</button>
               </div>
@@ -992,8 +1091,8 @@ function AgencyTab({ t }: { t: T }) {
                 <p className="text-xs text-gray-500">المرحلة: {p.stage} · عميل #{p.clientId}</p>
               </div>
               <div className="flex items-center gap-2">
-                <select value={p.status} onChange={e => updateStatus(p.id, e.target.value, 'project')} className="px-2 py-1 rounded-lg border border-gray-200 text-xs outline-none">
-                  <option value="active">Active</option><option value="paused">Paused</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option>
+                <select value={p.status} onChange={e => updateStatus(p.id, e.target.value, 'project')} className="px-2 py-1 rounded-full border border-gray-200 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option value="active">{t('نشط', 'Active')}</option><option value="paused">{t('متوقف', 'Paused')}</option><option value="completed">{t('مكتمل', 'Completed')}</option><option value="cancelled">{t('ملغي', 'Cancelled')}</option>
                 </select>
               </div>
             </div>
@@ -1024,6 +1123,9 @@ const TABS: Array<{ id: Tab; labelAr: string; labelEn: string; icon: string }> =
 
 export default function WzrdAdmin() {
   const [tab, setTab] = useState<Tab>('overview');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [adminUser, setAdminUser] = useState<{ name?: string } | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
   const [locale, setLocale] = useState<'ar' | 'en'>(() =>
     (typeof window !== 'undefined' && (localStorage.getItem('wzrd-admin-locale') as 'ar' | 'en')) || 'ar'
   );
@@ -1034,49 +1136,84 @@ export default function WzrdAdmin() {
     localStorage.setItem('wzrd-admin-locale', next);
   };
 
-  return (
-    <div dir={locale === 'ar' ? 'rtl' : 'ltr'} className="min-h-screen bg-gray-50 text-gray-900 font-sans">
-      {/* Header */}
-      <div className="border-b border-gray-200 bg-white backdrop-blur-xl shadow-sm sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="font-mono text-lg font-bold tracking-wider">
-              WZRD <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-indigo-500">AI</span>
-            </span>
-            <span className="text-xs bg-red-50 text-red-600 border border-red-200 px-2 py-0.5 rounded-full font-bold">{t('أدمن', 'ADMIN')}</span>
-            <button onClick={toggleLocale} className="text-[11px] px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200 font-medium transition" title={locale === 'ar' ? 'Switch to English' : 'التبديل للعربية'}>
-              {locale === 'ar' ? 'EN' : 'ع'}
-            </button>
-          </div>
-          <a href="/" className="text-xs text-gray-500 hover:text-amber-600 transition">{t('← لوحة التحكم', '← Dashboard')}</a>
-        </div>
-      </div>
+  useEffect(() => {
+    fetch('/api/debug/whoami').then(r => r.json()).then(d => setAdminUser(d.user || null)).catch(() => {});
+  }, []);
 
-      <div className="max-w-6xl mx-auto px-6 py-6">
-        {/* Tab bar */}
-        <div className="flex gap-1 mb-6 overflow-x-auto pb-2">
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString(locale === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+
+  const isRtl = locale === 'ar';
+
+  return (
+    <div dir={isRtl ? 'rtl' : 'ltr'} className="min-h-screen bg-gray-50 text-gray-900 font-sans flex">
+      {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
+
+      {/* Sidebar - fixed 240px */}
+      <aside className={`fixed top-0 z-40 w-60 h-full bg-white border border-gray-200 shadow-sm flex flex-col md:translate-x-0 transition-transform duration-200
+        ${isRtl ? 'right-0' : 'left-0'}
+        ${sidebarOpen ? 'translate-x-0' : isRtl ? 'translate-x-full md:translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+        <div className="p-5 border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-lg font-bold">WZRD <span className="text-indigo-600">AI</span></span>
+            <span className="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full font-bold">{t('أدمن', 'ADMIN')}</span>
+          </div>
+        </div>
+        <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
           {TABS.map(tabItem => (
-            <button key={tabItem.id} onClick={() => setTab(tabItem.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition ${
-                tab === tabItem.id ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-gray-50 text-gray-500 hover:text-white hover:bg-gray-100'
-              }`}>
+            <button key={tabItem.id} onClick={() => { setTab(tabItem.id); setSidebarOpen(false); }}
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition ${
+                tab === tabItem.id ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'
+              }`}
+              style={tab === tabItem.id ? (isRtl ? { borderRight: '4px solid rgb(79 70 229)' } : { borderLeft: '4px solid rgb(79 70 229)' }) : {}}
+            >
               <span>{tabItem.icon}</span> {locale === 'ar' ? tabItem.labelAr : tabItem.labelEn}
             </button>
           ))}
-        </div>
+        </nav>
+        <div className="p-4 border-t border-gray-100 text-[10px] text-gray-400 text-center">Primo Marca © 2026</div>
+      </aside>
 
-        {/* Tab content */}
-        {tab === 'overview' && <OverviewTab t={t} />}
-        {tab === 'cms' && <CmsTab t={t} />}
-        {tab === 'agency' && <AgencyTab t={t} />}
-        {tab === 'users' && <UsersTab t={t} />}
-        {tab === 'credits' && <CreditsTab t={t} />}
-        {tab === 'tools' && <ToolsTab t={t} />}
-        {tab === 'prompts' && <PromptsTab t={t} />}
-        {tab === 'team' && <TeamTab t={t} />}
-        {tab === 'payments' && <PaymentsTab t={t} />}
-        {tab === 'webhooks' && <WebhooksTab t={t} />}
-        {tab === 'config' && <ConfigTab t={t} />}
+      {/* Overlay for mobile */}
+      {sidebarOpen && <div className="fixed inset-0 bg-black/30 z-30 md:hidden" onClick={() => setSidebarOpen(false)} />}
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <header className="sticky top-0 z-20 border-b border-gray-200 bg-white shadow-sm">
+          <div className="px-4 md:px-6 py-3 flex items-center justify-between gap-4">
+            <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 md:hidden" aria-label="Menu">
+              <span className="text-xl">☰</span>
+            </button>
+            <div className="flex-1 flex items-center gap-4">
+              <p className="text-sm text-gray-600">{t('مرحباً،', 'Hi,')} {adminUser?.name || 'Admin'}</p>
+              <span className="text-xs text-gray-400">{timeStr}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={() => { setTab('agency'); setSidebarOpen(false); }} className="px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 text-xs font-medium hover:bg-indigo-100">+ {t('عميل', 'Client')}</button>
+              <button className="px-3 py-1.5 rounded-lg bg-amber-50 text-amber-600 text-xs font-medium hover:bg-amber-100">+ {t('كريدت', 'Credits')}</button>
+              <span className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 cursor-pointer" title="Notifications">🔔</span>
+              <button onClick={toggleLocale} className="text-[11px] px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200 font-medium">{locale === 'ar' ? 'EN' : 'ع'}</button>
+              <a href="/" className="text-xs text-gray-500 hover:text-amber-600">{t('← لوحة التحكم', '← Dashboard')}</a>
+            </div>
+          </div>
+        </header>
+
+        <main className="flex-1 p-6 overflow-auto">
+          <div className="max-w-5xl mx-auto">
+            {tab === 'overview' && <OverviewTab t={t} />}
+            {tab === 'cms' && <CmsTab t={t} onSuccess={() => setToast(t('تم الحفظ', 'Saved!'))} />}
+            {tab === 'agency' && <AgencyTab t={t} onSuccess={() => setToast(t('تم الحفظ', 'Saved!'))} />}
+            {tab === 'users' && <UsersTab t={t} />}
+            {tab === 'credits' && <CreditsTab t={t} />}
+            {tab === 'tools' && <ToolsTab t={t} />}
+            {tab === 'prompts' && <PromptsTab t={t} />}
+            {tab === 'team' && <TeamTab t={t} />}
+            {tab === 'payments' && <PaymentsTab t={t} />}
+            {tab === 'webhooks' && <WebhooksTab t={t} />}
+            {tab === 'config' && <ConfigTab t={t} />}
+          </div>
+        </main>
       </div>
     </div>
   );
