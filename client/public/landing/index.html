@@ -7,280 +7,307 @@
 <meta name="description" content="أدوات تشخيص براند احترافية مبنية على أطر عالمية. اعرف نقاط القوة والضعف — في دقيقة واحدة.">
 <meta property="og:title" content="WZRD AI — تشخيص البراند بالذكاء الاصطناعي">
 <meta property="og:description" content="شخّص البراند بتاعك مجاناً — ١٠٠ كريدت هدية">
-<meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --bg:#fafafa;--bg2:#f3f4f6;--text:#111827;--text2:#4b5563;--text3:#9ca3af;
-  --accent:#4f46e5;--accent2:#6366f1;--accent-light:#eef2ff;
-  --amber:#f59e0b;--green:#10b981;--red:#ef4444;
-  --card:#fff;--border:#e5e7eb;--radius:16px;--radius-sm:10px;
-  --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);
-  --shadow-lg:0 4px 20px rgba(0,0,0,.08),0 8px 32px rgba(0,0,0,.04);
-  --font-ar:'IBM Plex Sans Arabic',sans-serif;--font-en:'Space Grotesk','IBM Plex Sans Arabic',sans-serif;
-}
+:root{--accent:#4f46e5;--accent2:#6366f1;--accentL:#eef2ff;--text:#0f172a;--text2:#475569;--text3:#94a3b8;--bg:#ffffff;--bg2:#f8fafc;--bg3:#f1f5f9;--border:#e2e8f0;--green:#10b981;--amber:#f59e0b;--red:#ef4444;--card:#fff;--R:16px;--S:0 1px 3px rgba(0,0,0,.04),0 6px 24px rgba(0,0,0,.06);--SL:0 8px 40px rgba(0,0,0,.08);--f:'IBM Plex Sans Arabic',sans-serif;--fe:'Space Grotesk',sans-serif}
 html{scroll-behavior:smooth}
-body{font-family:var(--font-ar);background:var(--bg);color:var(--text);line-height:1.7;overflow-x:hidden}
-.en-mode{direction:ltr;font-family:var(--font-en)}
+body{font-family:var(--f);background:var(--bg);color:var(--text);line-height:1.75;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.en-mode{direction:ltr;font-family:var(--fe)}
 a{color:inherit;text-decoration:none}
 
-/* NAV */
-nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);transition:all .3s}
-nav.scrolled{box-shadow:var(--shadow)}
-.nav-inner{max-width:1100px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
-.nav-logo{font-family:var(--font-en);font-weight:700;font-size:18px;letter-spacing:-.5px}.nav-logo span{color:var(--accent)}
-.nav-links{display:flex;align-items:center;gap:28px}
-.nav-links a{font-size:14px;color:var(--text2);font-weight:500;transition:color .2s}.nav-links a:hover{color:var(--accent)}
-.nav-cta{padding:8px 20px;border-radius:50px;background:var(--accent);color:#fff;font-size:13px;font-weight:600;transition:all .2s}
-.nav-cta:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(79,70,229,.25)}
-.lang-btn{padding:5px 12px;border-radius:50px;border:1px solid var(--border);font-size:12px;font-weight:600;cursor:pointer;background:var(--bg);color:var(--text2);transition:all .2s}.lang-btn:hover{border-color:var(--accent);color:var(--accent)}
-.mobile-menu{display:none;cursor:pointer;font-size:24px}
-@media(max-width:768px){.nav-links{display:none}.mobile-menu{display:block}.nav-links.open{display:flex;flex-direction:column;position:absolute;top:100%;right:0;left:0;background:#fff;padding:20px;border-bottom:1px solid var(--border);gap:16px}}
+/* ═══ NAV ═══ */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,.72);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-bottom:1px solid rgba(0,0,0,.04);transition:all .4s}
+.nav.scrolled{box-shadow:0 2px 20px rgba(0,0,0,.06)}
+.nav-in{max-width:1120px;margin:0 auto;padding:12px 28px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:var(--fe);font-weight:700;font-size:20px;letter-spacing:-.5px;display:flex;align-items:center;gap:4px}.logo b{color:var(--accent)}
+.nav-r{display:flex;align-items:center;gap:20px}
+.nav-r a{font-size:13.5px;color:var(--text2);font-weight:500;transition:.2s;padding:6px 0;border-bottom:2px solid transparent}
+.nav-r a:hover{color:var(--text);border-bottom-color:var(--accent)}
+.btn-s{padding:9px 22px;border-radius:100px;font-size:13px;font-weight:600;transition:all .25s;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:6px}
+.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(79,70,229,.28)}
+.btn-o{background:transparent;border:1.5px solid var(--border);color:var(--text2)}.btn-o:hover{border-color:var(--accent);color:var(--accent)}
+.lang{font-size:12px;padding:5px 14px;border-radius:100px;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;font-weight:600;font-family:var(--fe);transition:.2s}.lang:hover{border-color:var(--accent);color:var(--accent)}
+.mob-tog{display:none;background:none;border:none;font-size:24px;cursor:pointer;color:var(--text)}
+@media(max-width:860px){.nav-r{display:none}.mob-tog{display:block}.nav-r.open{display:flex;flex-direction:column;position:absolute;top:100%;right:0;left:0;background:var(--bg);padding:24px;gap:16px;border-bottom:1px solid var(--border);box-shadow:var(--S)}}
 
-/* HERO */
-.hero{padding:140px 24px 80px;text-align:center;position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;top:-200px;right:-200px;width:600px;height:600px;background:radial-gradient(circle,rgba(79,70,229,.06) 0%,transparent 70%);border-radius:50%}
-.hero::after{content:'';position:absolute;bottom:-100px;left:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(245,158,11,.05) 0%,transparent 70%);border-radius:50%}
-.hero-content{position:relative;z-index:2;max-width:720px;margin:0 auto}
-.hero-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:50px;background:var(--accent-light);color:var(--accent);font-size:13px;font-weight:600;margin-bottom:24px}
-.hero h1{font-size:clamp(28px,5vw,46px);font-weight:700;line-height:1.3;margin-bottom:20px}
-.hero h1 em{font-style:normal;color:var(--accent)}
-.hero-sub{font-size:clamp(16px,2.5vw,19px);color:var(--text2);line-height:1.7;margin-bottom:36px;max-width:600px;margin-left:auto;margin-right:auto}
-.hero-cta{display:inline-flex;align-items:center;gap:8px;padding:16px 40px;border-radius:50px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:16px;font-weight:700;transition:all .3s;box-shadow:0 4px 20px rgba(79,70,229,.3)}
-.hero-cta:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(79,70,229,.4)}
-.hero-trust{display:flex;justify-content:center;gap:32px;margin-top:32px;flex-wrap:wrap}
-.hero-trust span{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text3);font-weight:500}
-.hero-trust svg{width:16px;height:16px;color:var(--green)}
+/* ═══ HERO ═══ */
+.hero{padding:160px 28px 100px;position:relative;overflow:hidden;background:linear-gradient(180deg,#f8fafc 0%,#fff 50%,#f0f1ff 100%)}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;max-width:1120px;margin:0 auto;align-items:center}
+.hero-text{position:relative;z-index:2}
+.hero-chip{display:inline-flex;align-items:center;gap:8px;padding:7px 16px;border-radius:100px;background:var(--accentL);color:var(--accent);font-size:13px;font-weight:600;margin-bottom:20px;border:1px solid rgba(79,70,229,.12)}
+.hero-chip svg{width:14px;height:14px}
+.hero h1{font-size:clamp(30px,4.5vw,50px);font-weight:700;line-height:1.25;margin-bottom:20px;letter-spacing:-.3px}
+.hero h1 em{font-style:normal;background:linear-gradient(135deg,var(--accent),#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-p{font-size:17px;color:var(--text2);line-height:1.75;margin-bottom:32px;max-width:500px}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px}
+.hero-btns .btn-s{padding:14px 32px;font-size:15px}
+.hero-trust{display:flex;gap:24px;flex-wrap:wrap}
+.hero-trust span{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--text3);font-weight:500}
+.hero-trust svg{width:15px;height:15px;color:var(--green)}
+/* Hero visual */
+.hero-vis{position:relative;display:flex;align-items:center;justify-content:center}
+.hero-card{width:340px;background:var(--card);border-radius:20px;box-shadow:var(--SL);padding:28px;border:1px solid var(--border);position:relative;z-index:2;transform:rotate(-2deg);animation:float 6s ease-in-out infinite}
+@keyframes float{0%,100%{transform:rotate(-2deg) translateY(0)}50%{transform:rotate(-2deg) translateY(-12px)}}
+.hc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.hc-score{font-size:42px;font-weight:700;font-family:var(--fe);color:var(--accent)}
+.hc-badge{padding:5px 12px;border-radius:100px;font-size:11px;font-weight:700;background:#fef3c7;color:#92400e}
+.hc-bar{height:6px;border-radius:6px;background:linear-gradient(to left,var(--green),var(--amber),var(--red));margin-bottom:16px;position:relative}
+.hc-bar::after{content:'';position:absolute;top:-3px;right:42%;width:12px;height:12px;border-radius:50%;background:#fff;border:2.5px solid var(--text);box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.hc-items{display:flex;flex-direction:column;gap:6px}
+.hc-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:var(--bg2);font-size:12px;font-weight:500}
+.hc-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+/* Floating shapes */
+.hero-shape{position:absolute;border-radius:50%;opacity:.07;z-index:0}
+.hs1{width:500px;height:500px;background:var(--accent);top:-150px;right:-150px}
+.hs2{width:350px;height:350px;background:var(--amber);bottom:-100px;left:-100px}
+.hs3{width:120px;height:120px;background:var(--accent2);top:30%;left:10%;animation:pulse 4s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:.07}50%{transform:scale(1.2);opacity:.12}}
+@media(max-width:860px){.hero-grid{grid-template-columns:1fr;text-align:center}.hero-p{margin-left:auto;margin-right:auto}.hero-btns{justify-content:center}.hero-trust{justify-content:center}.hero-vis{margin-top:40px}.hero-card{transform:rotate(0);width:100%;max-width:360px}}
 
-/* SECTIONS */
-section{padding:80px 24px}
-.section-inner{max-width:1000px;margin:0 auto}
-.section-label{display:inline-block;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
-.section-title{font-size:clamp(24px,4vw,36px);font-weight:700;line-height:1.3;margin-bottom:16px}
-.section-desc{font-size:16px;color:var(--text2);max-width:560px;line-height:1.7}
-.text-center{text-align:center}.mx-auto{margin-left:auto;margin-right:auto}
+/* ═══ SECTIONS ═══ */
+section{padding:90px 28px}
+.sec-in{max-width:1000px;margin:0 auto}
+.sec-lab{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.sec-h{font-size:clamp(26px,3.5vw,38px);font-weight:700;line-height:1.25;margin-bottom:14px;letter-spacing:-.2px}
+.sec-p{font-size:16px;color:var(--text2);max-width:540px;line-height:1.75}
+.tc{text-align:center}.mx{margin-left:auto;margin-right:auto}
 
-/* HOW */
+/* ═══ HOW ═══ */
 .how{background:var(--bg2)}
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;margin-top:48px}
-.step{text-align:center;padding:32px 24px;border-radius:var(--radius);background:var(--card);box-shadow:var(--shadow);transition:all .3s}
-.step:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
-.step-num{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;margin:0 auto 16px;font-family:var(--font-en)}
-.step h3{font-size:18px;font-weight:700;margin-bottom:8px}
-.step p{font-size:14px;color:var(--text2);line-height:1.6}
-@media(max-width:768px){.steps{grid-template-columns:1fr;gap:16px}}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:50px;position:relative}
+.steps::before{content:'';position:absolute;top:48px;left:15%;right:15%;height:2px;background:linear-gradient(to left,var(--accent),var(--accent2),var(--accent));opacity:.15;z-index:0}
+.step{text-align:center;padding:36px 24px 28px;border-radius:var(--R);background:var(--card);box-shadow:var(--S);transition:.35s;position:relative;z-index:1}
+.step:hover{transform:translateY(-6px);box-shadow:var(--SL)}
+.step-n{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin:0 auto 18px;font-family:var(--fe);box-shadow:0 4px 16px rgba(79,70,229,.25)}
+.step h3{font-size:17px;font-weight:700;margin-bottom:8px}
+.step p{font-size:13.5px;color:var(--text2);line-height:1.65}
+@media(max-width:768px){.steps{grid-template-columns:1fr;gap:16px}.steps::before{display:none}}
 
-/* TOOLS */
-.tools-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-top:48px}
-.tool-card{display:block;padding:28px;border-radius:var(--radius);background:var(--card);border:1px solid var(--border);transition:all .3s;position:relative;overflow:hidden}
-.tool-card:hover{border-color:var(--accent);box-shadow:var(--shadow-lg);transform:translateY(-3px)}
-.tool-card.featured{border-color:var(--accent);background:linear-gradient(135deg,var(--accent-light),#fff)}
-.tool-card.featured::before{content:'ابدأ من هنا';position:absolute;top:12px;left:12px;padding:4px 12px;border-radius:50px;background:var(--accent);color:#fff;font-size:11px;font-weight:700}
-.en-mode .tool-card.featured::before{content:'Start Here'}
-.tool-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px}
-.tool-icon.diag{background:#eef2ff}.tool-icon.offer{background:#fffbeb}.tool-icon.msg{background:#ecfdf5}.tool-icon.pres{background:#fef2f2}.tool-icon.ident{background:#f5f3ff}.tool-icon.launch{background:#fff7ed}
-.tool-card h3{font-size:17px;font-weight:700;margin-bottom:6px}
-.tool-card p{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:14px}
-.tool-meta{display:flex;align-items:center;justify-content:space-between}
-.tool-cost{font-size:13px;color:var(--text3);font-weight:600}
-.tool-arrow{width:32px;height:32px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;transition:all .2s;font-size:14px;color:var(--text3)}
-.tool-card:hover .tool-arrow{background:var(--accent);color:#fff}
-@media(max-width:768px){.tools-grid{grid-template-columns:1fr}}
+/* ═══ TOOLS ═══ */
+.tg{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:48px}
+.tc2{display:grid;grid-template-columns:1fr;gap:0}
+.tool{padding:26px;border-radius:var(--R);background:var(--card);border:1.5px solid var(--border);transition:.35s;position:relative;overflow:hidden;display:block}
+.tool:hover{border-color:var(--accent);box-shadow:var(--SL);transform:translateY(-4px)}
+.tool.feat{border-color:var(--accent);grid-column:span 3;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:24px;padding:32px;background:linear-gradient(135deg,var(--accentL),#fff,#faf5ff)}
+.tool.feat .ti{width:56px;height:56px;font-size:28px}
+.tool.feat h3{font-size:20px}
+.tool.feat p{font-size:14px}
+.feat-badge{position:absolute;top:14px;left:14px;padding:4px 14px;border-radius:100px;background:var(--accent);color:#fff;font-size:10.5px;font-weight:700;letter-spacing:.5px}
+.en-mode .feat-badge{content:'START HERE'}
+.ti{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:21px;margin-bottom:12px;flex-shrink:0}
+.ti-1{background:#eef2ff}.ti-2{background:#fffbeb}.ti-3{background:#ecfdf5}.ti-4{background:#fef2f2}.ti-5{background:#f5f3ff}.ti-6{background:#fff7ed}
+.tool h3{font-size:16px;font-weight:700;margin-bottom:4px}
+.tool p{font-size:12.5px;color:var(--text2);line-height:1.6;margin-bottom:12px}
+.tool-f{display:flex;align-items:center;justify-content:space-between}
+.tool-c{font-size:12px;color:var(--text3);font-weight:600}
+.tool-a{width:30px;height:30px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text3);transition:.2s}
+.tool:hover .tool-a{background:var(--accent);color:#fff;transform:scale(1.1)}
+.tool-det{font-size:12px;color:var(--accent);font-weight:600;margin-top:8px;display:inline-flex;align-items:center;gap:4px;opacity:0;transition:.2s}
+.tool:hover .tool-det{opacity:1}
+@media(max-width:860px){.tg{grid-template-columns:1fr}.tool.feat{grid-column:span 1;grid-template-columns:1fr}}
 
-/* EXAMPLE */
+/* ═══ EXAMPLE ═══ */
 .example{background:var(--bg2)}
-.example-box{max-width:600px;margin:40px auto 0;padding:32px;border-radius:var(--radius);background:var(--card);box-shadow:var(--shadow-lg);border:1px solid var(--border)}
-.score-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px}
-.score-num{font-size:36px;font-weight:700;font-family:var(--font-en);color:var(--text)}.score-num small{font-size:16px;color:var(--text3)}
-.score-label{font-size:13px;font-weight:600;color:#d97706;background:#fffbeb;padding:4px 12px;border-radius:50px}
-.bar-track{height:8px;border-radius:8px;background:linear-gradient(to left,var(--green),var(--amber),var(--red));position:relative}
-.bar-marker{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid var(--text);box-shadow:0 2px 6px rgba(0,0,0,.15)}
-.bar-labels{display:flex;justify-content:space-between;margin-top:4px;font-size:11px;color:var(--text3)}
-.findings-mini{margin-top:20px;display:flex;flex-direction:column;gap:8px}
-.finding-mini{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius-sm);background:var(--bg2);font-size:13px}
-.finding-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.finding-dot.high{background:var(--red)}.finding-dot.med{background:var(--amber)}.finding-dot.low{background:var(--green)}
+.ex-box{max-width:580px;margin:40px auto 0;padding:32px;border-radius:20px;background:var(--card);box-shadow:var(--SL);border:1px solid var(--border)}
+.ex-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+.ex-num{font-size:40px;font-weight:700;font-family:var(--fe);color:var(--text)}.ex-num small{font-size:16px;color:var(--text3)}
+.ex-badge{font-size:12px;font-weight:700;padding:5px 14px;border-radius:100px;background:#fef3c7;color:#92400e}
+.ex-bar{height:7px;border-radius:7px;background:linear-gradient(to left,var(--green),var(--amber),var(--red));position:relative;margin-bottom:4px}
+.ex-bar::after{content:'';position:absolute;top:-4.5px;right:42%;width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid var(--text);box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.ex-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:20px}
+.ex-items{display:flex;flex-direction:column;gap:7px}
+.ex-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:var(--bg2);font-size:12.5px;font-weight:500;transition:.2s}
+.ex-item:hover{background:var(--bg3)}
+.ex-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ex-dot.h{background:var(--red)}.ex-dot.m{background:var(--amber)}.ex-dot.l{background:var(--green)}
 
-/* WHY */
-.why-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-top:48px}
-.why-card{padding:28px;border-radius:var(--radius);background:var(--card);border:1px solid var(--border);transition:all .3s}
-.why-card:hover{border-color:var(--accent);box-shadow:var(--shadow)}
-.why-icon{width:40px;height:40px;border-radius:10px;background:var(--accent-light);color:var(--accent);display:flex;align-items:center;justify-content:center;margin-bottom:14px;font-size:18px}
-.why-card h3{font-size:16px;font-weight:700;margin-bottom:6px}
-.why-card p{font-size:13px;color:var(--text2);line-height:1.6}
-@media(max-width:768px){.why-grid{grid-template-columns:1fr}}
+/* ═══ WHY ═══ */
+.wg{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:48px}
+.wc{padding:28px;border-radius:var(--R);background:var(--card);border:1.5px solid var(--border);transition:.35s}
+.wc:hover{border-color:var(--accent);box-shadow:var(--S);transform:translateY(-3px)}
+.wi{width:42px;height:42px;border-radius:11px;background:var(--accentL);display:flex;align-items:center;justify-content:center;margin-bottom:14px;font-size:19px}
+.wc h3{font-size:15px;font-weight:700;margin-bottom:6px}
+.wc p{font-size:13px;color:var(--text2);line-height:1.65}
+@media(max-width:768px){.wg{grid-template-columns:1fr}}
 
-/* ABOUT */
+/* ═══ ABOUT ═══ */
 .about{background:var(--bg2)}
-.about-box{max-width:700px;margin:0 auto;text-align:center}
-.about-box p{font-size:16px;color:var(--text2);line-height:1.8;margin-bottom:16px}
+.ab-box{max-width:680px;margin:0 auto;text-align:center}
+.ab-box p{font-size:16px;color:var(--text2);line-height:1.8;margin-bottom:14px}
 
-/* FINAL CTA */
-.final-cta{text-align:center;padding:80px 24px;background:linear-gradient(135deg,#312e81,#4f46e5);color:#fff;position:relative;overflow:hidden}
-.final-cta::before{content:'';position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:rgba(255,255,255,.03);border-radius:50%}
-.final-cta h2{font-size:clamp(24px,4vw,34px);font-weight:700;margin-bottom:12px}
-.final-cta p{font-size:16px;opacity:.8;margin-bottom:32px;max-width:500px;margin-left:auto;margin-right:auto}
-.btn-white{display:inline-flex;align-items:center;gap:8px;padding:16px 40px;border-radius:50px;background:#fff;color:var(--accent);font-size:16px;font-weight:700;transition:all .3s}
-.btn-white:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.2)}
-.btn-secondary{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:50px;border:1px solid rgba(255,255,255,.3);color:#fff;font-size:14px;font-weight:500;margin-top:16px;transition:all .2s}
-.btn-secondary:hover{background:rgba(255,255,255,.1)}
+/* ═══ CTA ═══ */
+.cta-s{text-align:center;padding:100px 28px;background:linear-gradient(135deg,#1e1b4b,#3730a3,#4f46e5);color:#fff;position:relative;overflow:hidden}
+.cta-s::before{content:'';position:absolute;width:600px;height:600px;border-radius:50%;background:rgba(255,255,255,.04);top:-200px;right:-200px}
+.cta-s::after{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,.03);bottom:-100px;left:-50px}
+.cta-s h2{font-size:clamp(26px,4vw,38px);font-weight:700;margin-bottom:12px;position:relative;z-index:1}
+.cta-s p{font-size:16px;opacity:.75;margin-bottom:36px;max-width:480px;margin-left:auto;margin-right:auto;position:relative;z-index:1}
+.btn-w{display:inline-flex;align-items:center;gap:8px;padding:16px 44px;border-radius:100px;background:#fff;color:var(--accent);font-size:16px;font-weight:700;transition:.3s;position:relative;z-index:1;border:none;cursor:pointer}
+.btn-w:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.2)}
+.btn-g{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:100px;border:1.5px solid rgba(255,255,255,.25);color:#fff;font-size:14px;font-weight:500;margin-top:16px;transition:.2s;position:relative;z-index:1}
+.btn-g:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.4)}
 
-/* FOOTER */
-footer{padding:40px 24px;text-align:center;border-top:1px solid var(--border)}
-.footer-logo{font-family:var(--font-en);font-size:16px;font-weight:700;margin-bottom:8px}.footer-logo span{color:var(--accent)}
-.footer-tag{font-size:13px;color:var(--text3);font-style:italic;margin-bottom:16px}
-.footer-links{display:flex;justify-content:center;gap:20px;margin-bottom:16px}
-.footer-links a{font-size:13px;color:var(--text3);transition:color .2s}.footer-links a:hover{color:var(--accent)}
-.footer-copy{font-size:11px;color:var(--text3)}
+/* ═══ FOOTER ═══ */
+footer{padding:48px 28px 32px;text-align:center;border-top:1px solid var(--border);background:var(--bg2)}
+.ft-logo{font-family:var(--fe);font-size:18px;font-weight:700;margin-bottom:6px}.ft-logo b{color:var(--accent)}
+.ft-tag{font-size:13px;color:var(--text3);font-style:italic;margin-bottom:20px}
+.ft-links{display:flex;justify-content:center;gap:24px;margin-bottom:20px}
+.ft-links a{font-size:13px;color:var(--text3);transition:.2s}.ft-links a:hover{color:var(--accent)}
+.ft-copy{font-size:10.5px;color:var(--text3);letter-spacing:.5px}
 
-/* ANIMATIONS */
-.fade-up{opacity:0;transform:translateY(30px);transition:all .6s cubic-bezier(.16,1,.3,1)}
-.fade-up.visible{opacity:1;transform:translateY(0)}
+/* ═══ ANIMATIONS ═══ */
+.fi{opacity:0;transform:translateY(28px);transition:all .65s cubic-bezier(.22,1,.36,1)}
+.fi.v{opacity:1;transform:translateY(0)}
+.fi:nth-child(2){transition-delay:.08s}.fi:nth-child(3){transition-delay:.16s}.fi:nth-child(4){transition-delay:.24s}
 </style>
 </head>
 <body>
 
-<nav id="nav">
-  <div class="nav-inner">
-    <a href="/welcome" class="nav-logo">WZRD <span>AI</span></a>
-    <div class="nav-links" id="navLinks">
-      <a href="#how" data-ar="إزاي بيشتغل" data-en="How It Works">إزاي بيشتغل</a>
-      <a href="#tools" data-ar="الأدوات" data-en="Tools">الأدوات</a>
-      <a href="#why" data-ar="ليه WZRD" data-en="Why WZRD">ليه WZRD</a>
-      <a href="/services-info" data-ar="خدماتنا" data-en="Services">خدماتنا</a>
-      <button class="lang-btn" onclick="toggleLang()">EN</button>
-      <a href="/signup" class="nav-cta" data-ar="سجّل مجاناً" data-en="Sign Up Free">سجّل مجاناً</a>
-    </div>
-    <div class="mobile-menu" onclick="document.getElementById('navLinks').classList.toggle('open')">☰</div>
+<nav class="nav" id="nav">
+ <div class="nav-in">
+  <a href="/welcome" class="logo">WZRD <b>AI</b></a>
+  <div class="nav-r" id="navR">
+   <a href="#how" data-ar="إزاي بيشتغل" data-en="How It Works">إزاي بيشتغل</a>
+   <a href="#tools" data-ar="الأدوات" data-en="Tools">الأدوات</a>
+   <a href="#why" data-ar="ليه WZRD" data-en="Why WZRD">ليه WZRD</a>
+   <a href="/services-info" data-ar="خدماتنا" data-en="Services">خدماتنا</a>
+   <button class="lang" onclick="tl()">EN</button>
+   <a href="/signup" class="btn-s btn-p" data-ar="ابدأ مجاناً" data-en="Start Free">ابدأ مجاناً</a>
   </div>
+  <button class="mob-tog" onclick="document.getElementById('navR').classList.toggle('open')">☰</button>
+ </div>
 </nav>
 
 <section class="hero">
-  <div class="hero-content fade-up">
-    <div class="hero-badge"><span data-ar="من بريمو ماركا" data-en="by Primo Marca">من بريمو ماركا</span></div>
-    <h1 data-ar="شخّص البراند بتاعك <em>بالذكاء الاصطناعي</em> — في دقيقة واحدة." data-en="Diagnose your brand <em>with AI</em> — in one minute.">شخّص البراند بتاعك <em>بالذكاء الاصطناعي</em> — في دقيقة واحدة.</h1>
-    <p class="hero-sub" data-ar="أدوات تشخيص احترافية مبنية على أطر عالمية. اعرف نقاط القوة والضعف في البراند بتاعك — واللي محتاج يتصلح فوراً." data-en="Professional diagnostic tools built on global frameworks. Discover your brand strengths and weaknesses — and what needs fixing now.">أدوات تشخيص احترافية مبنية على أطر عالمية. اعرف نقاط القوة والضعف في البراند بتاعك — واللي محتاج يتصلح فوراً.</p>
-    <a href="/signup" class="hero-cta" data-ar="سجّل مجاناً واحصل على ١٠٠ كريدت" data-en="Sign Up Free — Get 100 Credits">سجّل مجاناً واحصل على ١٠٠ كريدت</a>
-    <div class="hero-trust">
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-ar="مجاني تماماً" data-en="Completely free">مجاني تماماً</span></span>
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-ar="بدون بطاقة ائتمان" data-en="No credit card">بدون بطاقة ائتمان</span></span>
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-ar="نتايج فورية" data-en="Instant results">نتايج فورية</span></span>
-    </div>
+ <div class="hero-shape hs1"></div><div class="hero-shape hs2"></div><div class="hero-shape hs3"></div>
+ <div class="hero-grid">
+  <div class="hero-text fi">
+   <div class="hero-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg><span data-ar="من بريمو ماركا" data-en="by Primo Marca">من بريمو ماركا</span></div>
+   <h1 data-ar="شخّص البراند بتاعك<br><em>بالذكاء الاصطناعي</em>" data-en="Diagnose your brand<br><em>with AI</em>">شخّص البراند بتاعك<br><em>بالذكاء الاصطناعي</em></h1>
+   <p class="hero-p" data-ar="أدوات تشخيص احترافية مبنية على أطر أكاديمية عالمية. اعرف نقاط القوة والضعف في البراند — واللي محتاج يتصلح فوراً." data-en="Professional diagnostic tools built on global academic frameworks. Discover your brand's strengths, weaknesses, and what needs fixing now.">أدوات تشخيص احترافية مبنية على أطر أكاديمية عالمية. اعرف نقاط القوة والضعف في البراند — واللي محتاج يتصلح فوراً.</p>
+   <div class="hero-btns">
+    <a href="/signup" class="btn-s btn-p" data-ar="سجّل مجاناً — ١٠٠ كريدت" data-en="Sign Up Free — 100 Credits">سجّل مجاناً — ١٠٠ كريدت</a>
+    <a href="#tools" class="btn-s btn-o" data-ar="شوف الأدوات" data-en="See Tools">شوف الأدوات</a>
+   </div>
+   <div class="hero-trust">
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-ar="مجاني تماماً" data-en="Free">مجاني تماماً</span></span>
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-ar="بدون بطاقة ائتمان" data-en="No credit card">بدون بطاقة ائتمان</span></span>
+    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-ar="نتايج فورية" data-en="Instant">نتايج فورية</span></span>
+   </div>
   </div>
+  <div class="hero-vis fi">
+   <div class="hero-card">
+    <div class="hc-head"><span class="hc-score">42</span><span class="hc-badge" data-ar="محتاج شغل" data-en="Needs Work">محتاج شغل</span></div>
+    <div class="hc-bar"></div>
+    <div class="hc-items">
+     <div class="hc-item"><span class="hc-dot" style="background:var(--red)"></span><span data-ar="التموضع مش واضح" data-en="Unclear Positioning">التموضع مش واضح</span></div>
+     <div class="hc-item"><span class="hc-dot" style="background:var(--red)"></span><span data-ar="رحلة العميل فيها احتكاك" data-en="Customer Journey Friction">رحلة العميل فيها احتكاك</span></div>
+     <div class="hc-item"><span class="hc-dot" style="background:var(--amber)"></span><span data-ar="الرسائل مش متسقة" data-en="Inconsistent Messaging">الرسائل مش متسقة</span></div>
+     <div class="hc-item"><span class="hc-dot" style="background:var(--green)"></span><span data-ar="الهوية البصرية متسقة ✓" data-en="Visual Identity OK ✓">الهوية البصرية متسقة ✓</span></div>
+    </div>
+   </div>
+  </div>
+ </div>
 </section>
 
 <section class="how" id="how">
-  <div class="section-inner text-center">
-    <div class="section-label fade-up" data-ar="٣ خطوات بس" data-en="Just 3 Steps">٣ خطوات بس</div>
-    <h2 class="section-title fade-up" data-ar="إزاي الموضوع بيشتغل؟" data-en="How Does It Work?">إزاي الموضوع بيشتغل؟</h2>
-    <div class="steps">
-      <div class="step fade-up"><div class="step-num">١</div><h3 data-ar="سجّل في ثواني" data-en="Sign Up in Seconds">سجّل في ثواني</h3><p data-ar="احصل على ١٠٠ كريدت مجاني فوراً — بدون بطاقة ائتمان" data-en="Get 100 free credits instantly — no credit card needed">احصل على ١٠٠ كريدت مجاني فوراً — بدون بطاقة ائتمان</p></div>
-      <div class="step fade-up"><div class="step-num">٢</div><h3 data-ar="اختار أداة التشخيص" data-en="Choose a Diagnostic Tool">اختار أداة التشخيص</h3><p data-ar="٦ أدوات متخصصة — كل واحدة بتحلل جانب مختلف من البراند" data-en="6 specialized tools — each analyzes a different aspect of your brand">٦ أدوات متخصصة — كل واحدة بتحلل جانب مختلف من البراند</p></div>
-      <div class="step fade-up"><div class="step-num">٣</div><h3 data-ar="استلم تقرير مفصّل" data-en="Get a Detailed Report">استلم تقرير مفصّل</h3><p data-ar="نتيجة من ١٠٠ + مشاكل محددة بالأولوية + توصيات عملية" data-en="Score out of 100 + prioritized issues + actionable recommendations">نتيجة من ١٠٠ + مشاكل محددة بالأولوية + توصيات عملية</p></div>
-    </div>
+ <div class="sec-in tc">
+  <div class="sec-lab fi" data-ar="٣ خطوات بس" data-en="Just 3 Steps">٣ خطوات بس</div>
+  <h2 class="sec-h fi" data-ar="إزاي الموضوع بيشتغل؟" data-en="How Does It Work?">إزاي الموضوع بيشتغل؟</h2>
+  <div class="steps">
+   <div class="step fi"><div class="step-n">١</div><h3 data-ar="سجّل في ثواني" data-en="Sign Up">سجّل في ثواني</h3><p data-ar="احصل على ١٠٠ كريدت مجاني — بدون بطاقة ائتمان" data-en="Get 100 free credits — no credit card">احصل على ١٠٠ كريدت مجاني — بدون بطاقة ائتمان</p></div>
+   <div class="step fi"><div class="step-n">٢</div><h3 data-ar="اختار التشخيص" data-en="Pick a Tool">اختار التشخيص</h3><p data-ar="٦ أدوات — كل واحدة بتحلل جانب مختلف من البراند" data-en="6 tools — each analyzes a different brand aspect">٦ أدوات — كل واحدة بتحلل جانب مختلف من البراند</p></div>
+   <div class="step fi"><div class="step-n">٣</div><h3 data-ar="استلم التقرير" data-en="Get Report">استلم التقرير</h3><p data-ar="نتيجة من ١٠٠ + مشاكل بالأولوية + توصيات عملية" data-en="Score/100 + prioritized issues + recommendations">نتيجة من ١٠٠ + مشاكل بالأولوية + توصيات عملية</p></div>
   </div>
+ </div>
 </section>
 
 <section id="tools">
-  <div class="section-inner text-center">
-    <div class="section-label fade-up" data-ar="أدوات التشخيص" data-en="Diagnostic Tools">أدوات التشخيص</div>
-    <h2 class="section-title fade-up" data-ar="٦ أدوات — كل واحدة بتكشف زاوية مختلفة" data-en="6 Tools — Each Reveals a Different Angle">٦ أدوات — كل واحدة بتكشف زاوية مختلفة</h2>
-    <p class="section-desc mx-auto fade-up" data-ar="مبنية على أطر عالمية زي Keller's CBBE و Kapferer's Prism — مش رأي عشوائي." data-en="Built on global frameworks like Keller's CBBE and Kapferer's Prism — not random opinions.">مبنية على أطر عالمية زي Keller's CBBE و Kapferer's Prism — مش رأي عشوائي.</p>
-    <div class="tools-grid">
-      <a href="/signup" class="tool-card featured fade-up"><div class="tool-icon diag">🔬</div><h3 data-ar="تشخيص البراند" data-en="Brand Diagnosis">تشخيص البراند</h3><p data-ar="نتيجة صحة البراند الشاملة — تموضع، رسائل، عرض، هوية، رحلة عميل." data-en="Complete brand health score — positioning, messaging, offer, identity, customer journey.">نتيجة صحة البراند الشاملة — تموضع، رسائل، عرض، هوية، رحلة عميل.</p><div class="tool-meta"><span class="tool-cost" data-ar="٢٠ كريدت" data-en="20 credits">٢٠ كريدت</span><span class="tool-arrow">←</span></div></a>
-      <a href="/signup" class="tool-card fade-up"><div class="tool-icon offer">📦</div><h3 data-ar="فحص منطق العرض" data-en="Offer Logic Check">فحص منطق العرض</h3><p data-ar="هل باكدجاتك منطقية؟ هل التسعير بيستخدم الـ Anchoring صح؟" data-en="Are your packages logical? Is your pricing using Anchoring correctly?">هل باكدجاتك منطقية؟ هل التسعير بيستخدم الـ Anchoring صح؟</p><div class="tool-meta"><span class="tool-cost" data-ar="٢٥ كريدت" data-en="25 credits">٢٥ كريدت</span><span class="tool-arrow">←</span></div></a>
-      <a href="/signup" class="tool-card fade-up"><div class="tool-icon msg">💬</div><h3 data-ar="فحص الرسالة" data-en="Message Check">فحص الرسالة</h3><p data-ar="هل رسالتك متسقة عبر كل القنوات ولا كل منصة بتقول حاجة مختلفة؟" data-en="Is your messaging consistent or is each platform saying something different?">هل رسالتك متسقة عبر كل القنوات ولا كل منصة بتقول حاجة مختلفة؟</p><div class="tool-meta"><span class="tool-cost" data-ar="٢٠ كريدت" data-en="20 credits">٢٠ كريدت</span><span class="tool-arrow">←</span></div></a>
-      <a href="/signup" class="tool-card fade-up"><div class="tool-icon pres">🌐</div><h3 data-ar="فحص الحضور الرقمي" data-en="Presence Audit">فحص الحضور الرقمي</h3><p data-ar="إزاي بتظهر أونلاين؟ هل الصورة اللي بتوصل هي اللي أنت عايزها؟" data-en="How do you appear online? Is the image you project the one you want?">إزاي بتظهر أونلاين؟ هل الصورة اللي بتوصل هي اللي أنت عايزها؟</p><div class="tool-meta"><span class="tool-cost" data-ar="٢٥ كريدت" data-en="25 credits">٢٥ كريدت</span><span class="tool-arrow">←</span></div></a>
-      <a href="/signup" class="tool-card fade-up"><div class="tool-icon ident">🪞</div><h3 data-ar="لقطة الهوية" data-en="Identity Snapshot">لقطة الهوية</h3><p data-ar="هل شخصية البراند بتوصل صح لجمهورك المستهدف؟" data-en="Does your brand personality resonate with your target audience?">هل شخصية البراند بتوصل صح لجمهورك المستهدف؟</p><div class="tool-meta"><span class="tool-cost" data-ar="٢٠ كريدت" data-en="20 credits">٢٠ كريدت</span><span class="tool-arrow">←</span></div></a>
-      <a href="/signup" class="tool-card fade-up"><div class="tool-icon launch">🚀</div><h3 data-ar="جاهزية الإطلاق" data-en="Launch Readiness">جاهزية الإطلاق</h3><p data-ar="جاهز تنزل السوق ولا لسه فيه حاجات ناقصة؟ اعرف قبل ما تصرف." data-en="Ready for market or still missing pieces? Find out before you spend.">جاهز تنزل السوق ولا لسه فيه حاجات ناقصة؟ اعرف قبل ما تصرف.</p><div class="tool-meta"><span class="tool-cost" data-ar="٣٠ كريدت" data-en="30 credits">٣٠ كريدت</span><span class="tool-arrow">←</span></div></a>
-    </div>
+ <div class="sec-in tc">
+  <div class="sec-lab fi" data-ar="أدوات التشخيص" data-en="Diagnostic Tools">أدوات التشخيص</div>
+  <h2 class="sec-h fi" data-ar="٦ أدوات — كل واحدة بتكشف زاوية مختلفة" data-en="6 Tools — Each Reveals a Different Angle">٦ أدوات — كل واحدة بتكشف زاوية مختلفة</h2>
+  <p class="sec-p mx fi" data-ar="مبنية على أطر أكاديمية زي Keller's CBBE و Kapferer's Prism." data-en="Built on frameworks like Keller's CBBE and Kapferer's Prism.">مبنية على أطر أكاديمية زي Keller's CBBE و Kapferer's Prism.</p>
+  <div class="tg">
+   <a href="/signup" class="tool feat fi"><span class="feat-badge" data-ar="ابدأ من هنا" data-en="Start Here">ابدأ من هنا</span><div class="ti ti-1">🔬</div><div><h3 data-ar="تشخيص البراند" data-en="Brand Diagnosis">تشخيص البراند</h3><p data-ar="تقييم شامل — تموضع، رسائل، عرض، هوية بصرية، رحلة عميل. ١٢ سؤال تحليلي." data-en="Full assessment — positioning, messaging, offer, identity, journey. 12 diagnostic questions.">تقييم شامل — تموضع، رسائل، عرض، هوية بصرية، رحلة عميل. ١٢ سؤال تحليلي.</p><span class="tool-det" data-ar="اعرف أكتر ←" data-en="Learn more →">اعرف أكتر ←</span></div><div style="text-align:left"><span class="tool-c" data-ar="٢٠ كريدت" data-en="20 credits">٢٠ كريدت</span></div></a>
+   <a href="/signup" class="tool fi"><div class="ti ti-2">📦</div><h3 data-ar="فحص منطق العرض" data-en="Offer Logic Check">فحص منطق العرض</h3><p data-ar="باكدجاتك منطقية؟ التسعير بيستخدم Anchoring صح؟" data-en="Packages logical? Pricing using Anchoring right?">باكدجاتك منطقية؟ التسعير بيستخدم Anchoring صح؟</p><div class="tool-f"><span class="tool-c" data-ar="٢٥ كريدت" data-en="25 credits">٢٥ كريدت</span><span class="tool-a">←</span></div></a>
+   <a href="/signup" class="tool fi"><div class="ti ti-3">💬</div><h3 data-ar="فحص الرسالة" data-en="Message Check">فحص الرسالة</h3><p data-ar="رسالتك متسقة ولا كل منصة بتقول حاجة مختلفة؟" data-en="Messaging consistent or each platform says different?">رسالتك متسقة ولا كل منصة بتقول حاجة مختلفة؟</p><div class="tool-f"><span class="tool-c" data-ar="٢٠ كريدت" data-en="20 credits">٢٠ كريدت</span><span class="tool-a">←</span></div></a>
+   <a href="/signup" class="tool fi"><div class="ti ti-4">🌐</div><h3 data-ar="فحص الحضور الرقمي" data-en="Presence Audit">فحص الحضور الرقمي</h3><p data-ar="إزاي بتظهر أونلاين؟ الصورة اللي بتوصل هي اللي عايزها؟" data-en="How you appear online? Is the image what you want?">إزاي بتظهر أونلاين؟ الصورة اللي بتوصل هي اللي عايزها؟</p><div class="tool-f"><span class="tool-c" data-ar="٢٥ كريدت" data-en="25 credits">٢٥ كريدت</span><span class="tool-a">←</span></div></a>
+   <a href="/signup" class="tool fi"><div class="ti ti-5">🪞</div><h3 data-ar="لقطة الهوية" data-en="Identity Snapshot">لقطة الهوية</h3><p data-ar="شخصية البراند بتوصل صح لجمهورك المستهدف؟" data-en="Brand personality resonating with target audience?">شخصية البراند بتوصل صح لجمهورك المستهدف؟</p><div class="tool-f"><span class="tool-c" data-ar="٢٠ كريدت" data-en="20 credits">٢٠ كريدت</span><span class="tool-a">←</span></div></a>
+   <a href="/signup" class="tool fi"><div class="ti ti-6">🚀</div><h3 data-ar="جاهزية الإطلاق" data-en="Launch Readiness">جاهزية الإطلاق</h3><p data-ar="جاهز تنزل السوق ولا فيه حاجات ناقصة؟" data-en="Ready for market or missing pieces?">جاهز تنزل السوق ولا فيه حاجات ناقصة؟</p><div class="tool-f"><span class="tool-c" data-ar="٣٠ كريدت" data-en="30 credits">٣٠ كريدت</span><span class="tool-a">←</span></div></a>
   </div>
+ </div>
 </section>
 
-<section class="example" id="example">
-  <div class="section-inner text-center">
-    <div class="section-label fade-up" data-ar="مثال حقيقي" data-en="Real Example">مثال حقيقي</div>
-    <h2 class="section-title fade-up" data-ar="شوف شكل نتيجة التشخيص" data-en="See What a Diagnosis Looks Like">شوف شكل نتيجة التشخيص</h2>
-    <div class="example-box fade-up">
-      <div class="score-header"><span class="score-num">42<small>/100</small></span><span class="score-label" data-ar="محتاج شغل" data-en="Needs Work">محتاج شغل</span></div>
-      <div class="bar-track"><div class="bar-marker" style="right:42%"></div></div>
-      <div class="bar-labels"><span>١٠٠</span><span>٠</span></div>
-      <div class="findings-mini">
-        <div class="finding-mini"><span class="finding-dot high"></span><span data-ar="التموضع مش واضح — العميل مش فاهم إيه المميز عندك" data-en="Unclear positioning — customer doesn't get your differentiator">التموضع مش واضح — العميل مش فاهم إيه المميز عندك</span></div>
-        <div class="finding-mini"><span class="finding-dot high"></span><span data-ar="رحلة العميل فيها احتكاك — مفيش CTA واضح" data-en="Customer journey has friction — no clear CTA">رحلة العميل فيها احتكاك — مفيش CTA واضح</span></div>
-        <div class="finding-mini"><span class="finding-dot med"></span><span data-ar="الرسائل مش متسقة بين الموقع والسوشيال" data-en="Messaging inconsistent between website and social">الرسائل مش متسقة بين الموقع والسوشيال</span></div>
-        <div class="finding-mini"><span class="finding-dot low"></span><span data-ar="الهوية البصرية متسقة ✓" data-en="Visual identity is consistent ✓">الهوية البصرية متسقة ✓</span></div>
-      </div>
-    </div>
+<section class="example">
+ <div class="sec-in tc">
+  <div class="sec-lab fi" data-ar="مثال حقيقي" data-en="Real Example">مثال حقيقي</div>
+  <h2 class="sec-h fi" data-ar="شوف شكل نتيجة التشخيص" data-en="See What a Result Looks Like">شوف شكل نتيجة التشخيص</h2>
+  <div class="ex-box fi">
+   <div class="ex-top"><span class="ex-num">42<small>/100</small></span><span class="ex-badge" data-ar="محتاج شغل" data-en="Needs Work">محتاج شغل</span></div>
+   <div class="ex-bar"></div>
+   <div class="ex-labels"><span>١٠٠</span><span>٠</span></div>
+   <div class="ex-items">
+    <div class="ex-item"><span class="ex-dot h"></span><span data-ar="التموضع مش واضح — العميل مش فاهم المميز عندك" data-en="Unclear positioning — customer doesn't get differentiator">التموضع مش واضح — العميل مش فاهم المميز عندك</span></div>
+    <div class="ex-item"><span class="ex-dot h"></span><span data-ar="رحلة العميل فيها احتكاك — مفيش CTA واضح" data-en="Customer journey friction — no clear CTA">رحلة العميل فيها احتكاك — مفيش CTA واضح</span></div>
+    <div class="ex-item"><span class="ex-dot m"></span><span data-ar="الرسائل مش متسقة بين الموقع والسوشيال" data-en="Inconsistent messaging between site and social">الرسائل مش متسقة بين الموقع والسوشيال</span></div>
+    <div class="ex-item"><span class="ex-dot l"></span><span data-ar="الهوية البصرية متسقة ✓" data-en="Visual identity is consistent ✓">الهوية البصرية متسقة ✓</span></div>
+   </div>
   </div>
+ </div>
 </section>
 
 <section id="why">
-  <div class="section-inner text-center">
-    <div class="section-label fade-up" data-ar="ليه WZRD AI؟" data-en="Why WZRD AI?">ليه WZRD AI؟</div>
-    <h2 class="section-title fade-up" data-ar="مش أداة عشوائية — ده نظام تشخيص حقيقي" data-en="Not a Random Tool — A Real Diagnostic System">مش أداة عشوائية — ده نظام تشخيص حقيقي</h2>
-    <div class="why-grid">
-      <div class="why-card fade-up"><div class="why-icon">🎯</div><h3 data-ar="مبني على أطر أكاديمية معتمدة" data-en="Built on Proven Frameworks">مبني على أطر أكاديمية معتمدة</h3><p data-ar="Keller's CBBE, Kapferer's Prism, Behavioral Economics — نفس الأطر اللي بتتدرّس في MBA." data-en="Keller's CBBE, Kapferer's Prism, Behavioral Economics — taught in MBA programs.">Keller's CBBE, Kapferer's Prism, Behavioral Economics — نفس الأطر اللي بتتدرّس في MBA.</p></div>
-      <div class="why-card fade-up"><div class="why-icon">⚡</div><h3 data-ar="نتايج في دقيقة — مش أسابيع" data-en="Results in a Minute — Not Weeks">نتايج في دقيقة — مش أسابيع</h3><p data-ar="بدل ما تستنى أسابيع وتدفع آلاف لاستشاري، خد تشخيص أولي فوري." data-en="Instead of waiting weeks and paying thousands, get an instant diagnosis.">بدل ما تستنى أسابيع وتدفع آلاف لاستشاري، خد تشخيص أولي فوري.</p></div>
-      <div class="why-card fade-up"><div class="why-icon">📊</div><h3 data-ar="تقرير مفصّل — مش مجرد رقم" data-en="Detailed Report — Not Just a Number">تقرير مفصّل — مش مجرد رقم</h3><p data-ar="مشاكل محددة بالأولوية + severity لكل مشكلة + توصيات عملية تقدر تنفذها." data-en="Prioritized issues + severity + actionable recommendations.">مشاكل محددة بالأولوية + severity لكل مشكلة + توصيات عملية تقدر تنفذها.</p></div>
-      <div class="why-card fade-up"><div class="why-icon">🔒</div><h3 data-ar="بياناتك في أمان" data-en="Your Data is Secure">بياناتك في أمان</h3><p data-ar="بياناتك بتتستخدم للتشخيص بس — مش بنشاركها مع أي طرف تالت." data-en="Your data is used for diagnosis only — never shared with third parties.">بياناتك بتتستخدم للتشخيص بس — مش بنشاركها مع أي طرف تالت.</p></div>
-    </div>
+ <div class="sec-in tc">
+  <div class="sec-lab fi" data-ar="ليه WZRD AI؟" data-en="Why WZRD AI?">ليه WZRD AI؟</div>
+  <h2 class="sec-h fi" data-ar="مش أداة عشوائية — ده نظام تشخيص حقيقي" data-en="Not Random — A Real Diagnostic System">مش أداة عشوائية — ده نظام تشخيص حقيقي</h2>
+  <div class="wg">
+   <div class="wc fi"><div class="wi">🎯</div><h3 data-ar="أطر أكاديمية معتمدة" data-en="Proven Frameworks">أطر أكاديمية معتمدة</h3><p data-ar="Keller's CBBE, Kapferer's Prism, Behavioral Economics — نفس الأطر اللي في MBA." data-en="Keller's CBBE, Kapferer's Prism, Behavioral Economics — MBA-level.">Keller's CBBE, Kapferer's Prism, Behavioral Economics — نفس الأطر اللي في MBA.</p></div>
+   <div class="wc fi"><div class="wi">⚡</div><h3 data-ar="نتايج فورية" data-en="Instant Results">نتايج فورية</h3><p data-ar="بدل أسابيع وآلاف لاستشاري — تشخيص أولي في دقيقة." data-en="Instead of weeks and thousands — initial diagnosis in a minute.">بدل أسابيع وآلاف لاستشاري — تشخيص أولي في دقيقة.</p></div>
+   <div class="wc fi"><div class="wi">📊</div><h3 data-ar="تقرير مفصّل" data-en="Detailed Report">تقرير مفصّل</h3><p data-ar="مشاكل بالأولوية + مستوى الخطورة + توصيات تقدر تنفذها." data-en="Prioritized issues + severity + actionable recommendations.">مشاكل بالأولوية + مستوى الخطورة + توصيات تقدر تنفذها.</p></div>
+   <div class="wc fi"><div class="wi">🔒</div><h3 data-ar="بياناتك في أمان" data-en="Data Security">بياناتك في أمان</h3><p data-ar="بياناتك للتشخيص بس — مش بنشاركها مع أي طرف تالت." data-en="Data used for diagnosis only — never shared.">بياناتك للتشخيص بس — مش بنشاركها مع أي طرف تالت.</p></div>
   </div>
+ </div>
 </section>
 
-<section class="about" id="about">
-  <div class="section-inner"><div class="about-box fade-up">
-    <div class="section-label" data-ar="مين إحنا" data-en="Who We Are">مين إحنا</div>
-    <h2 class="section-title" data-ar="WZRD AI من بريمو ماركا" data-en="WZRD AI by Primo Marca">WZRD AI من بريمو ماركا</h2>
-    <p data-ar="بريمو ماركا فريق متخصص في استراتيجيات البراند — بنشتغل مع شركات في مصر والسعودية والإمارات. WZRD AI هي أداتنا الذكية اللي بتديك تشخيص أولي لوضع البراند بتاعك." data-en="Primo Marca is a brand strategy team working with companies in Egypt, Saudi Arabia, and UAE. WZRD AI is our smart diagnostic tool.">بريمو ماركا فريق متخصص في استراتيجيات البراند — بنشتغل مع شركات في مصر والسعودية والإمارات. WZRD AI هي أداتنا الذكية اللي بتديك تشخيص أولي لوضع البراند بتاعك.</p>
-    <p data-ar="لو عايز شغل متخصص (هوية بصرية، إطار رسائل، نظام إطلاق) — ده اللي بنعمله." data-en="Need specialized work (visual identity, messaging framework, launch system)? That's what we do.">لو عايز شغل متخصص (هوية بصرية، إطار رسائل، نظام إطلاق) — ده اللي بنعمله.</p>
-    <a href="/services-info" style="display:inline-block;margin-top:12px;color:var(--accent);font-weight:600;font-size:14px" data-ar="اعرف أكتر عن خدماتنا ←" data-en="Learn more about our services →">اعرف أكتر عن خدماتنا ←</a>
-  </div></div>
+<section class="about">
+ <div class="sec-in"><div class="ab-box fi">
+  <div class="sec-lab" data-ar="مين إحنا" data-en="Who We Are">مين إحنا</div>
+  <h2 class="sec-h" data-ar="WZRD AI من بريمو ماركا" data-en="WZRD AI by Primo Marca">WZRD AI من بريمو ماركا</h2>
+  <p data-ar="فريق متخصص في استراتيجيات البراند — بنشتغل مع شركات في مصر والسعودية والإمارات. WZRD AI أداتنا الذكية اللي بتديك تشخيص أولي." data-en="Brand strategy team working with companies across Egypt, Saudi Arabia, and UAE.">فريق متخصص في استراتيجيات البراند — بنشتغل مع شركات في مصر والسعودية والإمارات. WZRD AI أداتنا الذكية اللي بتديك تشخيص أولي.</p>
+  <a href="/services-info" style="display:inline-block;margin-top:8px;color:var(--accent);font-weight:600;font-size:14px" data-ar="اعرف أكتر عن خدماتنا ←" data-en="Learn about our services →">اعرف أكتر عن خدماتنا ←</a>
+ </div></div>
 </section>
 
-<section class="final-cta">
-  <div class="fade-up">
-    <h2 data-ar="جاهز تعرف وضع البراند بتاعك؟" data-en="Ready to Know Your Brand Status?">جاهز تعرف وضع البراند بتاعك؟</h2>
-    <p data-ar="سجّل مجاناً — ١٠٠ كريدت هدية. بدون بطاقة. بدون التزام." data-en="Sign up free — 100 credits gift. No card. No commitment.">سجّل مجاناً — ١٠٠ كريدت هدية. بدون بطاقة. بدون التزام.</p>
-    <a href="/signup" class="btn-white" data-ar="سجّل مجاناً" data-en="Sign Up Free">سجّل مجاناً</a><br>
-    <a href="/services-info" class="btn-secondary" data-ar="أو تواصل مع خبير من Primo Marca" data-en="Or talk to a Primo Marca expert">أو تواصل مع خبير من Primo Marca</a>
-  </div>
+<section class="cta-s">
+ <div class="fi">
+  <h2 data-ar="جاهز تعرف وضع البراند بتاعك؟" data-en="Ready to Know Your Brand Status?">جاهز تعرف وضع البراند بتاعك؟</h2>
+  <p data-ar="١٠٠ كريدت هدية. بدون بطاقة. بدون التزام." data-en="100 free credits. No card. No commitment.">١٠٠ كريدت هدية. بدون بطاقة. بدون التزام.</p>
+  <a href="/signup" class="btn-w" data-ar="ابدأ مجاناً" data-en="Start Free">ابدأ مجاناً</a><br>
+  <a href="/services-info" class="btn-g" data-ar="أو تواصل مع خبير" data-en="Or talk to an expert">أو تواصل مع خبير</a>
+ </div>
 </section>
 
 <footer>
-  <div class="footer-logo">WZRD <span>AI</span></div>
-  <div class="footer-tag">"Marks Fade, MARCAS Don't."</div>
-  <div class="footer-links"><a href="https://instagram.com/primomarca">Instagram</a><a href="https://linkedin.com/company/primomarca">LinkedIn</a></div>
-  <div class="footer-copy">© 2026 WZRD AI by Primo Marca</div>
+ <div class="ft-logo">WZRD <b>AI</b></div>
+ <div class="ft-tag">"Marks Fade, MARCAS Don't."</div>
+ <div class="ft-links"><a href="https://instagram.com/primomarca">Instagram</a><a href="https://linkedin.com/company/primomarca">LinkedIn</a></div>
+ <div class="ft-copy">© 2026 WZRD AI by Primo Marca</div>
 </footer>
 
 <script>
-var obs=new IntersectionObserver(function(e){e.forEach(function(x){if(x.isIntersecting)x.target.classList.add('visible')})},{threshold:.1});
-document.querySelectorAll('.fade-up').forEach(function(el){obs.observe(el)});
+var o=new IntersectionObserver(function(e){e.forEach(function(x){if(x.isIntersecting)x.target.classList.add('v')})},{threshold:.08,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.fi').forEach(function(el){o.observe(el)});
 window.addEventListener('scroll',function(){document.getElementById('nav').classList.toggle('scrolled',window.scrollY>20)});
-var lang='ar';
-function toggleLang(){
-  lang=lang==='ar'?'en':'ar';
-  document.documentElement.lang=lang;
-  document.documentElement.dir=lang==='ar'?'rtl':'ltr';
-  document.body.classList.toggle('en-mode',lang==='en');
-  document.querySelectorAll('[data-ar]').forEach(function(el){
-    var t=lang==='ar'?el.getAttribute('data-ar'):el.getAttribute('data-en');
-    if(t){if(el.tagName==='INPUT'||el.tagName==='TEXTAREA')el.placeholder=t;else el.innerHTML=t;}
-  });
-  document.querySelectorAll('.lang-btn').forEach(function(b){b.textContent=lang==='ar'?'EN':'ع'});
-  var nums=document.querySelectorAll('.step-num');
-  if(lang==='ar'){nums[0].textContent='١';nums[1].textContent='٢';nums[2].textContent='٣'}
-  else{nums[0].textContent='1';nums[1].textContent='2';nums[2].textContent='3'}
+var l='ar';
+function tl(){
+ l=l==='ar'?'en':'ar';document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';
+ document.body.classList.toggle('en-mode',l==='en');
+ document.querySelectorAll('[data-ar]').forEach(function(e){var t=l==='ar'?e.getAttribute('data-ar'):e.getAttribute('data-en');if(t)e.innerHTML=t});
+ document.querySelectorAll('.lang').forEach(function(b){b.textContent=l==='ar'?'EN':'ع'});
+ var n=document.querySelectorAll('.step-n');if(n.length){if(l==='ar'){n[0].textContent='١';n[1].textContent='٢';n[2].textContent='٣'}else{n[0].textContent='1';n[1].textContent='2';n[2].textContent='3'}}
 }
-(function(){
-  var s=document.cookie.includes('app_session_id=');
-  if(s){document.querySelectorAll('.hero-cta,.nav-cta,.btn-white').forEach(function(el){
-    if(el.getAttribute('href')==='/signup'){el.setAttribute('href','/tools');el.innerHTML=lang==='ar'?'روح للأدوات':'Go to Tools'}
-  })}
-})();
+(function(){if(document.cookie.includes('app_session_id=')){document.querySelectorAll('[href="/signup"]').forEach(function(e){e.setAttribute('href','/tools');e.innerHTML=l==='ar'?'روح للأدوات':'Go to Tools'})}})();
 </script>
 </body>
 </html>
