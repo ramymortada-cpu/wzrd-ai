@@ -148,11 +148,14 @@ async function runToolAI(
   const result: ToolResult = {
     score,
     label: scoreLabel(score),
-    findings: (parsed.findings || []).slice(0, 5).map(f => ({
-      title: f.title || 'Finding',
-      detail: f.detail || '',
-      severity: (['high', 'medium', 'low'].includes(f.severity) ? f.severity : 'medium') as 'high' | 'medium' | 'low',
-    })),
+    findings: (parsed.findings || []).slice(0, 5).map(f => {
+      const s = (f.severity || 'medium').toLowerCase();
+      return {
+        title: f.title || 'Finding',
+        detail: f.detail || '',
+        severity: (['high', 'medium', 'low'].includes(s) ? s : 'medium') as 'high' | 'medium' | 'low',
+      };
+    }),
     recommendation: parsed.recommendation || 'Consider a full audit for detailed insights.',
     nextStep: { type: 'guide', title: 'Learn more', url: '/guides/brand-health' },
     serviceRecommendation: getServiceRecommendation(toolName, score),
@@ -175,6 +178,10 @@ async function runToolAI(
 // ════════════════════════════════════════════
 // TOOL PROMPTS
 // ════════════════════════════════════════════
+
+const ARABIC_INSTRUCTION = `أجب بالعربي المصري. كل العناوين والتفاصيل والتوصيات لازم تكون بالعربي. المصطلحات المهنية ممكن تفضل بالإنجليزي بس الشرح بالعربي.
+
+`;
 
 const TOOL_SYSTEM = `You are WZRD AI — a brand diagnosis engine trained on Keller's CBBE, Kapferer's Identity Prism, Sharp's How Brands Grow, and real MENA market data.
 
@@ -257,7 +264,7 @@ export const toolsRouter = router({
       challenge: z.string().max(1000).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const userPrompt = `Analyze brand health for:
+      const originalPrompt = `Analyze brand health for:
 Company: ${input.companyName}
 Industry: ${input.industry || 'Not specified'}
 Market: ${input.market || 'MENA'}
@@ -265,6 +272,7 @@ Website: ${input.website || 'Not provided'}
 Main challenge: ${input.challenge || 'Not specified'}
 
 Score the brand 0-100. Identify the top 3-5 issues across: positioning clarity, messaging consistency, offer logic, visual perception, and customer journey. Be specific to THIS company.`;
+      const userPrompt = ARABIC_INSTRUCTION + originalPrompt;
 
       const result = await runToolAI('brand_diagnosis', 'Brand Diagnosis', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
       result.nextStep = { type: 'guide', title: 'How to Audit Your Brand Health', url: '/guides/brand-health' };
@@ -281,13 +289,14 @@ Score the brand 0-100. Identify the top 3-5 issues across: positioning clarity, 
       targetAudience: z.string().max(500).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const userPrompt = `Analyze offer logic for:
+      const originalPrompt = `Analyze offer logic for:
 Company: ${input.companyName}
 Current packages/services: ${input.packages}
 Pricing approach: ${input.pricing || 'Not specified'}
 Target audience: ${input.targetAudience || 'Not specified'}
 
 Score 0-100. Check: Is the offer clear? Does pricing logic make sense? Are there too many/few options? Is the value proposition obvious? Is there a clear path from free→paid?`;
+      const userPrompt = ARABIC_INSTRUCTION + originalPrompt;
 
       const result = await runToolAI('offer_check', 'Offer Logic Check', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
       result.nextStep = { type: 'guide', title: 'Offer Logic 101', url: '/guides/offer-logic' };
@@ -305,7 +314,7 @@ Score 0-100. Check: Is the offer clear? Does pricing logic make sense? Are there
       websiteHeadline: z.string().max(500).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const userPrompt = `Analyze messaging consistency for:
+      const originalPrompt = `Analyze messaging consistency for:
 Company: ${input.companyName}
 Tagline: ${input.tagline || 'None'}
 Key message: ${input.keyMessage || 'Not provided'}
@@ -313,6 +322,7 @@ Social bio: ${input.socialBio || 'Not provided'}
 Website headline: ${input.websiteHeadline || 'Not provided'}
 
 Score 0-100. Check: Are these consistent? Is the differentiation clear? Is the tone appropriate? Is there a Clarity Gap? Would a new customer understand this brand in 5 seconds?`;
+      const userPrompt = ARABIC_INSTRUCTION + originalPrompt;
 
       const result = await runToolAI('message_check', 'Message Check', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
       result.nextStep = { type: 'guide', title: 'Brand Identity Guide', url: '/guides/brand-identity' };
@@ -330,7 +340,7 @@ Score 0-100. Check: Are these consistent? Is the differentiation clear? Is the t
       inquiryFlow: z.string().max(500).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const userPrompt = `Audit digital presence for:
+      const originalPrompt = `Audit digital presence for:
 Company: ${input.companyName}
 Instagram: ${input.instagramHandle || 'Not provided'}
 Website: ${input.website || 'Not provided'}
@@ -338,6 +348,7 @@ Other channels: ${input.otherChannels || 'None'}
 Inquiry flow: ${input.inquiryFlow || 'Not described'}
 
 Score 0-100. Check: Cross-channel consistency, premium perception, CTA clarity, inquiry flow friction, content-proof-CTA alignment. Why is this brand "present but not chosen"?`;
+      const userPrompt = ARABIC_INSTRUCTION + originalPrompt;
 
       const result = await runToolAI('presence_audit', 'Presence Audit', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
       result.nextStep = { type: 'service', title: 'Full Health Check', url: '/services#audit' };
@@ -354,13 +365,14 @@ Score 0-100. Check: Cross-channel consistency, premium perception, CTA clarity, 
       competitors: z.string().max(500).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const userPrompt = `Analyze brand identity match for:
+      const originalPrompt = `Analyze brand identity match for:
 Company: ${input.companyName}
 Brand describes itself as: ${input.brandDescription}
 Target audience: ${input.targetAudience || 'Not specified'}
 Main competitors: ${input.competitors || 'Not specified'}
 
 Score 0-100. Using Kapferer's Identity Prism, check: Does the brand personality match the audience? Is the visual quality matching the positioning? Is there a "Commodity Trap" — looking like everyone else? What archetype does this brand project vs. what it should project?`;
+      const userPrompt = ARABIC_INSTRUCTION + originalPrompt;
 
       const result = await runToolAI('identity_snapshot', 'Identity Snapshot', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
       result.nextStep = { type: 'guide', title: 'What Is Brand Identity', url: '/guides/brand-identity' };
@@ -379,7 +391,7 @@ Score 0-100. Using Kapferer's Identity Prism, check: Does the brand personality 
       launchGoal: z.string().max(500).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const userPrompt = `Assess launch readiness for:
+      const originalPrompt = `Assess launch readiness for:
 Company: ${input.companyName}
 Has brand guidelines: ${input.hasGuidelines ? 'Yes' : 'No'}
 Has structured offers: ${input.hasOfferStructure ? 'Yes' : 'No'}
@@ -388,6 +400,7 @@ Has website: ${input.hasWebsite ? 'Yes' : 'No'}
 Launch goal: ${input.launchGoal || 'Not specified'}
 
 Score 0-100 on launch readiness. Identify what's missing and what's the priority order. Be specific about what "ready to launch" means for THIS type of business.`;
+      const userPrompt = ARABIC_INSTRUCTION + originalPrompt;
 
       const result = await runToolAI('launch_readiness', 'Launch Readiness', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
       result.nextStep = { type: 'service', title: 'Business Takeoff Package', url: '/services#takeoff' };

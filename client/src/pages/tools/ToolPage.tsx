@@ -227,11 +227,13 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
 
   // ═══ RESULT VIEW ═══
   if (result) {
-    const serviceLabel = locale === 'ar' ? result.serviceRecommendation?.serviceAr : result.serviceRecommendation?.service;
-    const serviceReason = locale === 'ar' ? result.serviceRecommendation?.reasonAr : result.serviceRecommendation?.reason;
+    const isAr = locale === 'ar';
+    const serviceLabel = isAr ? result.serviceRecommendation?.serviceAr : result.serviceRecommendation?.service;
+    const serviceReason = isAr ? result.serviceRecommendation?.reasonAr : result.serviceRecommendation?.reason;
     const scoreLabelMap: Record<string, string> = { Strong: 'wzrd.scoreStrong', 'Needs Work': 'wzrd.scoreNeedsWork', Weak: 'wzrd.scoreWeak', Critical: 'wzrd.scoreCritical' };
-    const displayScoreLabel = locale === 'ar' && scoreLabelMap[result.label] ? t(scoreLabelMap[result.label]) : result.label;
-    const severityMap: Record<string, string> = { high: 'wzrd.severityHigh', medium: 'wzrd.severityMedium', low: 'wzrd.severityLow' };
+    const displayScoreLabel = isAr && scoreLabelMap[result.label] ? t(scoreLabelMap[result.label]) : result.label;
+    const severityKeyMap: Record<string, string> = { high: 'wzrd.severityHigh', medium: 'wzrd.severityMedium', low: 'wzrd.severityLow' };
+    const getSeverityLabel = (sev: string) => (isAr && severityKeyMap[(sev || '').toLowerCase()] ? t(severityKeyMap[(sev || '').toLowerCase()]) : sev);
     const tierMap: Record<string, string> = { AUDIT: 'wzrd.tierAudit', BUILD: 'wzrd.tierBuild', TAKEOFF: 'wzrd.tierTakeoff' };
     const nextStepTitleMap: Record<string, string> = {
       'How to Audit Your Brand Health': 'wzrd.nextStepAudit',
@@ -241,8 +243,8 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
       'Full Health Check': 'wzrd.nextStepHealth',
       'Business Takeoff Package': 'wzrd.nextStepTakeoff',
     };
-    const displayNextStepTitle = locale === 'ar' && nextStepTitleMap[result.nextStep.title] ? t(nextStepTitleMap[result.nextStep.title]) : result.nextStep.title;
-    const displayTier = locale === 'ar' && result.serviceRecommendation && tierMap[result.serviceRecommendation.tier] ? t(tierMap[result.serviceRecommendation.tier]) : result.serviceRecommendation?.tier;
+    const displayNextStepTitle = isAr && nextStepTitleMap[result.nextStep?.title ?? ''] ? t(nextStepTitleMap[result.nextStep.title]) : (result.nextStep?.title ?? '');
+    const displayTier = isAr && result.serviceRecommendation && tierMap[result.serviceRecommendation.tier] ? t(tierMap[result.serviceRecommendation.tier]) : (result.serviceRecommendation?.tier ?? '');
     return (
       <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white">
         <WzrdPublicHeader showCredits={false} />
@@ -261,7 +263,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
             {result.findings.map((f, i) => (
               <div key={i} className={`p-4 rounded-xl border shadow-sm ${severityColor(f.severity)}`}>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-mono uppercase tracking-wider opacity-60">{locale === 'ar' && severityMap[f.severity] ? t(severityMap[f.severity]) : f.severity}</span>
+                  <span className="text-xs font-mono uppercase tracking-wider opacity-60">{getSeverityLabel(f.severity)}</span>
                   <h4 className="font-bold text-sm">{f.title}</h4>
                 </div>
                 <p className="text-xs opacity-80 leading-relaxed">{f.detail}</p>
