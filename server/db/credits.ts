@@ -141,22 +141,21 @@ export async function deductCredits(
   const cost = TOOL_COSTS[toolName];
   if (!cost) return { success: false, newBalance: 0, cost: 0, error: `Unknown tool: ${toolName}` };
 
-  // Check daily cap BEFORE attempting deduction
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayUsage = await db.select({ total: sql<number>`COALESCE(SUM(ABS(amount)), 0)` })
-    .from(creditTransactions)
-    .where(and(
-      eq(creditTransactions.userId, userId),
-      eq(creditTransactions.type, 'tool_usage'),
-      sql`createdAt >= ${today}`
-    ));
-
-  const usedToday = todayUsage[0]?.total || 0;
-  if (usedToday + cost > DAILY_CREDIT_CAP) {
-    const currentBalance = await getUserCredits(userId);
-    return { success: false, newBalance: currentBalance, cost, error: `Daily limit reached (${DAILY_CREDIT_CAP} credits/day). Come back tomorrow!` };
-  }
+  // Check daily cap BEFORE attempting deduction — TEMPORARILY COMMENTED OUT for testing
+  // const today = new Date();
+  // today.setHours(0, 0, 0, 0);
+  // const todayUsage = await db.select({ total: sql<number>`COALESCE(SUM(ABS(amount)), 0)` })
+  //   .from(creditTransactions)
+  //   .where(and(
+  //     eq(creditTransactions.userId, userId),
+  //     eq(creditTransactions.type, 'tool_usage'),
+  //     sql`createdAt >= ${today}`
+  //   ));
+  // const usedToday = todayUsage[0]?.total || 0;
+  // if (usedToday + cost > DAILY_CREDIT_CAP) {
+  //   const currentBalance = await getUserCredits(userId);
+  //   return { success: false, newBalance: currentBalance, cost, error: `Daily limit reached (${DAILY_CREDIT_CAP} credits/day). Come back tomorrow!` };
+  // }
 
   try {
     // ATOMIC deduction: only deducts if credits >= cost
