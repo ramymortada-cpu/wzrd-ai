@@ -21,7 +21,7 @@ export async function setupVite(app: Express, server: Server) {
   });
 
   // ═══ Landing pages — BEFORE Vite so anonymous / gets landing, not React ═══
-  const landingPath = path.resolve(import.meta.dirname, "../..", "client", "public", "landing");
+  const landingPath = path.resolve(process.cwd(), "client", "public", "landing");
   if (fs.existsSync(landingPath)) {
     app.use("/landing", express.static(landingPath));
 
@@ -94,9 +94,9 @@ export function serveStatic(app: Express) {
   }
 
   // ═══ Landing pages — served BEFORE React catch-all ═══
-  // These are public HTML pages accessible without auth
-  const landingPath = path.resolve(import.meta.dirname, "../..", "client", "public", "landing");
-  const distLandingPath = path.resolve(distPath, "landing");
+  // Prefer source (client/public/landing) over dist — dist may have stale build cache
+  const landingPath = path.resolve(process.cwd(), "client", "public", "landing");
+  const distLandingPath = path.resolve(process.cwd(), "dist", "public", "landing");
   const activeLandingPath = fs.existsSync(landingPath) ? landingPath : distLandingPath;
 
   if (fs.existsSync(activeLandingPath)) {
