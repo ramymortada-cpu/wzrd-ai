@@ -5,7 +5,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
-type Tab = 'overview' | 'users' | 'credits' | 'tools' | 'payments' | 'webhooks' | 'cms' | 'prompts' | 'team' | 'agency' | 'config';
+type Tab = 'overview' | 'users' | 'credits' | 'tools' | 'payments' | 'webhooks' | 'cms' | 'prompts' | 'pricing' | 'team' | 'agency' | 'config';
 
 const FETCH_OPTS: RequestInit = { credentials: 'include' };
 
@@ -132,13 +132,36 @@ type T = (ar: string, en: string) => string;
 function OverviewTab({ t }: { t: T }) {
   const [data, setData] = useState<Record<string, any> | null>(null);
   const [recentRuns, setRecentRuns] = useState<{ runs: any[] } | null>(null);
-  useEffect(() => { api('wzrdAdmin.dashboard').then(setData); }, []);
-  useEffect(() => { api('wzrdAdmin.toolRunHistory', { limit: 5 }).then(setRecentRuns); }, []);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const load = useCallback(async () => {
+    setRefreshing(true);
+    const [d, r] = await Promise.all([
+      api('wzrdAdmin.dashboard'),
+      api('wzrdAdmin.toolRunHistory', { limit: 5 }),
+    ]);
+    setData(d);
+    setRecentRuns(r);
+    setRefreshing(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    const id = setInterval(load, 30_000);
+    return () => clearInterval(id);
+  }, [load]);
 
   if (!data) return <LoadingSkeleton />;
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs text-gray-400">{t('تحديث كل 30 ثانية', 'Auto-refresh every 30s')}</span>
+        <button onClick={load} disabled={refreshing} className="text-xs text-indigo-600 hover:text-indigo-500 disabled:opacity-50">
+          {refreshing ? t('جاري...', 'Refreshing...') : t('تحديث', 'Refresh')}
+        </button>
+      </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label={t('إجمالي التسجيلات', 'Total Signups')} value={data.users?.total || 0} sub={`+${data.users?.today || 0} ${t('النهاردة', 'today')}`} icon="👥" accent="border-l-indigo-500" gradient="from-indigo-50/50 to-white" />
         <StatCard label={t('هذا الأسبوع', 'This Week')} value={data.users?.thisWeek || 0} icon="📅" accent="border-l-cyan-500" gradient="from-cyan-50/50 to-white" />
@@ -194,19 +217,38 @@ function OverviewTab({ t }: { t: T }) {
 // ═══════════════════════════════════════
 const PAGE_SIZE = 20;
 
-function UsersTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; onError?: (msg: string) => void }) {
+function UsersTab({ t, onSuccess, onError }: { t: T; onSuccess?: (msg?: string) => void; onError?: (msg: string) => void }) {
   const [data, setData] = useState<{ users: any[]; total: number } | null>(null);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
   const [addingCredits, setAddingCredits] = useState<number | null>(null);
   const [creditsAmount, setCreditsAmount] = useState('50');
   const [addResult, setAddResult] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkAmount, setBulkAmount] = useState('50');
+  const [bulkReason, setBulkReason] = useState('Admin bulk add');
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const load = useCallback(() => {
     api('wzrdAdmin.users', { search: search || undefined, limit: PAGE_SIZE, offset: page * PAGE_SIZE }).then(setData);
   }, [search, page]);
 
   useEffect(() => { load(); }, [load]);
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    const ids = data?.users ?? [];
+    if (selectedIds.size >= ids.length) setSelectedIds(new Set());
+    else setSelectedIds(new Set(ids.map((u: any) => u.id)));
+  };
 
   const handleAddCredits = async (userId: number) => {
     const amount = parseInt(creditsAmount);
@@ -221,6 +263,26 @@ function UsersTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; onE
     } else {
       setAddResult('❌');
       onError?.(t('فشل إضافة الكريدت', 'Failed to add credits'));
+    }
+  };
+
+  const handleBulkAdd = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    const amount = parseInt(bulkAmount);
+    if (!amount || amount <= 0) return;
+    setBulkLoading(true);
+    const r = await apiMutation('credits.bulkAdminAdd', { userIds: ids, amount, reason: bulkReason });
+    setBulkLoading(false);
+    if (r?.added !== undefined) {
+      setSelectedIds(new Set());
+      load();
+      const msg = r.failed > 0
+        ? t(`تم إضافة ${r.added}، فشل ${r.failed}`, `Added ${r.added}, failed ${r.failed}`)
+        : t(`تم إضافة كريدت لـ ${r.added} مستخدم`, `Added credits to ${r.added} users`);
+      onSuccess?.(msg);
+    } else {
+      onError?.(t('فشل الإضافة الجماعية', 'Bulk add failed'));
     }
   };
 
@@ -242,10 +304,30 @@ function UsersTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; onE
             className="px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 w-64 outline-none focus:border-indigo-500" />
         </div>
       </div>
+
+      {selectedIds.size > 0 && (
+        <div className="mb-4 p-4 rounded-xl border border-amber-200 bg-amber-50 flex flex-wrap items-center gap-3">
+          <span className="text-sm font-medium text-amber-800">{selectedIds.size} {t('محدد', 'selected')}</span>
+          <input type="number" value={bulkAmount} onChange={e => setBulkAmount(e.target.value)} min={1} max={5000}
+            className="w-20 px-2 py-1.5 rounded-lg border border-amber-200 text-sm font-mono outline-none focus:ring-2 focus:ring-amber-500" placeholder="50" />
+          <input value={bulkReason} onChange={e => setBulkReason(e.target.value)}
+            className="flex-1 min-w-[120px] px-2 py-1.5 rounded-lg border border-amber-200 text-sm outline-none focus:ring-2 focus:ring-amber-500" placeholder={t('سبب الإضافة', 'Reason')} />
+          <button onClick={handleBulkAdd} disabled={bulkLoading}
+            className="px-4 py-1.5 rounded-lg bg-amber-600 text-white text-sm font-bold hover:bg-amber-500 disabled:opacity-50">
+            {bulkLoading ? t('جاري...', '...') : `+ ${t('كريدت لـ', 'Credits to')} ${selectedIds.size}`}
+          </button>
+          <button onClick={() => setSelectedIds(new Set())} className="px-2 py-1 text-amber-700 hover:text-amber-900 text-xs">{t('إلغاء التحديد', 'Clear')}</button>
+        </div>
+      )}
+
       <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-xs text-gray-500 bg-gray-50 border-b border-gray-200">
+              <th className="pb-2 pr-2 w-8">
+                <input type="checkbox" checked={(data?.users?.length ?? 0) > 0 && selectedIds.size >= (data?.users?.length ?? 0)} onChange={toggleSelectAll}
+                  className="rounded border-gray-300 text-amber-600 focus:ring-amber-500" />
+              </th>
               <th className="pb-2 pr-4">{t('الاسم', 'Name')}</th>
               <th className="pb-2 pr-4">{t('البريد', 'Email')}</th>
               <th className="pb-2 pr-4">{t('الشركة', 'Company')}</th>
@@ -258,7 +340,11 @@ function UsersTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; onE
           </thead>
           <tbody>
             {(data?.users || []).map((u: any, i: number) => (
-              <tr key={u.id} className={`border-b border-gray-100 hover:bg-gray-50 transition ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
+              <tr key={u.id} className={`border-b border-gray-100 hover:bg-gray-50 transition ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} ${selectedIds.has(u.id) ? 'bg-amber-50/50' : ''}`}>
+                <td className="py-2 pr-2">
+                  <input type="checkbox" checked={selectedIds.has(u.id)} onChange={() => toggleSelect(u.id)}
+                    className="rounded border-gray-300 text-amber-600 focus:ring-amber-500" />
+                </td>
                 <td className="py-2 pr-4 font-medium">{u.name || '—'}</td>
                 <td className="py-2 pr-4 text-gray-600">{u.email}</td>
                 <td className="py-2 pr-4 text-gray-500">{u.company || '—'}</td>
@@ -824,6 +910,174 @@ function CmsTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; onErr
 }
 
 // ═══════════════════════════════════════
+// PRICING TAB — Credit Plans + Promo Codes
+// ═══════════════════════════════════════
+function PricingTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; onError?: (m: string) => void }) {
+  const [plans, setPlans] = useState<any[]>([]);
+  const [promoCodes, setPromoCodes] = useState<any[]>([]);
+  const [editingPlan, setEditingPlan] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<Record<string, any>>({});
+  const [showAddPlan, setShowAddPlan] = useState(false);
+  const [newPlan, setNewPlan] = useState<Record<string, any>>({ id: '', credits: 500, priceEGP: 499, name: '', nameAr: '' });
+  const [showPromoForm, setShowPromoForm] = useState(false);
+  const [promoForm, setPromoForm] = useState<Record<string, any>>({});
+  const [saving, setSaving] = useState('');
+
+  const load = useCallback(async () => {
+    const [pRes, pcRes] = await Promise.all([
+      api('wzrdAdmin.creditPlansList'),
+      api('wzrdAdmin.promoCodeList'),
+    ]);
+    setPlans(pRes?.plans || []);
+    setPromoCodes(pcRes?.codes || []);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const savePlan = async (planId: string, updates: any) => {
+    setSaving('Saving...');
+    await apiMutation('wzrdAdmin.updateCreditPlan', { planId, ...updates });
+    setEditingPlan(null);
+    setSaving('✅');
+    onSuccess?.();
+    load();
+    setTimeout(() => setSaving(''), 2000);
+  };
+
+  const removePlan = async (planId: string) => {
+    if (!confirm(t('حذف الباقة؟', 'Delete this plan?'))) return;
+    await apiMutation('wzrdAdmin.removeCreditPlan', { planId });
+    load();
+    onSuccess?.();
+  };
+
+  const createPromo = async () => {
+    if (!promoForm.code?.trim()) { onError?.(t('الكود مطلوب', 'Code required')); return; }
+    setSaving('...');
+    await apiMutation('wzrdAdmin.promoCodeCreate', {
+      code: promoForm.code.trim(),
+      discountType: promoForm.discountType || 'percent',
+      discountValue: parseInt(promoForm.discountValue) || 10,
+      minAmountEGP: parseInt(promoForm.minAmountEGP) || 0,
+      maxUses: promoForm.maxUses ? parseInt(promoForm.maxUses) : null,
+      validUntil: promoForm.validUntil || null,
+    });
+    setShowPromoForm(false);
+    setPromoForm({});
+    setSaving('✅');
+    load();
+    onSuccess?.();
+    setTimeout(() => setSaving(''), 2000);
+  };
+
+  const togglePromo = async (id: number, enabled: number) => {
+    await apiMutation('wzrdAdmin.promoCodeUpdate', { id, enabled });
+    load();
+  };
+
+  const deletePromo = async (id: number) => {
+    if (!confirm(t('حذف الكود؟', 'Delete this promo?'))) return;
+    await apiMutation('wzrdAdmin.promoCodeDelete', { id });
+    load();
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold">{t('الباقات وأكواد الخصم', 'Plans & Promo Codes')}</h3>
+        {saving && <span className="text-xs text-green-600">{saving}</span>}
+      </div>
+
+      {/* Credit Plans */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-sm font-bold text-gray-600">📦 {t('باقات الكريدت', 'Credit Plans')}</h4>
+          <button onClick={() => setShowAddPlan(true)} className="px-3 py-1 rounded-lg bg-green-600 text-white text-xs font-bold">+ {t('باقة جديدة', 'New Plan')}</button>
+        </div>
+        {showAddPlan && (
+          <div className="p-4 rounded-xl border border-green-200 bg-green-50/50 mb-4 flex flex-wrap gap-2 items-center">
+            <input placeholder="ID (en)" value={newPlan.id} onChange={e => setNewPlan({...newPlan, id: e.target.value})} className="px-2 py-1 rounded border text-sm w-24" />
+            <input type="number" placeholder="Credits" value={newPlan.credits} onChange={e => setNewPlan({...newPlan, credits: parseInt(e.target.value) || 0})} className="px-2 py-1 rounded border text-sm w-20" />
+            <input type="number" placeholder="EGP" value={newPlan.priceEGP} onChange={e => setNewPlan({...newPlan, priceEGP: parseInt(e.target.value) || 0})} className="px-2 py-1 rounded border text-sm w-20" />
+            <input placeholder="Name (EN)" value={newPlan.name} onChange={e => setNewPlan({...newPlan, name: e.target.value})} className="px-2 py-1 rounded border text-sm w-28" />
+            <input placeholder="Name (AR)" value={newPlan.nameAr} onChange={e => setNewPlan({...newPlan, nameAr: e.target.value})} className="px-2 py-1 rounded border text-sm w-28" />
+            <button onClick={async () => { if (newPlan.id && newPlan.name) { await apiMutation('wzrdAdmin.updateCreditPlan', { planId: newPlan.id, credits: newPlan.credits, priceEGP: newPlan.priceEGP, name: newPlan.name, nameAr: newPlan.nameAr }); setNewPlan({ id: '', credits: 500, priceEGP: 499, name: '', nameAr: '' }); setShowAddPlan(false); load(); onSuccess?.(); }}} className="px-3 py-1 rounded bg-green-600 text-white text-xs">✓</button>
+            <button onClick={() => setShowAddPlan(false)} className="px-3 py-1 rounded text-gray-500 text-xs">✕</button>
+          </div>
+        )}
+        <div className="space-y-2">
+          {plans.map((p: any) => (
+            <div key={p.id} className="p-4 rounded-xl border border-gray-200 bg-white flex items-center justify-between">
+              {editingPlan === p.id ? (
+                <div className="flex gap-2 items-center flex-wrap">
+                  <input value={editDraft.credits ?? p.credits} onChange={e => setEditDraft({...editDraft, credits: parseInt(e.target.value) || 0})} type="number" className="w-20 px-2 py-1 rounded border text-sm" placeholder="Credits" />
+                  <input value={editDraft.priceEGP ?? p.priceEGP} onChange={e => setEditDraft({...editDraft, priceEGP: parseInt(e.target.value) || 0})} type="number" className="w-20 px-2 py-1 rounded border text-sm" placeholder="EGP" />
+                  <input value={editDraft.name ?? p.name} onChange={e => setEditDraft({...editDraft, name: e.target.value})} className="w-24 px-2 py-1 rounded border text-sm" placeholder="Name" />
+                  <button onClick={() => { savePlan(p.id, { credits: editDraft.credits ?? p.credits, priceEGP: editDraft.priceEGP ?? p.priceEGP, name: editDraft.name ?? p.name, nameAr: editDraft.nameAr ?? p.nameAr }); setEditDraft({}); setEditingPlan(null); }} className="px-3 py-1 rounded bg-green-600 text-white text-xs">✓</button>
+                  <button onClick={() => { setEditingPlan(null); setEditDraft({}); }} className="px-3 py-1 rounded text-gray-500 text-xs">✕</button>
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <span className="font-medium">{p.name}</span> <span className="text-gray-500">/ {p.nameAr}</span>
+                    <span className="ml-2 text-amber-600 font-mono">{p.credits} {t('نقطة', 'credits')}</span>
+                    <span className="ml-2 text-gray-600 font-mono">{p.priceEGP} EGP</span>
+                  </div>
+                  <div className="flex gap-1">
+                    <button onClick={() => { setEditingPlan(p.id); setEditDraft({ credits: p.credits, priceEGP: p.priceEGP, name: p.name, nameAr: p.nameAr }); }} className="px-2 py-1 rounded bg-indigo-50 text-indigo-600 text-xs">{t('تعديل', 'Edit')}</button>
+                    <button onClick={() => removePlan(p.id)} className="px-2 py-1 rounded text-red-500 text-xs hover:bg-red-50">🗑</button>
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Promo Codes */}
+      <div>
+        <h4 className="text-sm font-bold text-gray-600 mb-3">🏷️ {t('أكواد الخصم', 'Promo Codes')}</h4>
+        <button onClick={() => setShowPromoForm(true)} className="mb-3 px-4 py-1.5 rounded-lg bg-green-600 text-white text-xs font-bold">+ {t('كود جديد', 'New Code')}</button>
+        {showPromoForm && (
+          <div className="p-4 rounded-xl border border-green-200 bg-green-50/50 mb-4 space-y-2">
+            <input placeholder={t('كود الخصم', 'Promo code')} value={promoForm.code || ''} onChange={e => setPromoForm({...promoForm, code: e.target.value})} className="px-3 py-2 rounded border text-sm w-40" />
+            <select value={promoForm.discountType || 'percent'} onChange={e => setPromoForm({...promoForm, discountType: e.target.value})} className="px-3 py-2 rounded border text-sm">
+              <option value="percent">{t('نسبة مئوية', 'Percent')} (%)</option>
+              <option value="fixed">{t('مبلغ ثابت', 'Fixed EGP')}</option>
+            </select>
+            <input type="number" placeholder={t('القيمة', 'Value')} value={promoForm.discountValue || ''} onChange={e => setPromoForm({...promoForm, discountValue: e.target.value})} className="px-3 py-2 rounded border text-sm w-20" />
+            <input type="number" placeholder={t('الحد الأدنى EGP', 'Min EGP')} value={promoForm.minAmountEGP || ''} onChange={e => setPromoForm({...promoForm, minAmountEGP: e.target.value})} className="px-3 py-2 rounded border text-sm w-24" />
+            <input type="number" placeholder={t('أقصى استخدامات', 'Max uses')} value={promoForm.maxUses || ''} onChange={e => setPromoForm({...promoForm, maxUses: e.target.value})} className="px-3 py-2 rounded border text-sm w-24" />
+            <input type="date" placeholder="Valid until" value={promoForm.validUntil || ''} onChange={e => setPromoForm({...promoForm, validUntil: e.target.value})} className="px-3 py-2 rounded border text-sm" />
+            <div className="flex gap-2">
+              <button onClick={createPromo} className="px-4 py-2 rounded bg-green-600 text-white text-sm font-bold">✓ {t('إضافة', 'Add')}</button>
+              <button onClick={() => setShowPromoForm(false)} className="px-4 py-2 rounded text-gray-500 text-sm">✕</button>
+            </div>
+          </div>
+        )}
+        <div className="space-y-2">
+          {promoCodes.map((pc: any) => (
+            <div key={pc.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-200 bg-white">
+              <div>
+                <span className="font-mono font-bold">{pc.code}</span>
+                <span className="mx-2 text-gray-500">{pc.discountType === 'percent' ? `${pc.discountValue}%` : `${pc.discountValue} EGP`}</span>
+                <span className="text-xs text-gray-400">({pc.usedCount}/{pc.maxUses ?? '∞'})</span>
+              </div>
+              <div className="flex gap-1">
+                <button onClick={() => togglePromo(pc.id, pc.enabled ? 0 : 1)} className={`px-2 py-1 rounded text-xs ${pc.enabled ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
+                  {pc.enabled ? t('نشط', 'On') : t('معطّل', 'Off')}
+                </button>
+                <button onClick={() => deletePromo(pc.id)} className="px-2 py-1 rounded text-red-400 text-xs">🗑</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════
 // PROMPTS TAB — AI tool system prompts
 // ═══════════════════════════════════════
 function PromptsTab({ t }: { t: T }) {
@@ -832,7 +1086,8 @@ function PromptsTab({ t }: { t: T }) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [draft, setDraft] = useState('');
   const [saving, setSaving] = useState('');
-  const [testResult, setTestResult] = useState('');
+  const [testResult, setTestResult] = useState<{ loading?: boolean; error?: string; reply?: string; model?: string } | null>(null);
+  const [testSampleInput, setTestSampleInput] = useState('');
 
   useEffect(() => { api('wzrdAdmin.siteConfig').then(setSc); }, []);
 
@@ -845,9 +1100,14 @@ function PromptsTab({ t }: { t: T }) {
     setTimeout(() => setSaving(''), 2000);
   };
 
-  const handleTest = () => {
-    setTestResult(t('جاري الاختبار... (قريباً)', 'Testing... (coming soon)'));
-    setTimeout(() => setTestResult(''), 2000);
+  const handleTest = async (toolId: string) => {
+    setTestResult({ loading: true });
+    const r = await apiMutation('wzrdAdmin.testPrompt', { toolId, sampleInput: testSampleInput.trim() || undefined });
+    if (r?.success && r.reply) {
+      setTestResult({ reply: r.reply, model: r.model ?? undefined });
+    } else {
+      setTestResult({ error: r?.error || t('فشل الاختبار', 'Test failed') });
+    }
   };
 
   if (!sc) return <LoadingSkeleton />;
@@ -890,12 +1150,32 @@ function PromptsTab({ t }: { t: T }) {
                     <p className="text-[10px] text-gray-400 mt-1">{draft.length} {t('حرف', 'chars')}</p>
                     <div className="flex gap-2 mt-2">
                       <button onClick={() => savePrompt(p.toolId)} className="px-3 py-1.5 rounded-lg bg-green-500/20 text-green-600 text-xs font-bold">{t('حفظ', 'Save')}</button>
-                      <button onClick={handleTest} className="px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-600 text-xs font-bold">{t('اختبار', 'Test')}</button>
                       <button onClick={() => setEditing(null)} className="px-3 py-1.5 rounded-lg text-gray-500 text-xs">{t('إلغاء', 'Cancel')}</button>
                     </div>
-                    {testResult && <p className="text-xs text-gray-500 mt-2">{testResult}</p>}
                   </div>
-                ) : (
+                ) : null}
+                {/** Test section — available when expanded */}
+                {expanded[p.toolId] && (
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <p className="text-[10px] font-bold text-gray-500 uppercase mb-1">{t('اختبار الأمر', 'Test Prompt')}</p>
+                    <textarea value={testSampleInput} onChange={e => setTestSampleInput(e.target.value)} rows={2} placeholder={t('نص تجريبي (اختياري)', 'Sample input (optional)')}
+                      className="w-full px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-600 outline-none focus:ring-2 focus:ring-cyan-500 resize-y mb-2" />
+                    <div className="flex gap-2 items-center">
+                      <button onClick={() => handleTest(p.toolId)} disabled={testResult?.loading}
+                        className="px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-600 text-xs font-bold hover:bg-cyan-500/30 disabled:opacity-50">
+                        {testResult?.loading ? t('جاري...', 'Testing...') : t('تشغيل', 'Run Test')}
+                      </button>
+                      {testResult?.reply && (
+                        <div className="flex-1 p-3 rounded-lg bg-cyan-50/50 border border-cyan-200 text-xs text-gray-700 whitespace-pre-wrap max-h-40 overflow-y-auto">
+                          {testResult.reply}
+                          {testResult.model && <p className="text-[10px] text-gray-400 mt-1">Model: {testResult.model}</p>}
+                        </div>
+                      )}
+                      {testResult?.error && <p className="text-xs text-red-600">{testResult.error}</p>}
+                    </div>
+                  </div>
+                )}
+                {editing !== p.toolId && expanded[p.toolId] && (
                   <p className="text-xs text-gray-500 font-mono leading-relaxed whitespace-pre-wrap">{p.systemPrompt}</p>
                 )}
               </div>
@@ -1121,6 +1401,7 @@ const TABS: Array<{ id: Tab; labelAr: string; labelEn: string; icon: string }> =
   { id: 'credits', labelAr: 'الكريدت', labelEn: 'Credits', icon: '⚡' },
   { id: 'tools', labelAr: 'الأدوات', labelEn: 'Tools', icon: '🔬' },
   { id: 'prompts', labelAr: 'الأوامر', labelEn: 'Prompts', icon: '🧠' },
+  { id: 'pricing', labelAr: 'الباقات والخصومات', labelEn: 'Plans & Promos', icon: '💰' },
   { id: 'team', labelAr: 'الفريق', labelEn: 'Team', icon: '👔' },
   { id: 'payments', labelAr: 'المدفوعات', labelEn: 'Payments', icon: '💳' },
   { id: 'webhooks', labelAr: 'الإشعارات', labelEn: 'Webhooks', icon: '🔔' },
@@ -1146,6 +1427,16 @@ export default function WzrdAdmin() {
     fetch('/api/debug/whoami', { credentials: 'include' }).then(r => r.json()).then(d => setAdminUser(d.user || null)).catch(() => setAdminUser(null));
   }, []);
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      const n = e.key >= '1' && e.key <= '9' ? parseInt(e.key, 10) : 0;
+      if (n && TABS[n - 1]) { setTab(TABS[n - 1].id); e.preventDefault(); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   const now = new Date();
   const timeStr = now.toLocaleTimeString(locale === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' });
 
@@ -1161,7 +1452,7 @@ export default function WzrdAdmin() {
       {/* Session guard — show banner if not logged in */}
       {adminUser === null && (
         <div className="fixed top-0 left-0 right-0 z-[99] bg-amber-500 text-white py-2 px-4 text-center text-sm">
-          {t('سجّل دخولك الأول', 'Please log in first')} — <a href="/welcome" className="underline font-bold">{t('تسجيل الدخول', 'Sign in')}</a>
+          {t('سجّل دخولك الأول', 'Please log in first')} — <a href="/login" className="underline font-bold">{t('تسجيل الدخول', 'Sign in')}</a>
         </div>
       )}
 
@@ -1187,7 +1478,9 @@ export default function WzrdAdmin() {
             </button>
           ))}
         </nav>
-        <div className="p-4 border-t border-gray-100 text-[10px] text-gray-400 text-center">Primo Marca © 2026</div>
+        <div className="p-4 border-t border-gray-100 text-[10px] text-gray-400 text-center">
+          <span className="opacity-60">{t('1–9 لوحة', '1–9 tabs')}</span><br />Primo Marca © 2026
+        </div>
       </aside>
 
       {/* Overlay for mobile */}
@@ -1220,10 +1513,11 @@ export default function WzrdAdmin() {
             {tab === 'overview' && <OverviewTab t={t} />}
             {tab === 'cms' && <CmsTab t={t} onSuccess={() => showToast(t('تم الحفظ', 'Saved!'))} onError={(m) => showToast(m, 'error')} />}
             {tab === 'agency' && <AgencyTab t={t} onSuccess={() => showToast(t('تم الحفظ', 'Saved!'))} onError={(m) => showToast(m, 'error')} />}
-            {tab === 'users' && <UsersTab t={t} onSuccess={() => showToast(t('تم إضافة الكريدت', 'Credits added!'))} onError={(m) => showToast(m, 'error')} />}
+            {tab === 'users' && <UsersTab t={t} onSuccess={(m) => showToast(m || t('تم إضافة الكريدت', 'Credits added!'))} onError={(m) => showToast(m, 'error')} />}
             {tab === 'credits' && <CreditsTab t={t} />}
             {tab === 'tools' && <ToolsTab t={t} />}
             {tab === 'prompts' && <PromptsTab t={t} />}
+            {tab === 'pricing' && <PricingTab t={t} onSuccess={() => showToast(t('تم الحفظ', 'Saved!'))} onError={(m) => showToast(m, 'error')} />}
             {tab === 'team' && <TeamTab t={t} />}
             {tab === 'payments' && <PaymentsTab t={t} />}
             {tab === 'webhooks' && <WebhooksTab t={t} />}

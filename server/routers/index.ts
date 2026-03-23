@@ -25,12 +25,18 @@ import { brandTwinRouter } from "./brandTwin";
 import { leadsRouter } from "./leads";
 import { onboardingRouter } from "./onboarding";
 import { feedbackRouter } from "./feedback";
+import { deliverableFeedbackRouter } from "./deliverableFeedback";
+import { revisionsRouter } from "./revisions";
+import { commentsRouter } from "./comments";
+import { approvalsRouter } from "./approvals";
+import { diffRouter } from "./diff";
 import { analyticsRouter } from "./analytics";
 import { qualityRouter } from "./quality";
 import { adminRouter } from "./admin";
 import { creditsRouter } from "./credits";
 import { toolsRouter } from "./tools";
 import { wzrdAdminRouter } from "./wzrdAdmin";
+import { premiumRouter } from "./premium";
 import { dashboardRouter } from "./dashboard";
 
 export const appRouter = router({
@@ -54,12 +60,18 @@ export const appRouter = router({
   leads: leadsRouter,
   onboarding: onboardingRouter,
   feedback: feedbackRouter,
+  deliverableFeedback: deliverableFeedbackRouter,
+  revisions: revisionsRouter,
+  comments: commentsRouter,
+  approvals: approvalsRouter,
+  diff: diffRouter,
   analytics: analyticsRouter,
   quality: qualityRouter,
   admin: adminRouter,
   credits: creditsRouter,
   tools: toolsRouter,
   wzrdAdmin: wzrdAdminRouter,
+  premium: premiumRouter,
 });
 
 export type AppRouter = typeof appRouter;

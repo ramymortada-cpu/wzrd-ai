@@ -33,6 +33,7 @@ export const ENV = {
   claudeApiKey: process.env.ANTHROPIC_API_KEY ?? "",
   claudeApiUrl: process.env.CLAUDE_API_URL ?? "https://api.anthropic.com",
   claudeModel: process.env.CLAUDE_MODEL ?? "claude-sonnet-4-20250514",
+  premiumModel: process.env.PREMIUM_MODEL ?? process.env.CLAUDE_MODEL ?? "claude-sonnet-4-20250514",
 
   // Legacy compatibility
   llmApiKey: process.env.ANTHROPIC_API_KEY ?? process.env.GROQ_API_KEY ?? "",
