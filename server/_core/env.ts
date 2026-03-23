@@ -60,3 +60,4 @@ export const ENV = {
   // Frontend
   appUrl: process.env.APP_URL ?? "http://localhost:3000",
 };
+

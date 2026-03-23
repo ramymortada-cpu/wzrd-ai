@@ -775,3 +775,78 @@ export const siteConfigTable = mysqlTable("site_config", {
   value: text("value").notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
+
+// ════════════════════════════════════════════
+// PROMO CODES — discounts on credit purchases
+// ════════════════════════════════════════════
+export const promoCodes = mysqlTable("promo_codes", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("code", { length: 50 }).notNull().unique(),
+  discountType: mysqlEnum("discountType", ["percent", "fixed"]).notNull(),
+  discountValue: int("discountValue").notNull(), // percent 1–100, or fixed EGP amount
+  minAmountEGP: int("minAmountEGP").default(0), // minimum purchase to apply
+  maxUses: int("maxUses"), // null = unlimited
+  usedCount: int("usedCount").default(0).notNull(),
+  validFrom: timestamp("validFrom"),
+  validUntil: timestamp("validUntil"),
+  enabled: int("enabled").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+// ════════════════════════════════════════════
+// EMAIL AUTOMATION SYSTEM
+// ════════════════════════════════════════════
+
+/** Email templates — reusable HTML templates */
+export const emailTemplates = mysqlTable("email_templates", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  nameAr: varchar("nameAr", { length: 100 }),
+  subject: varchar("subject", { length: 255 }).notNull(),
+  subjectAr: varchar("subjectAr", { length: 255 }),
+  html: text("html").notNull(),
+  type: mysqlEnum("type", ["welcome", "tool_result", "follow_up", "re_engagement", "newsletter", "promo", "custom"]).notNull(),
+  isActive: int("isActive").notNull().default(1),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+/** Automation rules — trigger-based email flows */
+export const automationRules = mysqlTable("automation_rules", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  nameAr: varchar("nameAr", { length: 100 }),
+  trigger: mysqlEnum("trigger", [
+    "signup",
+    "first_tool_run",
+    "low_score",
+    "credits_low",
+    "inactive_3d",
+    "inactive_7d",
+    "inactive_30d",
+    "premium_purchase",
+    "manual",
+  ]).notNull(),
+  templateId: int("templateId"),
+  delayMinutes: int("delayMinutes").notNull().default(0),
+  isActive: int("isActive").notNull().default(1),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+/** Email send log — tracks every email sent */
+export const emailSendLog = mysqlTable("email_send_log", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"),
+  email: varchar("email", { length: 320 }).notNull(),
+  templateId: int("templateId"),
+  automationRuleId: int("automationRuleId"),
+  subject: varchar("subject", { length: 255 }).notNull(),
+  status: mysqlEnum("status", ["queued", "sent", "failed", "bounced"]).notNull().default("queued"),
+  trigger: varchar("trigger", { length: 50 }),
+  errorMessage: varchar("errorMessage", { length: 500 }),
+  sentAt: timestamp("sentAt"),
+  openedAt: timestamp("openedAt"),
+  clickedAt: timestamp("clickedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
