@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useI18n } from '@/lib/i18n';
 import WzrdPublicHeader from '@/components/WzrdPublicHeader';
+import { toArabicNumerals } from '@/lib/formatUtils';
 
 export interface ToolField {
   name: string;
@@ -253,12 +254,12 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
 
           <div className="mb-10" dir="ltr">
             <h2 className="text-2xl font-bold text-center">{locale === 'ar' && config.nameAr ? config.nameAr : config.name}</h2>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 text-center mt-1">{displayScoreLabel} · {result.creditsUsed} {t('wzrd.creditsUsed')} · {result.creditsRemaining} {t('wzrd.remaining')}</p>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 text-center mt-1">{displayScoreLabel} · {locale === 'ar' ? toArabicNumerals(result.creditsUsed) : result.creditsUsed} {t('wzrd.creditsUsed')} · {locale === 'ar' ? toArabicNumerals(result.creditsRemaining) : result.creditsRemaining} {t('wzrd.remaining')}</p>
 
             {/* Score gauge */}
             <div className="mt-6 max-w-xl mx-auto">
               <div className="flex items-center justify-center gap-2 mb-2">
-                <span className="text-2xl font-mono font-semibold text-zinc-700 dark:text-zinc-200">{result.score}/100</span>
+                <span className="text-2xl font-mono font-semibold text-zinc-700 dark:text-zinc-200">{locale === 'ar' ? toArabicNumerals(result.score) : result.score}/{locale === 'ar' ? toArabicNumerals(100) : '100'}</span>
                 <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                   result.score >= 70 ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' :
                   result.score >= 40 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' :
@@ -274,8 +275,8 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
                 />
               </div>
               <div className="flex justify-between mt-1.5 text-[10px] font-mono text-zinc-500 dark:text-zinc-400">
-                <span>0</span>
-                <span>100</span>
+                <span>{locale === 'ar' ? toArabicNumerals(0) : '0'}</span>
+                <span>{locale === 'ar' ? toArabicNumerals(100) : '100'}</span>
               </div>
             </div>
           </div>
@@ -341,7 +342,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
           <span className="text-4xl">{config.icon}</span>
           <div>
             <h1 className="text-xl font-bold">{locale === 'ar' && config.nameAr ? config.nameAr : config.name}</h1>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">{locale === 'ar' && config.descriptionAr ? config.descriptionAr : config.description} · ~{config.cost} {t('wzrd.credits')}</p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">{locale === 'ar' && config.descriptionAr ? config.descriptionAr : config.description} · ~{locale === 'ar' ? toArabicNumerals(config.cost) : config.cost} {t('wzrd.credits')}</p>
           </div>
         </div>
 
@@ -410,7 +411,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
           onClick={handleSubmit} disabled={loading}
           className="w-full mt-6 py-3.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-400 text-zinc-950 font-bold text-sm transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-amber-500/20 disabled:opacity-50"
         >
-          {t('wzrd.analyze')} — {config.cost} {t('wzrd.credits')}
+          {t('wzrd.analyze')} — {locale === 'ar' ? toArabicNumerals(config.cost) : config.cost} {t('wzrd.credits')}
         </button>
       </div>
     </div>

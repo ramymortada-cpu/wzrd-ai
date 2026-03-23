@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useI18n } from '@/lib/i18n';
 import WzrdPublicHeader from '@/components/WzrdPublicHeader';
+import { toArabicNumerals } from '@/lib/formatUtils';
 
 const PLANS = [
   { id: 'starter', credits: 500, price: 499, currency: 'EGP', popular: false, label: 'Starter', description: '~20 tool runs' },
@@ -11,7 +12,7 @@ const PLANS = [
 
 export default function Pricing() {
   const [, navigate] = useLocation();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [credits, setCredits] = useState<number | null>(null);
 
   useEffect(() => {
@@ -47,10 +48,10 @@ export default function Pricing() {
                 <h3 className="text-lg font-bold mb-1">{plan.label}</h3>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-4">{plan.description}</p>
                 <div className="mb-1">
-                  <span className="text-3xl font-bold font-mono text-zinc-900 dark:text-white">{plan.price.toLocaleString()}</span>
+                  <span className="text-3xl font-bold font-mono text-zinc-900 dark:text-white">{locale === 'ar' ? toArabicNumerals(plan.price.toLocaleString()) : plan.price.toLocaleString()}</span>
                   <span className="text-sm text-zinc-500 dark:text-zinc-400 ms-1">EGP</span>
                 </div>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-6">{plan.credits.toLocaleString()} {t('wzrd.credits')}</p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-6">{locale === 'ar' ? toArabicNumerals(plan.credits.toLocaleString()) : plan.credits.toLocaleString()} {t('wzrd.credits')}</p>
                 <button
                   onClick={async () => {
                     try {
@@ -74,9 +75,9 @@ export default function Pricing() {
                       : 'bg-amber-500 text-zinc-950'
                   }`}
                 >
-                  {t('wzrd.buy')} {plan.credits} {t('wzrd.credits')}
+                  {t('wzrd.buy')} {locale === 'ar' ? toArabicNumerals(plan.credits) : plan.credits} {t('wzrd.credits')}
                 </button>
-                <p className="text-[10px] text-zinc-600 mt-2">{(plan.price / plan.credits).toFixed(1)} EGP per credit</p>
+                <p className="text-[10px] text-zinc-600 mt-2">{locale === 'ar' ? toArabicNumerals((plan.price / plan.credits).toFixed(1)) : (plan.price / plan.credits).toFixed(1)} EGP per credit</p>
               </div>
             </div>
           ))}

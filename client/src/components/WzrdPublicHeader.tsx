@@ -1,6 +1,7 @@
 import { useLocation } from "wouter";
 import { useI18n } from "@/lib/i18n";
 import { useTheme } from "@/contexts/ThemeContext";
+import { toArabicNumerals } from "@/lib/formatUtils";
 
 interface WzrdPublicHeaderProps {
   credits?: number | null;
@@ -55,7 +56,7 @@ export default function WzrdPublicHeader({ credits, showCredits = true }: WzrdPu
           {showCredits && credits != null && (
             <div className="flex items-center gap-2 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 px-4 py-2">
               <span className="font-mono text-sm font-bold text-amber-600 dark:text-amber-400">
-                {credits}
+                {locale === "ar" ? toArabicNumerals(credits) : credits}
               </span>
               <span className="text-xs text-zinc-500 dark:text-zinc-400">
                 {t("wzrd.credits")}

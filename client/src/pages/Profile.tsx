@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useI18n } from '@/lib/i18n';
 import WzrdPublicHeader from '@/components/WzrdPublicHeader';
+import { toArabicNumerals } from '@/lib/formatUtils';
 
 export default function Profile() {
   const [, navigate] = useLocation();
@@ -45,7 +46,7 @@ export default function Profile() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">{t('wzrd.availableCredits')}</p>
-              <p className="text-4xl font-bold font-mono text-amber-600 dark:text-amber-400">{user?.credits ?? '...'}</p>
+              <p className="text-4xl font-bold font-mono text-amber-600 dark:text-amber-400">{user?.credits != null ? (locale === 'ar' ? toArabicNumerals(user.credits) : user.credits) : '...'}</p>
             </div>
             <button onClick={() => navigate('/pricing')}
               className="px-5 py-2 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-500 text-white text-sm font-bold hover:opacity-90 transition">
@@ -65,7 +66,7 @@ export default function Profile() {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className={`font-mono text-sm font-bold ${h.amount > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                    {h.amount > 0 ? '+' : ''}{h.amount}
+                    {h.amount > 0 ? '+' : ''}{locale === 'ar' ? toArabicNumerals(h.amount) : h.amount}
                   </span>
                   <span className="text-xs text-zinc-500 dark:text-zinc-600">{new Date(h.createdAt).toLocaleDateString(locale)}</span>
                 </div>

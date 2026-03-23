@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useI18n } from '@/lib/i18n';
 import WzrdPublicHeader from '@/components/WzrdPublicHeader';
+import { toArabicNumerals } from '@/lib/formatUtils';
 
 interface ToolInfo {
   id: string;
@@ -120,7 +121,7 @@ export default function Tools() {
                 <h3 className="text-base font-bold mb-1 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">{locale === 'ar' ? tool.nameAr : tool.name}</h3>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-4 leading-relaxed">{locale === 'ar' ? tool.descAr : tool.desc}</p>
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs" style={{ color: tool.color || '#44ddc9' }}>~{tool.cost} {t('wzrd.credits')}</span>
+                  <span className="font-mono text-xs" style={{ color: tool.color || '#44ddc9' }}>~{locale === 'ar' ? toArabicNumerals(tool.cost) : tool.cost} {t('wzrd.credits')}</span>
                   {canAfford ? (
                     <span className="text-xs text-amber-600 dark:text-amber-400">{t('wzrd.run')}</span>
                   ) : (
