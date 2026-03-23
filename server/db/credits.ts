@@ -128,7 +128,7 @@ export async function addCredits(
  * ATOMIC: Uses conditional UPDATE (credits >= cost) to prevent race conditions.
  * Also checks daily cap before deducting.
  */
-const DAILY_CREDIT_CAP = 200;
+const DAILY_CREDIT_CAP = 2000; // Temporarily raised for testing (was 200)
 
 export async function deductCredits(
   userId: number,
