@@ -58,6 +58,16 @@ async function startServer() {
     });
   });
 
+  // === DEBUG: whoami — verify session and return user (temporary) ===
+  app.get('/api/debug/whoami', async (req, res) => {
+    try {
+      const ctx = await createContext({ req, res } as Parameters<typeof createContext>[0]);
+      res.json({ loggedIn: !!ctx.user, user: ctx.user ? { id: ctx.user.id, email: ctx.user.email, name: ctx.user.name, role: ctx.user.role } : null });
+    } catch (err: unknown) {
+      res.json({ loggedIn: false, error: err instanceof Error ? err.message : String(err) });
+    }
+  });
+
   // === RATE LIMITING ON PUBLIC ENDPOINTS ===
   // Quick-check uses LLM — most aggressive limiting (3 req/min)
   app.use('/api/trpc/leads.submitQuickCheck', rateLimiters.quickCheck);
