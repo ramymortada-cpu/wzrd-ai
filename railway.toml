@@ -1,0 +1,9 @@
+[build]
+builder = "nixpacks"
+buildCommand = "pnpm install && pnpm run build"
+
+[build.nixpacks]
+no-cache = true
+
+[deploy]
+startCommand = "npx drizzle-kit push --force && NODE_ENV=production node dist/index.js"
