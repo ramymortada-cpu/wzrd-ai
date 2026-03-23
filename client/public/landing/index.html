@@ -299,14 +299,18 @@ footer{padding:48px 28px 32px;text-align:center;border-top:1px solid var(--borde
 var o=new IntersectionObserver(function(e){e.forEach(function(x){if(x.isIntersecting)x.target.classList.add('v')})},{threshold:.08,rootMargin:'0px 0px -40px 0px'});
 document.querySelectorAll('.fi').forEach(function(el){o.observe(el)});
 window.addEventListener('scroll',function(){document.getElementById('nav').classList.toggle('scrolled',window.scrollY>20)});
-var l='ar';
-function tl(){
- l=l==='ar'?'en':'ar';document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';
+var l=(function(){var s=localStorage.getItem('wzrd-locale');return(s==='en'||s==='ar')?s:'ar';})();
+function apply(){
+ document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';
  document.body.classList.toggle('en-mode',l==='en');
  document.querySelectorAll('[data-ar]').forEach(function(e){var t=l==='ar'?e.getAttribute('data-ar'):e.getAttribute('data-en');if(t)e.innerHTML=t});
  document.querySelectorAll('.lang').forEach(function(b){b.textContent=l==='ar'?'EN':'ع'});
  var n=document.querySelectorAll('.step-n');if(n.length){if(l==='ar'){n[0].textContent='١';n[1].textContent='٢';n[2].textContent='٣'}else{n[0].textContent='1';n[1].textContent='2';n[2].textContent='3'}}
 }
+function tl(){
+ l=l==='ar'?'en':'ar';localStorage.setItem('wzrd-locale',l);apply();
+}
+document.addEventListener('DOMContentLoaded',apply);
 (function(){if(document.cookie.includes('app_session_id=')){document.querySelectorAll('[href="/signup"]').forEach(function(e){e.setAttribute('href','/tools');e.innerHTML=l==='ar'?'روح للأدوات':'Go to Tools'})}})();
 </script>
 </body>

@@ -822,15 +822,16 @@ const translations: Record<Locale, Record<string, string>> = {
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(() => {
-    const saved = localStorage.getItem("primo-locale");
-    return (saved as Locale) || "ar";
+    const saved = localStorage.getItem("wzrd-locale");
+    const initialLocale = (saved === "en" || saved === "ar") ? saved : "ar";
+    return initialLocale;
   });
 
   const dir: Dir = locale === "ar" ? "rtl" : "ltr";
 
   const setLocale = useCallback((newLocale: Locale) => {
     setLocaleState(newLocale);
-    localStorage.setItem("primo-locale", newLocale);
+    localStorage.setItem("wzrd-locale", newLocale);
   }, []);
 
   const toggleLocale = useCallback(() => {

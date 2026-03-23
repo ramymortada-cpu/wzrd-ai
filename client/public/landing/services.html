@@ -266,7 +266,7 @@ footer { background: var(--text); color: #a1a1aa; padding: 48px 0 24px; margin-t
   <p class="sec-desc anim" data-en="We're not a marketing agency." data-ar="إحنا مش وكالة تسويق.">إحنا مش وكالة تسويق.</p>
   <div class="diff-grid">
     <div class="diff-col no anim">
-      <h4 data-en="We don't" data-ar="مش بنعمل">❌ مش بنعمل</h4>
+      <h4 data-en="❌ We don't" data-ar="❌ مش بنعمل">❌ مش بنعمل</h4>
       <ul>
         <li data-en="We don't manage social media pages" data-ar="مش بندير صفحات سوشيال ميديا">مش بندير صفحات سوشيال ميديا</li>
         <li data-en="We don't make daily posts" data-ar="مش بنعمل بوستات يومية">مش بنعمل بوستات يومية</li>
@@ -274,7 +274,7 @@ footer { background: var(--text); color: #a1a1aa; padding: 48px 0 24px; margin-t
       </ul>
     </div>
     <div class="diff-col yes anim d1">
-      <h4 data-en="We do" data-ar="بنعمل">✅ بنعمل</h4>
+      <h4 data-en="✅ We do" data-ar="✅ بنعمل">✅ بنعمل</h4>
       <ul>
         <li data-en="We diagnose the real problem" data-ar="بنشخّص المشكلة الحقيقية">بنشخّص المشكلة الحقيقية</li>
         <li data-en="We build a complete brand system" data-ar="بنبني نظام براند متكامل">بنبني نظام براند متكامل</li>
@@ -355,9 +355,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('#btnClarity, #footerWa').forEach(a => { a.href = wa; });
 });
 
-let cl = 'ar';
-function tl() {
-  cl = cl === 'ar' ? 'en' : 'ar';
+let cl = (function(){ var s = localStorage.getItem('wzrd-locale'); return (s === 'en' || s === 'ar') ? s : 'ar'; })();
+function apply() {
   document.documentElement.lang = cl;
   document.documentElement.dir = cl === 'ar' ? 'rtl' : 'ltr';
   document.querySelectorAll('[data-en]').forEach(e => {
@@ -368,9 +367,12 @@ function tl() {
     b.textContent = b.getAttribute('data-' + (cl === 'ar' ? 'en' : 'ar') + '-label') || (cl === 'ar' ? 'EN' : 'ع');
   });
 }
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.lang-t').forEach(b => { b.textContent = 'EN'; });
-});
+function tl() {
+  cl = cl === 'ar' ? 'en' : 'ar';
+  localStorage.setItem('wzrd-locale', cl);
+  apply();
+}
+document.addEventListener('DOMContentLoaded', apply);
 
 const ob = new IntersectionObserver(entries => {
   entries.forEach(n => { if (n.isIntersecting) n.target.classList.add('v'); });
