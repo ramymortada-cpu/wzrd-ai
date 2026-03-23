@@ -36,6 +36,17 @@ export async function setupVite(app: Express, server: Server) {
       }
     });
 
+    // Debug: check if session cookie is sent (no auth required)
+    app.get("/api/debug/admin-check", (req, res) => {
+      const cookie = req.headers.cookie || '';
+      const hasSession = cookie.includes('app_session_id=');
+      res.json({
+        hasCookie: hasSession,
+        cookieHeader: cookie.substring(0, 100),
+        timestamp: new Date().toISOString(),
+      });
+    });
+
     // Public routes → landing pages
     app.get("/api/public/site-config", (_req, res) => {
       try {
@@ -119,6 +130,17 @@ export function serveStatic(app: Express) {
       } else {
         next();
       }
+    });
+
+    // Debug: check if session cookie is sent (no auth required)
+    app.get("/api/debug/admin-check", (req, res) => {
+      const cookie = req.headers.cookie || '';
+      const hasSession = cookie.includes('app_session_id=');
+      res.json({
+        hasCookie: hasSession,
+        cookieHeader: cookie.substring(0, 100),
+        timestamp: new Date().toISOString(),
+      });
     });
 
     // Public routes → landing pages
