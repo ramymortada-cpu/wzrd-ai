@@ -1,0 +1,38 @@
+/**
+ * Shared industry options for Signup and tool forms.
+ * Use `labelAr` when locale is Arabic, `label` when English.
+ */
+export const INDUSTRIES = [
+  { value: 'fnb', label: 'Food & Beverage', labelAr: 'أغذية ومشروبات' },
+  { value: 'restaurant', label: 'Restaurants & Cafés', labelAr: 'مطاعم وكافيهات' },
+  { value: 'tech', label: 'Technology & Software', labelAr: 'تكنولوجيا وبرمجيات' },
+  { value: 'saas', label: 'SaaS & Digital Products', labelAr: 'منتجات رقمية و SaaS' },
+  { value: 'ecommerce', label: 'E-Commerce', labelAr: 'تجارة إلكترونية' },
+  { value: 'retail', label: 'Retail & Shopping', labelAr: 'تجزئة وتسوق' },
+  { value: 'healthcare', label: 'Healthcare & Medical', labelAr: 'رعاية صحية وطبية' },
+  { value: 'pharmacy', label: 'Pharmacy & Wellness', labelAr: 'صيدلة وعافية' },
+  { value: 'beauty', label: 'Beauty & Cosmetics', labelAr: 'تجميل ومستحضرات' },
+  { value: 'fashion', label: 'Fashion & Apparel', labelAr: 'أزياء وملابس' },
+  { value: 'realestate', label: 'Real Estate', labelAr: 'عقارات' },
+  { value: 'construction', label: 'Construction & Contracting', labelAr: 'مقاولات وبناء' },
+  { value: 'education', label: 'Education & Training', labelAr: 'تعليم وتدريب' },
+  { value: 'consulting', label: 'Consulting & Professional Services', labelAr: 'استشارات وخدمات مهنية' },
+  { value: 'marketing', label: 'Marketing & Advertising', labelAr: 'تسويق وإعلان' },
+  { value: 'media', label: 'Media & Content Creation', labelAr: 'ميديا وصناعة محتوى' },
+  { value: 'finance', label: 'Finance & Insurance', labelAr: 'مال وتأمين' },
+  { value: 'travel', label: 'Travel & Tourism', labelAr: 'سياحة وسفر' },
+  { value: 'hospitality', label: 'Hotels & Hospitality', labelAr: 'فندقة وضيافة' },
+  { value: 'fitness', label: 'Fitness & Sports', labelAr: 'رياضة ولياقة' },
+  { value: 'automotive', label: 'Automotive', labelAr: 'سيارات' },
+  { value: 'logistics', label: 'Logistics & Shipping', labelAr: 'لوجستيات وشحن' },
+  { value: 'manufacturing', label: 'Manufacturing', labelAr: 'تصنيع' },
+  { value: 'agriculture', label: 'Agriculture & Food Production', labelAr: 'زراعة وإنتاج غذائي' },
+  { value: 'nonprofit', label: 'Non-Profit & NGO', labelAr: 'منظمات غير ربحية' },
+  { value: 'government', label: 'Government & Public Sector', labelAr: 'قطاع حكومي' },
+  { value: 'entertainment', label: 'Entertainment & Events', labelAr: 'ترفيه وفعاليات' },
+  { value: 'interior', label: 'Interior Design & Architecture', labelAr: 'تصميم داخلي وعمارة' },
+  { value: 'legal', label: 'Legal Services', labelAr: 'خدمات قانونية' },
+  { value: 'cleaning', label: 'Cleaning & Maintenance', labelAr: 'نظافة وصيانة' },
+  { value: 'pets', label: 'Pets & Veterinary', labelAr: 'حيوانات أليفة وبيطرة' },
+  { value: 'other', label: 'Other', labelAr: 'أخرى' },
+] as const;

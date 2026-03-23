@@ -3,17 +3,7 @@ import { useLocation } from 'wouter';
 import { toErrorString } from '@/lib/errorUtils';
 import { useI18n } from '@/lib/i18n';
 import WzrdPublicHeader from '@/components/WzrdPublicHeader';
-
-const INDUSTRIES = [
-  { value: 'f&b', label: 'Food & Beverage', labelAr: 'مأكولات ومشروبات' },
-  { value: 'tech', label: 'Technology', labelAr: 'تكنولوجيا' },
-  { value: 'healthcare', label: 'Healthcare', labelAr: 'رعاية صحية' },
-  { value: 'retail', label: 'Retail / E-commerce', labelAr: 'تجزئة' },
-  { value: 'realestate', label: 'Real Estate', labelAr: 'عقارات' },
-  { value: 'education', label: 'Education', labelAr: 'تعليم' },
-  { value: 'beauty', label: 'Beauty / Fashion', labelAr: 'جمال / أزياء' },
-  { value: 'other', label: 'Other', labelAr: 'آخر' },
-];
+import { INDUSTRIES } from '@/lib/industries';
 
 export default function Signup() {
   const [, navigate] = useLocation();

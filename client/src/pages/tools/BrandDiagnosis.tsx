@@ -1,4 +1,6 @@
 import ToolPage from './ToolPage';
+import { INDUSTRIES } from '@/lib/industries';
+
 export default function BrandDiagnosis() {
   return <ToolPage config={{
     id: 'brand_diagnosis', name: 'Brand Diagnosis', nameAr: 'تشخيص البراند', icon: '🔬', cost: 20,
@@ -18,12 +20,7 @@ export default function BrandDiagnosis() {
     },
     fields: [
       { name: 'companyName', label: 'Company Name', labelAr: 'اسم الشركة', type: 'text', placeholder: 'e.g. Sahra Café', placeholderAr: 'مثال: كافيه سهرة', required: true },
-      { name: 'industry', label: 'Industry', labelAr: 'المجال', type: 'select', options: [
-        { value: 'f&b', label: 'Food & Beverage', labelAr: 'مأكولات ومشروبات' }, { value: 'tech', label: 'Technology', labelAr: 'تكنولوجيا' },
-        { value: 'healthcare', label: 'Healthcare', labelAr: 'رعاية صحية' }, { value: 'retail', label: 'Retail', labelAr: 'تجزئة' },
-        { value: 'realestate', label: 'Real Estate', labelAr: 'عقارات' }, { value: 'education', label: 'Education', labelAr: 'تعليم' },
-        { value: 'beauty', label: 'Beauty', labelAr: 'جمال' }, { value: 'other', label: 'Other', labelAr: 'آخر' },
-      ]},
+      { name: 'industry', label: 'Industry', labelAr: 'المجال', type: 'select', options: [...INDUSTRIES] },
       { name: 'market', label: 'Market', labelAr: 'السوق', type: 'select', options: [
         { value: 'egypt', label: 'Egypt', labelAr: 'مصر' }, { value: 'ksa', label: 'Saudi Arabia', labelAr: 'السعودية' },
         { value: 'uae', label: 'UAE', labelAr: 'الإمارات' }, { value: 'other', label: 'Other', labelAr: 'آخر' },
