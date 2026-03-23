@@ -7,12 +7,14 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recha
 
 type Tab = 'overview' | 'users' | 'credits' | 'tools' | 'payments' | 'webhooks' | 'cms' | 'prompts' | 'team' | 'agency' | 'config';
 
+const FETCH_OPTS: RequestInit = { credentials: 'include' };
+
 async function api(endpoint: string, input?: Record<string, unknown>) {
   try {
     const url = input
       ? `/api/trpc/${endpoint}?input=${encodeURIComponent(JSON.stringify({ json: input }))}`
       : `/api/trpc/${endpoint}`;
-    const res = await fetch(url);
+    const res = await fetch(url, FETCH_OPTS);
     if (!res.ok) { console.error(`[Admin] ${endpoint} failed: ${res.status}`); return null; }
     const data = await res.json();
     if (data?.error) { console.error(`[Admin] ${endpoint} error:`, data.error); return null; }
@@ -21,13 +23,17 @@ async function api(endpoint: string, input?: Record<string, unknown>) {
 }
 
 async function apiMutation(endpoint: string, input?: Record<string, unknown>) {
-  const res = await fetch(`/api/trpc/${endpoint}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ json: input || {} }),
-  });
-  const data = await res.json();
-  return data?.result?.data?.json ?? data?.result?.data ?? null;
+  try {
+    const res = await fetch(`/api/trpc/${endpoint}`, {
+      ...FETCH_OPTS,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ json: input || {} }),
+    });
+    const data = await res.json();
+    if (data?.error) { console.error(`[Admin] mutation ${endpoint} error:`, data.error); return null; }
+    return data?.result?.data?.json ?? data?.result?.data ?? null;
+  } catch (err) { console.error(`[Admin] mutation ${endpoint} error:`, err); return null; }
 }
 
 function timeAgo(date: Date) {
@@ -76,13 +82,13 @@ function EmptyState({ icon, message }: { icon: string; message: string }) {
   );
 }
 
-function Toast({ message, onDismiss }: { message: string; onDismiss: () => void }) {
+function Toast({ message, onDismiss, type = 'success' }: { message: string; onDismiss: () => void; type?: 'success' | 'error' }) {
   useEffect(() => {
-    const t = setTimeout(onDismiss, 3000);
+    const t = setTimeout(onDismiss, 4000);
     return () => clearTimeout(t);
   }, [onDismiss]);
   return (
-    <div className="fixed top-0 left-0 right-0 z-[100] bg-green-600 text-white py-3 px-6 text-center text-sm font-medium shadow-lg">
+    <div className={`fixed top-0 left-0 right-0 z-[100] py-3 px-6 text-center text-sm font-medium shadow-lg ${type === 'error' ? 'bg-red-600' : 'bg-green-600'} text-white`}>
       {message}
     </div>
   );
@@ -188,7 +194,7 @@ function OverviewTab({ t }: { t: T }) {
 // ═══════════════════════════════════════
 const PAGE_SIZE = 20;
 
-function UsersTab({ t }: { t: T }) {
+function UsersTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; onError?: (msg: string) => void }) {
   const [data, setData] = useState<{ users: any[]; total: number } | null>(null);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
@@ -208,11 +214,13 @@ function UsersTab({ t }: { t: T }) {
     setAddResult('Adding...');
     const r = await apiMutation('credits.adminAdd', { userId, amount, reason: 'Admin manual add' });
     if (r?.success) {
-      setAddResult(`✅ Added ${amount} credits`);
+      setAddResult(`✅ +${amount}`);
       setAddingCredits(null);
-      load(); // Refresh list
+      onSuccess?.();
+      load();
     } else {
-      setAddResult('❌ Failed');
+      setAddResult('❌');
+      onError?.(t('فشل إضافة الكريدت', 'Failed to add credits'));
     }
   };
 
@@ -721,7 +729,7 @@ function EmailStatsSection({ t }: { t: T }) {
 // ═══════════════════════════════════════
 // CMS TAB — Homepage + Site Settings
 // ═══════════════════════════════════════
-function CmsTab({ t, onSuccess }: { t: T; onSuccess?: () => void }) {
+function CmsTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; onError?: (msg: string) => void }) {
   const [sc, setSc] = useState<any>(null);
   const [saving, setSaving] = useState('');
 
@@ -730,18 +738,16 @@ function CmsTab({ t, onSuccess }: { t: T; onSuccess?: () => void }) {
   const saveHomepage = async () => {
     if (!sc) return;
     setSaving('Saving...');
-    await apiMutation('wzrdAdmin.updateHomepage', sc.homepage);
-    setSaving('✅ Saved');
-    onSuccess?.();
+    const ok = await apiMutation('wzrdAdmin.updateHomepage', sc.homepage);
+    if (ok !== null) { setSaving('✅ Saved'); onSuccess?.(); } else { setSaving(''); onError?.(t('فشل الحفظ', 'Save failed')); }
     setTimeout(() => setSaving(''), 2000);
   };
 
   const saveSite = async () => {
     if (!sc) return;
     setSaving('Saving...');
-    await apiMutation('wzrdAdmin.updateSiteSettings', sc.site);
-    setSaving('✅ Saved');
-    onSuccess?.();
+    const ok = await apiMutation('wzrdAdmin.updateSiteSettings', sc.site);
+    if (ok !== null) { setSaving('✅ Saved'); onSuccess?.(); } else { setSaving(''); onError?.(t('فشل الحفظ', 'Save failed')); }
     setTimeout(() => setSaving(''), 2000);
   };
 
@@ -943,7 +949,7 @@ function TeamTab({ t }: { t: T }) {
 // ═══════════════════════════════════════
 // AGENCY TAB — Clients + Projects overview
 // ═══════════════════════════════════════
-function AgencyTab({ t, onSuccess }: { t: T; onSuccess?: () => void }) {
+function AgencyTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; onError?: (msg: string) => void }) {
   const [clientsList, setClientsList] = useState<any>(null);
   const [projectsList, setProjectsList] = useState<any>(null);
   const [view, setView] = useState<'clients' | 'projects'>('clients');
@@ -959,8 +965,8 @@ function AgencyTab({ t, onSuccess }: { t: T; onSuccess?: () => void }) {
 
   const addClient = async () => {
     if (!form.name) { setMsg(t('الاسم مطلوب', 'Name required')); return; }
-    await apiMutation('wzrdAdmin.addClient', form);
-    setForm({}); setShowForm(false); setMsg('✅ ' + t('تم الإضافة', 'Added')); onSuccess?.(); reload();
+    const ok = await apiMutation('wzrdAdmin.addClient', form);
+    if (ok !== null) { setForm({}); setShowForm(false); setMsg('✅ ' + t('تم الإضافة', 'Added')); onSuccess?.(); reload(); } else { onError?.(t('فشل الإضافة', 'Add failed')); }
     setTimeout(() => setMsg(''), 2000);
   };
 
@@ -978,12 +984,12 @@ function AgencyTab({ t, onSuccess }: { t: T; onSuccess?: () => void }) {
 
   const addProject = async () => {
     if (!form.projectName || !form.clientId) { setMsg(t('الاسم والعميل مطلوبين', 'Name and client required')); return; }
-    await apiMutation('wzrdAdmin.addProject', {
+    const ok = await apiMutation('wzrdAdmin.addProject', {
       name: form.projectName,
       clientId: parseInt(form.clientId),
       serviceType: form.serviceType || 'consultation',
     });
-    setForm({}); setShowForm(false); setMsg('✅ ' + t('تم الإضافة', 'Added')); onSuccess?.(); reload();
+    if (ok !== null) { setForm({}); setShowForm(false); setMsg('✅ ' + t('تم الإضافة', 'Added')); onSuccess?.(); reload(); } else { onError?.(t('فشل الإضافة', 'Add failed')); }
     setTimeout(() => setMsg(''), 2000);
   };
 
@@ -1124,8 +1130,8 @@ const TABS: Array<{ id: Tab; labelAr: string; labelEn: string; icon: string }> =
 export default function WzrdAdmin() {
   const [tab, setTab] = useState<Tab>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [adminUser, setAdminUser] = useState<{ name?: string } | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [adminUser, setAdminUser] = useState<{ name?: string } | null | undefined>(undefined);
+  const [toast, setToast] = useState<{ message: string; type?: 'success' | 'error' } | null>(null);
   const [locale, setLocale] = useState<'ar' | 'en'>(() =>
     (typeof window !== 'undefined' && (localStorage.getItem('wzrd-admin-locale') as 'ar' | 'en')) || 'ar'
   );
@@ -1137,7 +1143,7 @@ export default function WzrdAdmin() {
   };
 
   useEffect(() => {
-    fetch('/api/debug/whoami').then(r => r.json()).then(d => setAdminUser(d.user || null)).catch(() => {});
+    fetch('/api/debug/whoami', { credentials: 'include' }).then(r => r.json()).then(d => setAdminUser(d.user || null)).catch(() => setAdminUser(null));
   }, []);
 
   const now = new Date();
@@ -1145,9 +1151,19 @@ export default function WzrdAdmin() {
 
   const isRtl = locale === 'ar';
 
+  const showToast = (msg: string, type: 'success' | 'error' = 'success') => setToast({ message: msg, type });
+  const dismissToast = () => setToast(null);
+
   return (
     <div dir={isRtl ? 'rtl' : 'ltr'} className="min-h-screen bg-gray-50 text-gray-900 font-sans flex">
-      {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
+      {toast && <Toast message={toast.message} type={toast.type} onDismiss={dismissToast} />}
+
+      {/* Session guard — show banner if not logged in */}
+      {adminUser === null && (
+        <div className="fixed top-0 left-0 right-0 z-[99] bg-amber-500 text-white py-2 px-4 text-center text-sm">
+          {t('سجّل دخولك الأول', 'Please log in first')} — <a href="/welcome" className="underline font-bold">{t('تسجيل الدخول', 'Sign in')}</a>
+        </div>
+      )}
 
       {/* Sidebar - fixed 240px */}
       <aside className={`fixed top-0 z-40 w-60 h-full bg-white border border-gray-200 shadow-sm flex flex-col md:translate-x-0 transition-transform duration-200
@@ -1191,7 +1207,7 @@ export default function WzrdAdmin() {
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => { setTab('agency'); setSidebarOpen(false); }} className="px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 text-xs font-medium hover:bg-indigo-100">+ {t('عميل', 'Client')}</button>
-              <button className="px-3 py-1.5 rounded-lg bg-amber-50 text-amber-600 text-xs font-medium hover:bg-amber-100">+ {t('كريدت', 'Credits')}</button>
+              <button onClick={() => { setTab('users'); setSidebarOpen(false); }} className="px-3 py-1.5 rounded-lg bg-amber-50 text-amber-600 text-xs font-medium hover:bg-amber-100">+ {t('كريدت', 'Credits')}</button>
               <span className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 cursor-pointer" title="Notifications">🔔</span>
               <button onClick={toggleLocale} className="text-[11px] px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200 font-medium">{locale === 'ar' ? 'EN' : 'ع'}</button>
               <a href="/" className="text-xs text-gray-500 hover:text-amber-600">{t('← لوحة التحكم', '← Dashboard')}</a>
@@ -1202,9 +1218,9 @@ export default function WzrdAdmin() {
         <main className="flex-1 p-6 overflow-auto">
           <div className="max-w-5xl mx-auto">
             {tab === 'overview' && <OverviewTab t={t} />}
-            {tab === 'cms' && <CmsTab t={t} onSuccess={() => setToast(t('تم الحفظ', 'Saved!'))} />}
-            {tab === 'agency' && <AgencyTab t={t} onSuccess={() => setToast(t('تم الحفظ', 'Saved!'))} />}
-            {tab === 'users' && <UsersTab t={t} />}
+            {tab === 'cms' && <CmsTab t={t} onSuccess={() => showToast(t('تم الحفظ', 'Saved!'))} onError={(m) => showToast(m, 'error')} />}
+            {tab === 'agency' && <AgencyTab t={t} onSuccess={() => showToast(t('تم الحفظ', 'Saved!'))} onError={(m) => showToast(m, 'error')} />}
+            {tab === 'users' && <UsersTab t={t} onSuccess={() => showToast(t('تم إضافة الكريدت', 'Credits added!'))} onError={(m) => showToast(m, 'error')} />}
             {tab === 'credits' && <CreditsTab t={t} />}
             {tab === 'tools' && <ToolsTab t={t} />}
             {tab === 'prompts' && <PromptsTab t={t} />}
