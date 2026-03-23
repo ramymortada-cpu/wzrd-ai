@@ -3,6 +3,38 @@
 
 ---
 
+## 🚀 Quick Deploy (WZRD AI) — 3 خطوات
+
+### Step 1: اعمل Domain
+- تحت **Networking** → اضغط **Generate Domain**
+- هيديك URL زي `wzrd-ai-production.up.railway.app` — **انسخه**
+
+### Step 2: أضف الـ Variables
+- اضغط **Variables** tab (فوق جنب Settings)
+- اضغط **Raw Editor**
+- الصق ده (غيّر القيم الـ 3):
+
+```
+NODE_ENV=production
+PORT=3000
+DATABASE_URL=<الصق MYSQL_URL من MySQL service>
+JWT_SECRET=xK9mP2vL8nQ4rT6wY1bJ3cF5hA7dG0eU
+GROQ_API_KEY=<الـ key الجديد بتاعك>
+GROQ_MODEL=llama-3.3-70b-versatile
+APP_URL=<الصق الـ domain URL من Step 1>
+EMAIL_PROVIDER=none
+EMAIL_FROM=WZRD AI <noreply@primomarca.com>
+```
+
+- اضغط **Add** أو **Save**
+
+### Step 3: Deploy
+- اضغط الزرار البنفسجي **Deploy** (أو Apply changes)
+- استنى 3–5 دقائق
+- افتح الـ domain URL في المتصفح
+
+---
+
 ## المتطلبات
 
 | الشيء | التفاصيل | التكلفة |
