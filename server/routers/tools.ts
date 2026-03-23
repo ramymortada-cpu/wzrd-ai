@@ -183,6 +183,33 @@ const ARABIC_INSTRUCTION = `أجب بالعربي المصري. كل العنا�
 
 `;
 
+/** Optional resources (URLs + uploaded file text) — append to any tool prompt */
+const resourcesSchema = z.object({
+  instagramUrl: z.string().max(500).optional(),
+  facebookUrl: z.string().max(500).optional(),
+  linkedinUrl: z.string().max(500).optional(),
+  tiktokUrl: z.string().max(500).optional(),
+  websiteUrl: z.string().max(500).optional(),
+  otherUrl: z.string().max(500).optional(),
+  uploadedFileText: z.string().max(50000).optional(),
+});
+
+function appendResources(prompt: string, input: z.infer<typeof resourcesSchema>): string {
+  const urls: string[] = [];
+  if (input.instagramUrl) urls.push(`Instagram: ${input.instagramUrl}`);
+  if (input.facebookUrl) urls.push(`Facebook: ${input.facebookUrl}`);
+  if (input.linkedinUrl) urls.push(`LinkedIn: ${input.linkedinUrl}`);
+  if (input.tiktokUrl) urls.push(`TikTok: ${input.tiktokUrl}`);
+  if (input.websiteUrl) urls.push(`Website: ${input.websiteUrl}`);
+  if (input.otherUrl) urls.push(`Other: ${input.otherUrl}`);
+  if (urls.length > 0) prompt += `\n\nAdditional links:\n${urls.join('\n')}`;
+  if (input.uploadedFileText) {
+    const truncated = input.uploadedFileText.substring(0, 10000);
+    prompt += `\n\nUploaded document content:\n${truncated}`;
+  }
+  return prompt;
+}
+
 const TOOL_SYSTEM = `You are WZRD AI — a brand diagnosis engine trained on Keller's CBBE, Kapferer's Identity Prism, Sharp's How Brands Grow, and real MENA market data.
 
 You analyze brands with brutal honesty. No fluff. No generic advice. Every finding must be specific and actionable.
@@ -269,9 +296,9 @@ export const toolsRouter = router({
       monthlyRevenue: z.string().max(50).optional(),
       biggestChallenge: z.string().min(1).max(1000),
       previousBranding: z.string().max(50).optional(),
-    }))
+    }).merge(resourcesSchema))
     .mutation(async ({ input, ctx }) => {
-      const originalPrompt = `Analyze brand health for:
+      let originalPrompt = `Analyze brand health for:
 Company: ${input.companyName}
 Industry: ${input.industry}
 Market: ${input.market}
@@ -286,6 +313,7 @@ Biggest challenge: ${input.biggestChallenge}
 Previous branding experience: ${input.previousBranding || 'Not specified'}
 
 Score the brand 0-100. Identify the top 3-5 issues across: positioning clarity, messaging consistency, offer logic, visual perception, and customer journey. Be specific to THIS company.`;
+      originalPrompt = appendResources(originalPrompt, input);
       const userPrompt = ARABIC_INSTRUCTION + originalPrompt;
 
       const result = await runToolAI('brand_diagnosis', 'Brand Diagnosis', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
@@ -307,9 +335,9 @@ Score the brand 0-100. Identify the top 3-5 issues across: positioning clarity, 
       targetAudience: z.string().min(1).max(1000),
       commonObjections: z.string().max(1000).optional(),
       competitorPricing: z.string().max(1000).optional(),
-    }))
+    }).merge(resourcesSchema))
     .mutation(async ({ input, ctx }) => {
-      const originalPrompt = `Analyze offer logic for:
+      let originalPrompt = `Analyze offer logic for:
 Company: ${input.companyName}
 Industry: ${input.industry}
 Current packages/services: ${input.currentPackages}
@@ -322,6 +350,7 @@ Common objections: ${input.commonObjections || 'Not specified'}
 Competitor pricing vs theirs: ${input.competitorPricing || 'Not specified'}
 
 Score 0-100. Check: Is the offer clear? Does pricing logic make sense? Are there too many/few options? Is the value proposition obvious? Is there a clear path from free→paid?`;
+      originalPrompt = appendResources(originalPrompt, input);
       const userPrompt = ARABIC_INSTRUCTION + originalPrompt;
 
       const result = await runToolAI('offer_check', 'Offer Logic Check', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
@@ -343,9 +372,9 @@ Score 0-100. Check: Is the offer clear? Does pricing logic make sense? Are there
       keyDifferentiator: z.string().max(1000).optional(),
       toneOfVoice: z.string().max(50).optional(),
       customerQuote: z.string().max(500).optional(),
-    }))
+    }).merge(resourcesSchema))
     .mutation(async ({ input, ctx }) => {
-      const originalPrompt = `Analyze messaging consistency for:
+      let originalPrompt = `Analyze messaging consistency for:
 Company: ${input.companyName}
 Industry: ${input.industry}
 Tagline: ${input.tagline || 'None'}
@@ -358,6 +387,7 @@ Tone of voice: ${input.toneOfVoice || 'Not specified'}
 Customer quote: ${input.customerQuote || 'None'}
 
 Score 0-100. Check: Are these consistent? Is the differentiation clear? Is the tone appropriate? Is there a Clarity Gap? Would a new customer understand this brand in 5 seconds?`;
+      originalPrompt = appendResources(originalPrompt, input);
       const userPrompt = ARABIC_INSTRUCTION + originalPrompt;
 
       const result = await runToolAI('message_check', 'Message Check', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
@@ -380,9 +410,9 @@ Score 0-100. Check: Are these consistent? Is the differentiation clear? Is the t
       inquiryMethod: z.string().min(1).max(500),
       avgResponseTime: z.string().max(50).optional(),
       googleBusiness: z.string().max(50).optional(),
-    }))
+    }).merge(resourcesSchema))
     .mutation(async ({ input, ctx }) => {
-      const originalPrompt = `Audit digital presence for:
+      let originalPrompt = `Audit digital presence for:
 Company: ${input.companyName}
 Industry: ${input.industry}
 Website: ${input.website || 'Not provided'}
@@ -396,6 +426,7 @@ Avg response time: ${input.avgResponseTime || 'Not specified'}
 Google Business Profile: ${input.googleBusiness || 'Not specified'}
 
 Score 0-100. Check: Cross-channel consistency, premium perception, CTA clarity, inquiry flow friction, content-proof-CTA alignment. Why is this brand "present but not chosen"?`;
+      originalPrompt = appendResources(originalPrompt, input);
       const userPrompt = ARABIC_INSTRUCTION + originalPrompt;
 
       const result = await runToolAI('presence_audit', 'Presence Audit', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
@@ -417,9 +448,9 @@ Score 0-100. Check: Cross-channel consistency, premium perception, CTA clarity, 
       competitors: z.string().max(1000).optional(),
       desiredPerception: z.string().min(1).max(1000),
       currentGap: z.string().max(1000).optional(),
-    }))
+    }).merge(resourcesSchema))
     .mutation(async ({ input, ctx }) => {
-      const originalPrompt = `Analyze brand identity match for:
+      let originalPrompt = `Analyze brand identity match for:
 Company: ${input.companyName}
 Industry: ${input.industry}
 Brand personality: ${input.brandPersonality}
@@ -432,6 +463,7 @@ Desired perception: ${input.desiredPerception}
 Current gap (desired vs actual): ${input.currentGap || 'Not specified'}
 
 Score 0-100. Using Kapferer's Identity Prism, check: Does the brand personality match the audience? Is the visual quality matching the positioning? Is there a "Commodity Trap" — looking like everyone else? What archetype does this brand project vs. what it should project?`;
+      originalPrompt = appendResources(originalPrompt, input);
       const userPrompt = ARABIC_INSTRUCTION + originalPrompt;
 
       const result = await runToolAI('identity_snapshot', 'Identity Snapshot', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
@@ -455,9 +487,9 @@ Score 0-100. Using Kapferer's Identity Prism, check: Does the brand personality 
       teamCapacity: z.string().max(500).optional(),
       biggestConcern: z.string().min(1).max(1000),
       successMetric: z.string().max(1000).optional(),
-    }))
+    }).merge(resourcesSchema))
     .mutation(async ({ input, ctx }) => {
-      const originalPrompt = `Assess launch readiness for:
+      let originalPrompt = `Assess launch readiness for:
 Company: ${input.companyName}
 Industry: ${input.industry}
 Launch type: ${input.launchType}
@@ -472,6 +504,7 @@ Biggest concern: ${input.biggestConcern}
 Success metric (3 months): ${input.successMetric || 'Not specified'}
 
 Score 0-100 on launch readiness. Identify what's missing and what's the priority order. Be specific about what "ready to launch" means for THIS type of business.`;
+      originalPrompt = appendResources(originalPrompt, input);
       const userPrompt = ARABIC_INSTRUCTION + originalPrompt;
 
       const result = await runToolAI('launch_readiness', 'Launch Readiness', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);

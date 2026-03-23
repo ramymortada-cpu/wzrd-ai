@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'wouter';
 import { useI18n } from '@/lib/i18n';
 import WzrdPublicHeader from '@/components/WzrdPublicHeader';
 import { toArabicNumerals } from '@/lib/formatUtils';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 export interface ToolField {
   name: string;
@@ -67,6 +68,37 @@ interface ToolResult {
 
 const severityColor = (s: string) => s === 'high' ? 'text-red-400 border-red-400/20 bg-red-400/5' : s === 'medium' ? 'text-amber-400 border-amber-400/20 bg-amber-400/5' : 'text-green-400 border-green-400/20 bg-green-400/5';
 const scoreColor = (s: number) => s >= 70 ? 'from-green-400 to-cyan-400' : s >= 40 ? 'from-amber-400 to-orange-400' : 'from-red-400 to-pink-400';
+
+// Resources section — URLs + file upload
+const RESOURCE_URL_FIELDS = [
+  { name: 'instagramUrl', label: 'Instagram URL', labelAr: 'رابط Instagram', placeholder: 'https://instagram.com/...' },
+  { name: 'facebookUrl', label: 'Facebook URL', labelAr: 'رابط Facebook', placeholder: 'https://facebook.com/...' },
+  { name: 'linkedinUrl', label: 'LinkedIn URL', labelAr: 'رابط LinkedIn', placeholder: 'https://linkedin.com/...' },
+  { name: 'tiktokUrl', label: 'TikTok URL', labelAr: 'رابط TikTok', placeholder: 'https://tiktok.com/...' },
+  { name: 'websiteUrl', label: 'Website URL', labelAr: 'رابط الموقع', placeholder: 'https://...' },
+  { name: 'otherUrl', label: 'Other URL (Google Business, Behance, etc.)', labelAr: 'رابط تاني (Google Business, Behance)', placeholder: 'https://...' },
+] as const;
+
+const ACCEPTED_FILE_TYPES = '.pdf,.docx,.doc,.png,.jpg,.jpeg';
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+async function extractFileText(file: File): Promise<string> {
+  const sizeKb = (file.size / 1024).toFixed(0);
+  if (file.type === 'application/pdf') {
+    return `[PDF file uploaded: ${file.name}, ${sizeKb}KB - content extraction pending]`;
+  }
+  if (file.name.endsWith('.docx') || file.name.endsWith('.doc')) {
+    return `[Document uploaded: ${file.name}, ${sizeKb}KB - content extraction pending]`;
+  }
+  if (file.type.startsWith('image/')) {
+    return `[Image uploaded: ${file.name}, ${sizeKb}KB - visual analysis pending]`;
+  }
+  try {
+    return await file.text();
+  } catch {
+    return `[File uploaded: ${file.name}, ${sizeKb}KB]`;
+  }
+}
 
 // ═══════════════════════════════════════
 // PROCESSING — professional timeline-based analysis (15s min)
@@ -354,10 +386,24 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ToolResult | null>(null);
   const [error, setError] = useState('');
+  const [uploadedFile, setUploadedFile] = useState<{ file: File; text: string } | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const updateField = (name: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
+
+  const handleFileUpload = useCallback(async (file: File) => {
+    setUploading(true);
+    setError('');
+    try {
+      const text = await extractFileText(file);
+      setUploadedFile({ file, text });
+      setFormData(prev => ({ ...prev, uploadedFileText: text }));
+    } finally {
+      setUploading(false);
+    }
+  }, []);
 
   const handleSubmit = async () => {
     // Validate required fields
@@ -506,7 +552,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
             </a>
           </div>
 
-          <button onClick={() => { setResult(null); setFormData({}); }} className="w-full mt-6 py-3 rounded-full border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-600 dark:text-zinc-400 hover:border-indigo-500 transition">
+          <button onClick={() => { setResult(null); setFormData({}); setUploadedFile(null); }} className="w-full mt-6 py-3 rounded-full border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-600 dark:text-zinc-400 hover:border-indigo-500 transition">
             {t('wzrd.runAgain')}
           </button>
         </div>
@@ -589,6 +635,89 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
             </div>
           );})}
         </div>
+
+        {/* Resources — collapsible section */}
+        <Collapsible className="mt-6" defaultOpen={false}>
+          <CollapsibleTrigger className="flex items-center gap-2 w-full py-3 px-4 rounded-xl border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-600 dark:text-zinc-400 hover:border-indigo-500/50 hover:bg-zinc-50 dark:hover:bg-zinc-900/30 transition text-right">
+            <span>📎</span>
+            <span>{locale === 'ar' ? 'أضف روابط ومصادر إضافية' : 'Additional Resources (optional)'}</span>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="mt-4 space-y-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+              {RESOURCE_URL_FIELDS.map(({ name, label, labelAr, placeholder }) => {
+                const fieldLabel = locale === 'ar' ? labelAr : label;
+                return (
+                  <div key={name}>
+                    <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1">{fieldLabel}</label>
+                    <input
+                      type="url"
+                      placeholder={placeholder}
+                      maxLength={500}
+                      className="w-full px-4 py-2.5 rounded-lg bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-600 text-sm outline-none focus:border-indigo-500 transition"
+                      value={(formData[name] as string) || ''}
+                      onChange={e => updateField(name, e.target.value)}
+                    />
+                  </div>
+                );
+              })}
+
+              {/* File upload */}
+              <div>
+                <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">
+                  {locale === 'ar' ? 'رفع ملف (PDF، Word، صورة)' : 'Upload file (PDF, Word, image)'}
+                </label>
+                <div
+                  className={`border-2 border-dashed rounded-xl p-6 text-center transition ${
+                    uploading ? 'border-indigo-500/50 bg-indigo-500/5' : 'border-zinc-300 dark:border-zinc-700 hover:border-indigo-500/40'
+                  }`}
+                  onDragOver={e => { e.preventDefault(); e.stopPropagation(); }}
+                  onDrop={e => {
+                    e.preventDefault();
+                    const f = e.dataTransfer.files[0];
+                    if (f) {
+                      if (f.size > MAX_FILE_SIZE) setError(locale === 'ar' ? 'حجم الملف أكبر من 5MB' : 'File size exceeds 5MB');
+                      else handleFileUpload(f);
+                    }
+                  }}
+                >
+                  <input
+                    type="file"
+                    accept={ACCEPTED_FILE_TYPES}
+                    className="hidden"
+                    id="resource-file"
+                    onChange={e => {
+                      const f = e.target.files?.[0];
+                      if (f) {
+                        if (f.size > MAX_FILE_SIZE) setError(locale === 'ar' ? 'حجم الملف أكبر من 5MB' : 'File size exceeds 5MB');
+                        else handleFileUpload(f);
+                      }
+                      e.target.value = '';
+                    }}
+                  />
+                  {uploadedFile ? (
+                    <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800/50">
+                      <span className="text-xs truncate">{uploadedFile.file.name}</span>
+                      <span className="text-[10px] text-zinc-500">{(uploadedFile.file.size / 1024).toFixed(0)}KB</span>
+                      <button
+                        type="button"
+                        onClick={() => setUploadedFile(null)}
+                        className="text-red-500 hover:text-red-600 text-xs px-2"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <label htmlFor="resource-file" className="cursor-pointer block">
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                        {locale === 'ar' ? 'ارفع ملف (PDF، Word، صورة) — حد أقصى 5MB' : 'Drop file or click — PDF, Word, image — max 5MB'}
+                      </p>
+                    </label>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
 
         <button
           onClick={handleSubmit} disabled={loading}
