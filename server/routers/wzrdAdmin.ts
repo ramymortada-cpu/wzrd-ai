@@ -307,42 +307,6 @@ export const wzrdAdminRouter = router({
     };
   }),
 
-  /** Debug: Test Groq API call directly (bypasses circuit breaker) */
-  testGroq: protectedProcedure.mutation(async ({ ctx }) => {
-    checkOwner(ctx);
-    try {
-      const { ENV } = await import('../_core/env');
-      const apiKey = ENV.groqApiKey;
-      if (!apiKey) return { success: false, error: 'GROQ_API_KEY not set', key: '' };
-
-      const response = await fetch(`${ENV.groqApiUrl}/v1/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: ENV.groqModel,
-          messages: [{ role: 'user', content: 'Say "GROQ WORKS" and nothing else.' }],
-          max_tokens: 20,
-        }),
-      });
-
-      const text = await response.text();
-      return {
-        success: response.ok,
-        status: response.status,
-        response: text.substring(0, 500),
-        key: apiKey.substring(0, 8) + '...',
-        model: ENV.groqModel,
-        url: ENV.groqApiUrl,
-      };
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { success: false, error: msg, key: '' };
-    }
-  }),
-
   /** Force send newsletter NOW (admin trigger) */
   sendNewsletter: protectedProcedure.mutation(async ({ ctx }) => {
     checkOwner(ctx);

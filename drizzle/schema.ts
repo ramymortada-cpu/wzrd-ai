@@ -765,3 +765,13 @@ export type QualityScore = typeof qualityScores.$inferSelect;
 export type InsertQualityScore = typeof qualityScores.$inferInsert;
 export type ClientFeedbackRow = typeof clientFeedbackTable.$inferSelect;
 export type InsertClientFeedback = typeof clientFeedbackTable.$inferInsert;
+
+// ════════════════════════════════════════════
+// SITE CONFIG — persists CMS/settings/prompts
+// ════════════════════════════════════════════
+export const siteConfigTable = mysqlTable("site_config", {
+  id: int("id").autoincrement().primaryKey(),
+  key: varchar("key", { length: 100 }).notNull().unique(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});

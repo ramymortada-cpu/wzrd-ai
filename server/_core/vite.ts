@@ -21,7 +21,7 @@ export async function setupVite(app: Express, server: Server) {
   });
 
   // ═══ Landing pages — BEFORE Vite so anonymous / gets landing, not React ═══
-  const landingPath = path.resolve(process.cwd(), "client", "public", "landing");
+  const landingPath = path.resolve(import.meta.dirname, "../..", "client", "public", "landing");
   if (fs.existsSync(landingPath)) {
     app.use("/landing", express.static(landingPath));
 
@@ -37,6 +37,14 @@ export async function setupVite(app: Express, server: Server) {
     });
 
     // Public routes → landing pages
+    app.get("/api/public/site-config", (_req, res) => {
+      try {
+        const { getSiteConfig } = require('../siteConfig');
+        const cfg = getSiteConfig();
+        res.json({ homepage: cfg.homepage, site: cfg.site, services: cfg.services });
+      } catch { res.json({}); }
+    });
+
     app.get("/welcome", (_req, res) => res.sendFile(path.resolve(landingPath, "index.html")));
     app.get("/services-info", (_req, res) => res.sendFile(path.resolve(landingPath, "services.html")));
     app.get("/guides/brand-health", (_req, res) => res.sendFile(path.resolve(landingPath, "guide-brand-health.html")));
@@ -94,29 +102,39 @@ export function serveStatic(app: Express) {
   }
 
   // ═══ Landing pages — served BEFORE React catch-all ═══
-  // Production: use dist/public/landing directly (postbuild guarantees it's fresh)
-  const landingDir = path.resolve(process.cwd(), "dist", "public", "landing");
+  // These are public HTML pages accessible without auth
+  const landingPath = path.resolve(import.meta.dirname, "../..", "client", "public", "landing");
+  const distLandingPath = path.resolve(distPath, "landing");
+  const activeLandingPath = fs.existsSync(landingPath) ? landingPath : distLandingPath;
 
-  if (fs.existsSync(landingDir)) {
-    app.use("/landing", express.static(landingDir));
+  if (fs.existsSync(activeLandingPath)) {
+    app.use("/landing", express.static(activeLandingPath));
 
     // Smart root: logged in → React dashboard, not logged in → landing page
     app.get("/", (req, res, next) => {
       const cookieHeader = req.headers.cookie || '';
       const hasSession = cookieHeader.includes('app_session_id=');
       if (!hasSession) {
-        res.sendFile(path.resolve(landingDir, "index.html"));
+        res.sendFile(path.resolve(activeLandingPath, "index.html"));
       } else {
         next();
       }
     });
 
     // Public routes → landing pages
-    app.get("/welcome", (_req, res) => res.sendFile(path.resolve(landingDir, "index.html")));
-    app.get("/services-info", (_req, res) => res.sendFile(path.resolve(landingDir, "services.html")));
-    app.get("/guides/brand-health", (_req, res) => res.sendFile(path.resolve(landingDir, "guide-brand-health.html")));
-    app.get("/guides/offer-logic", (_req, res) => res.sendFile(path.resolve(landingDir, "guide-offer-logic.html")));
-    app.get("/guides/brand-identity", (_req, res) => res.sendFile(path.resolve(landingDir, "guide-brand-identity.html")));
+    app.get("/api/public/site-config", (_req, res) => {
+      try {
+        const { getSiteConfig } = require('../siteConfig');
+        const cfg = getSiteConfig();
+        res.json({ homepage: cfg.homepage, site: cfg.site, services: cfg.services });
+      } catch { res.json({}); }
+    });
+
+    app.get("/welcome", (_req, res) => res.sendFile(path.resolve(activeLandingPath, "index.html")));
+    app.get("/services-info", (_req, res) => res.sendFile(path.resolve(activeLandingPath, "services.html")));
+    app.get("/guides/brand-health", (_req, res) => res.sendFile(path.resolve(activeLandingPath, "guide-brand-health.html")));
+    app.get("/guides/offer-logic", (_req, res) => res.sendFile(path.resolve(activeLandingPath, "guide-offer-logic.html")));
+    app.get("/guides/brand-identity", (_req, res) => res.sendFile(path.resolve(activeLandingPath, "guide-brand-identity.html")));
 
     // Newsletter unsubscribe (GET — works from email link click)
     app.get("/unsubscribe", async (req, res) => {

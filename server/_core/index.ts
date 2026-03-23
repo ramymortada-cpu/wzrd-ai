@@ -138,6 +138,15 @@ async function startServer() {
     // === POST-STARTUP TASKS (non-blocking) ===
     setTimeout(async () => {
       try {
+        // Load site config from DB (CMS, prompts, settings)
+        const { loadConfigFromDb } = await import('../siteConfig');
+        await loadConfigFromDb();
+        logger.info('Site config loaded from DB');
+      } catch (err) {
+        logger.warn({ err }, 'Site config DB load failed — using defaults');
+      }
+
+      try {
         // Auto-index knowledge base for semantic search
         const { indexKnowledgeBase } = await import('../vectorSearch');
         await indexKnowledgeBase();

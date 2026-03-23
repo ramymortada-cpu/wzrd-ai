@@ -23,6 +23,7 @@ import { logger } from "../_core/logger";
 import { resilientLLM } from "../_core/llmRouter";
 import { deductCredits, getUserCredits, TOOL_COSTS } from "../db";
 import { sendToolResultEmail } from "../wzrdEmails";
+import { getToolSystemPrompt, isToolEnabled } from "../siteConfig";
 
 // ════════════════════════════════════════════
 // SHARED TYPES
@@ -90,15 +91,24 @@ function getServiceRecommendation(toolName: string, score: number): ToolResult['
 }
 
 async function runToolAI(
-  toolName: string,
+  toolId: string,
   toolDisplayName: string,
-  systemPrompt: string,
+  defaultSystemPrompt: string,
   userPrompt: string,
   userId: number,
   userEmail?: string | null
 ): Promise<ToolResult> {
-  // 1. Deduct credits
-  const deduction = await deductCredits(userId, toolName);
+  // 0. Check if tool is enabled in admin
+  if (!isToolEnabled(toolId)) {
+    throw new Error('هذه الأداة معطّلة مؤقتاً. يرجى المحاولة لاحقاً.');
+  }
+
+  // 1. Get system prompt from admin (or use default)
+  const adminPrompt = getToolSystemPrompt(toolId);
+  const systemPrompt = adminPrompt || defaultSystemPrompt;
+
+  // 2. Deduct credits
+  const deduction = await deductCredits(userId, toolId);
   if (!deduction.success) {
     throw new Error(deduction.error || 'Insufficient credits');
   }
@@ -140,7 +150,7 @@ async function runToolAI(
       recommendation: 'Run a full Health Check for detailed insights.',
     };
 
-    logger.warn({ toolName, textLength: text.length, extractedScore }, 'AI response was not valid JSON — used smart fallback');
+    logger.warn({ toolId, textLength: text.length, extractedScore }, 'AI response was not valid JSON — used smart fallback');
   }
 
   const score = Math.max(0, Math.min(100, parsed.score || 50));
@@ -148,17 +158,14 @@ async function runToolAI(
   const result: ToolResult = {
     score,
     label: scoreLabel(score),
-    findings: (parsed.findings || []).slice(0, 5).map(f => {
-      const s = (f.severity || 'medium').toLowerCase();
-      return {
-        title: f.title || 'Finding',
-        detail: f.detail || '',
-        severity: (['high', 'medium', 'low'].includes(s) ? s : 'medium') as 'high' | 'medium' | 'low',
-      };
-    }),
+    findings: (parsed.findings || []).slice(0, 5).map(f => ({
+      title: f.title || 'Finding',
+      detail: f.detail || '',
+      severity: (['high', 'medium', 'low'].includes(f.severity) ? f.severity : 'medium') as 'high' | 'medium' | 'low',
+    })),
     recommendation: parsed.recommendation || 'Consider a full audit for detailed insights.',
     nextStep: { type: 'guide', title: 'Learn more', url: '/guides/brand-health' },
-    serviceRecommendation: getServiceRecommendation(toolName, score),
+    serviceRecommendation: getServiceRecommendation(toolId, score),
     creditsUsed: deduction.cost,
     creditsRemaining: deduction.newBalance ?? 0,
   };
@@ -179,35 +186,6 @@ async function runToolAI(
 // TOOL PROMPTS
 // ════════════════════════════════════════════
 
-const ARABIC_INSTRUCTION = `أجب بالعربي المصري. كل العناوين والتفاصيل والتوصيات لازم تكون بالعربي. المصطلحات المهنية ممكن تفضل بالإنجليزي بس الشرح بالعربي.
-
-`;
-
-/** Optional resources (social links + uploaded file text) — append to any tool prompt */
-const resourcesSchema = z.object({
-  socialLinks: z.string().max(5000).optional(), // JSON array of { platform, url }
-  uploadedFileText: z.string().max(50000).optional(),
-});
-
-function appendResources(prompt: string, input: z.infer<typeof resourcesSchema>): string {
-  if (input.socialLinks) {
-    try {
-      const links = JSON.parse(input.socialLinks) as Array<{ platform?: string; url?: string }>;
-      if (Array.isArray(links) && links.length > 0) {
-        const lines = links
-          .filter((l): l is { platform: string; url: string } => !!l.platform && !!l.url)
-          .map(l => `${l.platform}: ${l.url}`);
-        if (lines.length > 0) prompt += `\n\nAdditional links:\n${lines.join('\n')}`;
-      }
-    } catch { /* ignore invalid JSON */ }
-  }
-  if (input.uploadedFileText) {
-    const truncated = input.uploadedFileText.substring(0, 10000);
-    prompt += `\n\nUploaded document content:\n${truncated}`;
-  }
-  return prompt;
-}
-
 const TOOL_SYSTEM = `You are WZRD AI — a brand diagnosis engine trained on Keller's CBBE, Kapferer's Identity Prism, Sharp's How Brands Grow, and real MENA market data.
 
 You analyze brands with brutal honesty. No fluff. No generic advice. Every finding must be specific and actionable.
@@ -219,9 +197,7 @@ Respond in JSON format:
     { "title": "<short title>", "detail": "<specific explanation>", "severity": "high|medium|low" }
   ],
   "recommendation": "<one sentence next step>"
-}
-
-IMPORTANT: All your findings titles, details, and recommendations MUST be written in Egyptian Arabic (مصري). Use professional but accessible Arabic. Technical terms like "Brand Positioning" can stay in English but the explanation must be in Arabic.`;
+}`;
 
 // ════════════════════════════════════════════
 // ROUTER
@@ -283,36 +259,20 @@ export const toolsRouter = router({
   brandDiagnosis: protectedProcedure
     .input(z.object({
       companyName: z.string().min(1).max(255),
-      industry: z.string().max(100),
-      market: z.string().max(50),
-      yearsInBusiness: z.string().max(50).optional(),
-      teamSize: z.string().max(50).optional(),
+      industry: z.string().max(100).optional(),
+      market: z.string().max(50).optional(),
       website: z.string().max(500).optional(),
-      socialMedia: z.string().max(1000).optional(),
-      currentPositioning: z.string().max(1000).optional(),
-      targetAudience: z.string().min(1).max(1000),
-      monthlyRevenue: z.string().max(50).optional(),
-      biggestChallenge: z.string().min(1).max(1000),
-      previousBranding: z.string().max(50).optional(),
-    }).merge(resourcesSchema))
+      challenge: z.string().max(1000).optional(),
+    }))
     .mutation(async ({ input, ctx }) => {
-      let originalPrompt = `Analyze brand health for:
+      const userPrompt = `Analyze brand health for:
 Company: ${input.companyName}
-Industry: ${input.industry}
-Market: ${input.market}
-Years in business: ${input.yearsInBusiness || 'Not specified'}
-Team size: ${input.teamSize || 'Not specified'}
+Industry: ${input.industry || 'Not specified'}
+Market: ${input.market || 'MENA'}
 Website: ${input.website || 'Not provided'}
-Social media: ${input.socialMedia || 'Not provided'}
-Current positioning / differentiation: ${input.currentPositioning || 'Not specified'}
-Target audience: ${input.targetAudience}
-Monthly revenue: ${input.monthlyRevenue || 'Not specified'}
-Biggest challenge: ${input.biggestChallenge}
-Previous branding experience: ${input.previousBranding || 'Not specified'}
+Main challenge: ${input.challenge || 'Not specified'}
 
 Score the brand 0-100. Identify the top 3-5 issues across: positioning clarity, messaging consistency, offer logic, visual perception, and customer journey. Be specific to THIS company.`;
-      originalPrompt = appendResources(originalPrompt, input);
-      const userPrompt = ARABIC_INSTRUCTION + originalPrompt;
 
       const result = await runToolAI('brand_diagnosis', 'Brand Diagnosis', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
       result.nextStep = { type: 'guide', title: 'How to Audit Your Brand Health', url: '/guides/brand-health' };
@@ -324,32 +284,18 @@ Score the brand 0-100. Identify the top 3-5 issues across: positioning clarity, 
   offerCheck: protectedProcedure
     .input(z.object({
       companyName: z.string().min(1).max(255),
-      industry: z.string().max(100),
-      currentPackages: z.string().min(1).max(2000),
-      numberOfPackages: z.string().max(50).optional(),
-      pricingModel: z.string().max(50).optional(),
-      cheapestPrice: z.string().max(100).optional(),
-      highestPrice: z.string().max(100).optional(),
-      targetAudience: z.string().min(1).max(1000),
-      commonObjections: z.string().max(1000).optional(),
-      competitorPricing: z.string().max(1000).optional(),
-    }).merge(resourcesSchema))
+      packages: z.string().max(2000),
+      pricing: z.string().max(500).optional(),
+      targetAudience: z.string().max(500).optional(),
+    }))
     .mutation(async ({ input, ctx }) => {
-      let originalPrompt = `Analyze offer logic for:
+      const userPrompt = `Analyze offer logic for:
 Company: ${input.companyName}
-Industry: ${input.industry}
-Current packages/services: ${input.currentPackages}
-Number of packages: ${input.numberOfPackages || 'Not specified'}
-Pricing model: ${input.pricingModel || 'Not specified'}
-Cheapest price: ${input.cheapestPrice || 'Not specified'}
-Highest price: ${input.highestPrice || 'Not specified'}
-Target audience: ${input.targetAudience}
-Common objections: ${input.commonObjections || 'Not specified'}
-Competitor pricing vs theirs: ${input.competitorPricing || 'Not specified'}
+Current packages/services: ${input.packages}
+Pricing approach: ${input.pricing || 'Not specified'}
+Target audience: ${input.targetAudience || 'Not specified'}
 
 Score 0-100. Check: Is the offer clear? Does pricing logic make sense? Are there too many/few options? Is the value proposition obvious? Is there a clear path from free→paid?`;
-      originalPrompt = appendResources(originalPrompt, input);
-      const userPrompt = ARABIC_INSTRUCTION + originalPrompt;
 
       const result = await runToolAI('offer_check', 'Offer Logic Check', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
       result.nextStep = { type: 'guide', title: 'Offer Logic 101', url: '/guides/offer-logic' };
@@ -361,32 +307,20 @@ Score 0-100. Check: Is the offer clear? Does pricing logic make sense? Are there
   messageCheck: protectedProcedure
     .input(z.object({
       companyName: z.string().min(1).max(255),
-      industry: z.string().max(100),
       tagline: z.string().max(500).optional(),
-      elevatorPitch: z.string().min(1).max(1000),
+      keyMessage: z.string().max(1000).optional(),
+      socialBio: z.string().max(500).optional(),
       websiteHeadline: z.string().max(500).optional(),
-      instagramBio: z.string().max(500).optional(),
-      linkedinAbout: z.string().max(1000).optional(),
-      keyDifferentiator: z.string().max(1000).optional(),
-      toneOfVoice: z.string().max(50).optional(),
-      customerQuote: z.string().max(500).optional(),
-    }).merge(resourcesSchema))
+    }))
     .mutation(async ({ input, ctx }) => {
-      let originalPrompt = `Analyze messaging consistency for:
+      const userPrompt = `Analyze messaging consistency for:
 Company: ${input.companyName}
-Industry: ${input.industry}
 Tagline: ${input.tagline || 'None'}
-Elevator pitch (30 sec): ${input.elevatorPitch}
+Key message: ${input.keyMessage || 'Not provided'}
+Social bio: ${input.socialBio || 'Not provided'}
 Website headline: ${input.websiteHeadline || 'Not provided'}
-Instagram bio: ${input.instagramBio || 'Not provided'}
-LinkedIn/Facebook About: ${input.linkedinAbout || 'Not provided'}
-Key differentiator: ${input.keyDifferentiator || 'Not specified'}
-Tone of voice: ${input.toneOfVoice || 'Not specified'}
-Customer quote: ${input.customerQuote || 'None'}
 
 Score 0-100. Check: Are these consistent? Is the differentiation clear? Is the tone appropriate? Is there a Clarity Gap? Would a new customer understand this brand in 5 seconds?`;
-      originalPrompt = appendResources(originalPrompt, input);
-      const userPrompt = ARABIC_INSTRUCTION + originalPrompt;
 
       const result = await runToolAI('message_check', 'Message Check', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
       result.nextStep = { type: 'guide', title: 'Brand Identity Guide', url: '/guides/brand-identity' };
@@ -398,34 +332,20 @@ Score 0-100. Check: Are these consistent? Is the differentiation clear? Is the t
   presenceAudit: protectedProcedure
     .input(z.object({
       companyName: z.string().min(1).max(255),
-      industry: z.string().max(100),
-      website: z.string().max(500).optional(),
       instagramHandle: z.string().max(255).optional(),
-      instagramFollowers: z.string().max(50).optional(),
-      otherPlatforms: z.string().max(500).optional(),
-      postingFrequency: z.string().max(50).optional(),
-      contentType: z.string().max(500).optional(),
-      inquiryMethod: z.string().min(1).max(500),
-      avgResponseTime: z.string().max(50).optional(),
-      googleBusiness: z.string().max(50).optional(),
-    }).merge(resourcesSchema))
+      website: z.string().max(500).optional(),
+      otherChannels: z.string().max(500).optional(),
+      inquiryFlow: z.string().max(500).optional(),
+    }))
     .mutation(async ({ input, ctx }) => {
-      let originalPrompt = `Audit digital presence for:
+      const userPrompt = `Audit digital presence for:
 Company: ${input.companyName}
-Industry: ${input.industry}
-Website: ${input.website || 'Not provided'}
 Instagram: ${input.instagramHandle || 'Not provided'}
-Instagram followers: ${input.instagramFollowers || 'Not specified'}
-Other platforms: ${input.otherPlatforms || 'None'}
-Posting frequency: ${input.postingFrequency || 'Not specified'}
-Content type: ${input.contentType || 'Not specified'}
-Inquiry method: ${input.inquiryMethod}
-Avg response time: ${input.avgResponseTime || 'Not specified'}
-Google Business Profile: ${input.googleBusiness || 'Not specified'}
+Website: ${input.website || 'Not provided'}
+Other channels: ${input.otherChannels || 'None'}
+Inquiry flow: ${input.inquiryFlow || 'Not described'}
 
 Score 0-100. Check: Cross-channel consistency, premium perception, CTA clarity, inquiry flow friction, content-proof-CTA alignment. Why is this brand "present but not chosen"?`;
-      originalPrompt = appendResources(originalPrompt, input);
-      const userPrompt = ARABIC_INSTRUCTION + originalPrompt;
 
       const result = await runToolAI('presence_audit', 'Presence Audit', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
       result.nextStep = { type: 'service', title: 'Full Health Check', url: '/services#audit' };
@@ -437,32 +357,18 @@ Score 0-100. Check: Cross-channel consistency, premium perception, CTA clarity, 
   identitySnapshot: protectedProcedure
     .input(z.object({
       companyName: z.string().min(1).max(255),
-      industry: z.string().max(100),
-      brandPersonality: z.string().min(1).max(1000),
-      targetAudience: z.string().min(1).max(1000),
-      brandColors: z.string().max(255).optional(),
-      hasLogo: z.string().max(50).optional(),
-      hasGuidelines: z.string().max(50).optional(),
-      competitors: z.string().max(1000).optional(),
-      desiredPerception: z.string().min(1).max(1000),
-      currentGap: z.string().max(1000).optional(),
-    }).merge(resourcesSchema))
+      brandDescription: z.string().max(1000),
+      targetAudience: z.string().max(500).optional(),
+      competitors: z.string().max(500).optional(),
+    }))
     .mutation(async ({ input, ctx }) => {
-      let originalPrompt = `Analyze brand identity match for:
+      const userPrompt = `Analyze brand identity match for:
 Company: ${input.companyName}
-Industry: ${input.industry}
-Brand personality: ${input.brandPersonality}
-Target audience: ${input.targetAudience}
-Brand colors: ${input.brandColors || 'Not specified'}
-Has logo: ${input.hasLogo || 'Not specified'}
-Has guidelines: ${input.hasGuidelines || 'Not specified'}
-Competitors & their differentiation: ${input.competitors || 'Not specified'}
-Desired perception: ${input.desiredPerception}
-Current gap (desired vs actual): ${input.currentGap || 'Not specified'}
+Brand describes itself as: ${input.brandDescription}
+Target audience: ${input.targetAudience || 'Not specified'}
+Main competitors: ${input.competitors || 'Not specified'}
 
 Score 0-100. Using Kapferer's Identity Prism, check: Does the brand personality match the audience? Is the visual quality matching the positioning? Is there a "Commodity Trap" — looking like everyone else? What archetype does this brand project vs. what it should project?`;
-      originalPrompt = appendResources(originalPrompt, input);
-      const userPrompt = ARABIC_INSTRUCTION + originalPrompt;
 
       const result = await runToolAI('identity_snapshot', 'Identity Snapshot', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
       result.nextStep = { type: 'guide', title: 'What Is Brand Identity', url: '/guides/brand-identity' };
@@ -474,36 +380,22 @@ Score 0-100. Using Kapferer's Identity Prism, check: Does the brand personality 
   launchReadiness: protectedProcedure
     .input(z.object({
       companyName: z.string().min(1).max(255),
-      industry: z.string().min(1).max(100),
-      launchType: z.string().min(1).max(50),
-      targetLaunchDate: z.string().max(50).optional(),
-      hasGuidelines: z.string().max(50).optional(),
-      hasOfferStructure: z.string().max(50).optional(),
-      hasWebsite: z.string().max(50).optional(),
-      hasContentPlan: z.string().max(50).optional(),
-      marketingBudget: z.string().max(50).optional(),
-      teamCapacity: z.string().max(500).optional(),
-      biggestConcern: z.string().min(1).max(1000),
-      successMetric: z.string().max(1000).optional(),
-    }).merge(resourcesSchema))
+      hasGuidelines: z.boolean().default(false),
+      hasOfferStructure: z.boolean().default(false),
+      hasContentPlan: z.boolean().default(false),
+      hasWebsite: z.boolean().default(false),
+      launchGoal: z.string().max(500).optional(),
+    }))
     .mutation(async ({ input, ctx }) => {
-      let originalPrompt = `Assess launch readiness for:
+      const userPrompt = `Assess launch readiness for:
 Company: ${input.companyName}
-Industry: ${input.industry}
-Launch type: ${input.launchType}
-Target launch date: ${input.targetLaunchDate || 'Not specified'}
-Brand guidelines: ${input.hasGuidelines || 'Not specified'}
-Offer structure (packages & pricing): ${input.hasOfferStructure || 'Not specified'}
-Website: ${input.hasWebsite || 'Not specified'}
-Content plan: ${input.hasContentPlan || 'Not specified'}
-Marketing budget: ${input.marketingBudget || 'Not specified'}
-Team capacity: ${input.teamCapacity || 'Not specified'}
-Biggest concern: ${input.biggestConcern}
-Success metric (3 months): ${input.successMetric || 'Not specified'}
+Has brand guidelines: ${input.hasGuidelines ? 'Yes' : 'No'}
+Has structured offers: ${input.hasOfferStructure ? 'Yes' : 'No'}
+Has content plan: ${input.hasContentPlan ? 'Yes' : 'No'}
+Has website: ${input.hasWebsite ? 'Yes' : 'No'}
+Launch goal: ${input.launchGoal || 'Not specified'}
 
 Score 0-100 on launch readiness. Identify what's missing and what's the priority order. Be specific about what "ready to launch" means for THIS type of business.`;
-      originalPrompt = appendResources(originalPrompt, input);
-      const userPrompt = ARABIC_INSTRUCTION + originalPrompt;
 
       const result = await runToolAI('launch_readiness', 'Launch Readiness', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
       result.nextStep = { type: 'service', title: 'Business Takeoff Package', url: '/services#takeoff' };
