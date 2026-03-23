@@ -420,6 +420,43 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
             ))}
           </div>
 
+          {/* ═══ SHARE / DOWNLOAD ═══ */}
+          <div className="flex gap-2 mb-8">
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch('/api/trpc/reportPdf.generateHtml', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+                    body: JSON.stringify({ json: { toolName: config.name, toolNameAr: config.nameAr || config.name, score: result.score, label: result.label, findings: result.findings, recommendation: result.recommendation } }),
+                  });
+                  const data = await res.json();
+                  const html = data?.result?.data?.json?.html;
+                  if (html) { const w = window.open('', '_blank'); if (w) { w.document.write(html); w.document.close(); } }
+                } catch {}
+              }}
+              className="flex-1 py-3 rounded-full border border-indigo-500/30 text-sm text-indigo-400 hover:bg-indigo-500/10 transition flex items-center justify-center gap-2"
+            >📄 حمّل كـ PDF</button>
+            <button
+              onClick={async () => {
+                const email = (window as any).__userEmail || prompt('ادخل إيميلك:');
+                if (!email) return;
+                try {
+                  await fetch('/api/trpc/reportPdf.sendToEmail', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+                    body: JSON.stringify({ json: { toolName: config.name, toolNameAr: config.nameAr || config.name, score: result.score, label: result.label, findings: result.findings, recommendation: result.recommendation, email } }),
+                  });
+                  alert('تم الإرسال! ✅');
+                } catch { alert('فشل الإرسال'); }
+              }}
+              className="flex-1 py-3 rounded-full border border-green-500/30 text-sm text-green-400 hover:bg-green-500/10 transition flex items-center justify-center gap-2"
+            >📧 ابعت على إيميلي</button>
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent(`نتيجة تشخيص البراند بتاعي: ${result.score}/100\n${result.findings.map(f => '• ' + f.title).join('\n')}\n\nشخّص البراند بتاعك مجاناً:\n${typeof window !== 'undefined' ? window.location.origin : ''}/welcome`)}`}
+              target="_blank" rel="noopener"
+              className="flex-1 py-3 rounded-full border border-emerald-500/30 text-sm text-emerald-400 hover:bg-emerald-500/10 transition flex items-center justify-center gap-2"
+            >💬 شارك على WhatsApp</a>
+          </div>
+
           {/* ═══ PREMIUM UPGRADE CTA ═══ */}
           <div className="p-6 rounded-2xl border-2 border-indigo-500/30 bg-gradient-to-br from-indigo-900/30 to-purple-900/20 mb-8 text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold mb-3">

@@ -38,6 +38,7 @@ import { toolsRouter } from "./tools";
 import { wzrdAdminRouter } from "./wzrdAdmin";
 import { premiumRouter } from "./premium";
 import { emailAutomationRouter } from "./emailAutomation";
+import { reportPdfRouter } from "./reportPdf";
 import { dashboardRouter } from "./dashboard";
 
 export const appRouter = router({
@@ -74,6 +75,7 @@ export const appRouter = router({
   wzrdAdmin: wzrdAdminRouter,
   premium: premiumRouter,
   emailAutomation: emailAutomationRouter,
+  reportPdf: reportPdfRouter,
 });
 
 export type AppRouter = typeof appRouter;
