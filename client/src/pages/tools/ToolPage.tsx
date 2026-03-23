@@ -6,9 +6,11 @@ import WzrdPublicHeader from '@/components/WzrdPublicHeader';
 export interface ToolField {
   name: string;
   label: string;
+  labelAr?: string;
   type: 'text' | 'textarea' | 'select' | 'checkbox';
   placeholder?: string;
-  options?: Array<{ value: string; label: string }>;
+  placeholderAr?: string;
+  options?: Array<{ value: string; label: string; labelAr?: string }>;
   required?: boolean;
   maxLength?: number;
 }
@@ -25,9 +27,13 @@ export interface ToolConfig {
   guideTitle: string;
   intro?: {
     headline: string;
+    headlineAr?: string;
     body: string;
+    bodyAr?: string;
     measures: string[];
+    measuresAr?: string[];
     bestFor: string;
+    bestForAr?: string;
   };
 }
 
@@ -302,18 +308,18 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
 
         {config.intro && (
           <div className="mb-8 p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/20 shadow-sm">
-            <h2 className="text-base font-bold mb-2">{config.intro.headline}</h2>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed mb-4">{config.intro.body}</p>
+            <h2 className="text-base font-bold mb-2">{locale === 'ar' && config.intro.headlineAr ? config.intro.headlineAr : config.intro.headline}</h2>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed mb-4">{locale === 'ar' && config.intro.bodyAr ? config.intro.bodyAr : config.intro.body}</p>
             <div className="mb-3">
               <p className="text-[10px] font-bold text-zinc-600 dark:text-zinc-500 uppercase tracking-wider mb-2">{t('wzrd.whatItMeasures')}</p>
               <div className="flex flex-wrap gap-1.5">
-                {config.intro.measures.map((m, i) => (
+                {(locale === 'ar' && config.intro.measuresAr ? config.intro.measuresAr : config.intro.measures).map((m, i) => (
                   <span key={i} className="text-[11px] text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800/60 px-2 py-0.5 rounded-full">{m}</span>
                 ))}
               </div>
             </div>
             <p className="text-xs text-amber-600 dark:text-amber-400/80 leading-relaxed">
-              <span className="font-bold">{t('wzrd.bestFor')}</span> {config.intro.bestFor}
+              {locale === 'ar' && config.intro.bestForAr ? config.intro.bestForAr : (<><span className="font-bold">{t('wzrd.bestFor')}</span> {config.intro.bestFor}</>)}
             </p>
           </div>
         )}
@@ -323,12 +329,15 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
         )}
 
         <div className="space-y-4">
-          {config.fields.map(field => (
+          {config.fields.map(field => {
+            const fieldLabel = locale === 'ar' && field.labelAr ? field.labelAr : field.label;
+            const fieldPlaceholder = locale === 'ar' && field.placeholderAr ? field.placeholderAr : field.placeholder;
+            return (
             <div key={field.name}>
-              <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">{field.label}</label>
+              <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">{fieldLabel}</label>
               {field.type === 'textarea' ? (
                 <textarea
-                  placeholder={field.placeholder} maxLength={field.maxLength || 1000} rows={3}
+                  placeholder={fieldPlaceholder} maxLength={field.maxLength || 1000} rows={3}
                   className="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-600 text-sm outline-none focus:border-indigo-500 transition resize-none"
                   value={(formData[field.name] as string) || ''} onChange={e => updateField(field.name, e.target.value)}
                 />
@@ -338,22 +347,24 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
                   value={(formData[field.name] as string) || ''} onChange={e => updateField(field.name, e.target.value)}
                 >
                   <option value="">{t('wzrd.select')}</option>
-                  {field.options?.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  {field.options?.map(o => (
+                    <option key={o.value} value={o.value}>{locale === 'ar' && o.labelAr ? o.labelAr : o.label}</option>
+                  ))}
                 </select>
               ) : field.type === 'checkbox' ? (
                 <label className="flex items-center gap-2">
                   <input type="checkbox" className="accent-indigo-500" checked={!!formData[field.name]} onChange={e => updateField(field.name, e.target.checked)} />
-                  <span className="text-sm text-zinc-600 dark:text-zinc-400">{field.placeholder}</span>
+                  <span className="text-sm text-zinc-600 dark:text-zinc-400">{fieldPlaceholder}</span>
                 </label>
               ) : (
                 <input
-                  type="text" placeholder={field.placeholder} maxLength={field.maxLength || 255}
+                  type="text" placeholder={fieldPlaceholder} maxLength={field.maxLength || 255}
                   className="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-600 text-sm outline-none focus:border-indigo-500 transition"
                   value={(formData[field.name] as string) || ''} onChange={e => updateField(field.name, e.target.value)}
                 />
               )}
             </div>
-          ))}
+          );})}
         </div>
 
         <button
