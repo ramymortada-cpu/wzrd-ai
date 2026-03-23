@@ -69,3 +69,4 @@ export * from './leads';
 export * from './feedback';
 export * from './quality';
 export * from './credits';
+export * from './promoCodes';

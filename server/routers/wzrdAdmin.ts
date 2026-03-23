@@ -288,17 +288,20 @@ export const wzrdAdminRouter = router({
     return { subscribers: rows, total: countResult?.count || 0 };
   }),
 
-  /** WZRD AI config — read tool costs + credit plans */
+  /** WZRD AI config — read tool costs + credit plans from site config */
   config: protectedProcedure.query(({ ctx }) => {
     checkOwner(ctx);
+    const { getSiteConfig, getCreditPlans } = require('../siteConfig');
+    const sc = getSiteConfig();
+    const plans = getCreditPlans();
+    const creditPlans: Record<string, { credits: number; priceEGP: number; name?: string }> = {};
+    for (const p of plans) {
+      creditPlans[p.id] = { credits: p.credits, priceEGP: p.priceEGP, name: p.name };
+    }
     return {
       toolCosts: TOOL_COSTS,
       signupBonus: SIGNUP_BONUS,
-      creditPlans: {
-        starter: { credits: 500, priceEGP: 499 },
-        pro: { credits: 1500, priceEGP: 999 },
-        agency: { credits: 5000, priceEGP: 2499 },
-      },
+      creditPlans,
       dailyCreditCap: 200,
       emailProvider: process.env.EMAIL_PROVIDER || 'none',
       paymobConfigured: !!(process.env.PAYMOB_SECRET_KEY && process.env.PAYMOB_PUBLIC_KEY),
@@ -417,6 +420,131 @@ export const wzrdAdminRouter = router({
     }),
 
   // ═══════════════════════════════════════
+  // CREDIT PLANS — editable bundles
+  // ═══════════════════════════════════════
+
+  /** List credit plans (from site config — all plans including disabled) */
+  creditPlansList: protectedProcedure.query(({ ctx }) => {
+    checkOwner(ctx);
+    const { getSiteConfig } = require('../siteConfig');
+    const plans = (getSiteConfig().creditPlans || []).sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0));
+    return { plans };
+  }),
+
+  /** Update or add credit plan */
+  updateCreditPlan: protectedProcedure
+    .input(z.object({
+      planId: z.string().max(50),
+      credits: z.number().int().min(1).optional(),
+      priceEGP: z.number().int().min(0).optional(),
+      name: z.string().max(100).optional(),
+      nameAr: z.string().max(100).optional(),
+      description: z.string().max(200).optional(),
+      descriptionAr: z.string().max(200).optional(),
+      popular: z.boolean().optional(),
+      enabled: z.boolean().optional(),
+      sortOrder: z.number().int().optional(),
+    }))
+    .mutation(({ input, ctx }) => {
+      checkOwner(ctx);
+      const { updateCreditPlan } = require('../siteConfig');
+      const { planId, ...updates } = input;
+      return { success: updateCreditPlan(planId, updates) };
+    }),
+
+  /** Add new credit plan */
+  addCreditPlan: protectedProcedure
+    .input(z.object({
+      id: z.string().max(50),
+      credits: z.number().int().min(1),
+      priceEGP: z.number().int().min(0),
+      name: z.string().max(100),
+      nameAr: z.string().max(100),
+      description: z.string().max(200).optional(),
+      descriptionAr: z.string().max(200).optional(),
+      popular: z.boolean().optional(),
+      enabled: z.boolean().default(true),
+    }))
+    .mutation(({ input, ctx }) => {
+      checkOwner(ctx);
+      const { addCreditPlan } = require('../siteConfig');
+      return { success: addCreditPlan(input) };
+    }),
+
+  /** Remove credit plan */
+  removeCreditPlan: protectedProcedure
+    .input(z.object({ planId: z.string().max(50) }))
+    .mutation(({ input, ctx }) => {
+      checkOwner(ctx);
+      const { removeCreditPlan } = require('../siteConfig');
+      return { success: removeCreditPlan(input.planId) };
+    }),
+
+  // ═══════════════════════════════════════
+  // PROMO CODES
+  // ═══════════════════════════════════════
+
+  /** List promo codes */
+  promoCodeList: protectedProcedure.query(async ({ ctx }) => {
+    checkOwner(ctx);
+    const { listPromoCodes } = await import('../db/promoCodes');
+    return { codes: await listPromoCodes() };
+  }),
+
+  /** Create promo code */
+  promoCodeCreate: protectedProcedure
+    .input(z.object({
+      code: z.string().min(1).max(50),
+      discountType: z.enum(['percent', 'fixed']),
+      discountValue: z.number().int().min(1),
+      minAmountEGP: z.number().int().min(0).optional(),
+      maxUses: z.number().int().min(1).optional().nullable(),
+      validFrom: z.string().optional().nullable(),
+      validUntil: z.string().optional().nullable(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      checkOwner(ctx);
+      const { createPromoCode } = await import('../db/promoCodes');
+      const r = await createPromoCode({
+        code: input.code,
+        discountType: input.discountType,
+        discountValue: input.discountValue,
+        minAmountEGP: input.minAmountEGP ?? 0,
+        maxUses: input.maxUses ?? null,
+        validFrom: input.validFrom ? new Date(input.validFrom) : null,
+        validUntil: input.validUntil ? new Date(input.validUntil) : null,
+      });
+      return { success: true, id: r.id };
+    }),
+
+  /** Update promo code */
+  promoCodeUpdate: protectedProcedure
+    .input(z.object({
+      id: z.number().int(),
+      enabled: z.number().optional(),
+      validUntil: z.string().optional().nullable(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      checkOwner(ctx);
+      const { updatePromoCode } = await import('../db/promoCodes');
+      const updates: any = {};
+      if (input.enabled !== undefined) updates.enabled = input.enabled;
+      if (input.validUntil !== undefined) updates.validUntil = input.validUntil ? new Date(input.validUntil) : null;
+      await updatePromoCode(input.id, updates);
+      return { success: true };
+    }),
+
+  /** Delete promo code */
+  promoCodeDelete: protectedProcedure
+    .input(z.object({ id: z.number().int() }))
+    .mutation(async ({ input, ctx }) => {
+      checkOwner(ctx);
+      const { deletePromoCode } = await import('../db/promoCodes');
+      await deletePromoCode(input.id);
+      return { success: true };
+    }),
+
+  // ═══════════════════════════════════════
   // PROMPTS — AI tool system prompts
   // ═══════════════════════════════════════
 
@@ -432,6 +560,40 @@ export const wzrdAdminRouter = router({
       const { updateToolPrompt } = require('../siteConfig');
       const { toolId, ...updates } = input;
       return { success: updateToolPrompt(toolId, updates) };
+    }),
+
+  /** Test a tool's prompt — run sample input through LLM and return response */
+  testPrompt: protectedProcedure
+    .input(z.object({
+      toolId: z.string().max(50),
+      sampleInput: z.string().max(2000).optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      checkOwner(ctx);
+      const { getToolSystemPrompt } = await import('../siteConfig');
+      const systemPrompt = getToolSystemPrompt(input.toolId);
+      if (!systemPrompt) {
+        return { success: false, error: 'Tool not found or disabled', reply: null };
+      }
+      const userContent = input.sampleInput?.trim() || 'Give a brief 2–3 sentence diagnostic overview for a sample brand.';
+      try {
+        const { resilientLLM } = await import('../_core/llmRouter');
+        const result = await resilientLLM({
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userContent },
+          ],
+        }, { context: 'chat' });
+        const reply = result.choices?.[0]?.message?.content ?? '';
+        return {
+          success: true,
+          reply: typeof reply === 'string' ? reply : JSON.stringify(reply),
+          model: result.model ?? null,
+        };
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return { success: false, error: msg, reply: null };
+      }
     }),
 
   // ═══════════════════════════════════════

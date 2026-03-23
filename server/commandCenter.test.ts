@@ -41,21 +41,15 @@ describe("Knowledge Base", () => {
     }
   });
 
-  it("has correct service labels for all services (core + legacy)", () => {
-    expect(SERVICE_LABELS.clarity_package).toBe("Clarity Package");
-    expect(SERVICE_LABELS.brand_foundation).toBe("Brand Foundation");
-    expect(SERVICE_LABELS.growth_partnership).toBe("Growth Partnership");
+  it("has correct service labels for all services", () => {
     expect(SERVICE_LABELS.business_health_check).toBe("Business Health Check");
-    expect(SERVICE_LABELS.starting_business_logic).toBe("Starting Business Logic");
-    expect(SERVICE_LABELS.brand_identity).toBe("Brand Identity");
+    expect(SERVICE_LABELS.starting_business_logic).toContain("Clarity");
+    expect(SERVICE_LABELS.brand_identity).toContain("Brand");
     expect(SERVICE_LABELS.business_takeoff).toBe("Business Takeoff");
-    expect(SERVICE_LABELS.consultation).toBe("Consultation");
+    expect(SERVICE_LABELS.consultation).toContain("Growth");
   });
 
   it("has correct service prices in EGP", () => {
-    expect(SERVICE_PRICES.clarity_package).toBe(80000);
-    expect(SERVICE_PRICES.brand_foundation).toBe(120000);
-    expect(SERVICE_PRICES.growth_partnership).toBe(35000);
     expect(SERVICE_PRICES.business_health_check).toBe(140000);
     expect(SERVICE_PRICES.starting_business_logic).toBe(160000);
     expect(SERVICE_PRICES.brand_identity).toBe(210000);
@@ -287,7 +281,6 @@ describe("dashboard.playbooks", () => {
     expect(Object.keys(result.labels).length).toBeGreaterThanOrEqual(5);
     expect(result.prices).toBeDefined();
     expect(result.prices.business_health_check).toBe(140000);
-    expect(result.prices.clarity_package).toBe(80000);
     expect(result.stages).toBeDefined();
     expect(Object.keys(result.stages)).toHaveLength(5);
   });

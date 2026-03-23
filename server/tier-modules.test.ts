@@ -10,15 +10,20 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { routeToAgent } from './agentOrchestrator';
+import { INDUSTRY_PACKS, getIndustryPack, formatIndustryPackForAI } from './industryPacks';
+import { runRuleBasedQA, quickQualityCheck } from './qualityAssurance';
+import { MENA_CASE_STUDIES, matchMENACaseStudies, formatMENACaseStudiesForAI } from './menaCaseStudies';
+import * as vectorSearch from './vectorSearch';
+import { PRIMO_TEMPLATES, getAvailableTemplates } from './primoTemplates';
+import { scoreKnowledgeQuality, KNOWLEDGE_TEMPLATES } from './knowledgeAmplifier';
+import { getAgentInfo, AGENT_LABELS } from './agentOrchestrator';
 
 // ════════════════════════════════════════════
 // 1. AGENT ORCHESTRATOR
 // ════════════════════════════════════════════
 
 describe('Agent Orchestrator — Routing', () => {
-  // Import the routing function directly
-  const { routeToAgent } = require('./agentOrchestrator');
-
   const baseContext = {
     conversationHistory: [],
     clientContext: undefined,
@@ -79,7 +84,6 @@ describe('Agent Orchestrator — Routing', () => {
 // ════════════════════════════════════════════
 
 describe('Industry Knowledge Packs', () => {
-  const { INDUSTRY_PACKS, getIndustryPack, formatIndustryPackForAI } = require('./industryPacks');
 
   it('has 7 industry packs', () => {
     expect(INDUSTRY_PACKS).toHaveLength(7);
@@ -141,7 +145,6 @@ describe('Industry Knowledge Packs', () => {
 // ════════════════════════════════════════════
 
 describe('Quality Assurance — Rule-Based Checks', () => {
-  const { runRuleBasedQA, quickQualityCheck } = require('./qualityAssurance');
 
   const goodContent = `
 ## Brand Audit Report — NileTech Solutions
@@ -227,7 +230,6 @@ The Egyptian SaaS market is growing at 25% annually with digital transformation 
 // ════════════════════════════════════════════
 
 describe('MENA Case Studies', () => {
-  const { MENA_CASE_STUDIES, matchMENACaseStudies, formatMENACaseStudiesForAI } = require('./menaCaseStudies');
 
   it('has 15+ case studies', () => {
     expect(MENA_CASE_STUDIES.length).toBeGreaterThanOrEqual(15);
@@ -292,9 +294,6 @@ describe('MENA Case Studies', () => {
 // ════════════════════════════════════════════
 
 describe('Vector Search — Embedding & Similarity', () => {
-  // Test the internal functions by importing the module
-  // Note: generateSimpleEmbedding is not exported, so we test via semanticSearch
-  const vectorSearch = require('./vectorSearch');
 
   it('getIndexStats returns valid structure', () => {
     const stats = vectorSearch.getIndexStats();
@@ -315,7 +314,6 @@ describe('Vector Search — Embedding & Similarity', () => {
 // ════════════════════════════════════════════
 
 describe('Primo Experience Templates', () => {
-  const { PRIMO_TEMPLATES, getAvailableTemplates } = require('./primoTemplates');
 
   it('has 4 templates', () => {
     expect(PRIMO_TEMPLATES).toHaveLength(4);
@@ -368,7 +366,6 @@ describe('Primo Experience Templates', () => {
 // ════════════════════════════════════════════
 
 describe('Knowledge Amplifier — Quality Scoring', () => {
-  const { scoreKnowledgeQuality, KNOWLEDGE_TEMPLATES } = require('./knowledgeAmplifier');
 
   it('scores a comprehensive entry high', () => {
     const result = scoreKnowledgeQuality({
@@ -406,7 +403,6 @@ describe('Knowledge Amplifier — Quality Scoring', () => {
 // ════════════════════════════════════════════
 
 describe('Agent Info', () => {
-  const { getAgentInfo, AGENT_LABELS } = require('./agentOrchestrator');
 
   it('has 5 agents', () => {
     expect(Object.keys(AGENT_LABELS)).toHaveLength(5);

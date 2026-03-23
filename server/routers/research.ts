@@ -30,12 +30,12 @@ export const researchRouter = router({
       if (cached) return { results: cached.results, fromCache: true };
 
       const queryStr = [input.query, input.industry, input.market].filter(Boolean).join(" ");
-      const results = await quickResearch(queryStr);
+      const data = await quickResearch(queryStr);
       await setCachedResearch({
         cacheKey, queryType: 'quick', industry: input.industry,
-        market: input.market, results, sourcesCount: Array.isArray(results) ? results.length : 0,
+        market: input.market, results: data, sourcesCount: Array.isArray(data?.results) ? data.results.length : 0,
       });
-      return { results, fromCache: false };
+      return { ...data, fromCache: false };
     }),
 
   /** Alias for client compatibility — same as full, returns { id, summary } */
@@ -45,6 +45,8 @@ export const researchRouter = router({
       industry: z.string().max(255).optional(),
       market: z.string().max(100).optional(),
       website: z.string().max(500).optional(),
+      clientId: z.number().optional(),
+      additionalContext: z.string().max(2000).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       checkEditor(ctx);
@@ -57,6 +59,8 @@ export const researchRouter = router({
       try {
         const data = await conductResearch({
           companyName: input.companyName, industry, market,
+          website: input.website,
+          additionalContext: input.additionalContext,
         });
         await updateResearchReport(reportId, {
           reportData: data, status: 'completed', totalSources: data?.totalSources || 0,

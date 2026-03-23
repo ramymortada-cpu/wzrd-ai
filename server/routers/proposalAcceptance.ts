@@ -1,7 +1,7 @@
 /**
  * Proposal Acceptance Router — client-facing proposal accept/reject (public or protected).
  */
-import { publicProcedure, router } from "../_core/trpc";
+import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { createProposalAcceptance, updateProposal, getProposalAcceptances } from "../db";
 
@@ -32,7 +32,7 @@ export const proposalAcceptanceRouter = router({
       return result;
     }),
 
-  getByProposal: publicProcedure
+  getByProposal: protectedProcedure
     .input(z.object({ proposalId: z.number() }))
     .query(async ({ input }) => getProposalAcceptances(input.proposalId)),
 });

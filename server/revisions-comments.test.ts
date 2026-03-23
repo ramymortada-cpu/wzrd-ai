@@ -51,9 +51,11 @@ vi.mock("./db", async () => {
     deleteDeliverableComment: vi.fn(async (id: number) => {
       comments = comments.filter(c => c.id !== id);
     }),
-    // Portal token mock for public endpoints
+    // Portal token mock for public endpoints (router hashes token before lookup)
     getPortalTokenByToken: vi.fn(async (token: string) => {
-      if (token === "valid-test-token") {
+      const { hashToken } = await import("./_core/tokenSecurity");
+      const validHash = hashToken("valid-test-token");
+      if (token === "valid-test-token" || token === validHash) {
         return {
           id: 1,
           projectId: 100,

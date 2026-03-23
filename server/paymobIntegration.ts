@@ -8,12 +8,7 @@
  * 3. User pays (card, wallet, kiosk, etc.)
  * 4. Paymob sends webhook → backend verifies HMAC → credits added
  * 
- * Setup:
- * 1. Create Paymob account at https://paymob.com
- * 2. Get keys from Dashboard → Settings → Account Info
- * 3. Set env vars: PAYMOB_SECRET_KEY, PAYMOB_PUBLIC_KEY, PAYMOB_HMAC_SECRET
- * 4. Create integration IDs for Card + Wallet in Paymob Dashboard
- * 5. Set webhook URL in Paymob: https://your-app.com/api/webhooks/paymob
+ * Plans and pricing are loaded from site config (DB). Promo codes supported.
  * 
  * Docs: https://developers.paymob.com
  */
@@ -21,6 +16,7 @@
 import crypto from 'crypto';
 import { logger } from './_core/logger';
 import type { Express, Request, Response } from 'express';
+import { getCreditPlans } from './siteConfig';
 
 // ════════════════════════════════════════════
 // CONFIG
@@ -28,36 +24,37 @@ import type { Express, Request, Response } from 'express';
 
 const PAYMOB_BASE = 'https://accept.paymob.com/v1/intention';
 
-interface PaymobPlan {
-  credits: number;
-  amountEGP: number;      // in EGP (whole)
-  amountCents: number;     // in piasters (× 100)
-  name: string;
-  nameAr: string;
+/** Get plans for webhook lookup (credits by planId) */
+function getPlansMap(): Record<string, { credits: number }> {
+  return Object.fromEntries(getCreditPlans().map(p => [p.id, { credits: p.credits }]));
 }
-
-const PLANS: Record<string, PaymobPlan> = {
-  starter: { credits: 500, amountEGP: 499, amountCents: 49900, name: 'Starter — 500 Credits', nameAr: 'ستارتر — 500 نقطة' },
-  pro:     { credits: 1500, amountEGP: 999, amountCents: 99900, name: 'Pro — 1,500 Credits', nameAr: 'برو — 1,500 نقطة' },
-  agency:  { credits: 5000, amountEGP: 2499, amountCents: 249900, name: 'Agency — 5,000 Credits', nameAr: 'وكالة — 5,000 نقطة' },
-};
-
-export { PLANS as PAYMOB_PLANS };
 
 // ════════════════════════════════════════════
 // CREATE PAYMENT INTENTION
 // ════════════════════════════════════════════
 
+export interface PaymentIntentionInput {
+  planId: string;
+  credits: number;
+  amountCents: number;
+  planName: string;
+  userId: number;
+  userEmail: string;
+  userName: string;
+  appUrl: string;
+  promoCode?: string;
+}
+
 /**
  * Creates a Paymob Payment Intention.
- * Returns the client_secret for frontend checkout redirect.
+ * Plans come from site config. Amount can be discounted by promo.
  */
 export async function createPaymentIntention(
-  planId: string,
-  userId: number,
-  userEmail: string,
-  userName: string,
-  appUrl: string
+  planIdOrInput: string | PaymentIntentionInput,
+  userId?: number,
+  userEmail?: string,
+  userName?: string,
+  appUrl?: string
 ): Promise<{ clientSecret: string; publicKey: string; redirectUrl: string } | { error: string }> {
   const secretKey = process.env.PAYMOB_SECRET_KEY;
   const publicKey = process.env.PAYMOB_PUBLIC_KEY;
@@ -67,8 +64,26 @@ export async function createPaymentIntention(
     return { error: 'Paymob not configured. Set PAYMOB_SECRET_KEY and PAYMOB_PUBLIC_KEY.' };
   }
 
-  const plan = PLANS[planId];
-  if (!plan) return { error: 'Invalid plan.' };
+  let input: PaymentIntentionInput;
+  if (typeof planIdOrInput === 'object') {
+    input = planIdOrInput;
+    if (!input.appUrl) input.appUrl = process.env.APP_URL || 'http://localhost:3000';
+  } else {
+    const plans = getCreditPlans();
+    const plan = plans.find(p => p.id === planIdOrInput);
+    if (!plan) return { error: 'Invalid plan.' };
+    const appUrlResolved = appUrl || process.env.APP_URL || 'http://localhost:3000';
+    input = {
+      planId: plan.id,
+      credits: plan.credits,
+      amountCents: plan.priceEGP * 100,
+      planName: plan.name,
+      userId: userId!,
+      userEmail: userEmail || '',
+      userName: userName || 'User',
+      appUrl: appUrlResolved,
+    };
+  }
 
   const integrationIds = [
     integrationId,
@@ -87,19 +102,19 @@ export async function createPaymentIntention(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        amount: plan.amountCents,
+        amount: input.amountCents,
         currency: 'EGP',
         payment_methods: integrationIds,
         items: [{
-          name: plan.name,
-          amount: plan.amountCents,
-          description: `WZRD AI ${plan.name}`,
+          name: input.planName,
+          amount: input.amountCents,
+          description: `WZRD AI ${input.planName}`,
           quantity: 1,
         }],
         billing_data: {
-          first_name: userName.split(' ')[0] || 'User',
-          last_name: userName.split(' ').slice(1).join(' ') || '-',
-          email: userEmail,
+          first_name: input.userName.split(' ')[0] || 'User',
+          last_name: input.userName.split(' ').slice(1).join(' ') || '-',
+          email: input.userEmail,
           phone_number: 'NA',
           apartment: 'NA',
           street: 'NA',
@@ -110,13 +125,14 @@ export async function createPaymentIntention(
           state: 'NA',
         },
         extras: {
-          userId: String(userId),
-          planId,
-          credits: String(plan.credits),
+          userId: String(input.userId),
+          planId: input.planId,
+          credits: String(input.credits),
+          ...(input.promoCode && { promoCode: input.promoCode }),
         },
-        special_reference: `wzrd-${userId}-${planId}-${Date.now()}`,
-        redirection_url: `${appUrl}/tools?purchase=success&plan=${planId}`,
-        notification_url: `${appUrl}/api/webhooks/paymob`,
+        special_reference: `wzrd-${input.userId}-${input.planId}-${Date.now()}`,
+        redirection_url: `${input.appUrl}/tools?purchase=success&plan=${input.planId}`,
+        notification_url: `${input.appUrl}/api/webhooks/paymob`,
       }),
     });
 
@@ -125,7 +141,7 @@ export async function createPaymentIntention(
     if (data.client_secret) {
       const redirectUrl = `https://accept.paymob.com/unifiedcheckout/?publicKey=${publicKey}&clientSecret=${data.client_secret}`;
 
-      logger.info({ userId, planId, intentionId: data.id }, '[Paymob] Payment intention created');
+      logger.info({ userId: input.userId, planId: input.planId, intentionId: data.id }, '[Paymob] Payment intention created');
 
       return {
         clientSecret: data.client_secret,
@@ -305,13 +321,21 @@ export function mountPaymobWebhook(app: Express) {
         const planId = extras.planId || '';
         // Get credits from extras, or look up from plan if missing
         let credits = parseInt(extras.credits || '0');
-        if (!credits && planId && PLANS[planId]) {
-          credits = PLANS[planId].credits;
+        if (!credits && planId) {
+          const plansMap = getPlansMap();
+          if (plansMap[planId]) credits = plansMap[planId].credits;
         }
 
         if (userId && credits) {
           // Mark as processed BEFORE attempting (prevents race condition)
           if (transactionId) processedTransactions.add(transactionId);
+
+          // Increment promo usage if used
+          const promoCode = extras.promoCode;
+          if (promoCode) {
+            const { incrementPromoUsage } = await import('./db/promoCodes');
+            await incrementPromoUsage(promoCode);
+          }
 
           // Add credits with retry
           const added = await addCreditsWithRetry(

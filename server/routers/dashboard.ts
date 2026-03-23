@@ -12,7 +12,7 @@ import { clients, projects, deliverables, payments } from "../../drizzle/schema"
 import { getDb } from "../db/index";
 import { getAnalyticsData } from "../db/portal";
 import { SERVICE_PLAYBOOKS } from "../knowledgeBase";
-import { SERVICE_LABELS, SERVICE_PRICES } from "@shared/const";
+import { SERVICE_LABELS, SERVICE_PRICES, STAGE_LABELS } from "@shared/const";
 
 export const dashboardRouter = router({
   /** Aggregated stats for the dashboard home */
@@ -80,6 +80,7 @@ export const dashboardRouter = router({
     playbooks: SERVICE_PLAYBOOKS,
     labels: SERVICE_LABELS,
     prices: SERVICE_PRICES,
+    stages: STAGE_LABELS,
   })),
 
   /** Full analytics (proposalFunnel, marketDistribution, etc.) */

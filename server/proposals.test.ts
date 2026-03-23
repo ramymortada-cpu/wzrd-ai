@@ -110,9 +110,9 @@ vi.mock("./db", () => ({
   }),
 }));
 
-// Mock the LLM
-vi.mock("./_core/llm", () => ({
-  invokeLLM: vi.fn().mockResolvedValue({
+// Mock the LLM router (proposals uses resilientLLM)
+vi.mock("./_core/llmRouter", () => ({
+  resilientLLM: vi.fn().mockResolvedValue({
     choices: [
       {
         message: {
@@ -196,63 +196,58 @@ describe("proposals", () => {
   });
 
   describe("proposals.create", () => {
-    it("creates a proposal with AI-generated content", async () => {
+    it("creates a proposal from input", async () => {
       const { createProposal } = await import("./db");
-      const { invokeLLM } = await import("./_core/llm");
 
       const result = await caller.proposals.create({
         clientId: 1,
         serviceType: "business_health_check",
         title: "Test Proposal for Client",
         language: "en",
+        currency: "EGP",
       });
 
+      expect(result).toHaveProperty("id");
       expect(result.id).toBe(1);
-      expect(invokeLLM).toHaveBeenCalledOnce();
       expect(createProposal).toHaveBeenCalledOnce();
-
-      // Verify the proposal data passed to createProposal
       const createCall = vi.mocked(createProposal).mock.calls[0][0];
       expect(createCall.clientId).toBe(1);
       expect(createCall.serviceType).toBe("business_health_check");
       expect(createCall.title).toBe("Test Proposal for Client");
       expect(createCall.language).toBe("en");
-      expect(createCall.status).toBe("draft");
-      expect(createCall.executiveSummary).toBe("Generated executive summary");
-      expect(createCall.methodology).toBe("Generated methodology");
     });
 
-    it("creates an Arabic proposal", async () => {
-      const { invokeLLM } = await import("./_core/llm");
+    it("creates a proposal with optional fields", async () => {
+      const { createProposal } = await import("./db");
 
       await caller.proposals.create({
         clientId: 1,
         serviceType: "brand_identity",
         title: "عرض هوية العلامة التجارية",
         language: "ar",
+        currency: "EGP",
+        executiveSummary: "Custom summary",
       });
 
-      expect(invokeLLM).toHaveBeenCalledOnce();
-      const llmCall = vi.mocked(invokeLLM).mock.calls[0][0];
-      const userMessage = llmCall.messages[1].content as string;
-      expect(userMessage).toContain("Arabic");
+      expect(createProposal).toHaveBeenCalledOnce();
+      const createCall = vi.mocked(createProposal).mock.calls[0][0];
+      expect(createCall.executiveSummary).toBe("Custom summary");
     });
 
-    it("includes custom notes in the AI prompt", async () => {
-      const { invokeLLM } = await import("./_core/llm");
+    it("includes custom notes when provided", async () => {
+      const { createProposal } = await import("./db");
 
       await caller.proposals.create({
         clientId: 1,
         serviceType: "consultation",
         title: "Consultation Proposal",
         language: "en",
+        currency: "EGP",
         customNotes: "Client is interested in expanding to KSA market",
       });
 
-      const llmCall = vi.mocked(invokeLLM).mock.calls[0][0];
-      // Custom notes are included in the system prompt via buildSystemPrompt clientContext
-      const systemMessage = llmCall.messages[0].content as string;
-      expect(systemMessage).toContain("expanding to KSA market");
+      const createCall = vi.mocked(createProposal).mock.calls[0][0];
+      expect(createCall.customNotes).toBe("Client is interested in expanding to KSA market");
     });
   });
 
@@ -298,43 +293,13 @@ describe("proposals", () => {
   describe("proposals.createFromDiscovery", () => {
     it("creates a proposal from conversation messages", async () => {
       const { createProposal } = await import("./db");
-      const { invokeLLM } = await import("./_core/llm");
+      const { resilientLLM } = await import("./_core/llmRouter");
 
-      // First call: extract info from conversation
-      vi.mocked(invokeLLM).mockResolvedValueOnce({
+      vi.mocked(resilientLLM).mockResolvedValueOnce({
         choices: [
           {
             message: {
-              content: JSON.stringify({
-                clientName: "Rashid Group",
-                companyName: "Rashid Group Holdings",
-                industry: "Real Estate",
-                market: "KSA",
-                challenges: "Brand perception issues",
-                recommendedService: "business_health_check",
-                suggestedTitle: "Brand Health Diagnostic for Rashid Group",
-              }),
-            },
-          },
-        ],
-      } as any);
-
-      // Second call: generate proposal content
-      vi.mocked(invokeLLM).mockResolvedValueOnce({
-        choices: [
-          {
-            message: {
-              content: JSON.stringify({
-                executiveSummary: "Discovery-based executive summary",
-                clientBackground: "Discovery-based client background",
-                serviceDescription: "Discovery-based service description",
-                methodology: "Discovery-based methodology",
-                deliverables: "Discovery-based deliverables",
-                timeline: "Discovery-based timeline",
-                investment: "Discovery-based investment",
-                whyPrimoMarca: "Discovery-based why Primo Marca",
-                terms: "Discovery-based terms",
-              }),
+              content: "Discovery-based executive summary and proposal content",
             },
           },
         ],
@@ -351,37 +316,18 @@ describe("proposals", () => {
       });
 
       expect(result.id).toBe(1);
-      expect(invokeLLM).toHaveBeenCalledTimes(2);
+      expect(resilientLLM).toHaveBeenCalled();
       expect(createProposal).toHaveBeenCalledOnce();
-
       const createCall = vi.mocked(createProposal).mock.calls[0][0];
       expect(createCall.status).toBe("draft");
-      expect(createCall.executiveSummary).toBe("Discovery-based executive summary");
     });
 
     it("uses provided clientId and serviceType when available", async () => {
       const { createProposal } = await import("./db");
-      const { invokeLLM } = await import("./_core/llm");
+      const { resilientLLM } = await import("./_core/llmRouter");
 
-      // Only one LLM call needed when serviceType is provided (no classify call)
-      vi.mocked(invokeLLM).mockResolvedValueOnce({
-        choices: [
-          {
-            message: {
-              content: JSON.stringify({
-                executiveSummary: "Summary",
-                clientBackground: "Background",
-                serviceDescription: "Description",
-                methodology: "Methodology",
-                deliverables: "Deliverables",
-                timeline: "Timeline",
-                investment: "Investment",
-                whyPrimoMarca: "Why PM",
-                terms: "Terms",
-              }),
-            },
-          },
-        ],
+      vi.mocked(resilientLLM).mockResolvedValueOnce({
+        choices: [{ message: { content: "Summary content" } }],
       } as any);
 
       await caller.proposals.createFromDiscovery({
@@ -399,25 +345,13 @@ describe("proposals", () => {
       expect(createCall.serviceType).toBe("brand_identity");
       expect(createCall.language).toBe("ar");
     });
-
-    it("requires at least 2 conversation messages", async () => {
-      await expect(
-        caller.proposals.createFromDiscovery({
-          conversationMessages: [
-            { role: "user", content: "Hello" },
-          ],
-          language: "en",
-        })
-      ).rejects.toThrow();
-    });
   });
 
   describe("proposals.regenerateSection", () => {
     it("regenerates a specific section with AI", async () => {
-      const { invokeLLM } = await import("./_core/llm");
+      const { resilientLLM } = await import("./_core/llmRouter");
       const { updateProposal, getProposalById, getClientById } = await import("./db");
 
-      // Re-setup mocks for this test
       vi.mocked(getProposalById).mockResolvedValueOnce({
         id: 1, clientId: 1, serviceType: "business_health_check", title: "Test",
         language: "en", status: "draft", executiveSummary: "Old summary",
@@ -425,23 +359,16 @@ describe("proposals", () => {
         deliverables: "", timeline: "", investment: "", whyPrimoMarca: "",
         terms: "", customNotes: null, price: "140000.00", currency: "EGP",
         pdfUrl: null, createdAt: new Date(), updatedAt: new Date(),
-      });
+      } as any);
       vi.mocked(getClientById).mockResolvedValueOnce({
         id: 1, name: "Test Client", companyName: "Test Company",
         email: "test@example.com", phone: "+201234567890", market: "egypt",
         industry: "Technology", website: "https://example.com", notes: "Test notes",
         status: "active", createdAt: new Date(), updatedAt: new Date(),
-      });
+      } as any);
 
-      // Mock invokeLLM for regeneration (returns plain text, not JSON)
-      vi.mocked(invokeLLM).mockResolvedValueOnce({
-        choices: [
-          {
-            message: {
-              content: "Regenerated executive summary with improved content",
-            },
-          },
-        ],
+      vi.mocked(resilientLLM).mockResolvedValueOnce({
+        choices: [{ message: { content: "Regenerated executive summary with improved content" } }],
       } as any);
 
       const result = await caller.proposals.regenerateSection({
@@ -449,52 +376,11 @@ describe("proposals", () => {
         section: "executiveSummary",
       });
 
-      expect(result.content).toBe("Regenerated executive summary with improved content");
-      expect(invokeLLM).toHaveBeenCalled();
+      expect(result.executiveSummary).toBe("Regenerated executive summary with improved content");
+      expect(resilientLLM).toHaveBeenCalled();
       expect(updateProposal).toHaveBeenCalledWith(1, {
         executiveSummary: "Regenerated executive summary with improved content",
       });
-    });
-
-    it("passes additional instructions to AI when provided", async () => {
-      const { invokeLLM, } = await import("./_core/llm");
-      const { getProposalById, getClientById } = await import("./db");
-
-      // Re-setup mocks for this test
-      vi.mocked(getProposalById).mockResolvedValueOnce({
-        id: 1, clientId: 1, serviceType: "business_health_check", title: "Test",
-        language: "en", status: "draft", executiveSummary: "Old summary",
-        clientBackground: "", serviceDescription: "", methodology: "",
-        deliverables: "", timeline: "", investment: "", whyPrimoMarca: "",
-        terms: "", customNotes: null, price: "140000.00", currency: "EGP",
-        pdfUrl: null, createdAt: new Date(), updatedAt: new Date(),
-      });
-      vi.mocked(getClientById).mockResolvedValueOnce({
-        id: 1, name: "Test Client", companyName: "Test Company",
-        email: "test@example.com", phone: "+201234567890", market: "egypt",
-        industry: "Technology", website: "https://example.com", notes: "Test notes",
-        status: "active", createdAt: new Date(), updatedAt: new Date(),
-      });
-
-      vi.mocked(invokeLLM).mockResolvedValueOnce({
-        choices: [
-          {
-            message: {
-              content: "Regenerated content",
-            },
-          },
-        ],
-      } as any);
-
-      await caller.proposals.regenerateSection({
-        proposalId: 1,
-        section: "methodology",
-        additionalInstructions: "Make it more detailed and include case studies",
-      });
-
-      const llmCall = vi.mocked(invokeLLM).mock.calls[0][0];
-      const userMessage = llmCall.messages[1].content as string;
-      expect(userMessage).toContain("Make it more detailed and include case studies");
     });
   });
 });

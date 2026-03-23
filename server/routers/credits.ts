@@ -8,7 +8,7 @@
  * - credits.stats → admin: usage stats across all users
  */
 
-import { protectedProcedure, router } from "../_core/trpc";
+import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { checkOwner } from "../_core/authorization";
 import { z } from "zod";
 import { logger } from "../_core/logger";
@@ -53,27 +53,85 @@ export const creditsRouter = router({
       return result;
     }),
 
+  /** Admin: bulk add credits to multiple users */
+  bulkAdminAdd: protectedProcedure
+    .input(z.object({
+      userIds: z.array(z.number().int().positive()).max(50),
+      amount: z.number().int().positive().max(5000),
+      reason: z.string().max(500),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      checkOwner(ctx);
+      const results: { userId: number; success: boolean }[] = [];
+      for (const userId of input.userIds) {
+        const r = await addCredits(userId, input.amount, 'admin', input.reason);
+        results.push({ userId, success: r.success });
+      }
+      logger.info({ userIds: input.userIds.length, amount: input.amount }, 'Admin bulk added credits');
+      return { results, added: results.filter(r => r.success).length, failed: results.filter(r => !r.success).length };
+    }),
+
   /** Admin: credit usage stats */
   stats: protectedProcedure.query(async ({ ctx }) => {
     checkOwner(ctx);
     return getCreditStats();
   }),
 
+  /** Get credit plans (for Pricing page — public, no auth) */
+  plans: publicProcedure.query(async () => {
+    const { getCreditPlans } = await import('../siteConfig');
+    return { plans: getCreditPlans() };
+  }),
+
+  /** Validate promo code (returns discount without applying) — public for pre-check */
+  validatePromo: publicProcedure
+    .input(z.object({ code: z.string().max(50), planId: z.string(), amountEGP: z.number() }))
+    .query(async ({ input }) => {
+      const { validatePromoCode } = await import('../db/promoCodes');
+      return validatePromoCode(input.code, input.amountEGP);
+    }),
+
   /** Purchase credits via Paymob Checkout */
   purchase: protectedProcedure
     .input(z.object({
-      planId: z.enum(['starter', 'pro', 'agency']),
+      planId: z.string().max(50),
+      promoCode: z.string().max(50).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
+      const { getCreditPlans } = await import('../siteConfig');
+      const { validatePromoCode } = await import('../db/promoCodes');
       const { createPaymentIntention } = await import('../paymobIntegration');
       const appUrl = process.env.APP_URL || 'http://localhost:3000';
-      const result = await createPaymentIntention(
-        input.planId,
-        ctx.user!.id,
-        ctx.user!.email || '',
-        ctx.user!.name || 'User',
-        appUrl
-      );
+
+      const plans = getCreditPlans();
+      const plan = plans.find(p => p.id === input.planId);
+      if (!plan) {
+        return { success: false, redirectUrl: null, message: 'Invalid plan.' };
+      }
+
+      let amountCents = plan.priceEGP * 100;
+      let promoCode: string | undefined;
+
+      if (input.promoCode?.trim()) {
+        const validation = await validatePromoCode(input.promoCode.trim(), plan.priceEGP);
+        if (!validation.valid) {
+          return { success: false, redirectUrl: null, message: validation.message || 'Invalid promo code.' };
+        }
+        amountCents = validation.finalAmountCents;
+        promoCode = input.promoCode.trim().toUpperCase();
+      }
+
+      const result = await createPaymentIntention({
+        planId: plan.id,
+        credits: plan.credits,
+        amountCents,
+        planName: plan.name,
+        userId: ctx.user!.id,
+        userEmail: ctx.user!.email || '',
+        userName: ctx.user!.name || 'User',
+        appUrl,
+        promoCode,
+      });
 
       if ('error' in result) {
         logger.warn({ userId: ctx.user!.id, plan: input.planId, error: result.error }, 'Paymob checkout failed');

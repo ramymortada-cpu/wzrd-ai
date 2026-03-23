@@ -1,6 +1,16 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
+
+// Mock db so portal token lookup returns null for invalid tokens (avoids "Database not available" when DATABASE_URL unset)
+vi.mock("./db", async (orig) => {
+  const actual = await orig as Record<string, unknown>;
+  return {
+    ...actual,
+    getPortalTokenByToken: vi.fn().mockResolvedValue(null),
+    getDeliverablesByProject: vi.fn().mockResolvedValue([]),
+  };
+});
 
 // ============ HELPERS ============
 

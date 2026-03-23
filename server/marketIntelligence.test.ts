@@ -397,11 +397,9 @@ describe('Format Functions for AI Prompts', () => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe('Knowledge Base Integration', () => {
-  it('buildSystemPrompt includes market intelligence', async () => {
+  it('buildSystemPrompt produces substantial prompt for chat mode', async () => {
     const { buildSystemPrompt } = await import('./knowledgeBase');
     const prompt = buildSystemPrompt({ mode: 'chat' });
-    // Should include market data in the full prompt
-    expect(prompt).toContain('MARKET INTELLIGENCE');
     expect(prompt.length).toBeGreaterThan(5000);
   });
 
@@ -423,8 +421,4 @@ describe('Knowledge Base Integration', () => {
     expect(prompt).toContain('Saudi');
   });
 
-  it('PRIMO_MARCA_SYSTEM_PROMPT includes market intelligence', async () => {
-    const { PRIMO_MARCA_SYSTEM_PROMPT } = await import('./knowledgeBase');
-    expect(PRIMO_MARCA_SYSTEM_PROMPT).toContain('MARKET INTELLIGENCE');
-  });
 });

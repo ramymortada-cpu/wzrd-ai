@@ -19,13 +19,13 @@ import { describe, it, expect, beforeEach } from 'vitest';
 // ════════════════════════════════════════════
 
 describe('LLM Cache', () => {
-  let getCachedResponse: typeof import('../_core/llmCache').getCachedResponse;
-  let setCachedResponse: typeof import('../_core/llmCache').setCachedResponse;
-  let getCacheStats: typeof import('../_core/llmCache').getCacheStats;
-  let invalidateCache: typeof import('../_core/llmCache').invalidateCache;
+  let getCachedResponse: typeof import('./_core/llmCache').getCachedResponse;
+  let setCachedResponse: typeof import('./_core/llmCache').setCachedResponse;
+  let getCacheStats: typeof import('./_core/llmCache').getCacheStats;
+  let invalidateCache: typeof import('./_core/llmCache').invalidateCache;
 
   beforeEach(async () => {
-    const mod = await import('../_core/llmCache');
+    const mod = await import('./_core/llmCache');
     getCachedResponse = mod.getCachedResponse;
     setCachedResponse = mod.setCachedResponse;
     getCacheStats = mod.getCacheStats;
@@ -102,13 +102,13 @@ describe('LLM Cache', () => {
 // ════════════════════════════════════════════
 
 describe('Quality Pipeline', () => {
-  let assessDeliverableQuality: typeof import('../qualityFeedback').assessDeliverableQuality;
-  let getQualityLabel: typeof import('../qualityFeedback').getQualityLabel;
-  let recordOwnerReview: typeof import('../qualityFeedback').recordOwnerReview;
-  let getDeliverableQuality: typeof import('../qualityFeedback').getDeliverableQuality;
+  let assessDeliverableQuality: typeof import('./qualityFeedback').assessDeliverableQuality;
+  let getQualityLabel: typeof import('./qualityFeedback').getQualityLabel;
+  let recordOwnerReview: typeof import('./qualityFeedback').recordOwnerReview;
+  let getDeliverableQuality: typeof import('./qualityFeedback').getDeliverableQuality;
 
   beforeEach(async () => {
-    const mod = await import('../qualityFeedback');
+    const mod = await import('./qualityFeedback');
     assessDeliverableQuality = mod.assessDeliverableQuality;
     getQualityLabel = mod.getQualityLabel;
     recordOwnerReview = mod.recordOwnerReview;
@@ -187,13 +187,13 @@ Dose (22), Cup of Joe (15), Sahra (3). Market share estimated at 2%.
 // ════════════════════════════════════════════
 
 describe('RBAC — Authorization', () => {
-  let hasRole: typeof import('../_core/authorization').hasRole;
-  let requireRole: typeof import('../_core/authorization').requireRole;
-  let canPerform: typeof import('../_core/authorization').canPerform;
-  let getPermissionsForRole: typeof import('../_core/authorization').getPermissionsForRole;
+  let hasRole: typeof import('./_core/authorization').hasRole;
+  let requireRole: typeof import('./_core/authorization').requireRole;
+  let canPerform: typeof import('./_core/authorization').canPerform;
+  let getPermissionsForRole: typeof import('./_core/authorization').getPermissionsForRole;
 
   beforeEach(async () => {
-    const mod = await import('../_core/authorization');
+    const mod = await import('./_core/authorization');
     hasRole = mod.hasRole;
     requireRole = mod.requireRole;
     canPerform = mod.canPerform;
@@ -250,15 +250,15 @@ describe('RBAC — Authorization', () => {
 // ════════════════════════════════════════════
 
 describe('Prompt Lab — A/B Testing', () => {
-  let createPromptVersion: typeof import('../promptLab').createPromptVersion;
-  let activateVersion: typeof import('../promptLab').activateVersion;
-  let getActivePrompt: typeof import('../promptLab').getActivePrompt;
-  let recordPromptMetric: typeof import('../promptLab').recordPromptMetric;
-  let analyzeABTest: typeof import('../promptLab').analyzeABTest;
-  let listPrompts: typeof import('../promptLab').listPrompts;
+  let createPromptVersion: typeof import('./promptLab').createPromptVersion;
+  let activateVersion: typeof import('./promptLab').activateVersion;
+  let getActivePrompt: typeof import('./promptLab').getActivePrompt;
+  let recordPromptMetric: typeof import('./promptLab').recordPromptMetric;
+  let analyzeABTest: typeof import('./promptLab').analyzeABTest;
+  let listPrompts: typeof import('./promptLab').listPrompts;
 
   beforeEach(async () => {
-    const mod = await import('../promptLab');
+    const mod = await import('./promptLab');
     createPromptVersion = mod.createPromptVersion;
     activateVersion = mod.activateVersion;
     getActivePrompt = mod.getActivePrompt;
@@ -316,10 +316,10 @@ describe('Prompt Lab — A/B Testing', () => {
 // ════════════════════════════════════════════
 
 describe('Error Handler', () => {
-  let formatTRPCError: typeof import('../_core/errorHandler').formatTRPCError;
+  let formatTRPCError: typeof import('./_core/errorHandler').formatTRPCError;
 
   beforeEach(async () => {
-    const mod = await import('../_core/errorHandler');
+    const mod = await import('./_core/errorHandler');
     formatTRPCError = mod.formatTRPCError;
   });
 
@@ -374,10 +374,10 @@ describe('Vector Search — Synonym Matching', () => {
 // ════════════════════════════════════════════
 
 describe('Research Quota', () => {
-  let getQuotaStats: typeof import('../researchQuota').getQuotaStats;
+  let getQuotaStats: typeof import('./researchQuota').getQuotaStats;
 
   beforeEach(async () => {
-    const mod = await import('../researchQuota');
+    const mod = await import('./researchQuota');
     getQuotaStats = mod.getQuotaStats;
   });
 

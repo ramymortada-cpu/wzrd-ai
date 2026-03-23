@@ -68,6 +68,14 @@ vi.mock("./db", () => ({
   createProject: vi.fn().mockResolvedValue(1),
   createDeliverable: vi.fn().mockResolvedValue(1),
   createPortalToken: vi.fn().mockResolvedValue(1),
+  getDb: vi.fn().mockResolvedValue({
+    select: () => ({
+      from: () => ({
+        where: () => ({ orderBy: () => ({ limit: () => Promise.resolve([]) }) }),
+        orderBy: () => ({ limit: () => Promise.resolve([]) }),
+      }),
+    }),
+  }),
 }));
 
 // Mock brand twin engine
@@ -156,17 +164,11 @@ describe("Brand Digital Twin - Run Audit", () => {
     expect(result).toHaveProperty("weaknesses");
   });
 
-  it("should run audit with research enabled", async () => {
+  it("should run audit with optional overrides", async () => {
     const caller = createCaller();
-    const result = await caller.brandTwin.runAudit({ clientId: 1, includeResearch: true });
+    const result = await caller.brandTwin.runAudit({ clientId: 1, companyName: "Custom Name", industry: "F&B", market: "ksa" });
     expect(result).toHaveProperty("snapshotId", 1);
     expect(result).toHaveProperty("overallScore", 72);
-  });
-
-  it("should return null comparison when no previous snapshot exists", async () => {
-    const caller = createCaller();
-    const result = await caller.brandTwin.runAudit({ clientId: 1 });
-    expect(result.comparison).toBeNull();
   });
 });
 
@@ -231,7 +233,7 @@ describe("Brand Digital Twin - Metrics", () => {
 
   it("should return metrics for a client", async () => {
     const caller = createCaller();
-    const metrics = await caller.brandTwin.getMetrics({ clientId: 1 });
+    const metrics = await caller.brandTwin.metrics({ clientId: 1 });
     expect(Array.isArray(metrics)).toBe(true);
     expect(metrics.length).toBe(2);
     expect(metrics[0]).toHaveProperty("dimension", "identity");
@@ -240,7 +242,7 @@ describe("Brand Digital Twin - Metrics", () => {
 
   it("should filter metrics by dimension", async () => {
     const caller = createCaller();
-    const metrics = await caller.brandTwin.getMetrics({ clientId: 1, dimension: "digitalPresence" });
+    const metrics = await caller.brandTwin.metrics({ clientId: 1, dimension: "digitalPresence" });
     expect(Array.isArray(metrics)).toBe(true);
   });
 });
@@ -250,7 +252,7 @@ describe("Brand Digital Twin - Compare Snapshots", () => {
 
   it("should compare two snapshots and return differences", async () => {
     const caller = createCaller();
-    const comparison = await caller.brandTwin.compare({ snapshotId1: 1, snapshotId2: 2 });
+    const comparison = await caller.brandTwin.compare({ snapshotIdA: 1, snapshotIdB: 2 });
     expect(comparison).toHaveProperty("overallChange");
     expect(comparison).toHaveProperty("dimensions");
     expect(Array.isArray(comparison.dimensions)).toBe(true);

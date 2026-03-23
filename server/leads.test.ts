@@ -107,9 +107,11 @@ describe("leads router", () => {
       const ctx = createAuthContext();
       const caller = appRouter.createCaller(ctx);
 
-      const leads = await caller.leads.list();
+      const result = await caller.leads.list();
 
-      expect(Array.isArray(leads)).toBe(true);
+      expect(result).toBeDefined();
+      expect(result).toHaveProperty("data");
+      expect(Array.isArray(result.data)).toBe(true);
     });
 
     it("rejects unauthenticated access", async () => {

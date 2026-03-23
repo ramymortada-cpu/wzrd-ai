@@ -36,11 +36,25 @@ export interface ToolPrompt {
   systemPrompt: string; enabled: boolean;
 }
 
+export interface CreditPlan {
+  id: string;
+  credits: number;
+  priceEGP: number;
+  name: string;
+  nameAr: string;
+  description?: string;
+  descriptionAr?: string;
+  popular?: boolean;
+  enabled: boolean;
+  sortOrder: number;
+}
+
 export interface SiteConfig {
   homepage: HomepageConfig;
   services: { services: ServiceItem[] };
   site: SiteSettings;
   prompts: ToolPrompt[];
+  creditPlans: CreditPlan[];
 }
 
 // ════════════════════════════════════════════
@@ -71,6 +85,11 @@ const DEFAULT_CONFIG: SiteConfig = {
     instagram: '@primomarca', linkedin: 'primomarca', website: 'https://primomarca.com',
     taglineEn: 'Marks Fade, MARCAS Don\'t.', taglineAr: 'العلامات بتختفي، الـ MARCAS لا.',
   },
+  creditPlans: [
+    { id: 'starter', credits: 500, priceEGP: 499, name: 'Starter', nameAr: 'ستارتر', description: '~20 tool runs', descriptionAr: '~20 تشغيل', popular: false, enabled: true, sortOrder: 1 },
+    { id: 'pro', credits: 1500, priceEGP: 999, name: 'Pro', nameAr: 'برو', description: '~60 tool runs — best value', descriptionAr: '~60 تشغيل — أفضل قيمة', popular: true, enabled: true, sortOrder: 2 },
+    { id: 'agency', credits: 5000, priceEGP: 2499, name: 'Agency', nameAr: 'وكالة', description: '~200 tool runs', descriptionAr: '~200 تشغيل', popular: false, enabled: true, sortOrder: 3 },
+  ],
   prompts: [
     { toolId: 'brand_diagnosis', toolName: 'Brand Diagnosis', enabled: true,
       systemPrompt: 'You are WZRD AI — a brand diagnosis engine trained on Keller\'s CBBE, Kapferer\'s Identity Prism, Sharp\'s How Brands Grow, and real MENA market data.' },
@@ -120,15 +139,18 @@ export async function loadConfigFromDb(): Promise<void> {
       await saveConfigToDb();
     } else {
       // Load from DB
+      const keys = new Set(rows.map((r: any) => r.key));
       for (const row of rows) {
         try {
           const val = JSON.parse(row.value);
           if (row.key === 'homepage') config.homepage = val;
           else if (row.key === 'services') config.services = val;
           else if (row.key === 'site') config.site = val;
+          else if (row.key === 'creditPlans') config.creditPlans = Array.isArray(val) ? val : config.creditPlans;
           else if (row.key === 'prompts') config.prompts = val;
         } catch { /* skip bad rows */ }
       }
+      if (!keys.has('creditPlans')) saveSectionToDb('creditPlans', config.creditPlans);
       logger.info('[SiteConfig] Loaded from DB (%d keys)', rows.length);
     }
     dbReady = true;
@@ -150,6 +172,7 @@ async function saveConfigToDb(): Promise<void> {
       { key: 'homepage', value: JSON.stringify(config.homepage) },
       { key: 'services', value: JSON.stringify(config.services) },
       { key: 'site', value: JSON.stringify(config.site) },
+      { key: 'creditPlans', value: JSON.stringify(config.creditPlans) },
       { key: 'prompts', value: JSON.stringify(config.prompts) },
     ];
 
@@ -212,6 +235,58 @@ export function updateToolPrompt(toolId: string, updates: Partial<ToolPrompt>): 
   Object.assign(prompt, updates);
   saveSectionToDb('prompts', config.prompts);
   logger.info({ toolId }, '[SiteConfig] Prompt updated + saved to DB');
+  return true;
+}
+
+/** Get enabled credit plans (for Paymob + Pricing page) */
+export function getCreditPlans(): CreditPlan[] {
+  return config.creditPlans
+    .filter(p => p.enabled)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+/** Update or add a credit plan */
+export function updateCreditPlan(planId: string, updates: Partial<CreditPlan>): boolean {
+  const plan = config.creditPlans.find(p => p.id === planId);
+  if (plan) {
+    Object.assign(plan, updates);
+  } else {
+    const maxOrder = Math.max(0, ...config.creditPlans.map(p => p.sortOrder));
+    config.creditPlans.push({
+      id: planId,
+      credits: updates.credits ?? 0,
+      priceEGP: updates.priceEGP ?? 0,
+      name: updates.name ?? planId,
+      nameAr: updates.nameAr ?? planId,
+      enabled: updates.enabled ?? true,
+      sortOrder: maxOrder + 1,
+      ...updates,
+    } as CreditPlan);
+  }
+  saveSectionToDb('creditPlans', config.creditPlans);
+  logger.info({ planId }, '[SiteConfig] Credit plan updated + saved to DB');
+  return true;
+}
+
+/** Add new credit plan */
+export function addCreditPlan(plan: Omit<CreditPlan, 'sortOrder'> & { sortOrder?: number }): boolean {
+  const maxOrder = Math.max(0, ...config.creditPlans.map(p => p.sortOrder));
+  config.creditPlans.push({
+    ...plan,
+    sortOrder: plan.sortOrder ?? maxOrder + 1,
+  } as CreditPlan);
+  saveSectionToDb('creditPlans', config.creditPlans);
+  logger.info({ planId: plan.id }, '[SiteConfig] Credit plan added + saved to DB');
+  return true;
+}
+
+/** Remove credit plan (soft disable or delete) */
+export function removeCreditPlan(planId: string): boolean {
+  const idx = config.creditPlans.findIndex(p => p.id === planId);
+  if (idx < 0) return false;
+  config.creditPlans.splice(idx, 1);
+  saveSectionToDb('creditPlans', config.creditPlans);
+  logger.info({ planId }, '[SiteConfig] Credit plan removed + saved to DB');
   return true;
 }
 
