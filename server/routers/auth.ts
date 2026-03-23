@@ -185,11 +185,11 @@ export const authRouter = router({
     return { success: true } as const;
   }),
 
-  /** [TEMPORARY] Reset credits for ramy.mortada@gmail.com — remove after testing */
+  /** [TEMPORARY] Reset credits + set admin for ramy.mortada@gmail.com — remove after testing */
   resetCredits: publicProcedure.mutation(async () => {
     const db = await getDb();
     if (!db) return { success: false };
-    await db.execute(sql`UPDATE users SET credits = 1000 WHERE email = 'ramy.mortada@gmail.com'`);
+    await db.execute(sql`UPDATE users SET credits = 1000, role = 'admin' WHERE email = 'ramy.mortada@gmail.com'`);
     return { success: true, message: 'Credits reset to 1000' };
   }),
 });

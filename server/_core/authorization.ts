@@ -21,7 +21,7 @@ import type { TrpcContext } from './context';
 
 // ============ TYPES ============
 
-export type UserRole = 'owner' | 'editor' | 'viewer';
+export type UserRole = 'owner' | 'editor' | 'viewer' | 'admin' | 'user';
 
 export interface AuthUser {
   id: number;
@@ -30,11 +30,13 @@ export interface AuthUser {
   role: UserRole;
 }
 
-// Role hierarchy: owner > editor > viewer
+// Role hierarchy: admin/owner > editor > viewer > user (DB uses admin/user)
 const ROLE_HIERARCHY: Record<UserRole, number> = {
   owner: 3,
+  admin: 3,  // Same as owner — DB uses 'admin' for full access
   editor: 2,
   viewer: 1,
+  user: 0,
 };
 
 // ============ AUTHORIZATION CHECKS ============
@@ -79,7 +81,7 @@ export function canAccessProject(
   userProjectIds?: number[]
 ): boolean {
   if (!user) return false;
-  if (user.role === 'owner') return true;
+  if (user.role === 'owner' || user.role === 'admin') return true;
   if (!userProjectIds) return false;
   return userProjectIds.includes(projectId);
 }
@@ -105,7 +107,7 @@ export function createRoleCheck(requiredRole: UserRole) {
       id: u?.id || 1,
       name: u?.name || 'Owner',
       email: u?.email || '',
-      role: (u?.role as UserRole) || 'owner', // Default: owner (backward compatible)
+      role: (u?.role as UserRole) || 'admin', // Default: admin (backward compatible)
     };
 
     requireRole(user, requiredRole);
@@ -114,7 +116,7 @@ export function createRoleCheck(requiredRole: UserRole) {
 }
 
 // Pre-built role checks
-export const checkOwner = createRoleCheck('owner');
+export const checkOwner = createRoleCheck('admin');  // DB uses 'admin' for full access
 export const checkEditor = createRoleCheck('editor');
 export const checkViewer = createRoleCheck('viewer');
 
