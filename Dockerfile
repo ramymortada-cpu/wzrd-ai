@@ -2,6 +2,7 @@
 # Primo Command Center — Production Dockerfile
 # ═══════════════════════════════════════════
 # Multi-stage build: install → build → run
+# CACHE BUST v2 - force rebuild
 
 # Stage 1: Install dependencies
 FROM node:20-alpine AS deps
@@ -26,6 +27,8 @@ ENV NODE_ENV=production
 
 # Copy only what's needed
 COPY --from=builder /app/dist ./dist
+# Landing pages — prefer source so production always has latest (dist may be stale)
+COPY --from=builder /app/client/public/landing ./client/public/landing
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/drizzle ./drizzle
