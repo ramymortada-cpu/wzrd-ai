@@ -1,5 +1,6 @@
 import ToolPage from './ToolPage';
 import { INDUSTRIES } from '@/lib/industries';
+import { MARKET_OPTIONS, YEARS_IN_BUSINESS, TEAM_SIZE, MONTHLY_REVENUE, PREVIOUS_BRANDING } from '@/lib/formOptions';
 
 export default function BrandDiagnosis() {
   return <ToolPage config={{
@@ -20,13 +21,17 @@ export default function BrandDiagnosis() {
     },
     fields: [
       { name: 'companyName', label: 'Company Name', labelAr: 'اسم الشركة', type: 'text', placeholder: 'e.g. Sahra Café', placeholderAr: 'مثال: كافيه سهرة', required: true },
-      { name: 'industry', label: 'Industry', labelAr: 'المجال', type: 'select', options: [...INDUSTRIES] },
-      { name: 'market', label: 'Market', labelAr: 'السوق', type: 'select', options: [
-        { value: 'egypt', label: 'Egypt', labelAr: 'مصر' }, { value: 'ksa', label: 'Saudi Arabia', labelAr: 'السعودية' },
-        { value: 'uae', label: 'UAE', labelAr: 'الإمارات' }, { value: 'other', label: 'Other', labelAr: 'آخر' },
-      ]},
-      { name: 'website', label: 'Website (optional)', labelAr: 'الموقع الإلكتروني (اختياري)', type: 'text', placeholder: 'https://...' },
-      { name: 'challenge', label: 'Biggest Challenge', labelAr: 'أكبر تحدي بتواجهه', type: 'textarea', placeholder: 'What\'s the main problem you\'re facing?', placeholderAr: 'إيه أكبر مشكلة بتواجهك؟', maxLength: 1000 },
+      { name: 'industry', label: 'Industry', labelAr: 'المجال', type: 'select', options: [...INDUSTRIES], required: true },
+      { name: 'market', label: 'Market', labelAr: 'السوق', type: 'select', options: [...MARKET_OPTIONS], required: true },
+      { name: 'yearsInBusiness', label: 'Years in business', labelAr: 'عمر الشركة', type: 'select', options: [...YEARS_IN_BUSINESS] },
+      { name: 'teamSize', label: 'Team size', labelAr: 'حجم الفريق', type: 'select', options: [...TEAM_SIZE] },
+      { name: 'website', label: 'Website', labelAr: 'الموقع الإلكتروني', type: 'text', placeholder: 'https://...' },
+      { name: 'socialMedia', label: 'Social media accounts', labelAr: 'حسابات السوشيال ميديا', type: 'text', placeholder: 'Instagram, LinkedIn, etc.', placeholderAr: 'Instagram, LinkedIn, إلخ' },
+      { name: 'currentPositioning', label: 'What differentiates you from competitors?', labelAr: 'إيه اللي بيميزك عن المنافسين؟', type: 'textarea', placeholder: "If unsure, write 'not sure'", placeholderAr: 'لو مش عارف قول "مش متأكد"', maxLength: 1000 },
+      { name: 'targetAudience', label: 'Who is your ideal customer?', labelAr: 'مين عميلك المثالي؟', type: 'textarea', placeholder: 'Age, level, interests', placeholderAr: 'السن، المستوى، الاهتمامات', required: true, maxLength: 1000 },
+      { name: 'monthlyRevenue', label: 'Approx. monthly revenue', labelAr: 'الإيرادات الشهرية التقريبية', type: 'select', options: [...MONTHLY_REVENUE] },
+      { name: 'biggestChallenge', label: 'Biggest brand challenge', labelAr: 'أكبر تحدي بتواجهه في البراند بتاعك؟', type: 'textarea', placeholder: "What's the main problem?", placeholderAr: 'إيه أكبر تحدي؟', required: true, maxLength: 1000 },
+      { name: 'previousBranding', label: 'Have you done branding before?', labelAr: 'هل عملت branding قبل كده؟', type: 'select', options: [...PREVIOUS_BRANDING] },
     ],
   }} />;
 }

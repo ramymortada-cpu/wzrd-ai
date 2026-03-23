@@ -1,4 +1,7 @@
 import ToolPage from './ToolPage';
+import { INDUSTRIES } from '@/lib/industries';
+import { TONE_OF_VOICE } from '@/lib/formOptions';
+
 export default function MessageCheck() {
   return <ToolPage config={{
     id: 'message_check', name: 'Message Check', nameAr: 'فحص الرسالة', icon: '💬', cost: 20,
@@ -18,10 +21,15 @@ export default function MessageCheck() {
     },
     fields: [
       { name: 'companyName', label: 'Company Name', labelAr: 'اسم الشركة', type: 'text', placeholder: 'e.g. Sahra Café', placeholderAr: 'مثال: كافيه سهرة', required: true },
-      { name: 'tagline', label: 'Tagline / Slogan', labelAr: 'الشعار', type: 'text', placeholder: 'e.g. "Your daily escape"', placeholderAr: 'مثال: "هروبك اليومي"' },
-      { name: 'keyMessage', label: 'Key Message', labelAr: 'الرسالة الأساسية', type: 'textarea', placeholder: 'What do you tell customers about who you are?', placeholderAr: 'بتقول للعملاء إيه عن نفسك؟', maxLength: 1000 },
-      { name: 'socialBio', label: 'Social Media Bio', labelAr: 'البايو بتاع السوشيال ميديا', type: 'text', placeholder: 'Copy your Instagram/LinkedIn bio here', placeholderAr: 'انسخ البايو بتاع الإنستجرام أو اللينكدإن' },
-      { name: 'websiteHeadline', label: 'Website Headline', labelAr: 'عنوان الصفحة الرئيسية', type: 'text', placeholder: 'The main headline on your homepage', placeholderAr: 'العنوان الرئيسي على الصفحة الأولى' },
+      { name: 'industry', label: 'Industry', labelAr: 'المجال', type: 'select', options: [...INDUSTRIES], required: true },
+      { name: 'tagline', label: 'Tagline / Slogan', labelAr: 'الـ Tagline أو الشعار بتاعك', type: 'text', placeholder: 'e.g. "Your daily escape"' },
+      { name: 'elevatorPitch', label: 'If someone asked "What do you do?" — 30 sec answer', labelAr: 'لو حد سألك "بتعملوا إيه؟" هتقوله إيه في ٣٠ ثانية؟', type: 'textarea', required: true, maxLength: 1000 },
+      { name: 'websiteHeadline', label: 'First headline on homepage', labelAr: 'أول جملة على الـ homepage بتاعك', type: 'text', placeholder: 'Main headline' },
+      { name: 'instagramBio', label: 'Instagram bio', labelAr: 'الـ bio بتاع Instagram', type: 'text', placeholder: 'Copy your bio' },
+      { name: 'linkedinAbout', label: 'LinkedIn / Facebook About section', labelAr: 'الـ About section على LinkedIn أو Facebook', type: 'textarea', maxLength: 1000 },
+      { name: 'keyDifferentiator', label: 'What makes you different?', labelAr: 'إيه اللي بيخليك مختلف عن أي حد تاني؟', type: 'textarea', maxLength: 1000 },
+      { name: 'toneOfVoice', label: 'Your tone of voice', labelAr: 'نبرة الصوت بتاعتك', type: 'select', options: [...TONE_OF_VOICE] },
+      { name: 'customerQuote', label: 'A quote from a customer about you', labelAr: 'جملة عميل قالها عنك', type: 'textarea', placeholder: 'If you have one', placeholderAr: 'لو عندك', maxLength: 500 },
     ],
   }} />;
 }

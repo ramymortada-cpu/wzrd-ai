@@ -258,18 +258,32 @@ export const toolsRouter = router({
   brandDiagnosis: protectedProcedure
     .input(z.object({
       companyName: z.string().min(1).max(255),
-      industry: z.string().max(100).optional(),
-      market: z.string().max(50).optional(),
+      industry: z.string().max(100),
+      market: z.string().max(50),
+      yearsInBusiness: z.string().max(50).optional(),
+      teamSize: z.string().max(50).optional(),
       website: z.string().max(500).optional(),
-      challenge: z.string().max(1000).optional(),
+      socialMedia: z.string().max(1000).optional(),
+      currentPositioning: z.string().max(1000).optional(),
+      targetAudience: z.string().min(1).max(1000),
+      monthlyRevenue: z.string().max(50).optional(),
+      biggestChallenge: z.string().min(1).max(1000),
+      previousBranding: z.string().max(50).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       const originalPrompt = `Analyze brand health for:
 Company: ${input.companyName}
-Industry: ${input.industry || 'Not specified'}
-Market: ${input.market || 'MENA'}
+Industry: ${input.industry}
+Market: ${input.market}
+Years in business: ${input.yearsInBusiness || 'Not specified'}
+Team size: ${input.teamSize || 'Not specified'}
 Website: ${input.website || 'Not provided'}
-Main challenge: ${input.challenge || 'Not specified'}
+Social media: ${input.socialMedia || 'Not provided'}
+Current positioning / differentiation: ${input.currentPositioning || 'Not specified'}
+Target audience: ${input.targetAudience}
+Monthly revenue: ${input.monthlyRevenue || 'Not specified'}
+Biggest challenge: ${input.biggestChallenge}
+Previous branding experience: ${input.previousBranding || 'Not specified'}
 
 Score the brand 0-100. Identify the top 3-5 issues across: positioning clarity, messaging consistency, offer logic, visual perception, and customer journey. Be specific to THIS company.`;
       const userPrompt = ARABIC_INSTRUCTION + originalPrompt;
@@ -284,16 +298,28 @@ Score the brand 0-100. Identify the top 3-5 issues across: positioning clarity, 
   offerCheck: protectedProcedure
     .input(z.object({
       companyName: z.string().min(1).max(255),
-      packages: z.string().max(2000),
-      pricing: z.string().max(500).optional(),
-      targetAudience: z.string().max(500).optional(),
+      industry: z.string().max(100),
+      currentPackages: z.string().min(1).max(2000),
+      numberOfPackages: z.string().max(50).optional(),
+      pricingModel: z.string().max(50).optional(),
+      cheapestPrice: z.string().max(100).optional(),
+      highestPrice: z.string().max(100).optional(),
+      targetAudience: z.string().min(1).max(1000),
+      commonObjections: z.string().max(1000).optional(),
+      competitorPricing: z.string().max(1000).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       const originalPrompt = `Analyze offer logic for:
 Company: ${input.companyName}
-Current packages/services: ${input.packages}
-Pricing approach: ${input.pricing || 'Not specified'}
-Target audience: ${input.targetAudience || 'Not specified'}
+Industry: ${input.industry}
+Current packages/services: ${input.currentPackages}
+Number of packages: ${input.numberOfPackages || 'Not specified'}
+Pricing model: ${input.pricingModel || 'Not specified'}
+Cheapest price: ${input.cheapestPrice || 'Not specified'}
+Highest price: ${input.highestPrice || 'Not specified'}
+Target audience: ${input.targetAudience}
+Common objections: ${input.commonObjections || 'Not specified'}
+Competitor pricing vs theirs: ${input.competitorPricing || 'Not specified'}
 
 Score 0-100. Check: Is the offer clear? Does pricing logic make sense? Are there too many/few options? Is the value proposition obvious? Is there a clear path from free→paid?`;
       const userPrompt = ARABIC_INSTRUCTION + originalPrompt;
@@ -308,18 +334,28 @@ Score 0-100. Check: Is the offer clear? Does pricing logic make sense? Are there
   messageCheck: protectedProcedure
     .input(z.object({
       companyName: z.string().min(1).max(255),
+      industry: z.string().max(100),
       tagline: z.string().max(500).optional(),
-      keyMessage: z.string().max(1000).optional(),
-      socialBio: z.string().max(500).optional(),
+      elevatorPitch: z.string().min(1).max(1000),
       websiteHeadline: z.string().max(500).optional(),
+      instagramBio: z.string().max(500).optional(),
+      linkedinAbout: z.string().max(1000).optional(),
+      keyDifferentiator: z.string().max(1000).optional(),
+      toneOfVoice: z.string().max(50).optional(),
+      customerQuote: z.string().max(500).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       const originalPrompt = `Analyze messaging consistency for:
 Company: ${input.companyName}
+Industry: ${input.industry}
 Tagline: ${input.tagline || 'None'}
-Key message: ${input.keyMessage || 'Not provided'}
-Social bio: ${input.socialBio || 'Not provided'}
+Elevator pitch (30 sec): ${input.elevatorPitch}
 Website headline: ${input.websiteHeadline || 'Not provided'}
+Instagram bio: ${input.instagramBio || 'Not provided'}
+LinkedIn/Facebook About: ${input.linkedinAbout || 'Not provided'}
+Key differentiator: ${input.keyDifferentiator || 'Not specified'}
+Tone of voice: ${input.toneOfVoice || 'Not specified'}
+Customer quote: ${input.customerQuote || 'None'}
 
 Score 0-100. Check: Are these consistent? Is the differentiation clear? Is the tone appropriate? Is there a Clarity Gap? Would a new customer understand this brand in 5 seconds?`;
       const userPrompt = ARABIC_INSTRUCTION + originalPrompt;
@@ -334,18 +370,30 @@ Score 0-100. Check: Are these consistent? Is the differentiation clear? Is the t
   presenceAudit: protectedProcedure
     .input(z.object({
       companyName: z.string().min(1).max(255),
-      instagramHandle: z.string().max(255).optional(),
+      industry: z.string().max(100),
       website: z.string().max(500).optional(),
-      otherChannels: z.string().max(500).optional(),
-      inquiryFlow: z.string().max(500).optional(),
+      instagramHandle: z.string().max(255).optional(),
+      instagramFollowers: z.string().max(50).optional(),
+      otherPlatforms: z.string().max(500).optional(),
+      postingFrequency: z.string().max(50).optional(),
+      contentType: z.string().max(500).optional(),
+      inquiryMethod: z.string().min(1).max(500),
+      avgResponseTime: z.string().max(50).optional(),
+      googleBusiness: z.string().max(50).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       const originalPrompt = `Audit digital presence for:
 Company: ${input.companyName}
-Instagram: ${input.instagramHandle || 'Not provided'}
+Industry: ${input.industry}
 Website: ${input.website || 'Not provided'}
-Other channels: ${input.otherChannels || 'None'}
-Inquiry flow: ${input.inquiryFlow || 'Not described'}
+Instagram: ${input.instagramHandle || 'Not provided'}
+Instagram followers: ${input.instagramFollowers || 'Not specified'}
+Other platforms: ${input.otherPlatforms || 'None'}
+Posting frequency: ${input.postingFrequency || 'Not specified'}
+Content type: ${input.contentType || 'Not specified'}
+Inquiry method: ${input.inquiryMethod}
+Avg response time: ${input.avgResponseTime || 'Not specified'}
+Google Business Profile: ${input.googleBusiness || 'Not specified'}
 
 Score 0-100. Check: Cross-channel consistency, premium perception, CTA clarity, inquiry flow friction, content-proof-CTA alignment. Why is this brand "present but not chosen"?`;
       const userPrompt = ARABIC_INSTRUCTION + originalPrompt;
@@ -360,16 +408,28 @@ Score 0-100. Check: Cross-channel consistency, premium perception, CTA clarity, 
   identitySnapshot: protectedProcedure
     .input(z.object({
       companyName: z.string().min(1).max(255),
-      brandDescription: z.string().max(1000),
-      targetAudience: z.string().max(500).optional(),
-      competitors: z.string().max(500).optional(),
+      industry: z.string().max(100),
+      brandPersonality: z.string().min(1).max(1000),
+      targetAudience: z.string().min(1).max(1000),
+      brandColors: z.string().max(255).optional(),
+      hasLogo: z.string().max(50).optional(),
+      hasGuidelines: z.string().max(50).optional(),
+      competitors: z.string().max(1000).optional(),
+      desiredPerception: z.string().min(1).max(1000),
+      currentGap: z.string().max(1000).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       const originalPrompt = `Analyze brand identity match for:
 Company: ${input.companyName}
-Brand describes itself as: ${input.brandDescription}
-Target audience: ${input.targetAudience || 'Not specified'}
-Main competitors: ${input.competitors || 'Not specified'}
+Industry: ${input.industry}
+Brand personality: ${input.brandPersonality}
+Target audience: ${input.targetAudience}
+Brand colors: ${input.brandColors || 'Not specified'}
+Has logo: ${input.hasLogo || 'Not specified'}
+Has guidelines: ${input.hasGuidelines || 'Not specified'}
+Competitors & their differentiation: ${input.competitors || 'Not specified'}
+Desired perception: ${input.desiredPerception}
+Current gap (desired vs actual): ${input.currentGap || 'Not specified'}
 
 Score 0-100. Using Kapferer's Identity Prism, check: Does the brand personality match the audience? Is the visual quality matching the positioning? Is there a "Commodity Trap" — looking like everyone else? What archetype does this brand project vs. what it should project?`;
       const userPrompt = ARABIC_INSTRUCTION + originalPrompt;
@@ -384,20 +444,32 @@ Score 0-100. Using Kapferer's Identity Prism, check: Does the brand personality 
   launchReadiness: protectedProcedure
     .input(z.object({
       companyName: z.string().min(1).max(255),
-      hasGuidelines: z.boolean().default(false),
-      hasOfferStructure: z.boolean().default(false),
-      hasContentPlan: z.boolean().default(false),
-      hasWebsite: z.boolean().default(false),
-      launchGoal: z.string().max(500).optional(),
+      industry: z.string().min(1).max(100),
+      launchType: z.string().min(1).max(50),
+      targetLaunchDate: z.string().max(50).optional(),
+      hasGuidelines: z.string().max(50).optional(),
+      hasOfferStructure: z.string().max(50).optional(),
+      hasWebsite: z.string().max(50).optional(),
+      hasContentPlan: z.string().max(50).optional(),
+      marketingBudget: z.string().max(50).optional(),
+      teamCapacity: z.string().max(500).optional(),
+      biggestConcern: z.string().min(1).max(1000),
+      successMetric: z.string().max(1000).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       const originalPrompt = `Assess launch readiness for:
 Company: ${input.companyName}
-Has brand guidelines: ${input.hasGuidelines ? 'Yes' : 'No'}
-Has structured offers: ${input.hasOfferStructure ? 'Yes' : 'No'}
-Has content plan: ${input.hasContentPlan ? 'Yes' : 'No'}
-Has website: ${input.hasWebsite ? 'Yes' : 'No'}
-Launch goal: ${input.launchGoal || 'Not specified'}
+Industry: ${input.industry}
+Launch type: ${input.launchType}
+Target launch date: ${input.targetLaunchDate || 'Not specified'}
+Brand guidelines: ${input.hasGuidelines || 'Not specified'}
+Offer structure (packages & pricing): ${input.hasOfferStructure || 'Not specified'}
+Website: ${input.hasWebsite || 'Not specified'}
+Content plan: ${input.hasContentPlan || 'Not specified'}
+Marketing budget: ${input.marketingBudget || 'Not specified'}
+Team capacity: ${input.teamCapacity || 'Not specified'}
+Biggest concern: ${input.biggestConcern}
+Success metric (3 months): ${input.successMetric || 'Not specified'}
 
 Score 0-100 on launch readiness. Identify what's missing and what's the priority order. Be specific about what "ready to launch" means for THIS type of business.`;
       const userPrompt = ARABIC_INSTRUCTION + originalPrompt;

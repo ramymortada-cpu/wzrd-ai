@@ -1,4 +1,7 @@
 import ToolPage from './ToolPage';
+import { INDUSTRIES } from '@/lib/industries';
+import { HAS_LOGO, HAS_GUIDELINES_FULL } from '@/lib/formOptions';
+
 export default function IdentitySnapshot() {
   return <ToolPage config={{
     id: 'identity_snapshot', name: 'Identity Snapshot', nameAr: 'لقطة الهوية', icon: '🪞', cost: 20,
@@ -18,9 +21,15 @@ export default function IdentitySnapshot() {
     },
     fields: [
       { name: 'companyName', label: 'Company Name', labelAr: 'اسم الشركة', type: 'text', placeholder: 'e.g. Sahra Café', placeholderAr: 'مثال: كافيه سهرة', required: true },
-      { name: 'brandDescription', label: 'Describe Your Brand', labelAr: 'وصف البراند بتاعك', type: 'textarea', placeholder: 'How would you describe your brand in 2-3 sentences? What personality does it have?', placeholderAr: 'وصّف البراند في 2-3 جمل. إيه الشخصية بتاعته؟', required: true, maxLength: 1000 },
-      { name: 'targetAudience', label: 'Target Audience', labelAr: 'الجمهور المستهدف', type: 'text', placeholder: 'Who are your ideal customers?', placeholderAr: 'مين العملاء المثاليين بتوعك؟' },
-      { name: 'competitors', label: 'Main Competitors', labelAr: 'أهم المنافسين', type: 'text', placeholder: 'Name 2-3 competitors', placeholderAr: 'سمّي 2 أو 3 منافسين' },
+      { name: 'industry', label: 'Industry', labelAr: 'المجال', type: 'select', options: [...INDUSTRIES], required: true },
+      { name: 'brandPersonality', label: 'If your brand were a person, their personality?', labelAr: 'لو البراند بتاعك شخص، هيكون شخصيته إيه؟', type: 'textarea', placeholder: 'e.g. serious, playful, luxury, simple', placeholderAr: 'مثلاً: جاد، مرح، فاخر، بسيط', required: true, maxLength: 1000 },
+      { name: 'targetAudience', label: 'Ideal customer description', labelAr: 'وصف عميلك المثالي', type: 'textarea', placeholder: 'Age, interests, level', placeholderAr: 'السن، الاهتمامات، المستوى', required: true, maxLength: 1000 },
+      { name: 'brandColors', label: 'Main brand colors', labelAr: 'الألوان الرئيسية للبراند', type: 'text', placeholder: 'If you have them' },
+      { name: 'hasLogo', label: 'Do you have a logo?', labelAr: 'عندك لوجو؟', type: 'select', options: [...HAS_LOGO] },
+      { name: 'hasGuidelines', label: 'Brand Guidelines', labelAr: 'عندك Brand Guidelines؟', type: 'select', options: [...HAS_GUIDELINES_FULL] },
+      { name: 'competitors', label: 'Name 3 competitors and what differentiates them', labelAr: 'اذكر ٣ منافسين وإيه اللي بيميزهم', type: 'textarea', maxLength: 1000 },
+      { name: 'desiredPerception', label: 'What do you want people to feel when they see your brand?', labelAr: 'عايز الناس يحسوا بإيه لما يشوفوا البراند بتاعك؟', type: 'textarea', required: true, maxLength: 1000 },
+      { name: 'currentGap', label: 'Gap between desired and actual?', labelAr: 'إيه الفجوة بين اللي عايزه واللي حاصل فعلاً؟', type: 'textarea', maxLength: 1000 },
     ],
   }} />;
 }

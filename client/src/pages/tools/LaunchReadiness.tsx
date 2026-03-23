@@ -1,4 +1,7 @@
 import ToolPage from './ToolPage';
+import { INDUSTRIES } from '@/lib/industries';
+import { LAUNCH_TYPE, TARGET_LAUNCH_DATE, HAS_GUIDELINES_SIMPLE, HAS_OFFER_STRUCTURE, HAS_WEBSITE, HAS_CONTENT_PLAN, MARKETING_BUDGET } from '@/lib/formOptions';
+
 export default function LaunchReadiness() {
   return <ToolPage config={{
     id: 'launch_readiness', name: 'Launch Readiness', nameAr: 'جاهزية الإطلاق', icon: '🚀', cost: 30,
@@ -18,11 +21,17 @@ export default function LaunchReadiness() {
     },
     fields: [
       { name: 'companyName', label: 'Company Name', labelAr: 'اسم الشركة', type: 'text', placeholder: 'e.g. Sahra Café', placeholderAr: 'مثال: كافيه سهرة', required: true },
-      { name: 'hasGuidelines', label: 'Brand Guidelines', labelAr: 'جوايد البراند', type: 'checkbox', placeholder: 'I have brand guidelines (logo, colors, fonts)', placeholderAr: 'عندي جوايد براند (لوجو، ألوان، فونتات)' },
-      { name: 'hasOfferStructure', label: 'Offer Structure', labelAr: 'هيكل العرض', type: 'checkbox', placeholder: 'I have structured packages/pricing', placeholderAr: 'عندي باقات وتسعير منظم' },
-      { name: 'hasContentPlan', label: 'Content Plan', labelAr: 'خطة المحتوى', type: 'checkbox', placeholder: 'I have a content/marketing plan', placeholderAr: 'عندي خطة محتوى/ماركتينج' },
-      { name: 'hasWebsite', label: 'Website', labelAr: 'موقع إلكتروني', type: 'checkbox', placeholder: 'I have a live website', placeholderAr: 'عندي موقع شغال' },
-      { name: 'launchGoal', label: 'Launch Goal', type: 'textarea', labelAr: 'هدف الإطلاق', placeholder: 'What are you trying to launch? What does success look like?', placeholderAr: 'بتحاول تنزل إيه؟ إيه هي شكل النجاح؟', maxLength: 500 },
+      { name: 'industry', label: 'Industry', labelAr: 'المجال', type: 'select', options: [...INDUSTRIES], required: true },
+      { name: 'launchType', label: 'Launch type', labelAr: 'نوع الإطلاق', type: 'select', options: [...LAUNCH_TYPE], required: true },
+      { name: 'targetLaunchDate', label: 'Planned launch date', labelAr: 'الإطلاق المخطط', type: 'select', options: [...TARGET_LAUNCH_DATE] },
+      { name: 'hasGuidelines', label: 'Brand Guidelines', labelAr: 'عندك Brand Guidelines؟', type: 'select', options: [...HAS_GUIDELINES_SIMPLE] },
+      { name: 'hasOfferStructure', label: 'Structured packages & pricing?', labelAr: 'عندك باكدجات وأسعار محددة؟', type: 'select', options: [...HAS_OFFER_STRUCTURE] },
+      { name: 'hasWebsite', label: 'Website', labelAr: 'عندك موقع إلكتروني؟', type: 'select', options: [...HAS_WEBSITE] },
+      { name: 'hasContentPlan', label: 'Content plan', labelAr: 'عندك خطة محتوى؟', type: 'select', options: [...HAS_CONTENT_PLAN] },
+      { name: 'marketingBudget', label: 'Monthly marketing budget', labelAr: 'ميزانية التسويق الشهرية', type: 'select', options: [...MARKETING_BUDGET] },
+      { name: 'teamCapacity', label: 'Who will work on the launch?', labelAr: 'مين هيشتغل على الإطلاق؟', type: 'textarea', placeholder: 'e.g. just you / internal team / agency', placeholderAr: 'مثال: أنت لوحدك / فريق داخلي / وكالة', maxLength: 500 },
+      { name: 'biggestConcern', label: 'Biggest launch concern', labelAr: 'إيه أكتر حاجة قلقان منها في الإطلاق؟', type: 'textarea', required: true, maxLength: 1000 },
+      { name: 'successMetric', label: 'What would make launch a success after 3 months?', labelAr: 'إيه اللي لو حصل بعد ٣ شهور هتعتبر الإطلاق ناجح؟', type: 'textarea', maxLength: 1000 },
     ],
   }} />;
 }
