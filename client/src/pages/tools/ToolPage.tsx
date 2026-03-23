@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { toErrorString } from '@/lib/errorUtils';
 
 export interface ToolField {
   name: string;
@@ -58,6 +57,103 @@ interface ToolResult {
 const severityColor = (s: string) => s === 'high' ? 'text-red-400 border-red-400/20 bg-red-400/5' : s === 'medium' ? 'text-amber-400 border-amber-400/20 bg-amber-400/5' : 'text-green-400 border-green-400/20 bg-green-400/5';
 const scoreColor = (s: number) => s >= 70 ? 'from-green-400 to-cyan-400' : s >= 40 ? 'from-amber-400 to-orange-400' : 'from-red-400 to-pink-400';
 
+// ═══════════════════════════════════════
+// PROCESSING ANIMATION — shows analysis steps
+// ═══════════════════════════════════════
+const ANALYSIS_STEPS = [
+  { label: 'جاري تحليل بيانات البراند...', labelEn: 'Analyzing brand data...', duration: 1500 },
+  { label: 'فحص وضوح التموضع...', labelEn: 'Checking positioning clarity...', duration: 2000 },
+  { label: 'تقييم اتساق الرسائل...', labelEn: 'Evaluating messaging consistency...', duration: 2000 },
+  { label: 'مراجعة هيكل العرض...', labelEn: 'Reviewing offer structure...', duration: 1800 },
+  { label: 'تحليل الهوية البصرية...', labelEn: 'Analyzing visual identity...', duration: 1500 },
+  { label: 'فحص رحلة العميل...', labelEn: 'Checking customer journey...', duration: 1800 },
+  { label: 'إنشاء التوصيات...', labelEn: 'Generating recommendations...', duration: 2000 },
+];
+
+function ProcessingScreen({ toolName }: { toolName: string }) {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    // Progress bar animation
+    const progressInterval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 95) return 95; // Never hit 100 until done
+        return prev + 0.5;
+      });
+    }, 100);
+
+    // Step progression
+    let stepTimeout: ReturnType<typeof setTimeout>;
+    const advanceStep = (step: number) => {
+      if (step >= ANALYSIS_STEPS.length) return;
+      setCurrentStep(step);
+      stepTimeout = setTimeout(() => advanceStep(step + 1), ANALYSIS_STEPS[step].duration);
+    };
+    advanceStep(0);
+
+    return () => {
+      clearInterval(progressInterval);
+      clearTimeout(stepTimeout);
+    };
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center">
+      <div className="max-w-md mx-auto px-6 text-center">
+        {/* Animated brain icon */}
+        <div className="relative mx-auto w-24 h-24 mb-8">
+          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-500/20 to-cyan-500/20 animate-pulse" />
+          <div className="absolute inset-2 rounded-full bg-gradient-to-br from-indigo-500/10 to-cyan-500/10 animate-ping" style={{ animationDuration: '2s' }} />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-4xl animate-bounce" style={{ animationDuration: '2s' }}>🧠</span>
+          </div>
+        </div>
+
+        {/* Tool name */}
+        <h2 className="text-lg font-bold mb-2">{toolName}</h2>
+        <p className="text-xs text-zinc-500 mb-8">WZRD AI يحلل البيانات بتاعتك...</p>
+
+        {/* Progress bar */}
+        <div className="w-full h-1.5 bg-zinc-800 rounded-full mb-8 overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-indigo-500 via-cyan-500 to-amber-500 rounded-full transition-all duration-300"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+
+        {/* Steps */}
+        <div className="space-y-3 text-right" dir="rtl">
+          {ANALYSIS_STEPS.map((step, i) => (
+            <div
+              key={i}
+              className={`flex items-center gap-3 transition-all duration-500 ${
+                i < currentStep ? 'opacity-40' : i === currentStep ? 'opacity-100' : 'opacity-0'
+              }`}
+            >
+              {i < currentStep ? (
+                <span className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                  <span className="text-green-400 text-xs">✓</span>
+                </span>
+              ) : i === currentStep ? (
+                <span className="w-5 h-5 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin flex-shrink-0" />
+              ) : (
+                <span className="w-5 h-5 rounded-full bg-zinc-800 flex-shrink-0" />
+              )}
+              <span className={`text-sm ${i === currentStep ? 'text-white font-medium' : 'text-zinc-500'}`}>
+                {step.label}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Subtle branding */}
+        <p className="text-[10px] text-zinc-700 mt-12 tracking-widest">POWERED BY WZRD AI</p>
+      </div>
+    </div>
+  );
+}
+
 export default function ToolPage({ config }: { config: ToolConfig }) {
   const [, navigate] = useLocation();
   const [formData, setFormData] = useState<Record<string, string | boolean>>({});
@@ -81,16 +177,23 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
     setLoading(true);
     setError('');
 
+    // Minimum 8 seconds processing time so user sees the full animation
+    const minDelay = new Promise(resolve => setTimeout(resolve, 8000));
+
     try {
-      const res = await fetch(`/api/trpc/${config.endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ json: formData }),
-      });
+      const [, res] = await Promise.all([
+        minDelay,
+        fetch(`/api/trpc/${config.endpoint}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ json: formData }),
+        }),
+      ]);
       const data = await res.json();
 
       if (data.error) {
-        setError(toErrorString(data.error, 'Analysis failed. You may not have enough credits.'));
+        const msg = data.error.message || data.error.json?.message || '';
+        setError(typeof msg === 'string' ? msg : 'Analysis failed. You may not have enough credits.');
       } else {
         // Handle both tRPC response formats: {result.data.json} or {result.data}
         const toolResult = data.result?.data?.json ?? data.result?.data;
@@ -106,6 +209,11 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
       setLoading(false);
     }
   };
+
+  // ═══ PROCESSING VIEW ═══
+  if (loading) {
+    return <ProcessingScreen toolName={config.name} />;
+  }
 
   // ═══ RESULT VIEW ═══
   if (result) {
@@ -254,14 +362,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
           onClick={handleSubmit} disabled={loading}
           className="w-full mt-6 py-3.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-400 text-zinc-950 font-bold text-sm transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-amber-500/20 disabled:opacity-50"
         >
-          {loading ? (
-            <span className="flex items-center justify-center gap-2">
-              <span className="w-4 h-4 border-2 border-zinc-950/20 border-t-zinc-950 rounded-full animate-spin" />
-              WZRD AI is analyzing...
-            </span>
-          ) : (
-            `Analyze — ${config.cost} credits`
-          )}
+          تحليل — {config.cost} كريدت
         </button>
       </div>
     </div>
