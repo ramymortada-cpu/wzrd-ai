@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
+import { toErrorString } from '@/lib/errorUtils';
 
 const INDUSTRIES = [
   { value: 'f&b', label: 'Food & Beverage', labelAr: 'مأكولات ومشروبات' },
@@ -36,8 +37,7 @@ export default function Signup() {
 
       // Rate limit (429) and other non-tRPC errors return { error, retryAfter }
       if (!res.ok) {
-        const errMsg = data?.error || `Request failed (${res.status})`;
-        setError(errMsg);
+        setError(toErrorString(data?.error, `Request failed (${res.status})`));
         return;
       }
 
@@ -46,7 +46,7 @@ export default function Signup() {
       if (result?.success) {
         navigate('/tools');
       } else {
-        setError(result?.message || 'Something went wrong');
+        setError(toErrorString(result?.message, 'Something went wrong'));
       }
     } catch {
       setError('Network error. Please try again.');

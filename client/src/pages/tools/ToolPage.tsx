@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
+import { toErrorString } from '@/lib/errorUtils';
 
 export interface ToolField {
   name: string;
@@ -89,7 +90,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
       const data = await res.json();
 
       if (data.error) {
-        setError(data.error.message || 'Analysis failed. You may not have enough credits.');
+        setError(toErrorString(data.error, 'Analysis failed. You may not have enough credits.'));
       } else {
         // Handle both tRPC response formats: {result.data.json} or {result.data}
         const toolResult = data.result?.data?.json ?? data.result?.data;

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
+import { toErrorString } from '@/lib/errorUtils';
 
 export default function Login() {
   const [, navigate] = useLocation();
@@ -27,7 +28,7 @@ export default function Login() {
           setCode(result.devCode); // Pre-fill OTP when returned (EMAIL_PROVIDER=none)
         }
       } else {
-        setError(result?.message || 'Failed to send code.');
+        setError(toErrorString(result?.message, 'Failed to send code.'));
       }
     } catch {
       setError('Network error. Please try again.');
@@ -51,7 +52,7 @@ export default function Login() {
       if (result?.success) {
         navigate('/tools');
       } else {
-        setError(result?.message || 'Invalid code.');
+        setError(toErrorString(result?.message, 'Invalid code.'));
       }
     } catch {
       setError('Network error. Please try again.');
