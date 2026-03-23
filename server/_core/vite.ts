@@ -94,31 +94,29 @@ export function serveStatic(app: Express) {
   }
 
   // ═══ Landing pages — served BEFORE React catch-all ═══
-  // Prefer source (client/public/landing) over dist — dist may have stale build cache
-  const landingPath = path.resolve(process.cwd(), "client", "public", "landing");
-  const distLandingPath = path.resolve(process.cwd(), "dist", "public", "landing");
-  const activeLandingPath = fs.existsSync(landingPath) ? landingPath : distLandingPath;
+  // Production: use dist/public/landing directly (postbuild guarantees it's fresh)
+  const landingDir = path.resolve(process.cwd(), "dist", "public", "landing");
 
-  if (fs.existsSync(activeLandingPath)) {
-    app.use("/landing", express.static(activeLandingPath));
+  if (fs.existsSync(landingDir)) {
+    app.use("/landing", express.static(landingDir));
 
     // Smart root: logged in → React dashboard, not logged in → landing page
     app.get("/", (req, res, next) => {
       const cookieHeader = req.headers.cookie || '';
       const hasSession = cookieHeader.includes('app_session_id=');
       if (!hasSession) {
-        res.sendFile(path.resolve(activeLandingPath, "index.html"));
+        res.sendFile(path.resolve(landingDir, "index.html"));
       } else {
         next();
       }
     });
 
     // Public routes → landing pages
-    app.get("/welcome", (_req, res) => res.sendFile(path.resolve(activeLandingPath, "index.html")));
-    app.get("/services-info", (_req, res) => res.sendFile(path.resolve(activeLandingPath, "services.html")));
-    app.get("/guides/brand-health", (_req, res) => res.sendFile(path.resolve(activeLandingPath, "guide-brand-health.html")));
-    app.get("/guides/offer-logic", (_req, res) => res.sendFile(path.resolve(activeLandingPath, "guide-offer-logic.html")));
-    app.get("/guides/brand-identity", (_req, res) => res.sendFile(path.resolve(activeLandingPath, "guide-brand-identity.html")));
+    app.get("/welcome", (_req, res) => res.sendFile(path.resolve(landingDir, "index.html")));
+    app.get("/services-info", (_req, res) => res.sendFile(path.resolve(landingDir, "services.html")));
+    app.get("/guides/brand-health", (_req, res) => res.sendFile(path.resolve(landingDir, "guide-brand-health.html")));
+    app.get("/guides/offer-logic", (_req, res) => res.sendFile(path.resolve(landingDir, "guide-offer-logic.html")));
+    app.get("/guides/brand-identity", (_req, res) => res.sendFile(path.resolve(landingDir, "guide-brand-identity.html")));
 
     // Newsletter unsubscribe (GET — works from email link click)
     app.get("/unsubscribe", async (req, res) => {

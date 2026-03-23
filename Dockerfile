@@ -26,10 +26,8 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy only what's needed
+# Copy only what's needed (landing lives in dist/public/landing via postbuild)
 COPY --from=builder /app/dist ./dist
-# Landing pages — prefer source so production always has latest (dist may be stale)
-COPY --from=builder /app/client/public/landing ./client/public/landing
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/drizzle ./drizzle
