@@ -15,6 +15,7 @@ RUN pnpm install --frozen-lockfile 2>/dev/null || pnpm install
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
+COPY BUILD_ID .
 COPY . .
 RUN corepack enable && corepack prepare pnpm@latest --activate
 RUN pnpm run build
