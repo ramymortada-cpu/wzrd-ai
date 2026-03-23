@@ -187,7 +187,9 @@ Respond in JSON format:
     { "title": "<short title>", "detail": "<specific explanation>", "severity": "high|medium|low" }
   ],
   "recommendation": "<one sentence next step>"
-}`;
+}
+
+IMPORTANT: All your findings titles, details, and recommendations MUST be written in Egyptian Arabic (مصري). Use professional but accessible Arabic. Technical terms like "Brand Positioning" can stay in English but the explanation must be in Arabic.`;
 
 // ════════════════════════════════════════════
 // ROUTER

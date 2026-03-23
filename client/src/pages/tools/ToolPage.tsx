@@ -229,6 +229,20 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
   if (result) {
     const serviceLabel = locale === 'ar' ? result.serviceRecommendation?.serviceAr : result.serviceRecommendation?.service;
     const serviceReason = locale === 'ar' ? result.serviceRecommendation?.reasonAr : result.serviceRecommendation?.reason;
+    const scoreLabelMap: Record<string, string> = { Strong: 'wzrd.scoreStrong', 'Needs Work': 'wzrd.scoreNeedsWork', Weak: 'wzrd.scoreWeak', Critical: 'wzrd.scoreCritical' };
+    const displayScoreLabel = locale === 'ar' && scoreLabelMap[result.label] ? t(scoreLabelMap[result.label]) : result.label;
+    const severityMap: Record<string, string> = { high: 'wzrd.severityHigh', medium: 'wzrd.severityMedium', low: 'wzrd.severityLow' };
+    const tierMap: Record<string, string> = { AUDIT: 'wzrd.tierAudit', BUILD: 'wzrd.tierBuild', TAKEOFF: 'wzrd.tierTakeoff' };
+    const nextStepTitleMap: Record<string, string> = {
+      'How to Audit Your Brand Health': 'wzrd.nextStepAudit',
+      'Offer Logic 101': 'wzrd.nextStepOffer',
+      'Brand Identity Guide': 'wzrd.nextStepBrandGuide',
+      'What Is Brand Identity': 'wzrd.nextStepIdentity',
+      'Full Health Check': 'wzrd.nextStepHealth',
+      'Business Takeoff Package': 'wzrd.nextStepTakeoff',
+    };
+    const displayNextStepTitle = locale === 'ar' && nextStepTitleMap[result.nextStep.title] ? t(nextStepTitleMap[result.nextStep.title]) : result.nextStep.title;
+    const displayTier = locale === 'ar' && result.serviceRecommendation && tierMap[result.serviceRecommendation.tier] ? t(tierMap[result.serviceRecommendation.tier]) : result.serviceRecommendation?.tier;
     return (
       <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white">
         <WzrdPublicHeader showCredits={false} />
@@ -240,14 +254,14 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
               <span className="text-4xl font-bold text-zinc-950 font-mono">{result.score}</span>
             </div>
             <h2 className="text-2xl font-bold">{locale === 'ar' && config.nameAr ? config.nameAr : config.name}</h2>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">{result.label} · {result.creditsUsed} {t('wzrd.creditsUsed')} · {result.creditsRemaining} {t('wzrd.remaining')}</p>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">{displayScoreLabel} · {result.creditsUsed} {t('wzrd.creditsUsed')} · {result.creditsRemaining} {t('wzrd.remaining')}</p>
           </div>
 
           <div className="space-y-3 mb-8">
             {result.findings.map((f, i) => (
               <div key={i} className={`p-4 rounded-xl border shadow-sm ${severityColor(f.severity)}`}>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-mono uppercase tracking-wider opacity-60">{f.severity}</span>
+                  <span className="text-xs font-mono uppercase tracking-wider opacity-60">{locale === 'ar' && severityMap[f.severity] ? t(severityMap[f.severity]) : f.severity}</span>
                   <h4 className="font-bold text-sm">{f.title}</h4>
                 </div>
                 <p className="text-xs opacity-80 leading-relaxed">{f.detail}</p>
@@ -262,7 +276,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
           {result.serviceRecommendation?.show && (
             <div className="p-5 rounded-xl border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 mb-8">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded">{result.serviceRecommendation.tier}</span>
+                <span className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded">{displayTier}</span>
                 <span className="text-sm font-bold">{serviceLabel}</span>
               </div>
               <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed mb-3">{serviceReason}</p>
@@ -275,7 +289,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
           <div className="grid grid-cols-2 gap-3">
             <a href={result.nextStep.url} className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:border-amber-500/30 transition text-center shadow-sm">
               <span className="text-xl">📖</span>
-              <p className="text-xs font-bold mt-2">{result.nextStep.title}</p>
+              <p className="text-xs font-bold mt-2">{displayNextStepTitle}</p>
               <p className="text-[10px] text-zinc-500 dark:text-zinc-400">{t('wzrd.learnMore')}</p>
             </a>
             <a href="/services-info" className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:border-amber-500/30 transition text-center shadow-sm">
