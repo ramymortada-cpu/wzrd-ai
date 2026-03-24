@@ -3,15 +3,12 @@ import fs from "fs";
 import { type Server } from "http";
 import { nanoid } from "nanoid";
 import path from "path";
-import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
 import viteConfig from "../../vite.config";
 
-/** `server/_core` under tsx; `dist` when running bundled `dist/index.js`. esbuild does not set `import.meta.dirname`. */
-function moduleDir(): string {
-  const fromMeta = (import.meta as { dirname?: string }).dirname;
-  if (typeof fromMeta === "string" && fromMeta.length > 0) return fromMeta;
-  return path.dirname(fileURLToPath(import.meta.url));
+/** App root — always process.cwd() so paths work in esbuild ESM bundle (no import.meta.dirname). */
+function appRoot(): string {
+  return process.cwd();
 }
 
 export async function setupVite(app: Express, server: Server) {
@@ -29,7 +26,7 @@ export async function setupVite(app: Express, server: Server) {
   });
 
   // ═══ Landing pages — BEFORE Vite so anonymous / gets landing, not React ═══
-  const landingPath = path.resolve(moduleDir(), "../..", "client", "public", "landing");
+  const landingPath = path.resolve(appRoot(), "client", "public", "landing");
   if (fs.existsSync(landingPath)) {
     app.use("/landing", express.static(landingPath));
 
@@ -76,12 +73,7 @@ export async function setupVite(app: Express, server: Server) {
     const url = req.originalUrl;
 
     try {
-      const clientTemplate = path.resolve(
-        moduleDir(),
-        "../..",
-        "client",
-        "index.html"
-      );
+      const clientTemplate = path.resolve(appRoot(), "client", "index.html");
 
       // always reload the index.html file from disk incase it changes
       let template = await fs.promises.readFile(clientTemplate, "utf-8");
@@ -99,10 +91,7 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  const distPath =
-    process.env.NODE_ENV === "development"
-      ? path.resolve(moduleDir(), "../..", "dist", "public")
-      : path.resolve(moduleDir(), "public");
+  const distPath = path.resolve(appRoot(), "dist", "public");
   if (!fs.existsSync(distPath)) {
     console.error(
       `Could not find the build directory: ${distPath}, make sure to build the client first`
@@ -110,8 +99,7 @@ export function serveStatic(app: Express) {
   }
 
   // ═══ Landing pages — served BEFORE React catch-all ═══
-  // These are public HTML pages accessible without auth
-  const landingPath = path.resolve(moduleDir(), "../..", "client", "public", "landing");
+  const landingPath = path.resolve(appRoot(), "client", "public", "landing");
   const distLandingPath = path.resolve(distPath, "landing");
   const activeLandingPath = fs.existsSync(landingPath) ? landingPath : distLandingPath;
 
