@@ -1,3 +1,18 @@
+// CRITICAL: Bootstrap error handlers BEFORE any imports that might fail.
+// The logger is not yet available here, so we write directly to stderr.
+// These are intentionally replaced later by installProcessErrorHandlers()
+// once the logger is ready, but they must exist first to catch module-load
+// failures that would otherwise cause a silent exit.
+process.on('uncaughtException', (err) => {
+  console.error('[FATAL] Uncaught exception during startup:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[FATAL] Unhandled rejection during startup:', reason);
+  process.exit(1);
+});
+
 import "dotenv/config";
 import fs from "fs";
 import express from "express";
