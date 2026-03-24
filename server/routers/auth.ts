@@ -8,13 +8,12 @@
  * - auth.logout → clear session
  */
 
-import { sql } from "drizzle-orm";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "../_core/cookies";
 import { publicProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { logger } from "../_core/logger";
-import { createPublicUser, getUserByEmail, getDb } from "../db";
+import { createPublicUser, getUserByEmail } from "../db";
 import { addCredits, SIGNUP_BONUS } from "../db";
 import { sendWelcomeEmail } from "../wzrdEmails";
 import { signSession } from "../_core/session";
@@ -183,13 +182,5 @@ export const authRouter = router({
     const cookieOptions = getSessionCookieOptions(ctx.req);
     ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
     return { success: true } as const;
-  }),
-
-  /** [TEMPORARY] Reset credits + set admin for ramy.mortada@gmail.com — remove after testing */
-  resetCredits: publicProcedure.mutation(async () => {
-    const db = await getDb();
-    if (!db) return { success: false };
-    await db.execute(sql`UPDATE users SET credits = 1000, role = 'admin' WHERE email = 'ramy.mortada@gmail.com'`);
-    return { success: true, message: 'Credits reset to 1000' };
   }),
 });
