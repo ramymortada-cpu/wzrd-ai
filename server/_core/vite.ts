@@ -3,46 +3,51 @@ import fs from "fs";
 import { type Server } from "http";
 import { nanoid } from "nanoid";
 import path from "path";
-import { createServer as createViteServer } from "vite";
-import viteConfig from "../../vite.config";
+import { fileURLToPath } from "url";
+
+// Safe dirname — works in both dev and esbuild bundle
+const __dir = (() => {
+  try {
+    if (typeof import.meta.dirname === 'string') return import.meta.dirname;
+  } catch {}
+  try {
+    return path.dirname(fileURLToPath(import.meta.url));
+  } catch {}
+  return process.cwd();
+})();
+
+const PROJECT_ROOT = path.resolve(__dir, process.env.NODE_ENV === 'production' ? '..' : '../..');
 
 export async function setupVite(app: Express, server: Server) {
-  const serverOptions = {
-    middlewareMode: true,
-    hmr: { server },
-    allowedHosts: true as const,
-  };
+  // Dev only — dynamic imports to avoid bundling vite in production
+  const { createServer: createViteServer } = await import("vite");
+  // Use variable path so esbuild doesn't bundle vite.config.ts
+  const configPath = "../../vite.config";
+  const viteConfig = (await import(/* @vite-ignore */ configPath)).default;
 
   const vite = await createViteServer({
     ...viteConfig,
     configFile: false,
-    server: serverOptions,
+    server: {
+      middlewareMode: true,
+      hmr: { server },
+      allowedHosts: true as const,
+    },
     appType: "custom",
   });
 
-  // ═══ Landing pages — BEFORE Vite so anonymous / gets landing, not React ═══
-  const landingPath = path.resolve(import.meta.dirname, "../..", "client", "public", "landing");
+  const landingPath = path.resolve(PROJECT_ROOT, "client", "public", "landing");
   if (fs.existsSync(landingPath)) {
     app.use("/landing", express.static(landingPath));
 
-    // Smart root: no session → landing, has session → pass to Vite/React
     app.get("/", (req, res, next) => {
-      const cookieHeader = req.headers.cookie || "";
-      const hasSession = cookieHeader.includes("app_session_id=");
-      if (!hasSession) {
-        res.sendFile(path.resolve(landingPath, "index.html"));
-      } else {
-        next();
-      }
+      const hasSession = (req.headers.cookie || "").includes("app_session_id=");
+      if (!hasSession) res.sendFile(path.resolve(landingPath, "index.html"));
+      else next();
     });
 
-    // Public routes → landing pages
     app.get("/api/public/site-config", (_req, res) => {
-      try {
-        const { getSiteConfig } = require('../siteConfig');
-        const cfg = getSiteConfig();
-        res.json({ homepage: cfg.homepage, site: cfg.site, services: cfg.services });
-      } catch { res.json({}); }
+      try { const { getSiteConfig } = require('../siteConfig'); res.json(getSiteConfig()); } catch { res.json({}); }
     });
 
     app.get("/welcome", (_req, res) => res.sendFile(path.resolve(landingPath, "index.html")));
@@ -51,37 +56,24 @@ export async function setupVite(app: Express, server: Server) {
     app.get("/guides/offer-logic", (_req, res) => res.sendFile(path.resolve(landingPath, "guide-offer-logic.html")));
     app.get("/guides/brand-identity", (_req, res) => res.sendFile(path.resolve(landingPath, "guide-brand-identity.html")));
 
-    // Newsletter unsubscribe
     app.get("/unsubscribe", async (req, res) => {
       const email = req.query.email as string;
       if (!email) { res.status(400).send("Email required"); return; }
       try {
         const { unsubscribeUser } = await import("../newsletter");
         await unsubscribeUser(email);
-        res.send(`<html><body style="background:#09090b;color:#f4f4f6;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center"><div><h2>Unsubscribed ✓</h2><p style="color:#b0b0be">You won't receive weekly tips anymore.</p><a href="/welcome" style="color:#c8a24e">← Back to WZRD AI</a></div></body></html>`);
+        res.send('<html><body style="background:#fff;color:#111;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center"><div><h2>Unsubscribed ✓</h2><p>You won\'t receive weekly tips anymore.</p><a href="/welcome">← Back to WZRD AI</a></div></body></html>');
       } catch { res.status(500).send("Error processing unsubscribe"); }
     });
   }
 
   app.use(vite.middlewares);
   app.use("*", async (req, res, next) => {
-    const url = req.originalUrl;
-
     try {
-      const clientTemplate = path.resolve(
-        import.meta.dirname,
-        "../..",
-        "client",
-        "index.html"
-      );
-
-      // always reload the index.html file from disk incase it changes
+      const clientTemplate = path.resolve(PROJECT_ROOT, "client", "index.html");
       let template = await fs.promises.readFile(clientTemplate, "utf-8");
-      template = template.replace(
-        `src="/src/main.tsx"`,
-        `src="/src/main.tsx?v=${nanoid()}"`
-      );
-      const page = await vite.transformIndexHtml(url, template);
+      template = template.replace(`src="/src/main.tsx"`, `src="/src/main.tsx?v=${nanoid()}"`);
+      const page = await vite.transformIndexHtml(req.originalUrl, template);
       res.status(200).set({ "Content-Type": "text/html" }).end(page);
     } catch (e) {
       vite.ssrFixStacktrace(e as Error);
@@ -91,43 +83,34 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  const distPath =
-    process.env.NODE_ENV === "development"
-      ? path.resolve(import.meta.dirname, "../..", "dist", "public")
-      : path.resolve(import.meta.dirname, "public");
+  const distPath = path.resolve(__dir, "public");
   if (!fs.existsSync(distPath)) {
-    console.error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`
-    );
+    console.error(`Could not find build directory: ${distPath}`);
   }
 
-  // ═══ Landing pages — served BEFORE React catch-all ═══
-  // These are public HTML pages accessible without auth
-  const landingPath = path.resolve(import.meta.dirname, "../..", "client", "public", "landing");
   const distLandingPath = path.resolve(distPath, "landing");
-  const activeLandingPath = fs.existsSync(landingPath) ? landingPath : distLandingPath;
+  const srcLandingPath = path.resolve(PROJECT_ROOT, "client", "public", "landing");
+  const activeLandingPath = fs.existsSync(distLandingPath) ? distLandingPath : (fs.existsSync(srcLandingPath) ? srcLandingPath : distLandingPath);
 
   if (fs.existsSync(activeLandingPath)) {
     app.use("/landing", express.static(activeLandingPath));
 
-    // Smart root: logged in → React dashboard, not logged in → landing page
     app.get("/", (req, res, next) => {
-      const cookieHeader = req.headers.cookie || '';
-      const hasSession = cookieHeader.includes('app_session_id=');
-      if (!hasSession) {
-        res.sendFile(path.resolve(activeLandingPath, "index.html"));
-      } else {
-        next();
-      }
+      const hasSession = (req.headers.cookie || '').includes('app_session_id=');
+      if (!hasSession) res.sendFile(path.resolve(activeLandingPath, "index.html"));
+      else next();
     });
 
-    // Public routes → landing pages
     app.get("/api/public/site-config", (_req, res) => {
+      try { const { getSiteConfig } = require('../siteConfig'); res.json(getSiteConfig()); } catch { res.json({}); }
+    });
+
+    app.get("/api/debug/whoami", async (req, res) => {
       try {
-        const { getSiteConfig } = require('../siteConfig');
-        const cfg = getSiteConfig();
-        res.json({ homepage: cfg.homepage, site: cfg.site, services: cfg.services });
-      } catch { res.json({}); }
+        const { verifySession } = require('./cookies');
+        const user = await verifySession(req);
+        res.json({ loggedIn: !!user, user: user || null });
+      } catch (err: any) { res.json({ loggedIn: false, error: err.message }); }
     });
 
     app.get("/welcome", (_req, res) => res.sendFile(path.resolve(activeLandingPath, "index.html")));
@@ -136,21 +119,18 @@ export function serveStatic(app: Express) {
     app.get("/guides/offer-logic", (_req, res) => res.sendFile(path.resolve(activeLandingPath, "guide-offer-logic.html")));
     app.get("/guides/brand-identity", (_req, res) => res.sendFile(path.resolve(activeLandingPath, "guide-brand-identity.html")));
 
-    // Newsletter unsubscribe (GET — works from email link click)
     app.get("/unsubscribe", async (req, res) => {
       const email = req.query.email as string;
       if (!email) { res.status(400).send("Email required"); return; }
       try {
         const { unsubscribeUser } = await import("../newsletter");
         await unsubscribeUser(email);
-        res.send(`<html><body style="background:#09090b;color:#f4f4f6;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center"><div><h2>Unsubscribed ✓</h2><p style="color:#b0b0be">You won't receive weekly tips anymore.</p><a href="/welcome" style="color:#c8a24e">← Back to WZRD AI</a></div></body></html>`);
+        res.send('<html><body style="background:#fff;color:#111;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center"><div><h2>Unsubscribed ✓</h2><p>You won\'t receive weekly tips anymore.</p><a href="/welcome">← Back to WZRD AI</a></div></body></html>');
       } catch { res.status(500).send("Error processing unsubscribe"); }
     });
   }
 
   app.use(express.static(distPath));
-
-  // fall through to index.html if the file doesn't exist (React SPA)
   app.use("*", (_req, res) => {
     res.sendFile(path.resolve(distPath, "index.html"));
   });

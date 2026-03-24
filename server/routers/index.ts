@@ -1,10 +1,6 @@
 /**
  * Router Index — composes all sub-routers into the main appRouter.
- * 
- * This replaces the monolithic 3,200-line routers.ts file.
- * Each domain has its own router file < 200 lines.
  */
-// Build: force-rebuild-20260323
 
 import { router } from "../_core/trpc";
 import { systemRouter } from "../_core/systemRouter";
@@ -26,11 +22,6 @@ import { brandTwinRouter } from "./brandTwin";
 import { leadsRouter } from "./leads";
 import { onboardingRouter } from "./onboarding";
 import { feedbackRouter } from "./feedback";
-import { deliverableFeedbackRouter } from "./deliverableFeedback";
-import { revisionsRouter } from "./revisions";
-import { commentsRouter } from "./comments";
-import { approvalsRouter } from "./approvals";
-import { diffRouter } from "./diff";
 import { analyticsRouter } from "./analytics";
 import { qualityRouter } from "./quality";
 import { adminRouter } from "./admin";
@@ -63,11 +54,6 @@ export const appRouter = router({
   leads: leadsRouter,
   onboarding: onboardingRouter,
   feedback: feedbackRouter,
-  deliverableFeedback: deliverableFeedbackRouter,
-  revisions: revisionsRouter,
-  comments: commentsRouter,
-  approvals: approvalsRouter,
-  diff: diffRouter,
   analytics: analyticsRouter,
   quality: qualityRouter,
   admin: adminRouter,
