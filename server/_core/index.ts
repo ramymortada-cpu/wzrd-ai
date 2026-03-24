@@ -1,7 +1,9 @@
 import "dotenv/config";
+import fs from "fs";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
+import path from "path";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
@@ -13,6 +15,33 @@ import { rateLimiters } from "./rateLimit";
 import { csrfProtection, setCsrfToken } from "./csrf";
 import { mountMessagingWebhooks } from "../messagingIntegration";
 import { installProcessErrorHandlers, expressErrorHandler } from "./errorHandler";
+
+/** When entry is `dist/index.js`, cwd may not be the repo root (Docker/Railway). Chdir so process.cwd() paths match vite.ts. */
+function ensureAppRootFromEntry(): void {
+  if (process.env.APP_ROOT) {
+    try {
+      process.chdir(process.env.APP_ROOT);
+    } catch {
+      /* keep cwd */
+    }
+    return;
+  }
+  const entry = process.argv[1];
+  if (!entry) return;
+  const normalized = path.normalize(entry);
+  const distIdx = `${path.sep}dist${path.sep}index.js`;
+  if (!normalized.endsWith(distIdx) && !normalized.endsWith("/dist/index.js")) return;
+  const root = path.resolve(path.dirname(normalized), "..");
+  if (fs.existsSync(path.join(root, "package.json")) && fs.existsSync(path.join(root, "dist", "public"))) {
+    try {
+      process.chdir(root);
+    } catch {
+      /* keep cwd */
+    }
+  }
+}
+
+ensureAppRootFromEntry();
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
