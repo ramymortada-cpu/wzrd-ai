@@ -21,9 +21,55 @@ import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { logger } from "../_core/logger";
 import { resilientLLM } from "../_core/llmRouter";
-import { deductCredits, getUserCredits, TOOL_COSTS } from "../db";
+import { deductCredits, getUserCredits, TOOL_COSTS, getDb } from "../db";
 import { sendToolResultEmail } from "../wzrdEmails";
 import { getToolSystemPrompt, isToolEnabled } from "../siteConfig";
+import { diagnosisHistory, userChecklists } from "../../drizzle/schema";
+import { eq, desc, and } from "drizzle-orm";
+
+type DiagnosisHistoryRow = typeof diagnosisHistory.$inferSelect;
+type UserChecklistRow = typeof userChecklists.$inferSelect;
+
+/**
+ * Save diagnosis result to history (non-blocking).
+ * If save fails, the tool result is still shown — we just lose the history entry.
+ */
+async function saveDiagnosisHistory(userId: number, toolId: string, result: ToolResult): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  const insertResult = await db.insert(diagnosisHistory).values({
+    userId,
+    toolId,
+    score: result.score,
+    pillarScores: null,
+    findings: result.findings,
+    actionItems: result.actionItems.length > 0 ? result.actionItems : null,
+    recommendation: result.recommendation,
+    schemaVersion: 1,
+  });
+
+  // Auto-create checklist if actionItems exist
+  if (result.actionItems.length > 0) {
+    const diagId = (insertResult as any)?.[0]?.insertId ?? 0;
+    if (diagId > 0) {
+      const checklistItems = result.actionItems.map((item, i) => ({
+        id: i,
+        task: item.task,
+        difficulty: item.difficulty,
+        completed: false,
+        completedAt: null,
+      }));
+      await db.insert(userChecklists).values({
+        userId,
+        diagnosisId: diagId,
+        items: checklistItems,
+        completedCount: 0,
+        totalCount: checklistItems.length,
+      }).catch((err: any) => logger.warn({ err }, 'Failed to create checklist'));
+    }
+  }
+}
 
 // ════════════════════════════════════════════
 // SHARED TYPES
@@ -33,6 +79,7 @@ interface ToolResult {
   score: number;
   label: string;
   findings: Array<{ title: string; detail: string; severity: 'high' | 'medium' | 'low' }>;
+  actionItems: Array<{ task: string; difficulty: 'easy' | 'medium' | 'hard' }>;
   recommendation: string;
   nextStep: { type: 'guide' | 'service' | 'tool'; title: string; url: string };
   serviceRecommendation: { show: boolean; tier: string; service: string; serviceAr: string; reason: string; reasonAr: string; url: string } | null;
@@ -124,7 +171,7 @@ async function runToolAI(
   const text = response.choices[0]?.message?.content as string;
 
   // 3. Parse response
-  let parsed: { score?: number; findings?: Array<{ title: string; detail: string; severity: string }>; recommendation?: string };
+  let parsed: { score?: number; findings?: Array<{ title: string; detail: string; severity: string }>; actionItems?: Array<{ task: string; difficulty: string }>; recommendation?: string };
   try {
     const clean = text.replace(/```json|```/g, '').trim();
     // Try parsing the full response
@@ -155,6 +202,17 @@ async function runToolAI(
 
   const score = Math.max(0, Math.min(100, parsed.score || 50));
 
+  // Extract actionItems with defensive parsing
+  let actionItems: Array<{ task: string; difficulty: 'easy' | 'medium' | 'hard' }> = [];
+  try {
+    actionItems = (parsed.actionItems || []).slice(0, 15).map(item => ({
+      task: item.task || '',
+      difficulty: (['easy', 'medium', 'hard'].includes(item.difficulty) ? item.difficulty : 'medium') as 'easy' | 'medium' | 'hard',
+    })).filter(item => item.task.length > 0);
+  } catch {
+    logger.warn({ toolId }, 'actionItems parse failed — using empty array');
+  }
+
   const result: ToolResult = {
     score,
     label: scoreLabel(score),
@@ -163,6 +221,7 @@ async function runToolAI(
       detail: f.detail || '',
       severity: (['high', 'medium', 'low'].includes(f.severity) ? f.severity : 'medium') as 'high' | 'medium' | 'low',
     })),
+    actionItems,
     recommendation: parsed.recommendation || 'Consider a full audit for detailed insights.',
     nextStep: { type: 'guide', title: 'Learn more', url: '/guides/brand-health' },
     serviceRecommendation: getServiceRecommendation(toolId, score),
@@ -170,7 +229,12 @@ async function runToolAI(
     creditsRemaining: deduction.newBalance ?? 0,
   };
 
-  // 4. Send result email (non-blocking)
+  // 4. Save to diagnosis_history (non-blocking — don't fail the tool if save fails)
+  saveDiagnosisHistory(userId, toolId, result).catch(err => {
+    logger.error({ err, userId, toolId }, 'Failed to save diagnosis history — result still shown to user');
+  });
+
+  // 5. Send result email (non-blocking)
   if (userEmail) {
     sendToolResultEmail(
       userEmail, '', toolDisplayName, result.score,
@@ -196,8 +260,13 @@ Respond in JSON format:
   "findings": [
     { "title": "<short title>", "detail": "<specific explanation>", "severity": "high|medium|low" }
   ],
+  "actionItems": [
+    { "task": "<specific actionable task in Arabic>", "difficulty": "easy|medium|hard" }
+  ],
   "recommendation": "<one sentence next step>"
-}`;
+}
+
+CRITICAL: You MUST include actionItems array. For each finding, include 2-3 specific, actionable tasks the business owner can do TODAY. Tasks must be in Egyptian Arabic and be practical (not generic). Max 15 actionItems total.`;
 
 // ════════════════════════════════════════════
 // ROUTER
@@ -426,5 +495,116 @@ Score 0-100 on launch readiness. Identify what's missing and what's the priority
 
       logger.info({ email: input.email, guide: input.guideName }, 'Guide downloaded');
       return { success: true, title: guide.title, url: guide.url };
+    }),
+
+  // ════════════════════════════════════════════
+  // BRAND HEALTH TRACKER — History + Checklist
+  // ════════════════════════════════════════════
+
+  /** Get diagnosis history — last 12 entries + trend */
+  myHistory: protectedProcedure
+    .query(async ({ ctx }) => {
+      try {
+        const db = await getDb();
+        if (!db) return { history: [], trend: 'new' as const, latest: null, totalDiagnoses: 0 };
+
+        const history = await db.select()
+          .from(diagnosisHistory)
+          .where(eq(diagnosisHistory.userId, ctx.user!.id))
+          .orderBy(desc(diagnosisHistory.createdAt))
+          .limit(12);
+
+        // Defensive parsing — handle different schema versions
+        const safe = history.map((h: DiagnosisHistoryRow) => ({
+          ...h,
+          pillarScores: typeof h.pillarScores === 'object' && h.pillarScores ? h.pillarScores : {},
+          findings: Array.isArray(h.findings) ? h.findings : [],
+          actionItems: Array.isArray(h.actionItems) ? h.actionItems : [],
+        }));
+
+        // Calculate trend
+        let trend: 'improving' | 'declining' | 'stable' | 'new' = 'new';
+        if (safe.length >= 2) {
+          const diff = safe[0].score - safe[1].score;
+          trend = diff > 3 ? 'improving' : diff < -3 ? 'declining' : 'stable';
+        }
+
+        return {
+          history: safe,
+          trend,
+          latest: safe[0] || null,
+          totalDiagnoses: safe.length,
+        };
+      } catch (err) {
+        logger.error({ err, userId: ctx.user!.id }, 'myHistory error');
+        return { history: [], trend: 'new' as const, latest: null, totalDiagnoses: 0 };
+      }
+    }),
+
+  /** Get checklists for current user */
+  myChecklists: protectedProcedure
+    .query(async ({ ctx }) => {
+      try {
+        const db = await getDb();
+        if (!db) return [];
+
+        const checklists = await db.select()
+          .from(userChecklists)
+          .where(eq(userChecklists.userId, ctx.user!.id))
+          .orderBy(desc(userChecklists.createdAt))
+          .limit(10);
+
+        return checklists.map((cl: UserChecklistRow) => ({
+          ...cl,
+          items: Array.isArray(cl.items) ? cl.items : [],
+        }));
+      } catch (err) {
+        logger.error({ err }, 'myChecklists error');
+        return [];
+      }
+    }),
+
+  /** Toggle a checklist item (complete/uncomplete) */
+  toggleChecklistItem: protectedProcedure
+    .input(z.object({
+      checklistId: z.number(),
+      itemIndex: z.number(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error('Database unavailable');
+
+      // Get the checklist
+      const [checklist] = await db.select()
+        .from(userChecklists)
+        .where(and(
+          eq(userChecklists.id, input.checklistId),
+          eq(userChecklists.userId, ctx.user!.id),
+        ));
+
+      if (!checklist) {
+        throw new Error('Checklist not found');
+      }
+
+      const items = Array.isArray(checklist.items) ? [...checklist.items] as any[] : [];
+      if (input.itemIndex < 0 || input.itemIndex >= items.length) {
+        throw new Error('Item index out of range');
+      }
+
+      // Toggle completion
+      const item = items[input.itemIndex];
+      item.completed = !item.completed;
+      item.completedAt = item.completed ? new Date().toISOString() : null;
+
+      const completedCount = items.filter((i: any) => i.completed).length;
+
+      await db.update(userChecklists)
+        .set({
+          items,
+          completedCount,
+        })
+        .where(eq(userChecklists.id, input.checklistId));
+
+      return { items, completedCount, totalCount: items.length };
     }),
 });

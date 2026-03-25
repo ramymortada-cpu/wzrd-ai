@@ -51,6 +51,7 @@ const LaunchReadinessPage = lazy(() => import("./pages/tools/LaunchReadiness"));
 const PricingPage = lazy(() => import("./pages/Pricing"));
 const WzrdAdminPage = lazy(() => import("./pages/WzrdAdmin"));
 const ProfilePage = lazy(() => import("./pages/Profile"));
+const MyBrandPage = lazy(() => import("./pages/MyBrand"));
 
 function SuspenseWrapper({ children, fallback }: { children: React.ReactNode; fallback?: React.ReactNode }) {
   return (
@@ -114,6 +115,7 @@ function App() {
               <Route path="/tools/identity-snapshot">{() => <SuspenseWrapper><IdentitySnapshotPage /></SuspenseWrapper>}</Route>
               <Route path="/tools/launch-readiness">{() => <SuspenseWrapper><LaunchReadinessPage /></SuspenseWrapper>}</Route>
               <Route path="/pricing">{() => <SuspenseWrapper><PricingPage /></SuspenseWrapper>}</Route>
+              <Route path="/my-brand">{() => <SuspenseWrapper><MyBrandPage /></SuspenseWrapper>}</Route>
               <Route path="/wzrd-admin">{() => <SuspenseWrapper><WzrdAdminPage /></SuspenseWrapper>}</Route>
               <Route path="/profile">{() => <SuspenseWrapper><ProfilePage /></SuspenseWrapper>}</Route>
               {/* Existing public routes */}

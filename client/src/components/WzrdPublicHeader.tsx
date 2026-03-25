@@ -46,6 +46,12 @@ export default function WzrdPublicHeader({ credits, showCredits = true }: WzrdPu
           >
             {t("wzrd.buyCredits")}
           </a>
+          <a
+            href="/my-brand"
+            className="text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+          >
+            {locale === "ar" ? "صحة البراند" : "My Brand"}
+          </a>
         </nav>
 
         {/* Right: credits pill + theme + language */}

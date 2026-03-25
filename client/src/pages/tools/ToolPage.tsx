@@ -48,6 +48,7 @@ interface ToolResult {
   score: number;
   label: string;
   findings: Finding[];
+  actionItems?: Array<{ task: string; difficulty: 'easy' | 'medium' | 'hard' }>;
   recommendation: string;
   nextStep: { type: string; title: string; url: string };
   serviceRecommendation?: {
@@ -419,6 +420,37 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
               </div>
             ))}
           </div>
+
+          {/* ═══ ACTION ITEMS ═══ */}
+          {result.actionItems && result.actionItems.length > 0 && (
+            <div className="mb-8 p-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5">
+              <h3 className="text-base font-bold text-emerald-300 mb-3" dir="rtl">
+                خطواتك العملية ({result.actionItems.length} مهمة)
+              </h3>
+              <div className="space-y-2">
+                {result.actionItems.map((item, i) => (
+                  <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-zinc-900/50" dir="rtl">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-md border-2 border-emerald-500/40 flex items-center justify-center text-xs text-emerald-400 mt-0.5">
+                      {i + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm text-zinc-200">{item.task}</span>
+                    </div>
+                    <span className={`flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${
+                      item.difficulty === 'easy' ? 'bg-green-500/20 text-green-400' :
+                      item.difficulty === 'hard' ? 'bg-red-500/20 text-red-400' :
+                      'bg-yellow-500/20 text-yellow-400'
+                    }`}>
+                      {item.difficulty === 'easy' ? 'سهل' : item.difficulty === 'hard' ? 'صعب' : 'متوسط'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-zinc-500 mt-3 text-center" dir="rtl">
+                تابع تقدمك من <a href="/my-brand" className="text-indigo-400 hover:underline">صفحة صحة البراند</a>
+              </p>
+            </div>
+          )}
 
           {/* ═══ SHARE / DOWNLOAD ═══ */}
           <div className="flex gap-2 mb-8">

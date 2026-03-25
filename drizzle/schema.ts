@@ -850,3 +850,29 @@ export const emailSendLog = mysqlTable("email_send_log", {
   clickedAt: timestamp("clickedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
+
+/** Diagnosis history — tracks all diagnosis results for Brand Health Tracker */
+export const diagnosisHistory = mysqlTable("diagnosis_history", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id").notNull(),
+  toolId: varchar("tool_id", { length: 50 }).notNull(),
+  score: int("score").notNull(),
+  pillarScores: json("pillar_scores"),
+  findings: json("findings"),
+  actionItems: json("action_items"),
+  recommendation: text("recommendation"),
+  schemaVersion: int("schema_version").notNull().default(1),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+/** User checklists — action items from each diagnosis */
+export const userChecklists = mysqlTable("user_checklists", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id").notNull(),
+  diagnosisId: int("diagnosis_id").notNull(),
+  items: json("items").notNull(),
+  completedCount: int("completed_count").notNull().default(0),
+  totalCount: int("total_count").notNull().default(0),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});

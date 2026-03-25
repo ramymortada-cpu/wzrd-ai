@@ -105,14 +105,6 @@ export function serveStatic(app: Express) {
       try { const { getSiteConfig } = require('../siteConfig'); res.json(getSiteConfig()); } catch { res.json({}); }
     });
 
-    app.get("/api/debug/whoami", async (req, res) => {
-      try {
-        const { verifySession } = require('./cookies');
-        const user = await verifySession(req);
-        res.json({ loggedIn: !!user, user: user || null });
-      } catch (err: any) { res.json({ loggedIn: false, error: err.message }); }
-    });
-
     app.get("/welcome", (_req, res) => res.sendFile(path.resolve(activeLandingPath, "index.html")));
     app.get("/services-info", (_req, res) => res.sendFile(path.resolve(activeLandingPath, "services.html")));
     app.get("/guides/brand-health", (_req, res) => res.sendFile(path.resolve(activeLandingPath, "guide-brand-health.html")));

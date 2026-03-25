@@ -36,7 +36,7 @@ export default function Signup() {
       const result = data?.result?.data?.json ?? data?.result?.data;
 
       if (result?.success) {
-        navigate('/tools');
+        navigate('/tools/brand-diagnosis');
       } else {
         setError(toErrorString(result?.message, 'Something went wrong'));
       }
