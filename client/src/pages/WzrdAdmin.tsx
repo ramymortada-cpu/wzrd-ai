@@ -354,6 +354,8 @@ function CommandCenterTab({ t, setTab }: { t: T; setTab: (id: Tab) => void }) {
 function EmailAutomationTab({ t, onToast }: { t: T; onToast: (msg: string, err?: boolean) => void }) {
   const [templates, setTemplates] = useState<any[] | null>(null);
   const [rules, setRules] = useState<any[] | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [draft, setDraft] = useState({ subject: '', subjectAr: '', html: '' });
 
   const load = useCallback(() => {
     api('emailAutomation.listTemplates').then((d: any) => setTemplates(d?.templates || []));
@@ -365,7 +367,7 @@ function EmailAutomationTab({ t, onToast }: { t: T; onToast: (msg: string, err?:
   const seed = async () => {
     const r = await apiMutation('emailAutomation.seedDefaults', {});
     if (r?.success) { onToast(t('تم زرع القوالب', 'Templates seeded')); load(); }
-    else onToast(r?.error || t('فشل أو موجود مسبقاً', 'Failed or already exists'), true);
+    else onToast((r as { error?: string })?.error || t('فشل أو موجود مسبقاً', 'Failed or already exists'), true);
   };
 
   const toggleRule = async (id: number, currentlyActive: number) => {
@@ -373,11 +375,53 @@ function EmailAutomationTab({ t, onToast }: { t: T; onToast: (msg: string, err?:
     load();
   };
 
+  const openEditor = (tm: any) => {
+    setEditingId(tm.id);
+    setDraft({
+      subject: tm.subject || '',
+      subjectAr: tm.subjectAr || '',
+      html: tm.html || '',
+    });
+  };
+
+  const saveTemplate = async () => {
+    if (!editingId) return;
+    const r = await apiMutation('emailAutomation.updateTemplate', {
+      id: editingId,
+      subject: draft.subject,
+      subjectAr: draft.subjectAr,
+      html: draft.html,
+    });
+    if (r?.success) {
+      onToast(t('تم حفظ القالب', 'Template saved'));
+      setEditingId(null);
+      load();
+    } else onToast(t('فشل الحفظ', 'Save failed'), true);
+  };
+
+  const deleteTemplate = async (id: number) => {
+    if (!confirm(t('تأكيد حذف القالب؟', 'Delete this template?'))) return;
+    const r = await apiMutation('emailAutomation.deleteTemplate', { id });
+    if (r?.success) {
+      onToast(t('تم الحذف', 'Deleted'));
+      if (editingId === id) setEditingId(null);
+      load();
+    } else onToast(t('فشل الحذف', 'Delete failed'), true);
+  };
+
+  const toggleTplActive = async (tm: any) => {
+    await apiMutation('emailAutomation.updateTemplate', { id: tm.id, isActive: tm.isActive ? 0 : 1 });
+    load();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-lg font-bold">{t('الإيميل والأتمتة', 'Email & automation')}</h3>
-        <button type="button" onClick={seed} className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500">
+        <div>
+          <h3 className="text-lg font-bold">{t('الإيميل والأتمتة', 'Email & automation')}</h3>
+          <p className="text-xs text-gray-500 mt-0.5">{t('تحرير HTML كامل للقوالب المرسلة من المنتج العام.', 'Full HTML for public-product emails.')}</p>
+        </div>
+        <button type="button" onClick={seed} className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500 shrink-0">
           {t('زرع القوالب الافتراضية', 'Seed default templates')}
         </button>
       </div>
@@ -389,14 +433,51 @@ function EmailAutomationTab({ t, onToast }: { t: T; onToast: (msg: string, err?:
         ) : (
           <ul className="divide-y divide-gray-100">
             {templates.map((tm: any) => (
-              <li key={tm.id} className="py-2 flex justify-between gap-2 text-sm">
-                <span><b>{tm.name}</b> <span className="text-gray-400 text-xs">({tm.type})</span></span>
-                <span className={`text-xs ${tm.isActive ? 'text-green-600' : 'text-gray-400'}`}>{tm.isActive ? t('نشط', 'On') : t('متوقف', 'Off')}</span>
+              <li key={tm.id} className="py-3 flex flex-wrap items-start justify-between gap-2 text-sm">
+                <div>
+                  <b>{tm.name}</b> <span className="text-gray-400 text-xs">({tm.type})</span>
+                  <p className="text-xs text-gray-500 mt-0.5 truncate max-w-md">{tm.subject}</p>
+                </div>
+                <div className="flex flex-wrap gap-1 shrink-0">
+                  <button type="button" onClick={() => openEditor(tm)} className="text-xs px-2 py-1 rounded bg-indigo-100 text-indigo-700 hover:bg-indigo-200">{t('تحرير', 'Edit')}</button>
+                  <button type="button" onClick={() => toggleTplActive(tm)} className={`text-xs px-2 py-1 rounded ${tm.isActive ? 'bg-gray-100 text-gray-600' : 'bg-amber-100 text-amber-800'}`}>
+                    {tm.isActive ? t('إيقاف', 'Off') : t('تشغيل', 'On')}
+                  </button>
+                  <button type="button" onClick={() => deleteTemplate(tm.id)} className="text-xs px-2 py-1 rounded bg-red-50 text-red-600 hover:bg-red-100">{t('حذف', 'Del')}</button>
+                </div>
               </li>
             ))}
           </ul>
         )}
       </div>
+
+      {editingId !== null && (
+        <div className="p-5 rounded-xl border-2 border-indigo-200 bg-indigo-50/30 shadow-sm space-y-3">
+          <h4 className="text-sm font-bold text-gray-800">{t('محرر القالب', 'Template editor')} #{editingId}</h4>
+          <input
+            className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm"
+            placeholder="Subject (EN)"
+            value={draft.subject}
+            onChange={(e) => setDraft((d) => ({ ...d, subject: e.target.value }))}
+          />
+          <input
+            className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm"
+            placeholder="Subject (AR)"
+            value={draft.subjectAr}
+            onChange={(e) => setDraft((d) => ({ ...d, subjectAr: e.target.value }))}
+          />
+          <textarea
+            className="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs font-mono min-h-[220px]"
+            placeholder="HTML"
+            value={draft.html}
+            onChange={(e) => setDraft((d) => ({ ...d, html: e.target.value }))}
+          />
+          <div className="flex gap-2">
+            <button type="button" onClick={saveTemplate} className="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-500">{t('حفظ', 'Save')}</button>
+            <button type="button" onClick={() => setEditingId(null)} className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">{t('إلغاء', 'Cancel')}</button>
+          </div>
+        </div>
+      )}
 
       <div className="p-5 rounded-xl border border-gray-200 bg-white shadow-sm">
         <h4 className="text-sm font-bold text-gray-600 mb-3">{t('قواعد الأتمتة', 'Automation rules')} ({rules?.length ?? '…'})</h4>
@@ -1715,6 +1796,9 @@ export default function WzrdAdmin() {
             <span className="font-mono text-lg font-bold">WZRD <span className="text-indigo-600">AI</span></span>
             <span className="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full font-bold">{t('أدمن', 'ADMIN')}</span>
           </div>
+          <p className="text-[10px] text-gray-500 mt-2 leading-relaxed">
+            {t('إدارة الموقع والمنتج العام فقط — منفصلة تماماً عن Primo Command Center.', 'Public website & product only — separate from Primo Command Center.')}
+          </p>
         </div>
         <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
           {TABS.map(tabItem => (
@@ -1729,7 +1813,7 @@ export default function WzrdAdmin() {
           ))}
         </nav>
         <div className="p-4 border-t border-gray-100 text-[10px] text-gray-400 text-center">
-          <span className="opacity-60">{t('اختصار: 1–9 أول تبويبات', 'Shortcuts: 1–9 first tabs')}</span><br />Primo Marca © 2026
+          <span className="opacity-60">{t('اختصار: 1–9 أول تبويبات', 'Shortcuts: 1–9 first tabs')}</span><br />WZRD AI · {t('عمليات', 'Operations')}
         </div>
       </aside>
 
@@ -1753,7 +1837,7 @@ export default function WzrdAdmin() {
               <button onClick={() => { setTab('users'); setSidebarOpen(false); }} className="px-3 py-1.5 rounded-lg bg-amber-50 text-amber-600 text-xs font-medium hover:bg-amber-100">+ {t('كريدت', 'Credits')}</button>
               <span className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 cursor-pointer" title="Notifications">🔔</span>
               <button onClick={toggleLocale} className="text-[11px] px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200 font-medium">{locale === 'ar' ? 'EN' : 'ع'}</button>
-              <a href="/" className="text-xs text-gray-500 hover:text-amber-600">{t('← لوحة التحكم', '← Dashboard')}</a>
+              <a href="/welcome" className="text-xs text-gray-500 hover:text-amber-600">{t('← الموقع العام', '← Public site')}</a>
             </div>
           </div>
         </header>

@@ -63,6 +63,21 @@ export default function Home() {
       {/* Guided Tour for first-time users */}
       <OnboardingTour isAr={locale === 'ar'} />
 
+      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <Badge variant="secondary" className="font-normal">
+          {locale === "ar" ? "Primo Marca · Command Center (داخلي)" : "Primo Marca · Command Center (internal)"}
+        </Badge>
+        <a
+          href="/wzrd-admin"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 underline-offset-4 hover:underline hover:text-primary"
+        >
+          {locale === "ar" ? "إدارة منتج WZRD العام" : "WZRD public product admin"}
+          <ExternalLink className="h-3 w-3" />
+        </a>
+      </div>
+
       {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{t("dashboard.title")}</h1>
