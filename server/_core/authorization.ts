@@ -125,6 +125,13 @@ function isOwnerAdmin(user: { email?: string; role?: string }): boolean {
   return email === 'ramy.mortada@gmail.com';
 }
 
+/** True if this session may use WZRD Super Admin APIs (same rules as checkOwner). */
+export function isSuperAdmin(ctx: TrpcContext): boolean {
+  const user = ctx.user as { email?: string; role?: string } | null;
+  if (!user) return false;
+  return isOwnerAdmin(user);
+}
+
 // Pre-built role checks — checkOwner: admin role or allowlisted email(s)
 export function checkOwner(ctx: TrpcContext) {
   const user = ctx.user as { id?: number; email?: string; role?: string } | null;

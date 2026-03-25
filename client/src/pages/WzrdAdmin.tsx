@@ -5,7 +5,21 @@
 import { useState, useEffect, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
-type Tab = 'overview' | 'users' | 'credits' | 'tools' | 'payments' | 'webhooks' | 'cms' | 'prompts' | 'pricing' | 'team' | 'agency' | 'config';
+type Tab =
+  | 'command'
+  | 'overview'
+  | 'users'
+  | 'credits'
+  | 'tools'
+  | 'payments'
+  | 'webhooks'
+  | 'cms'
+  | 'prompts'
+  | 'pricing'
+  | 'email'
+  | 'team'
+  | 'agency'
+  | 'config';
 
 const FETCH_OPTS: RequestInit = { credentials: 'include' };
 
@@ -241,6 +255,175 @@ function OverviewTab({ t }: { t: T }) {
 }
 
 // ═══════════════════════════════════════
+// COMMAND CENTER — unified control hub
+// ═══════════════════════════════════════
+function CommandCenterTab({ t, setTab }: { t: T; setTab: (id: Tab) => void }) {
+  const [snap, setSnap] = useState<Record<string, unknown> | null>(null);
+  const [act, setAct] = useState<{ activities?: any[] } | null>(null);
+
+  useEffect(() => {
+    api('wzrdAdmin.commandCenter').then(setSnap);
+    api('wzrdAdmin.activityLog').then(setAct);
+  }, []);
+
+  const quick: Array<{ id: Tab; ar: string; en: string; icon: string }> = [
+    { id: 'overview', ar: 'نظرة عامة', en: 'Overview', icon: '📊' },
+    { id: 'cms', ar: 'محتوى الموقع', en: 'Site CMS', icon: '📝' },
+    { id: 'users', ar: 'المستخدمين', en: 'Users', icon: '👥' },
+    { id: 'credits', ar: 'الكريدت', en: 'Credits', icon: '⚡' },
+    { id: 'tools', ar: 'الأدوات', en: 'Tools', icon: '🔬' },
+    { id: 'prompts', ar: 'برومبتات AI', en: 'AI Prompts', icon: '🧠' },
+    { id: 'pricing', ar: 'باقات وخصومات', en: 'Plans & promos', icon: '💰' },
+    { id: 'email', ar: 'إيميل وأتمتة', en: 'Email automation', icon: '📧' },
+    { id: 'payments', ar: 'مدفوعات', en: 'Payments', icon: '💳' },
+    { id: 'webhooks', ar: 'Webhooks', en: 'Webhooks', icon: '🔔' },
+    { id: 'agency', ar: 'الوكالة', en: 'Agency', icon: '🏢' },
+    { id: 'team', ar: 'الفريق', en: 'Team', icon: '👔' },
+    { id: 'config', ar: 'إعدادات تقنية', en: 'Tech config', icon: '⚙️' },
+  ];
+
+  const flag = (on: boolean) => (on ? '✓' : '—');
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-gray-900 mb-1">{t('مركز القيادة', 'Command center')}</h2>
+        <p className="text-sm text-gray-500">{t('تشغيل كل أجزاء WZRD من مكان واحد.', 'Run WZRD from one place.')}</p>
+      </div>
+
+      {snap && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatCard label={t('بيئة', 'Environment')} value={String(snap.environment || '—')} icon="🌐" accent="border-l-slate-500" gradient="from-slate-50/80 to-white" />
+          <StatCard label={t('إحالات', 'Referrals')} value={Number(snap.referralRecords || 0)} icon="🎁" accent="border-l-pink-500" gradient="from-pink-50/50 to-white" />
+          <StatCard label={t('رسائل كوبايلوت', 'Copilot msgs')} value={Number(snap.copilotMessages || 0)} icon="💬" accent="border-l-violet-500" gradient="from-violet-50/50 to-white" />
+          <StatCard label={t('قاعدة البيانات', 'Database')} value={snap.databaseConnected ? t('متصل', 'OK') : t('لا', 'No')} icon="🗄️" accent="border-l-teal-500" gradient="from-teal-50/50 to-white" />
+        </div>
+      )}
+
+      <div className="p-5 rounded-xl border border-gray-200 bg-white shadow-sm">
+        <h4 className="text-sm font-bold text-gray-600 mb-3">{t('حالة التكامل', 'Integrations')}</h4>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs font-mono">
+          <div className="p-2 rounded-lg bg-gray-50">{t('Groq', 'Groq')}: <b>{flag(!!snap?.hasGroq)}</b></div>
+          <div className="p-2 rounded-lg bg-gray-50">{t('Claude', 'Claude')}: <b>{flag(!!snap?.hasClaude)}</b></div>
+          <div className="p-2 rounded-lg bg-gray-50">Paymob: <b>{flag(!!snap?.hasPaymob)}</b></div>
+          <div className="p-2 rounded-lg bg-gray-50">{t('مفتاح البريد', 'Email key')}: <b>{flag(!!snap?.hasEmailApiKey)}</b></div>
+          <div className="p-2 rounded-lg bg-gray-50">ADMIN_EMAILS: <b>{flag(!!snap?.adminEmailsFromEnv)}</b></div>
+          <div className="p-2 rounded-lg bg-gray-50">APP_URL: <b className="truncate block">{String(snap?.appUrl || '—').slice(0, 28)}</b></div>
+        </div>
+        <p className="text-[10px] text-gray-400 mt-3">
+          {t('متغيرات السيرفر الحساسة تضبط من Railway — اللوحة تعرض حالة فقط.', 'Secrets live in Railway — this panel shows status only.')}
+        </p>
+      </div>
+
+      <div className="p-5 rounded-xl border border-gray-200 bg-white shadow-sm">
+        <h4 className="text-sm font-bold text-gray-600 mb-3">{t('انتقال سريع', 'Quick navigation')}</h4>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+          {quick.map((q) => (
+            <button
+              key={q.id}
+              type="button"
+              onClick={() => setTab(q.id)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-100 bg-gray-50 text-left hover:bg-indigo-50 hover:border-indigo-200 text-xs font-medium text-gray-800 transition"
+            >
+              <span>{q.icon}</span> {t(q.ar, q.en)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {(act?.activities?.length ?? 0) > 0 && (
+        <div className="p-5 rounded-xl border border-gray-200 bg-white shadow-sm">
+          <h4 className="text-sm font-bold text-gray-600 mb-3">{t('نشاط نموذجي (LLM)', 'Recent LLM usage')}</h4>
+          <div className="space-y-1 max-h-48 overflow-y-auto">
+            {act!.activities!.slice(0, 15).map((a: any, i: number) => (
+              <div key={i} className="flex justify-between text-[11px] border-b border-gray-50 py-1">
+                <span className="text-gray-600 truncate max-w-[60%]">{a.model || a.context || '—'}</span>
+                <span className="text-gray-400">{a.createdAt ? timeAgo(new Date(a.createdAt)) : ''}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════
+// EMAIL AUTOMATION TAB
+// ═══════════════════════════════════════
+function EmailAutomationTab({ t, onToast }: { t: T; onToast: (msg: string, err?: boolean) => void }) {
+  const [templates, setTemplates] = useState<any[] | null>(null);
+  const [rules, setRules] = useState<any[] | null>(null);
+
+  const load = useCallback(() => {
+    api('emailAutomation.listTemplates').then((d: any) => setTemplates(d?.templates || []));
+    api('emailAutomation.listRules').then((d: any) => setRules(d?.rules || []));
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const seed = async () => {
+    const r = await apiMutation('emailAutomation.seedDefaults', {});
+    if (r?.success) { onToast(t('تم زرع القوالب', 'Templates seeded')); load(); }
+    else onToast(r?.error || t('فشل أو موجود مسبقاً', 'Failed or already exists'), true);
+  };
+
+  const toggleRule = async (id: number, currentlyActive: number) => {
+    await apiMutation('emailAutomation.updateRule', { id, isActive: currentlyActive ? 0 : 1 });
+    load();
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h3 className="text-lg font-bold">{t('الإيميل والأتمتة', 'Email & automation')}</h3>
+        <button type="button" onClick={seed} className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500">
+          {t('زرع القوالب الافتراضية', 'Seed default templates')}
+        </button>
+      </div>
+
+      <div className="p-5 rounded-xl border border-gray-200 bg-white shadow-sm">
+        <h4 className="text-sm font-bold text-gray-600 mb-3">{t('القوالب', 'Templates')} ({templates?.length ?? '…'})</h4>
+        {!templates?.length ? (
+          <p className="text-sm text-gray-400">{t('لا قوالب — اضغط زرع.', 'No templates — tap seed.')}</p>
+        ) : (
+          <ul className="divide-y divide-gray-100">
+            {templates.map((tm: any) => (
+              <li key={tm.id} className="py-2 flex justify-between gap-2 text-sm">
+                <span><b>{tm.name}</b> <span className="text-gray-400 text-xs">({tm.type})</span></span>
+                <span className={`text-xs ${tm.isActive ? 'text-green-600' : 'text-gray-400'}`}>{tm.isActive ? t('نشط', 'On') : t('متوقف', 'Off')}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="p-5 rounded-xl border border-gray-200 bg-white shadow-sm">
+        <h4 className="text-sm font-bold text-gray-600 mb-3">{t('قواعد الأتمتة', 'Automation rules')} ({rules?.length ?? '…'})</h4>
+        {!rules?.length ? (
+          <p className="text-sm text-gray-400">{t('لا قواعد بعد.', 'No rules yet.')}</p>
+        ) : (
+          <ul className="divide-y divide-gray-100">
+            {rules.map((r: any) => (
+              <li key={r.id} className="py-2 flex flex-wrap items-center justify-between gap-2 text-sm">
+                <span><b>{r.name}</b> <span className="text-gray-400 text-xs">{r.trigger}</span></span>
+                <button
+                  type="button"
+                  onClick={() => toggleRule(r.id, Number(r.isActive))}
+                  className={`text-xs px-2 py-1 rounded ${r.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}
+                >
+                  {r.isActive ? t('تعطيل', 'Disable') : t('تفعيل', 'Enable')}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════
 // USERS TAB
 // ═══════════════════════════════════════
 const PAGE_SIZE = 20;
@@ -434,6 +617,8 @@ function CreditsTab({ t }: { t: T }) {
     tool_usage: 'text-red-600 bg-red-400/10',
     refund: 'text-blue-400 bg-blue-400/10',
     admin: 'text-purple-400 bg-purple-400/10',
+    referral_bonus: 'text-cyan-600 bg-cyan-400/10',
+    copilot_refund: 'text-orange-600 bg-orange-400/10',
   };
 
   const filterLabels: Record<string, string> = {
@@ -443,6 +628,8 @@ function CreditsTab({ t }: { t: T }) {
     tool_usage: t('استخدام أداة', 'tool usage'),
     refund: t('استرجاع', 'refund'),
     admin: t('أدمن', 'admin'),
+    referral_bonus: t('إحالة', 'referral'),
+    copilot_refund: t('استرداد كوبايلوت', 'copilot refund'),
   };
 
   return (
@@ -460,7 +647,7 @@ function CreditsTab({ t }: { t: T }) {
             ↓ {t('تصدير CSV', 'Export CSV')}
           </button>
           <div className="flex gap-1">
-          {['all', 'signup_bonus', 'purchase', 'tool_usage', 'refund', 'admin'].map(f => (
+          {['all', 'signup_bonus', 'purchase', 'tool_usage', 'refund', 'admin', 'referral_bonus', 'copilot_refund'].map(f => (
             <button key={f} onClick={() => setFilter(f)}
               className={`px-3 py-1 rounded-full text-xs font-medium transition ${filter === f ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-gray-50 text-gray-500 hover:text-indigo-600'}`}>
               {filterLabels[f] || f.replace(/_/g, ' ')}
@@ -1422,6 +1609,7 @@ function AgencyTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; on
 // MAIN PAGE
 // ═══════════════════════════════════════
 const TABS: Array<{ id: Tab; labelAr: string; labelEn: string; icon: string }> = [
+  { id: 'command', labelAr: 'مركز القيادة', labelEn: 'Command', icon: '🎛️' },
   { id: 'overview', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: '📊' },
   { id: 'cms', labelAr: 'المحتوى', labelEn: 'CMS', icon: '📝' },
   { id: 'agency', labelAr: 'الوكالة', labelEn: 'Agency', icon: '🏢' },
@@ -1430,16 +1618,20 @@ const TABS: Array<{ id: Tab; labelAr: string; labelEn: string; icon: string }> =
   { id: 'tools', labelAr: 'الأدوات', labelEn: 'Tools', icon: '🔬' },
   { id: 'prompts', labelAr: 'الأوامر', labelEn: 'Prompts', icon: '🧠' },
   { id: 'pricing', labelAr: 'الباقات والخصومات', labelEn: 'Plans & Promos', icon: '💰' },
+  { id: 'email', labelAr: 'إيميل وأتمتة', labelEn: 'Email', icon: '📧' },
   { id: 'team', labelAr: 'الفريق', labelEn: 'Team', icon: '👔' },
   { id: 'payments', labelAr: 'المدفوعات', labelEn: 'Payments', icon: '💳' },
   { id: 'webhooks', labelAr: 'الإشعارات', labelEn: 'Webhooks', icon: '🔔' },
   { id: 'config', labelAr: 'الإعدادات', labelEn: 'Config', icon: '⚙️' },
 ];
 
+type AdminGate = 'loading' | 'anon' | 'denied' | 'ok';
+
 export default function WzrdAdmin() {
-  const [tab, setTab] = useState<Tab>('overview');
+  const [tab, setTab] = useState<Tab>('command');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [adminUser, setAdminUser] = useState<{ name?: string } | null | undefined>(undefined);
+  const [gate, setGate] = useState<AdminGate>('loading');
   const [toast, setToast] = useState<{ message: string; type?: 'success' | 'error' } | null>(null);
   const [locale, setLocale] = useState<'ar' | 'en'>(() =>
     (typeof window !== 'undefined' && (localStorage.getItem('wzrd-admin-locale') as 'ar' | 'en')) || 'ar'
@@ -1452,13 +1644,25 @@ export default function WzrdAdmin() {
   };
 
   useEffect(() => {
-    fetch('/api/trpc/auth.me', { credentials: 'include' })
-      .then((r) => r.json())
-      .then((d) => {
-        const user = d?.result?.data?.json ?? d?.result?.data ?? null;
-        setAdminUser(user && typeof user === 'object' ? user : null);
-      })
-      .catch(() => setAdminUser(null));
+    let cancelled = false;
+    (async () => {
+      const meRes = await fetch('/api/trpc/auth.me', { credentials: 'include' });
+      const meJ = await meRes.json().catch(() => ({}));
+      const user = meJ?.result?.data?.json ?? meJ?.result?.data ?? null;
+      if (cancelled) return;
+      setAdminUser(user && typeof user === 'object' ? user : null);
+      if (!user) {
+        setGate('anon');
+        return;
+      }
+      const bsRes = await fetch('/api/trpc/wzrdAdmin.bootstrap', { credentials: 'include' });
+      const bsJ = await bsRes.json().catch(() => ({}));
+      const bs = bsJ?.result?.data?.json ?? bsJ?.result?.data;
+      if (cancelled) return;
+      if (bs?.superAdmin) setGate('ok');
+      else setGate('denied');
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -1483,8 +1687,20 @@ export default function WzrdAdmin() {
     <div dir={isRtl ? 'rtl' : 'ltr'} className="min-h-screen bg-gray-50 text-gray-900 font-sans flex">
       {toast && <Toast message={toast.message} type={toast.type} onDismiss={dismissToast} />}
 
+      {gate === 'denied' && (
+        <div className="fixed inset-0 z-[98] bg-gray-900/70 flex items-center justify-center p-6">
+          <div className="max-w-md bg-white rounded-2xl p-8 shadow-2xl text-center border border-gray-200">
+            <p className="text-lg font-bold text-gray-900 mb-2">{t('مفيش صلاحية سوبر أدمن', 'Not a super admin')}</p>
+            <p className="text-sm text-gray-600 mb-6">
+              {t('الحساب مسجّل لكن مش من قائمة المالكين. اتواصل مع مدير المنصة أو ضبط ADMIN_EMAILS على Railway.', 'Your account is signed in but is not allowlisted. Ask the owner or set ADMIN_EMAILS in Railway.')}
+            </p>
+            <a href="/" className="inline-flex px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-500">{t('العودة للموقع', 'Back to site')}</a>
+          </div>
+        </div>
+      )}
+
       {/* Session guard — show banner if not logged in */}
-      {adminUser === null && (
+      {gate === 'anon' && (
         <div className="fixed top-0 left-0 right-0 z-[99] bg-amber-500 text-white py-2 px-4 text-center text-sm">
           {t('سجّل دخولك الأول', 'Please log in first')} — <a href="/login" className="underline font-bold">{t('تسجيل الدخول', 'Sign in')}</a>
         </div>
@@ -1513,7 +1729,7 @@ export default function WzrdAdmin() {
           ))}
         </nav>
         <div className="p-4 border-t border-gray-100 text-[10px] text-gray-400 text-center">
-          <span className="opacity-60">{t('1–9 لوحة', '1–9 tabs')}</span><br />Primo Marca © 2026
+          <span className="opacity-60">{t('اختصار: 1–9 أول تبويبات', 'Shortcuts: 1–9 first tabs')}</span><br />Primo Marca © 2026
         </div>
       </aside>
 
@@ -1544,18 +1760,28 @@ export default function WzrdAdmin() {
 
         <main className="flex-1 p-6 overflow-auto">
           <div className="max-w-5xl mx-auto">
-            {tab === 'overview' && <OverviewTab t={t} />}
-            {tab === 'cms' && <CmsTab t={t} onSuccess={() => showToast(t('تم الحفظ', 'Saved!'))} onError={(m) => showToast(m, 'error')} />}
-            {tab === 'agency' && <AgencyTab t={t} onSuccess={() => showToast(t('تم الحفظ', 'Saved!'))} onError={(m) => showToast(m, 'error')} />}
-            {tab === 'users' && <UsersTab t={t} onSuccess={(m) => showToast(m || t('تم إضافة الكريدت', 'Credits added!'))} onError={(m) => showToast(m, 'error')} />}
-            {tab === 'credits' && <CreditsTab t={t} />}
-            {tab === 'tools' && <ToolsTab t={t} />}
-            {tab === 'prompts' && <PromptsTab t={t} />}
-            {tab === 'pricing' && <PricingTab t={t} onSuccess={() => showToast(t('تم الحفظ', 'Saved!'))} onError={(m) => showToast(m, 'error')} />}
-            {tab === 'team' && <TeamTab t={t} />}
-            {tab === 'payments' && <PaymentsTab t={t} />}
-            {tab === 'webhooks' && <WebhooksTab t={t} />}
-            {tab === 'config' && <ConfigTab t={t} />}
+            {gate === 'loading' && (
+              <div className="py-24 text-center text-gray-400 text-sm">{t('جاري التحقق من الصلاحيات…', 'Verifying access…')}</div>
+            )}
+            {tab === 'command' && gate === 'ok' && <CommandCenterTab t={t} setTab={setTab} />}
+            {tab === 'overview' && gate === 'ok' && <OverviewTab t={t} />}
+            {tab === 'cms' && gate === 'ok' && <CmsTab t={t} onSuccess={() => showToast(t('تم الحفظ', 'Saved!'))} onError={(m) => showToast(m, 'error')} />}
+            {tab === 'agency' && gate === 'ok' && <AgencyTab t={t} onSuccess={() => showToast(t('تم الحفظ', 'Saved!'))} onError={(m) => showToast(m, 'error')} />}
+            {tab === 'users' && gate === 'ok' && <UsersTab t={t} onSuccess={(m) => showToast(m || t('تم إضافة الكريدت', 'Credits added!'))} onError={(m) => showToast(m, 'error')} />}
+            {tab === 'credits' && gate === 'ok' && <CreditsTab t={t} />}
+            {tab === 'tools' && gate === 'ok' && <ToolsTab t={t} />}
+            {tab === 'prompts' && gate === 'ok' && <PromptsTab t={t} />}
+            {tab === 'pricing' && gate === 'ok' && <PricingTab t={t} onSuccess={() => showToast(t('تم الحفظ', 'Saved!'))} onError={(m) => showToast(m, 'error')} />}
+            {tab === 'email' && gate === 'ok' && (
+              <EmailAutomationTab
+                t={t}
+                onToast={(msg, err) => showToast(msg, err ? 'error' : 'success')}
+              />
+            )}
+            {tab === 'team' && gate === 'ok' && <TeamTab t={t} />}
+            {tab === 'payments' && gate === 'ok' && <PaymentsTab t={t} />}
+            {tab === 'webhooks' && gate === 'ok' && <WebhooksTab t={t} />}
+            {tab === 'config' && gate === 'ok' && <ConfigTab t={t} />}
           </div>
         </main>
       </div>

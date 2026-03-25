@@ -188,10 +188,10 @@ footer{padding:48px 28px 32px;text-align:center;border-top:1px solid var(--borde
  <div class="hero-grid">
   <div class="hero-text fi">
    <div class="hero-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg><span data-ar="من بريمو ماركا" data-en="by Primo Marca">من بريمو ماركا</span></div>
-   <h1 data-ar="شخّص البراند بتاعك<br><em>بالذكاء الاصطناعي</em>" data-en="Diagnose your brand<br><em>with AI</em>">شخّص البراند بتاعك<br><em>بالذكاء الاصطناعي</em></h1>
-   <p class="hero-p" data-ar="أدوات تشخيص احترافية مبنية على أطر أكاديمية عالمية. اعرف نقاط القوة والضعف في البراند — واللي محتاج يتصلح فوراً." data-en="Professional diagnostic tools built on global academic frameworks. Discover your brand's strengths, weaknesses, and what needs fixing now.">أدوات تشخيص احترافية مبنية على أطر أكاديمية عالمية. اعرف نقاط القوة والضعف في البراند — واللي محتاج يتصلح فوراً.</p>
+   <h1 id="wzrd-hero-title" data-ar="شخّص البراند بتاعك<br><em>بالذكاء الاصطناعي</em>" data-en="Diagnose your brand<br><em>with AI</em>">شخّص البراند بتاعك<br><em>بالذكاء الاصطناعي</em></h1>
+   <p id="wzrd-hero-sub" class="hero-p" data-ar="أدوات تشخيص احترافية مبنية على أطر أكاديمية عالمية. اعرف نقاط القوة والضعف في البراند — واللي محتاج يتصلح فوراً." data-en="Professional diagnostic tools built on global academic frameworks. Discover your brand's strengths, weaknesses, and what needs fixing now.">أدوات تشخيص احترافية مبنية على أطر أكاديمية عالمية. اعرف نقاط القوة والضعف في البراند — واللي محتاج يتصلح فوراً.</p>
    <div class="hero-btns">
-    <a href="/signup" class="btn-s btn-p" data-ar="سجّل مجاناً — ١٠٠ كريدت" data-en="Sign Up Free — 100 Credits">سجّل مجاناً — ١٠٠ كريدت</a>
+    <a id="wzrd-hero-cta" href="/signup" class="btn-s btn-p" data-ar="سجّل مجاناً — ١٠٠ كريدت" data-en="Sign Up Free — 100 Credits">سجّل مجاناً — ١٠٠ كريدت</a>
     <a href="#tools" class="btn-s btn-o" data-ar="شوف الأدوات" data-en="See Tools">شوف الأدوات</a>
    </div>
    <div class="hero-trust">
@@ -320,18 +320,41 @@ var o=new IntersectionObserver(function(e){e.forEach(function(x){if(x.isIntersec
 document.querySelectorAll('.fi').forEach(function(el){o.observe(el)});
 window.addEventListener('scroll',function(){document.getElementById('nav').classList.toggle('scrolled',window.scrollY>20)});
 var l=(function(){var s=localStorage.getItem('wzrd-locale');return(s==='en'||s==='ar')?s:'ar';})();
+window.WZRD_CMS=null;
+function applyCms(){
+ var c=window.WZRD_CMS;if(!c||!c.homepage)return;
+ var h=c.homepage, loc=(localStorage.getItem('wzrd-locale')==='en')?'en':'ar';
+ var titleEl=document.getElementById('wzrd-hero-title');
+ var subEl=document.getElementById('wzrd-hero-sub');
+ var ctaEl=document.getElementById('wzrd-hero-cta');
+ if(titleEl){
+  var ht=loc==='ar'?(h.heroTitleAr||h.heroTitle||''):(h.heroTitle||h.heroTitleAr||'');
+  if(ht) titleEl.innerHTML=String(ht).replace(/\n/g,'<br>');
+ }
+ if(subEl){
+  var st=loc==='ar'?(h.heroSubtitleAr||h.heroSubtitle||''):(h.heroSubtitle||h.heroSubtitleAr||'');
+  if(st) subEl.textContent=st;
+ }
+ if(ctaEl){
+  var ctaT=loc==='ar'?(h.ctaTextAr||h.ctaText||''):(h.ctaText||h.ctaTextAr||'');
+  if(ctaT) ctaEl.textContent=ctaT;
+  if(h.ctaUrl) ctaEl.setAttribute('href',h.ctaUrl);
+ }
+}
 function apply(){
  document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';
  document.body.classList.toggle('en-mode',l==='en');
  document.querySelectorAll('[data-ar]').forEach(function(e){var t=l==='ar'?e.getAttribute('data-ar'):e.getAttribute('data-en');if(t)e.innerHTML=t});
  document.querySelectorAll('.lang').forEach(function(b){b.textContent=l==='ar'?'EN':'ع'});
  var n=document.querySelectorAll('.step-n');if(n.length){if(l==='ar'){n[0].textContent='١';n[1].textContent='٢';n[2].textContent='٣'}else{n[0].textContent='1';n[1].textContent='2';n[2].textContent='3'}}
+ applyCms();
 }
 function tl(){
  l=l==='ar'?'en':'ar';localStorage.setItem('wzrd-locale',l);apply();
 }
 document.addEventListener('DOMContentLoaded',apply);
 (function(){if(document.cookie.includes('app_session_id=')){document.querySelectorAll('[href="/signup"]').forEach(function(e){e.setAttribute('href','/tools');e.innerHTML=l==='ar'?'روح للأدوات':'Go to Tools'})}})();
+fetch('/api/public/site-config').then(function(r){return r.json();}).then(function(c){window.WZRD_CMS=c;applyCms();}).catch(function(){});
 </script>
 </body>
 </html>

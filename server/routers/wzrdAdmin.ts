@@ -12,7 +12,7 @@
  */
 
 import { protectedProcedure, router } from "../_core/trpc";
-import { checkOwner } from "../_core/authorization";
+import { checkOwner, isSuperAdmin } from "../_core/authorization";
 import { z } from "zod";
 import { logger } from "../_core/logger";
 import { eq, desc, sql, and, like } from "drizzle-orm";
@@ -21,6 +21,53 @@ import { getDb } from "../db/index";
 import { TOOL_COSTS, SIGNUP_BONUS, getCreditStats, updateToolCost } from "../db/credits";
 
 export const wzrdAdminRouter = router({
+  /**
+   * Super-admin gate for the portal UI (does not throw — use for client layout).
+   * APIs still enforce checkOwner individually.
+   */
+  bootstrap: protectedProcedure.query(({ ctx }) => {
+    const u = ctx.user as { email?: string; name?: string } | null;
+    if (!u) return { authenticated: false as const, superAdmin: false };
+    return {
+      authenticated: true as const,
+      superAdmin: isSuperAdmin(ctx),
+      email: u.email ?? null,
+      name: u.name ?? null,
+    };
+  }),
+
+  /** Snapshot of env + product metrics for the command center tab */
+  commandCenter: protectedProcedure.query(async ({ ctx }) => {
+    checkOwner(ctx);
+    const db = await getDb();
+    let referralRecords = 0;
+    let copilotMessages = 0;
+    if (db) {
+      try {
+        const { referrals, copilotMessages: copilotMsgs } = await import("../../drizzle/schema");
+        const [r] = await db.select({ c: sql<number>`count(*)` }).from(referrals);
+        referralRecords = Number(r?.c ?? 0);
+        const [cm] = await db.select({ c: sql<number>`count(*)` }).from(copilotMsgs);
+        copilotMessages = Number(cm?.c ?? 0);
+      } catch {
+        /* migrations optional */
+      }
+    }
+    return {
+      environment: process.env.NODE_ENV || "development",
+      appUrl: process.env.APP_URL || "",
+      adminEmailsFromEnv: !!(process.env.ADMIN_EMAILS && process.env.ADMIN_EMAILS.trim()),
+      emailProvider: process.env.EMAIL_PROVIDER || "none",
+      hasGroq: !!process.env.GROQ_API_KEY,
+      hasClaude: !!process.env.ANTHROPIC_API_KEY,
+      hasPaymob: !!(process.env.PAYMOB_SECRET_KEY && process.env.PAYMOB_PUBLIC_KEY),
+      hasEmailApiKey: !!process.env.EMAIL_API_KEY,
+      databaseConnected: !!db,
+      referralRecords,
+      copilotMessages,
+    };
+  }),
+
   /** Overview dashboard — all key metrics */
   dashboard: protectedProcedure.query(async ({ ctx }) => {
     checkOwner(ctx);
@@ -151,7 +198,16 @@ export const wzrdAdminRouter = router({
   /** Credit transactions log */
   creditLog: protectedProcedure
     .input(z.object({
-      type: z.enum(['all', 'signup_bonus', 'purchase', 'tool_usage', 'refund', 'admin']).default('all'),
+      type: z.enum([
+        'all',
+        'signup_bonus',
+        'purchase',
+        'tool_usage',
+        'refund',
+        'admin',
+        'referral_bonus',
+        'copilot_refund',
+      ]).default('all'),
       limit: z.number().int().min(1).max(200).default(50),
       offset: z.number().int().min(0).default(0),
     }).optional())
