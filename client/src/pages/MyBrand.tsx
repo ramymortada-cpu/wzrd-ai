@@ -314,7 +314,7 @@ export default function MyBrand() {
               </div>
             )}
 
-            {/* ═══ REFERRAL + COPILOT CARDS ═══ */}
+            {/* ═══ FEATURE CARDS ═══ */}
             <div className="grid grid-cols-2 gap-3 mb-4">
               {/* Copilot Card */}
               <button
@@ -324,6 +324,26 @@ export default function MyBrand() {
                 <div className="text-2xl mb-2">🧙‍♂️</div>
                 <h4 className="text-sm font-bold text-gray-900">{isAr ? 'المستشار الذكي' : 'AI Copilot'}</h4>
                 <p className="text-xs text-gray-400 mt-1">{isAr ? 'اسأل أي سؤال' : 'Ask anything'}</p>
+              </button>
+
+              {/* Benchmark Card */}
+              <button
+                onClick={() => navigate('/tools/benchmark')}
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 text-center hover:shadow-md transition"
+              >
+                <div className="text-2xl mb-2">📊</div>
+                <h4 className="text-sm font-bold text-gray-900">{isAr ? 'قارن بالمنافسين' : 'Benchmark'}</h4>
+                <p className="text-xs text-gray-400 mt-1">{isAr ? '٤٠ كريدت' : '40 credits'}</p>
+              </button>
+
+              {/* Quick Diagnosis Card */}
+              <button
+                onClick={() => navigate('/tools/quick')}
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 text-center hover:shadow-md transition"
+              >
+                <div className="text-2xl mb-2">⚡</div>
+                <h4 className="text-sm font-bold text-gray-900">{isAr ? 'تشخيص سريع' : 'Quick Check'}</h4>
+                <p className="text-xs text-gray-400 mt-1">{isAr ? '٥ أسئلة بس' : '5 questions'}</p>
               </button>
 
               {/* Referral Card */}

@@ -22,6 +22,7 @@ function generateReportHtml(data: {
   score: number;
   label: string;
   findings: Array<{ title: string; detail: string; severity: string }>;
+  actionItems?: Array<{ task: string; difficulty: string }>;
   recommendation: string;
   userName?: string;
   date: string;
@@ -30,6 +31,8 @@ function generateReportHtml(data: {
   const severityBg = (s: string) => s === 'high' ? '#fef2f2' : s === 'medium' ? '#fffbeb' : '#ecfdf5';
   const severityColor = (s: string) => s === 'high' ? '#dc2626' : s === 'medium' ? '#d97706' : '#059669';
   const severityLabel = (s: string) => s === 'high' ? 'عالي' : s === 'medium' ? 'متوسط' : 'منخفض';
+  const diffLabel = (d: string) => d === 'easy' ? 'سهل' : d === 'hard' ? 'صعب' : 'متوسط';
+  const diffColor = (d: string) => d === 'easy' ? '#059669' : d === 'hard' ? '#dc2626' : '#d97706';
 
   const findingsHtml = data.findings.map(f => `
     <div style="padding:16px;border-radius:12px;background:${severityBg(f.severity)};border:1px solid ${severityColor(f.severity)}20;margin-bottom:10px">
@@ -40,6 +43,21 @@ function generateReportHtml(data: {
       <p style="font-size:13px;color:#475569;line-height:1.7;margin:0">${f.detail}</p>
     </div>
   `).join('');
+
+  const actionItemsHtml = (data.actionItems && data.actionItems.length > 0) ? `
+    <div style="margin-bottom:28px">
+      <div class="section-title">خطواتك العملية (${data.actionItems.length} مهمة)</div>
+      ${data.actionItems.map((item, i) => `
+        <div style="padding:12px 16px;border-radius:10px;background:#f0fdf4;border:1px solid #bbf7d0;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px">
+          <span style="flex-shrink:0;width:24px;height:24px;border-radius:6px;border:2px solid #86efac;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#166534">${i + 1}</span>
+          <div style="flex:1">
+            <span style="font-size:13px;color:#1e293b">${item.task}</span>
+          </div>
+          <span style="flex-shrink:0;font-size:10px;font-weight:700;color:${diffColor(item.difficulty)};background:${diffColor(item.difficulty)}15;padding:2px 8px;border-radius:50px">${diffLabel(item.difficulty)}</span>
+        </div>
+      `).join('')}
+    </div>
+  ` : '';
 
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -144,6 +162,9 @@ body{font-family:'IBM Plex Sans Arabic',sans-serif;background:#fff;color:#1e293b
     ${findingsHtml}
   </div>
 
+  <!-- Action Items -->
+  ${actionItemsHtml}
+
   <!-- Recommendation -->
   <div class="recommendation">
     <div class="section-title" style="border:none;padding:0;margin-bottom:8px">💡 التوصية</div>
@@ -153,8 +174,15 @@ body{font-family:'IBM Plex Sans Arabic',sans-serif;background:#fff;color:#1e293b
   <!-- CTA -->
   <div class="cta">
     <h3>عايز تقرير مفصّل أكتر؟</h3>
-    <p>التقرير الـ Premium فيه تحليل عميق لكل محور + خطة عمل ٩٠ يوم + Quick Wins</p>
+    <p>التقرير الـ Premium فيه تحليل عميق لكل محور + خطة عمل ٩٠ يوم + Quick Wins — بـ ٩٩ جنيه بس</p>
     <a href="${APP_URL}/tools">احصل على التقرير المفصّل ←</a>
+  </div>
+
+  <!-- Contact -->
+  <div style="text-align:center;padding:20px;border-radius:12px;background:#f8fafc;border:1px solid #e2e8f0;margin-bottom:28px">
+    <p style="font-size:13px;color:#64748b;margin-bottom:8px">محتاج مساعدة متخصصة؟</p>
+    <p style="font-size:14px;font-weight:700;color:#1e293b;margin-bottom:4px">احجز Clarity Call مجاني — ١٥ دقيقة مع خبير</p>
+    <a href="${APP_URL}/services-info" style="font-size:13px;color:#4f46e5;text-decoration:none">اعرف أكتر عن خدماتنا ←</a>
   </div>
 
   <!-- Footer -->
@@ -196,6 +224,10 @@ export const reportPdfRouter = router({
         detail: z.string(),
         severity: z.string(),
       })),
+      actionItems: z.array(z.object({
+        task: z.string(),
+        difficulty: z.string(),
+      })).optional(),
       recommendation: z.string(),
     }))
     .mutation(({ input, ctx }) => {
@@ -204,6 +236,7 @@ export const reportPdfRouter = router({
 
       const html = generateReportHtml({
         ...input,
+        actionItems: input.actionItems || [],
         userName,
         date,
       });
@@ -224,6 +257,10 @@ export const reportPdfRouter = router({
         detail: z.string(),
         severity: z.string(),
       })),
+      actionItems: z.array(z.object({
+        task: z.string(),
+        difficulty: z.string(),
+      })).optional(),
       recommendation: z.string(),
       email: z.string().email().max(320),
     }))
@@ -237,6 +274,7 @@ export const reportPdfRouter = router({
         score: input.score,
         label: input.label,
         findings: input.findings,
+        actionItems: input.actionItems || [],
         recommendation: input.recommendation,
         userName,
         date,

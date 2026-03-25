@@ -27,11 +27,13 @@ const ROUTE_MAP: Record<string, string> = {
 
 const FALLBACK_TOOLS: ToolInfo[] = [
   { id: 'brand_diagnosis', name: 'Brand Diagnosis', nameAr: 'تشخيص البراند', desc: 'Health score + top issues. The starting point.', descAr: 'نتيجة صحة + أهم المشاكل. نقطة البداية.', icon: '🔬', color: '#6d5cff', cost: 20, route: '/tools/brand-diagnosis' },
+  { id: 'quick_diagnosis', name: 'Quick Diagnosis', nameAr: 'تشخيص سريع', desc: '5 questions only — fast results in 1 minute.', descAr: '٥ أسئلة بس — نتيجة سريعة في دقيقة.', icon: '⚡', color: '#06b6d4', cost: 20, route: '/tools/quick' },
   { id: 'offer_check', name: 'Offer Logic Check', nameAr: 'فحص منطق العرض', desc: 'Is your offer clear? Pricing logical?', descAr: 'العرض واضح؟ التسعير منطقي؟', icon: '📦', color: '#c8a24e', cost: 25, route: '/tools/offer-check' },
   { id: 'message_check', name: 'Message Check', nameAr: 'فحص الرسالة', desc: 'Messaging consistency and clarity.', descAr: 'اتساق ووضوح الرسالة.', icon: '💬', color: '#44ddc9', cost: 20, route: '/tools/message-check' },
   { id: 'presence_audit', name: 'Presence Audit', nameAr: 'فحص الحضور', desc: 'Cross-channel digital presence check.', descAr: 'فحص الحضور الرقمي عبر القنوات.', icon: '🌐', color: '#ff6b6b', cost: 25, route: '/tools/presence-audit' },
   { id: 'identity_snapshot', name: 'Identity Snapshot', nameAr: 'لقطة الهوية', desc: 'Does your personality match your audience?', descAr: 'شخصيتك بتتوافق مع جمهورك؟', icon: '🪞', color: '#a78bfa', cost: 20, route: '/tools/identity-snapshot' },
   { id: 'launch_readiness', name: 'Launch Readiness', nameAr: 'جاهزية الإطلاق', desc: 'How ready are you to go to market?', descAr: 'أد إيه أنت جاهز تنزل السوق؟', icon: '🚀', color: '#f59e0b', cost: 30, route: '/tools/launch-readiness' },
+  { id: 'competitive_benchmark', name: 'Competitive Benchmark', nameAr: 'مقارنة بالمنافسين', desc: 'Compare your brand against competitors.', descAr: 'قارن البراند بتاعك بالمنافسين.', icon: '📊', color: '#8b5cf6', cost: 40, route: '/tools/benchmark' },
 ];
 
 export default function Tools() {

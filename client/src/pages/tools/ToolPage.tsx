@@ -459,7 +459,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
                 try {
                   const res = await fetch('/api/trpc/reportPdf.generateHtml', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-                    body: JSON.stringify({ json: { toolName: config.name, toolNameAr: config.nameAr || config.name, score: result.score, label: result.label, findings: result.findings, recommendation: result.recommendation } }),
+                    body: JSON.stringify({ json: { toolName: config.name, toolNameAr: config.nameAr || config.name, score: result.score, label: result.label, findings: result.findings, actionItems: result.actionItems || [], recommendation: result.recommendation } }),
                   });
                   const data = await res.json();
                   const html = data?.result?.data?.json?.html;
@@ -475,7 +475,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
                 try {
                   await fetch('/api/trpc/reportPdf.sendToEmail', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-                    body: JSON.stringify({ json: { toolName: config.name, toolNameAr: config.nameAr || config.name, score: result.score, label: result.label, findings: result.findings, recommendation: result.recommendation, email } }),
+                    body: JSON.stringify({ json: { toolName: config.name, toolNameAr: config.nameAr || config.name, score: result.score, label: result.label, findings: result.findings, actionItems: result.actionItems || [], recommendation: result.recommendation, email } }),
                   });
                   alert('تم الإرسال! ✅');
                 } catch { alert('فشل الإرسال'); }
