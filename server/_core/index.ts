@@ -47,27 +47,6 @@ async function startServer() {
   // === SIMPLE HEALTH CHECK (for Docker/Railway — no auth, no params) ===
   app.get('/healthz', (_req, res) => res.status(200).json({ ok: true, uptime: Math.floor(process.uptime()) }));
 
-  // === DEBUG: cookie check (temporary — remove after debugging) ===
-  app.get('/api/debug/admin-check', (req, res) => {
-    const cookie = req.headers.cookie || '';
-    const hasSession = cookie.includes('app_session_id=');
-    res.json({
-      hasCookie: hasSession,
-      cookieHeader: cookie.substring(0, 100),
-      timestamp: new Date().toISOString(),
-    });
-  });
-
-  // === DEBUG: whoami — verify session and return user (temporary) ===
-  app.get('/api/debug/whoami', async (req, res) => {
-    try {
-      const ctx = await createContext({ req, res } as Parameters<typeof createContext>[0]);
-      res.json({ loggedIn: !!ctx.user, user: ctx.user ? { id: ctx.user.id, email: ctx.user.email, name: ctx.user.name, role: ctx.user.role } : null });
-    } catch (err: unknown) {
-      res.json({ loggedIn: false, error: err instanceof Error ? err.message : String(err) });
-    }
-  });
-
   // === RATE LIMITING ON PUBLIC ENDPOINTS ===
   // Quick-check uses LLM — most aggressive limiting (3 req/min)
   app.use('/api/trpc/leads.submitQuickCheck', rateLimiters.quickCheck);

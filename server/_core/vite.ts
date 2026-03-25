@@ -56,6 +56,12 @@ export async function setupVite(app: Express, server: Server) {
     app.get("/guides/offer-logic", (_req, res) => res.sendFile(path.resolve(landingPath, "guide-offer-logic.html")));
     app.get("/guides/brand-identity", (_req, res) => res.sendFile(path.resolve(landingPath, "guide-brand-identity.html")));
 
+    // SEO Landing Pages
+    const seoToolsDev = ['brand-diagnosis','offer-check','message-check','presence-audit','identity-snapshot','launch-readiness'];
+    for (const tool of seoToolsDev) {
+      app.get(`/seo/${tool}`, (_req, res) => res.sendFile(path.resolve(landingPath, "seo", `${tool}.html`)));
+    }
+
     app.get("/unsubscribe", async (req, res) => {
       const email = req.query.email as string;
       if (!email) { res.status(400).send("Email required"); return; }
@@ -110,6 +116,12 @@ export function serveStatic(app: Express) {
     app.get("/guides/brand-health", (_req, res) => res.sendFile(path.resolve(activeLandingPath, "guide-brand-health.html")));
     app.get("/guides/offer-logic", (_req, res) => res.sendFile(path.resolve(activeLandingPath, "guide-offer-logic.html")));
     app.get("/guides/brand-identity", (_req, res) => res.sendFile(path.resolve(activeLandingPath, "guide-brand-identity.html")));
+
+    // SEO Landing Pages — one per tool
+    const seoTools = ['brand-diagnosis','offer-check','message-check','presence-audit','identity-snapshot','launch-readiness'];
+    for (const tool of seoTools) {
+      app.get(`/seo/${tool}`, (_req, res) => res.sendFile(path.resolve(activeLandingPath, "seo", `${tool}.html`)));
+    }
 
     app.get("/unsubscribe", async (req, res) => {
       const email = req.query.email as string;
