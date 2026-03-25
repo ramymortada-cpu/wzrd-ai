@@ -162,6 +162,34 @@ function OverviewTab({ t }: { t: T }) {
           {refreshing ? t('جاري...', 'Refreshing...') : t('تحديث', 'Refresh')}
         </button>
       </div>
+
+      <div className="p-5 rounded-xl border border-gray-200 bg-white shadow-sm space-y-3">
+        <h4 className="text-sm font-bold text-gray-600">{t('روابط سريعة', 'Quick links')}</h4>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {[
+            { href: '/welcome', ar: 'الرئيسية', en: 'Home' },
+            { href: '/tools', ar: 'الأدوات', en: 'Tools' },
+            { href: '/tools/quick', ar: 'تشخيص سريع', en: 'Quick dx' },
+            { href: '/pricing', ar: 'الأسعار', en: 'Pricing' },
+            { href: '/signup', ar: 'تسجيل', en: 'Signup' },
+            { href: '/my-brand', ar: 'براندي', en: 'My brand' },
+            { href: '/copilot', ar: 'كوبايلوت', en: 'Copilot' },
+            { href: '/services-info', ar: 'الخدمات', en: 'Services' },
+          ].map((L) => (
+            <a key={L.href} href={L.href} target="_blank" rel="noopener noreferrer"
+              className="block text-center px-3 py-2 rounded-lg border border-gray-100 bg-gray-50 text-xs font-medium text-indigo-700 hover:bg-indigo-50 hover:border-indigo-200 transition">
+              {t(L.ar, L.en)}
+            </a>
+          ))}
+        </div>
+        <p className="text-[11px] text-gray-500 leading-relaxed border-t border-gray-100 pt-3">
+          {t(
+            'تقديرات تكلفة الطرفية (Groq وغيره): تعتمد على الموديل وحجم التوكن. راقب استهلاكك في كونسول المزوّد — كل تشخيص/أداة ≈ عدة آلاف توكن.',
+            'API cost (Groq, etc.) depends on model and tokens. Check your provider console — each tool run is typically a few thousand tokens.',
+          )}
+        </p>
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label={t('إجمالي التسجيلات', 'Total Signups')} value={data.users?.total || 0} sub={`+${data.users?.today || 0} ${t('النهاردة', 'today')}`} icon="👥" accent="border-l-indigo-500" gradient="from-indigo-50/50 to-white" />
         <StatCard label={t('هذا الأسبوع', 'This Week')} value={data.users?.thisWeek || 0} icon="📅" accent="border-l-cyan-500" gradient="from-cyan-50/50 to-white" />
@@ -1424,7 +1452,13 @@ export default function WzrdAdmin() {
   };
 
   useEffect(() => {
-    fetch('/api/debug/whoami', { credentials: 'include' }).then(r => r.json()).then(d => setAdminUser(d.user || null)).catch(() => setAdminUser(null));
+    fetch('/api/trpc/auth.me', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        const user = d?.result?.data?.json ?? d?.result?.data ?? null;
+        setAdminUser(user && typeof user === 'object' ? user : null);
+      })
+      .catch(() => setAdminUser(null));
   }, []);
 
   useEffect(() => {

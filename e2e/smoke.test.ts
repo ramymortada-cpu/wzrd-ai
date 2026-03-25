@@ -35,6 +35,14 @@ test.describe("WZRD AI Smoke Tests", () => {
     expect(body).toMatch(/تشخيص|diagnosis|أداة|tool/i);
   });
 
+  test("quick diagnosis page loads", async ({ page }) => {
+    await page.goto(`${BASE}/tools/quick`);
+    await page.waitForTimeout(2000);
+    const body = await page.textContent("body");
+    expect(body).not.toContain("Cannot GET");
+    expect(body).toMatch(/WZRD|quick|سريع|تشخيص|question/i);
+  });
+
   test("signup page loads", async ({ page }) => {
     await page.goto(`${BASE}/signup`);
     await page.waitForTimeout(1000);
