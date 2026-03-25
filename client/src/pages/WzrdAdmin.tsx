@@ -64,13 +64,13 @@ function timeAgo(date: Date) {
 function LoadingSkeleton() {
   return (
     <div className="space-y-4 animate-pulse">
-      <div className="h-8 bg-gray-200 rounded w-1/3" />
+      <div className="h-9 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded-xl w-2/5" />
       <div className="grid grid-cols-4 gap-4">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-24 bg-gray-200 rounded-xl" />
+          <div key={i} className="h-28 bg-gradient-to-br from-slate-100 to-slate-200/80 rounded-2xl" />
         ))}
       </div>
-      <div className="h-48 bg-gray-200 rounded-xl" />
+      <div className="h-52 bg-slate-100 rounded-2xl" />
     </div>
   );
 }
@@ -89,21 +89,35 @@ function StatusBadge({ status, t }: { status: string; t: (ar: string, en: string
 
 function EmptyState({ icon, message }: { icon: string; message: string }) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <span className="text-5xl mb-4 opacity-50">{icon}</span>
-      <p className="text-gray-500 text-sm">{message}</p>
+    <div className="flex flex-col items-center justify-center py-16 px-6 text-center rounded-2xl border border-dashed border-gray-200 bg-white/60">
+      <span className="text-5xl mb-4 drop-shadow-sm" aria-hidden>{icon}</span>
+      <p className="text-gray-500 text-sm max-w-sm leading-relaxed">{message}</p>
     </div>
   );
 }
 
 function Toast({ message, onDismiss, type = 'success' }: { message: string; onDismiss: () => void; type?: 'success' | 'error' }) {
   useEffect(() => {
-    const t = setTimeout(onDismiss, 4000);
+    const t = setTimeout(onDismiss, 5200);
     return () => clearTimeout(t);
   }, [onDismiss]);
+  const ok = type === 'success';
   return (
-    <div className={`fixed top-0 left-0 right-0 z-[100] py-3 px-6 text-center text-sm font-medium shadow-lg ${type === 'error' ? 'bg-red-600' : 'bg-green-600'} text-white`}>
-      {message}
+    <div
+      role="status"
+      className={`fixed top-4 left-1/2 -translate-x-1/2 md:left-auto md:right-6 md:translate-x-0 z-[100] flex items-center gap-3 pl-4 pr-2 py-3 max-w-[min(100vw-2rem,28rem)] rounded-2xl text-sm font-medium shadow-xl shadow-gray-900/10 border ${
+        ok ? 'bg-emerald-50 text-emerald-900 border-emerald-200/80' : 'bg-red-50 text-red-900 border-red-200/80'
+      }`}
+    >
+      <span className="text-lg shrink-0" aria-hidden>{ok ? '✓' : '!'}</span>
+      <span className="flex-1 text-start leading-snug">{message}</span>
+      <button
+        type="button"
+        onClick={onDismiss}
+        className={`shrink-0 rounded-xl px-2.5 py-1.5 text-xs font-semibold transition ${ok ? 'hover:bg-emerald-100' : 'hover:bg-red-100'}`}
+      >
+        ✕
+      </button>
     </div>
   );
 }
@@ -111,17 +125,17 @@ function Toast({ message, onDismiss, type = 'success' }: { message: string; onDi
 // ═══════════════════════════════════════
 // STAT CARD — icon, accent border, gradient, count-up
 // ═══════════════════════════════════════
-function StatCard({ label, value, sub, icon, accent = 'border-l-indigo-500', gradient = 'from-indigo-50/50 to-white' }: {
+function StatCard({ label, value, sub, icon, accent = 'border-s-indigo-500', gradient = 'from-indigo-50/50 to-white' }: {
   label: string; value: string | number; sub?: string; icon: string; accent?: string; gradient?: string;
 }) {
   return (
-    <div className={`p-5 rounded-xl border border-gray-200 bg-gradient-to-br ${gradient} shadow-sm hover:shadow-md transition-all border-l-4 ${accent}`}>
-      <div className="flex items-center gap-2 mb-1">
-        <span className="text-xl">{icon}</span>
-        <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">{label}</p>
+    <div className={`group p-5 rounded-2xl border border-gray-200/90 bg-gradient-to-br ${gradient} shadow-sm hover:shadow-md hover:border-indigo-200/60 transition-all duration-200 border-s-4 ${accent}`}>
+      <div className="flex items-center gap-2 mb-1.5">
+        <span className="text-xl grayscale group-hover:grayscale-0 transition-[filter]">{icon}</span>
+        <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">{label}</p>
       </div>
-      <p className="text-2xl font-bold font-mono text-gray-900">{typeof value === 'number' ? value.toLocaleString() : value}</p>
-      {sub && <p className="text-[10px] text-gray-400 mt-1">{sub}</p>}
+      <p className="text-2xl font-bold font-mono text-gray-900 tracking-tight">{typeof value === 'number' ? value.toLocaleString() : value}</p>
+      {sub && <p className="text-[11px] text-gray-500 mt-1.5">{sub}</p>}
     </div>
   );
 }
@@ -169,17 +183,17 @@ function OverviewTab({ t }: { t: T }) {
   if (!data) return <LoadingSkeleton />;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-gray-400">{t('تحديث كل 30 ثانية', 'Auto-refresh every 30s')}</span>
-        <button onClick={load} disabled={refreshing} className="text-xs text-indigo-600 hover:text-indigo-500 disabled:opacity-50">
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-gray-500">{t('تحديث كل 30 ثانية', 'Auto-refresh every 30s')}</span>
+        <button type="button" onClick={load} disabled={refreshing} className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 disabled:opacity-50 transition-colors shadow-sm">
           {refreshing ? t('جاري...', 'Refreshing...') : t('تحديث', 'Refresh')}
         </button>
       </div>
 
-      <div className="p-5 rounded-xl border border-gray-200 bg-white shadow-sm space-y-3">
-        <h4 className="text-sm font-bold text-gray-600">{t('روابط سريعة', 'Quick links')}</h4>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div className="p-5 md:p-6 rounded-2xl border border-gray-200/90 bg-white shadow-sm space-y-4">
+        <h4 className="text-sm font-bold text-gray-800">{t('روابط سريعة', 'Quick links')}</h4>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
           {[
             { href: '/welcome', ar: 'الرئيسية', en: 'Home' },
             { href: '/tools', ar: 'الأدوات', en: 'Tools' },
@@ -191,12 +205,12 @@ function OverviewTab({ t }: { t: T }) {
             { href: '/services-info', ar: 'الخدمات', en: 'Services' },
           ].map((L) => (
             <a key={L.href} href={L.href} target="_blank" rel="noopener noreferrer"
-              className="block text-center px-3 py-2 rounded-lg border border-gray-100 bg-gray-50 text-xs font-medium text-indigo-700 hover:bg-indigo-50 hover:border-indigo-200 transition">
+              className="block text-center px-3 py-2.5 rounded-xl border border-gray-100 bg-gray-50/90 text-xs font-semibold text-indigo-700 hover:bg-white hover:border-indigo-200 hover:shadow-md transition-all active:scale-[0.98]">
               {t(L.ar, L.en)}
             </a>
           ))}
         </div>
-        <p className="text-[11px] text-gray-500 leading-relaxed border-t border-gray-100 pt-3">
+        <p className="text-[11px] text-gray-600 leading-relaxed border-t border-gray-100 pt-4">
           {t(
             'تقديرات تكلفة الطرفية (Groq وغيره): تعتمد على الموديل وحجم التوكن. راقب استهلاكك في كونسول المزوّد — كل تشخيص/أداة ≈ عدة آلاف توكن.',
             'API cost (Groq, etc.) depends on model and tokens. Check your provider console — each tool run is typically a few thousand tokens.',
@@ -205,23 +219,23 @@ function OverviewTab({ t }: { t: T }) {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label={t('إجمالي التسجيلات', 'Total Signups')} value={data.users?.total || 0} sub={`+${data.users?.today || 0} ${t('النهاردة', 'today')}`} icon="👥" accent="border-l-indigo-500" gradient="from-indigo-50/50 to-white" />
-        <StatCard label={t('هذا الأسبوع', 'This Week')} value={data.users?.thisWeek || 0} icon="📅" accent="border-l-cyan-500" gradient="from-cyan-50/50 to-white" />
-        <StatCard label={t('عمليات التشخيص', 'Tool Runs')} value={data.tools?.totalRuns || 0} sub={`${t('متوسط النتيجة', 'Avg score')}: ${data.tools?.avgScore || '—'}`} icon="🔬" accent="border-l-amber-500" gradient="from-amber-50/50 to-white" />
-        <StatCard label={t('مشتركين النشرة', 'Newsletter Subs')} value={data.newsletter?.subscribers || 0} icon="📬" accent="border-l-green-500" gradient="from-green-50/50 to-white" />
+        <StatCard label={t('إجمالي التسجيلات', 'Total Signups')} value={data.users?.total || 0} sub={`+${data.users?.today || 0} ${t('النهاردة', 'today')}`} icon="👥" accent="border-s-indigo-500" gradient="from-indigo-50/50 to-white" />
+        <StatCard label={t('هذا الأسبوع', 'This Week')} value={data.users?.thisWeek || 0} icon="📅" accent="border-s-cyan-500" gradient="from-cyan-50/50 to-white" />
+        <StatCard label={t('عمليات التشخيص', 'Tool Runs')} value={data.tools?.totalRuns || 0} sub={`${t('متوسط النتيجة', 'Avg score')}: ${data.tools?.avgScore || '—'}`} icon="🔬" accent="border-s-amber-500" gradient="from-amber-50/50 to-white" />
+        <StatCard label={t('مشتركين النشرة', 'Newsletter Subs')} value={data.newsletter?.subscribers || 0} icon="📬" accent="border-s-green-500" gradient="from-green-50/50 to-white" />
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <StatCard label={t('كريدت صادر', 'Credits Issued')} value={data.credits?.totalIssued || 0} icon="⚡" accent="border-l-emerald-500" gradient="from-emerald-50/50 to-white" />
-        <StatCard label={t('كريدت مستخدم', 'Credits Used')} value={data.credits?.totalUsed || 0} icon="📉" accent="border-l-red-500" gradient="from-red-50/50 to-white" />
-        <StatCard label={t('إيرادات الكريدت', 'Credit Revenue')} value={`${(data.revenue?.totalCreditsRevenue || 0).toLocaleString()} ${t('كريدت', 'credits')}`} icon="💰" accent="border-l-amber-500" gradient="from-amber-50/50 to-white" />
+        <StatCard label={t('كريدت صادر', 'Credits Issued')} value={data.credits?.totalIssued || 0} icon="⚡" accent="border-s-emerald-500" gradient="from-emerald-50/50 to-white" />
+        <StatCard label={t('كريدت مستخدم', 'Credits Used')} value={data.credits?.totalUsed || 0} icon="📉" accent="border-s-red-500" gradient="from-red-50/50 to-white" />
+        <StatCard label={t('إيرادات الكريدت', 'Credit Revenue')} value={`${(data.revenue?.totalCreditsRevenue || 0).toLocaleString()} ${t('كريدت', 'credits')}`} icon="💰" accent="border-s-amber-500" gradient="from-amber-50/50 to-white" />
       </div>
 
       {(recentRuns?.runs?.length ?? 0) > 0 && (
-        <div className="p-5 rounded-xl border border-gray-200 bg-white shadow-sm">
-          <h4 className="text-sm font-bold text-gray-600 mb-3">{t('آخر النشاطات', 'Recent Activity')}</h4>
-          <div className="space-y-2">
+        <div className="p-5 md:p-6 rounded-2xl border border-gray-200/90 bg-white shadow-sm">
+          <h4 className="text-sm font-bold text-gray-800 mb-3">{t('آخر النشاطات', 'Recent Activity')}</h4>
+          <div className="divide-y divide-gray-100 rounded-xl border border-gray-100 overflow-hidden">
             {recentRuns!.runs.slice(0, 5).map((r: any) => (
-              <div key={r.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+              <div key={r.id} className="flex items-center justify-between py-3 px-3 hover:bg-slate-50/80">
                 <div>
                   <span className="text-sm font-medium">User #{r.userId}</span>
                   <span className="text-gray-500 mx-2">·</span>
@@ -235,11 +249,11 @@ function OverviewTab({ t }: { t: T }) {
       )}
 
       {data.tools?.topTools?.length > 0 && (
-        <div className="p-5 rounded-xl border border-gray-200 bg-white shadow-sm">
-          <h4 className="text-sm font-bold text-gray-600 mb-3">{t('أكتر الأدوات استخداماً', 'Top Tools')}</h4>
+        <div className="p-5 md:p-6 rounded-2xl border border-gray-200/90 bg-white shadow-sm">
+          <h4 className="text-sm font-bold text-gray-800 mb-3">{t('أكتر الأدوات استخداماً', 'Top Tools')}</h4>
           <div className="space-y-2">
             {data.tools.topTools.map((item: any) => (
-              <div key={item.tool} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition">
+              <div key={item.tool} className="flex items-center justify-between p-3 rounded-xl bg-gray-50/90 border border-gray-100 hover:border-indigo-100 hover:bg-white transition-colors">
                 <span className="text-sm font-medium">{item.tool?.replace(/_/g, ' ')}</span>
                 <div className="flex gap-4">
                   <span className="text-xs text-gray-500">{item.uses} {t('عملية', 'runs')}</span>
@@ -285,60 +299,77 @@ function CommandCenterTab({ t, setTab }: { t: T; setTab: (id: Tab) => void }) {
   const flag = (on: boolean) => (on ? '✓' : '—');
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-1">{t('مركز القيادة', 'Command center')}</h2>
-        <p className="text-sm text-gray-500">{t('تشغيل كل أجزاء WZRD من مكان واحد.', 'Run WZRD from one place.')}</p>
+    <div className="space-y-8">
+      <div className="rounded-2xl border border-indigo-100/80 bg-gradient-to-br from-indigo-50/50 via-white to-white px-5 py-4 shadow-sm">
+        <h2 className="text-xl font-bold text-gray-900 tracking-tight">{t('مركز القيادة', 'Command center')}</h2>
+        <p className="text-sm text-gray-600 mt-1 max-w-2xl leading-relaxed">{t('تشغيل كل أجزاء WZRD من مكان واحد.', 'Run WZRD from one place.')}</p>
       </div>
 
       {snap && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard label={t('بيئة', 'Environment')} value={String(snap.environment || '—')} icon="🌐" accent="border-l-slate-500" gradient="from-slate-50/80 to-white" />
-          <StatCard label={t('إحالات', 'Referrals')} value={Number(snap.referralRecords || 0)} icon="🎁" accent="border-l-pink-500" gradient="from-pink-50/50 to-white" />
-          <StatCard label={t('رسائل كوبايلوت', 'Copilot msgs')} value={Number(snap.copilotMessages || 0)} icon="💬" accent="border-l-violet-500" gradient="from-violet-50/50 to-white" />
-          <StatCard label={t('قاعدة البيانات', 'Database')} value={snap.databaseConnected ? t('متصل', 'OK') : t('لا', 'No')} icon="🗄️" accent="border-l-teal-500" gradient="from-teal-50/50 to-white" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          <StatCard label={t('بيئة', 'Environment')} value={String(snap.environment || '—')} icon="🌐" accent="border-s-slate-500" gradient="from-slate-50/80 to-white" />
+          <StatCard label={t('إحالات', 'Referrals')} value={Number(snap.referralRecords || 0)} icon="🎁" accent="border-s-pink-500" gradient="from-pink-50/50 to-white" />
+          <StatCard label={t('رسائل كوبايلوت', 'Copilot msgs')} value={Number(snap.copilotMessages || 0)} icon="💬" accent="border-s-violet-500" gradient="from-violet-50/50 to-white" />
+          <StatCard label={t('قاعدة البيانات', 'Database')} value={snap.databaseConnected ? t('متصل', 'OK') : t('لا', 'No')} icon="🗄️" accent="border-s-teal-500" gradient="from-teal-50/50 to-white" />
         </div>
       )}
 
-      <div className="p-5 rounded-xl border border-gray-200 bg-white shadow-sm">
-        <h4 className="text-sm font-bold text-gray-600 mb-3">{t('حالة التكامل', 'Integrations')}</h4>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs font-mono">
-          <div className="p-2 rounded-lg bg-gray-50">{t('Groq', 'Groq')}: <b>{flag(!!snap?.hasGroq)}</b></div>
-          <div className="p-2 rounded-lg bg-gray-50">{t('Claude', 'Claude')}: <b>{flag(!!snap?.hasClaude)}</b></div>
-          <div className="p-2 rounded-lg bg-gray-50">Paymob: <b>{flag(!!snap?.hasPaymob)}</b></div>
-          <div className="p-2 rounded-lg bg-gray-50">{t('مفتاح البريد', 'Email key')}: <b>{flag(!!snap?.hasEmailApiKey)}</b></div>
-          <div className="p-2 rounded-lg bg-gray-50">ADMIN_EMAILS: <b>{flag(!!snap?.adminEmailsFromEnv)}</b></div>
-          <div className="p-2 rounded-lg bg-gray-50">APP_URL: <b className="truncate block">{String(snap?.appUrl || '—').slice(0, 28)}</b></div>
+      <div className="p-5 md:p-6 rounded-2xl border border-gray-200/90 bg-white/90 shadow-sm shadow-slate-900/5">
+        <h4 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" aria-hidden />
+          {t('حالة التكامل', 'Integrations')}
+        </h4>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 text-xs">
+          {[
+            { k: 'hasGroq', label: t('Groq', 'Groq') },
+            { k: 'hasClaude', label: 'Claude' },
+            { k: 'hasPaymob', label: 'Paymob' },
+            { k: 'hasEmailApiKey', label: t('مفتاح البريد', 'Email key') },
+            { k: 'adminEmailsFromEnv', label: 'ADMIN_EMAILS' },
+          ].map(({ k, label }) => {
+            const on = !!(snap as any)?.[k];
+            return (
+              <div key={k} className={`flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border ${on ? 'bg-emerald-50/80 border-emerald-200/60' : 'bg-slate-50 border-slate-200/60'}`}>
+                <span className="font-medium text-gray-700 truncate">{label}</span>
+                <span className={`shrink-0 w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-bold ${on ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}`}>{flag(on)}</span>
+              </div>
+            );
+          })}
+          <div className="sm:col-span-2 md:col-span-3 flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border border-slate-200/60 bg-slate-50/80">
+            <span className="font-medium text-gray-700">APP_URL</span>
+            <code className="text-[10px] text-gray-600 truncate max-w-[65%] font-mono">{String(snap?.appUrl || '—')}</code>
+          </div>
         </div>
-        <p className="text-[10px] text-gray-400 mt-3">
-          {t('متغيرات السيرفر الحساسة تضبط من Railway — اللوحة تعرض حالة فقط.', 'Secrets live in Railway — this panel shows status only.')}
+        <p className="text-[11px] text-gray-500 mt-4 leading-relaxed">
+          {t('المفاتيح الحقيقية على Railway — هنا عرض الحالة فقط.', 'Secrets live in Railway — status only here.')}
         </p>
       </div>
 
-      <div className="p-5 rounded-xl border border-gray-200 bg-white shadow-sm">
-        <h4 className="text-sm font-bold text-gray-600 mb-3">{t('انتقال سريع', 'Quick navigation')}</h4>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+      <div className="p-5 md:p-6 rounded-2xl border border-gray-200/90 bg-white/90 shadow-sm">
+        <h4 className="text-sm font-bold text-gray-800 mb-4">{t('انتقال سريع', 'Quick navigation')}</h4>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
           {quick.map((q) => (
             <button
               key={q.id}
               type="button"
               onClick={() => setTab(q.id)}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-100 bg-gray-50 text-left hover:bg-indigo-50 hover:border-indigo-200 text-xs font-medium text-gray-800 transition"
+              className="group flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-gray-100 bg-gray-50/90 text-start hover:bg-white hover:border-indigo-200 hover:shadow-md hover:shadow-indigo-900/5 text-xs font-semibold text-gray-800 transition-all duration-150 active:scale-[0.98]"
             >
-              <span>{q.icon}</span> {t(q.ar, q.en)}
+              <span className="text-base opacity-80 group-hover:opacity-100 transition-opacity">{q.icon}</span>
+              <span className="truncate">{t(q.ar, q.en)}</span>
             </button>
           ))}
         </div>
       </div>
 
       {(act?.activities?.length ?? 0) > 0 && (
-        <div className="p-5 rounded-xl border border-gray-200 bg-white shadow-sm">
-          <h4 className="text-sm font-bold text-gray-600 mb-3">{t('نشاط نموذجي (LLM)', 'Recent LLM usage')}</h4>
-          <div className="space-y-1 max-h-48 overflow-y-auto">
+        <div className="p-5 md:p-6 rounded-2xl border border-gray-200/90 bg-white shadow-sm">
+          <h4 className="text-sm font-bold text-gray-800 mb-3">{t('نشاط نموذجي (LLM)', 'Recent LLM usage')}</h4>
+          <div className="space-y-0 max-h-52 overflow-y-auto rounded-xl border border-gray-100 divide-y divide-gray-100">
             {act!.activities!.slice(0, 15).map((a: any, i: number) => (
-              <div key={i} className="flex justify-between text-[11px] border-b border-gray-50 py-1">
-                <span className="text-gray-600 truncate max-w-[60%]">{a.model || a.context || '—'}</span>
-                <span className="text-gray-400">{a.createdAt ? timeAgo(new Date(a.createdAt)) : ''}</span>
+              <div key={i} className="flex justify-between gap-3 text-[11px] py-2 px-3 hover:bg-slate-50/80">
+                <span className="text-gray-700 truncate">{a.model || a.context || '—'}</span>
+                <span className="text-gray-400 tabular-nums shrink-0">{a.createdAt ? timeAgo(new Date(a.createdAt)) : ''}</span>
               </div>
             ))}
           </div>
@@ -415,18 +446,18 @@ function EmailAutomationTab({ t, onToast }: { t: T; onToast: (msg: string, err?:
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-8">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h3 className="text-lg font-bold">{t('الإيميل والأتمتة', 'Email & automation')}</h3>
-          <p className="text-xs text-gray-500 mt-0.5">{t('تحرير HTML كامل للقوالب المرسلة من المنتج العام.', 'Full HTML for public-product emails.')}</p>
+          <h3 className="text-lg font-bold text-gray-900 tracking-tight">{t('الإيميل والأتمتة', 'Email & automation')}</h3>
+          <p className="text-sm text-gray-600 mt-1 max-w-xl leading-relaxed">{t('تحرير HTML كامل للقوالب المرسلة من المنتج العام.', 'Full HTML for public-product emails.')}</p>
         </div>
-        <button type="button" onClick={seed} className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500 shrink-0">
+        <button type="button" onClick={seed} className="px-4 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-500 shadow-md shadow-indigo-600/20 shrink-0 transition-colors">
           {t('زرع القوالب الافتراضية', 'Seed default templates')}
         </button>
       </div>
 
-      <div className="p-5 rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="p-5 md:p-6 rounded-2xl border border-gray-200/90 bg-white shadow-sm">
         <h4 className="text-sm font-bold text-gray-600 mb-3">{t('القوالب', 'Templates')} ({templates?.length ?? '…'})</h4>
         {!templates?.length ? (
           <p className="text-sm text-gray-400">{t('لا قوالب — اضغط زرع.', 'No templates — tap seed.')}</p>
@@ -452,34 +483,37 @@ function EmailAutomationTab({ t, onToast }: { t: T; onToast: (msg: string, err?:
       </div>
 
       {editingId !== null && (
-        <div className="p-5 rounded-xl border-2 border-indigo-200 bg-indigo-50/30 shadow-sm space-y-3">
-          <h4 className="text-sm font-bold text-gray-800">{t('محرر القالب', 'Template editor')} #{editingId}</h4>
+        <div className="p-5 md:p-6 rounded-2xl border-2 border-indigo-200/90 bg-gradient-to-br from-indigo-50/40 to-white shadow-lg shadow-indigo-900/5 space-y-4">
+          <h4 className="text-sm font-bold text-gray-900">{t('محرر القالب', 'Template editor')} <span className="text-indigo-600">#{editingId}</span></h4>
+          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide">{t('العنوان EN', 'Subject EN')}</label>
           <input
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm"
+            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
             placeholder="Subject (EN)"
             value={draft.subject}
             onChange={(e) => setDraft((d) => ({ ...d, subject: e.target.value }))}
           />
+          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide">{t('العنوان AR', 'Subject AR')}</label>
           <input
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm"
+            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
             placeholder="Subject (AR)"
             value={draft.subjectAr}
             onChange={(e) => setDraft((d) => ({ ...d, subjectAr: e.target.value }))}
           />
+          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide">HTML</label>
           <textarea
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs font-mono min-h-[220px]"
+            className="w-full px-3 py-3 rounded-xl border border-gray-200 text-xs font-mono min-h-[240px] leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
             placeholder="HTML"
             value={draft.html}
             onChange={(e) => setDraft((d) => ({ ...d, html: e.target.value }))}
           />
-          <div className="flex gap-2">
-            <button type="button" onClick={saveTemplate} className="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-500">{t('حفظ', 'Save')}</button>
-            <button type="button" onClick={() => setEditingId(null)} className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">{t('إلغاء', 'Cancel')}</button>
+          <div className="flex flex-wrap gap-2 pt-1">
+            <button type="button" onClick={saveTemplate} className="px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-500 shadow-md shadow-emerald-600/20 transition-colors">{t('حفظ', 'Save')}</button>
+            <button type="button" onClick={() => setEditingId(null)} className="px-5 py-2.5 rounded-xl border border-gray-300 bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors">{t('إلغاء', 'Cancel')}</button>
           </div>
         </div>
       )}
 
-      <div className="p-5 rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="p-5 md:p-6 rounded-2xl border border-gray-200/90 bg-white shadow-sm">
         <h4 className="text-sm font-bold text-gray-600 mb-3">{t('قواعد الأتمتة', 'Automation rules')} ({rules?.length ?? '…'})</h4>
         {!rules?.length ? (
           <p className="text-sm text-gray-400">{t('لا قواعد بعد.', 'No rules yet.')}</p>
@@ -1066,9 +1100,9 @@ function EmailStatsSection({ t }: { t: T }) {
     <div className="mt-6">
       <h4 className="text-sm font-bold text-gray-600 mb-3">📧 {t('تحليلات البريد', 'Email Analytics')}</h4>
       <div className="grid grid-cols-3 gap-3 mb-4">
-        <StatCard label="Sent" value={stats.totalSent} icon="✓" accent="border-l-green-500" gradient="from-green-50/50 to-white" />
-        <StatCard label="Failed" value={stats.totalFailed} icon="✕" accent="border-l-red-500" gradient="from-red-50/50 to-white" />
-        <StatCard label="Skipped" value={stats.totalSkipped} icon="—" accent="border-l-gray-400" gradient="from-gray-50 to-white" />
+        <StatCard label="Sent" value={stats.totalSent} icon="✓" accent="border-s-green-500" gradient="from-green-50/50 to-white" />
+        <StatCard label="Failed" value={stats.totalFailed} icon="✕" accent="border-s-red-500" gradient="from-red-50/50 to-white" />
+        <StatCard label="Skipped" value={stats.totalSkipped} icon="—" accent="border-s-gray-400" gradient="from-gray-50 to-white" />
       </div>
       {Object.keys(stats.byTemplate || {}).length > 0 && (
         <div className="mb-4">
@@ -1640,7 +1674,7 @@ function AgencyTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; on
       {projectsList?.byStatus && Object.keys(projectsList.byStatus).length > 0 && (
         <div className="grid grid-cols-4 gap-2 mb-4">
           {Object.entries(projectsList.byStatus).map(([status, count]) => (
-            <StatCard key={status} label={t(status === 'active' ? 'نشط' : status === 'completed' ? 'مكتمل' : status === 'paused' ? 'متوقف' : status === 'cancelled' ? 'ملغي' : status, status)} value={count as number} icon="📊" accent={status === 'active' ? 'border-l-green-500' : status === 'completed' ? 'border-l-blue-500' : 'border-l-gray-400'} gradient={status === 'active' ? 'from-green-50/50 to-white' : status === 'completed' ? 'from-blue-50/50 to-white' : 'from-gray-50 to-white'} />
+            <StatCard key={status} label={t(status === 'active' ? 'نشط' : status === 'completed' ? 'مكتمل' : status === 'paused' ? 'متوقف' : status === 'cancelled' ? 'ملغي' : status, status)} value={count as number} icon="📊" accent={status === 'active' ? 'border-s-green-500' : status === 'completed' ? 'border-s-blue-500' : 'border-s-gray-400'} gradient={status === 'active' ? 'from-green-50/50 to-white' : status === 'completed' ? 'from-blue-50/50 to-white' : 'from-gray-50 to-white'} />
           ))}
         </div>
       )}
@@ -1764,34 +1798,38 @@ export default function WzrdAdmin() {
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => setToast({ message: msg, type });
   const dismissToast = () => setToast(null);
 
+  const tabMeta = TABS.find((x) => x.id === tab);
+
   return (
-    <div dir={isRtl ? 'rtl' : 'ltr'} className="min-h-screen bg-gray-50 text-gray-900 font-sans flex">
+    <div dir={isRtl ? 'rtl' : 'ltr'} className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/40 text-gray-900 font-sans flex antialiased">
       {toast && <Toast message={toast.message} type={toast.type} onDismiss={dismissToast} />}
 
       {gate === 'denied' && (
-        <div className="fixed inset-0 z-[98] bg-gray-900/70 flex items-center justify-center p-6">
-          <div className="max-w-md bg-white rounded-2xl p-8 shadow-2xl text-center border border-gray-200">
+        <div className="fixed inset-0 z-[98] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-6">
+          <div className="max-w-md bg-white rounded-3xl p-8 shadow-2xl shadow-indigo-950/10 text-center border border-gray-100 ring-1 ring-black/5">
+            <div className="text-4xl mb-3" aria-hidden>🔒</div>
             <p className="text-lg font-bold text-gray-900 mb-2">{t('مفيش صلاحية سوبر أدمن', 'Not a super admin')}</p>
             <p className="text-sm text-gray-600 mb-6">
               {t('الحساب مسجّل لكن مش من قائمة المالكين. اتواصل مع مدير المنصة أو ضبط ADMIN_EMAILS على Railway.', 'Your account is signed in but is not allowlisted. Ask the owner or set ADMIN_EMAILS in Railway.')}
             </p>
-            <a href="/" className="inline-flex px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-500">{t('العودة للموقع', 'Back to site')}</a>
+            <a href="/welcome" className="inline-flex px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-500 shadow-lg shadow-indigo-600/25 transition-colors">{t('العودة للموقع', 'Back to site')}</a>
           </div>
         </div>
       )}
 
       {/* Session guard — show banner if not logged in */}
       {gate === 'anon' && (
-        <div className="fixed top-0 left-0 right-0 z-[99] bg-amber-500 text-white py-2 px-4 text-center text-sm">
-          {t('سجّل دخولك الأول', 'Please log in first')} — <a href="/login" className="underline font-bold">{t('تسجيل الدخول', 'Sign in')}</a>
+        <div className="fixed top-0 left-0 right-0 z-[99] bg-gradient-to-r from-amber-500 to-orange-500 text-white py-2.5 px-4 text-center text-sm shadow-md">
+          {t('سجّل دخولك الأول', 'Please log in first')} —{' '}
+          <a href="/login" className="underline font-bold underline-offset-2 hover:text-white/90">{t('تسجيل الدخول', 'Sign in')}</a>
         </div>
       )}
 
       {/* Sidebar - fixed 240px */}
-      <aside className={`fixed top-0 z-40 w-60 h-full bg-white border border-gray-200 shadow-sm flex flex-col md:translate-x-0 transition-transform duration-200
+      <aside className={`fixed top-0 z-40 w-64 h-full bg-white/95 backdrop-blur-md border-s border-gray-200/80 shadow-lg shadow-slate-900/5 flex flex-col md:translate-x-0 transition-transform duration-200 ease-out
         ${isRtl ? 'right-0' : 'left-0'}
         ${sidebarOpen ? 'translate-x-0' : isRtl ? 'translate-x-full md:translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
-        <div className="p-5 border-b border-gray-100">
+        <div className="p-5 border-b border-gray-100/90 bg-gradient-to-b from-white to-slate-50/50">
           <div className="flex items-center gap-2">
             <span className="font-mono text-lg font-bold">WZRD <span className="text-indigo-600">AI</span></span>
             <span className="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full font-bold">{t('أدمن', 'ADMIN')}</span>
@@ -1800,52 +1838,79 @@ export default function WzrdAdmin() {
             {t('إدارة الموقع والمنتج العام فقط — منفصلة تماماً عن Primo Command Center.', 'Public website & product only — separate from Primo Command Center.')}
           </p>
         </div>
-        <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+        <nav className="flex-1 p-2.5 space-y-1 overflow-y-auto overscroll-contain">
           {TABS.map(tabItem => (
             <button key={tabItem.id} onClick={() => { setTab(tabItem.id); setSidebarOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition ${
-                tab === tabItem.id ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
+                tab === tabItem.id
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20 ring-1 ring-indigo-500/30'
+                  : 'text-gray-600 hover:bg-gray-100/90 hover:text-gray-900'
               }`}
-              style={tab === tabItem.id ? (isRtl ? { borderRight: '4px solid rgb(79 70 229)' } : { borderLeft: '4px solid rgb(79 70 229)' }) : {}}
             >
-              <span>{tabItem.icon}</span> {locale === 'ar' ? tabItem.labelAr : tabItem.labelEn}
+              <span className="text-base shrink-0 opacity-90">{tabItem.icon}</span>
+              <span className="truncate text-start">{locale === 'ar' ? tabItem.labelAr : tabItem.labelEn}</span>
             </button>
           ))}
         </nav>
-        <div className="p-4 border-t border-gray-100 text-[10px] text-gray-400 text-center">
-          <span className="opacity-60">{t('اختصار: 1–9 أول تبويبات', 'Shortcuts: 1–9 first tabs')}</span><br />WZRD AI · {t('عمليات', 'Operations')}
+        <div className="p-4 border-t border-gray-100 bg-slate-50/60 text-[10px] text-gray-500 text-center leading-relaxed">
+          <span className="inline-flex items-center gap-1 justify-center flex-wrap">
+            <kbd className="px-1.5 py-0.5 rounded-md bg-white border border-gray-200 font-mono text-[9px] shadow-sm">1</kbd>
+            <span className="opacity-50">–</span>
+            <kbd className="px-1.5 py-0.5 rounded-md bg-white border border-gray-200 font-mono text-[9px] shadow-sm">9</kbd>
+            <span className="ms-1">{t('تبويبات', 'tabs')}</span>
+          </span>
+          <div className="mt-1 text-gray-400">WZRD AI · {t('عمليات', 'Operations')}</div>
         </div>
       </aside>
 
       {/* Overlay for mobile */}
-      {sidebarOpen && <div className="fixed inset-0 bg-black/30 z-30 md:hidden" onClick={() => setSidebarOpen(false)} />}
+      {sidebarOpen && <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] z-30 md:hidden" onClick={() => setSidebarOpen(false)} aria-hidden />}
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* Main content — offset for fixed sidebar (logical margin) */}
+      <div className="flex-1 flex flex-col min-w-0 md:ms-64">
         {/* Header */}
-        <header className="sticky top-0 z-20 border-b border-gray-200 bg-white shadow-sm">
-          <div className="px-4 md:px-6 py-3 flex items-center justify-between gap-4">
-            <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 md:hidden" aria-label="Menu">
-              <span className="text-xl">☰</span>
+        <header className="sticky top-0 z-20 border-b border-gray-200/80 bg-white/80 backdrop-blur-md shadow-sm shadow-slate-900/5">
+          <div className="px-4 md:px-6 py-3 flex items-center justify-between gap-4 flex-wrap">
+            <button onClick={() => setSidebarOpen(true)} className="p-2.5 rounded-xl hover:bg-gray-100 md:hidden text-gray-700" aria-label="Menu">
+              <span className="text-xl leading-none">☰</span>
             </button>
-            <div className="flex-1 flex items-center gap-4">
-              <p className="text-sm text-gray-600">{t('مرحباً،', 'Hi,')} {adminUser?.name || 'Admin'}</p>
-              <span className="text-xs text-gray-400">{timeStr}</span>
+            <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
+              <div>
+                <p className="text-sm text-gray-500">
+                  {t('مرحباً،', 'Hi,')} <span className="font-semibold text-gray-900">{adminUser?.name || 'Admin'}</span>
+                </p>
+                {gate === 'ok' && tabMeta && (
+                  <p className="text-xs text-indigo-600 font-medium truncate">
+                    {locale === 'ar' ? tabMeta.labelAr : tabMeta.labelEn}
+                  </p>
+                )}
+              </div>
+              <span className="hidden sm:inline text-xs tabular-nums text-gray-400 border-s border-gray-200 ps-4">{timeStr}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <button onClick={() => { setTab('agency'); setSidebarOpen(false); }} className="px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 text-xs font-medium hover:bg-indigo-100">+ {t('عميل', 'Client')}</button>
-              <button onClick={() => { setTab('users'); setSidebarOpen(false); }} className="px-3 py-1.5 rounded-lg bg-amber-50 text-amber-600 text-xs font-medium hover:bg-amber-100">+ {t('كريدت', 'Credits')}</button>
-              <span className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 cursor-pointer" title="Notifications">🔔</span>
-              <button onClick={toggleLocale} className="text-[11px] px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200 font-medium">{locale === 'ar' ? 'EN' : 'ع'}</button>
-              <a href="/welcome" className="text-xs text-gray-500 hover:text-amber-600">{t('← الموقع العام', '← Public site')}</a>
+            <div className="flex items-center gap-2 flex-wrap justify-end">
+              <button type="button" onClick={() => { setTab('agency'); setSidebarOpen(false); }} className="px-3 py-1.5 rounded-xl bg-white border border-indigo-200 text-indigo-700 text-xs font-semibold hover:bg-indigo-50 shadow-sm transition-colors">
+                + {t('عميل', 'Client')}
+              </button>
+              <button type="button" onClick={() => { setTab('users'); setSidebarOpen(false); }} className="px-3 py-1.5 rounded-xl bg-white border border-amber-200 text-amber-800 text-xs font-semibold hover:bg-amber-50 shadow-sm transition-colors">
+                + {t('كريدت', 'Credits')}
+              </button>
+              <button type="button" onClick={toggleLocale} className="text-[11px] px-2.5 py-1.5 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 font-semibold border border-gray-200/80">
+                {locale === 'ar' ? 'EN' : 'ع'}
+              </button>
+              <a href="/welcome" className="text-xs font-medium text-indigo-600 hover:text-indigo-500 px-2 py-1 rounded-lg hover:bg-indigo-50 transition-colors">
+                {t('الموقع العام', 'Public site')} ↗
+              </a>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 p-6 overflow-auto">
-          <div className="max-w-5xl mx-auto">
+        <main className="flex-1 p-4 md:p-6 overflow-auto">
+          <div className="max-w-5xl mx-auto w-full">
             {gate === 'loading' && (
-              <div className="py-24 text-center text-gray-400 text-sm">{t('جاري التحقق من الصلاحيات…', 'Verifying access…')}</div>
+              <div className="py-24 flex flex-col items-center gap-4 text-gray-500 text-sm">
+                <div className="h-10 w-10 rounded-full border-2 border-indigo-200 border-t-indigo-600 animate-spin" aria-hidden />
+                <span>{t('جاري التحقق من الصلاحيات…', 'Verifying access…')}</span>
+              </div>
             )}
             {tab === 'command' && gate === 'ok' && <CommandCenterTab t={t} setTab={setTab} />}
             {tab === 'overview' && gate === 'ok' && <OverviewTab t={t} />}

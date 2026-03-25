@@ -63,18 +63,19 @@ export default function Home() {
       {/* Guided Tour for first-time users */}
       <OnboardingTour isAr={locale === 'ar'} />
 
-      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <Badge variant="secondary" className="font-normal">
-          {locale === "ar" ? "Primo Marca · Command Center (داخلي)" : "Primo Marca · Command Center (internal)"}
+      <div className="flex flex-wrap items-center gap-3 p-3 rounded-xl border border-border/80 bg-muted/30 shadow-sm">
+        <Badge variant="secondary" className="font-medium px-2.5 py-0.5 border border-border/60">
+          {locale === "ar" ? "Primo · Command Center" : "Primo · Command Center"}
         </Badge>
+        <span className="hidden sm:inline text-muted-foreground/50">|</span>
         <a
           href="/wzrd-admin"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 underline-offset-4 hover:underline hover:text-primary"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 rounded-lg px-2 py-1 hover:bg-indigo-500/10 transition-colors"
         >
-          {locale === "ar" ? "إدارة منتج WZRD العام" : "WZRD public product admin"}
-          <ExternalLink className="h-3 w-3" />
+          {locale === "ar" ? "WZRD — لوحة المنتج العام" : "WZRD — public product admin"}
+          <ExternalLink className="h-3 w-3 opacity-70" />
         </a>
       </div>
 
