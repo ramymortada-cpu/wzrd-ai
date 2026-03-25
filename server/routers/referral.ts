@@ -15,10 +15,11 @@ import { logger } from "../_core/logger";
 import { getDb, addCredits } from "../db";
 import { referrals, users } from "../../drizzle/schema";
 import { eq, sql, and, count } from "drizzle-orm";
+import type { InferSelectModel } from "drizzle-orm";
+
+type ReferralRow = InferSelectModel<typeof referrals>;
 
 const REFERRAL_BONUS = 50; // credits for both referrer and referred
-
-type ReferralRow = typeof referrals.$inferSelect;
 
 function generateCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I confusion
@@ -81,7 +82,10 @@ export const referralRouter = router({
         .orderBy(sql`${referrals.createdAt} DESC`)
         .limit(50);
 
-      const totalCredits = refs.reduce((sum: number, r: ReferralRow) => sum + (r.creditsAwarded || 0), 0);
+      const totalCredits = refs.reduce(
+        (sum: number, r: ReferralRow) => sum + (r.creditsAwarded || 0),
+        0
+      );
 
       return {
         totalReferrals: refs.length,

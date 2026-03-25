@@ -136,7 +136,7 @@ export async function addCredits(
  * ATOMIC: Uses conditional UPDATE (credits >= cost) to prevent race conditions.
  * Also checks daily cap before deducting.
  */
-const DAILY_CREDIT_CAP = 2000; // Temporarily raised for testing (was 200)
+const DAILY_CREDIT_CAP = 500; // 500 credits/day per user — prevents abuse
 
 export async function deductCredits(
   userId: number,
@@ -149,21 +149,25 @@ export async function deductCredits(
   const cost = TOOL_COSTS[toolName];
   if (!cost) return { success: false, newBalance: 0, cost: 0, error: `Unknown tool: ${toolName}` };
 
-  // Check daily cap BEFORE attempting deduction — TEMPORARILY COMMENTED OUT for testing
-  // const today = new Date();
-  // today.setHours(0, 0, 0, 0);
-  // const todayUsage = await db.select({ total: sql<number>`COALESCE(SUM(ABS(amount)), 0)` })
-  //   .from(creditTransactions)
-  //   .where(and(
-  //     eq(creditTransactions.userId, userId),
-  //     eq(creditTransactions.type, 'tool_usage'),
-  //     sql`createdAt >= ${today}`
-  //   ));
-  // const usedToday = todayUsage[0]?.total || 0;
-  // if (usedToday + cost > DAILY_CREDIT_CAP) {
-  //   const currentBalance = await getUserCredits(userId);
-  //   return { success: false, newBalance: currentBalance, cost, error: `Daily limit reached (${DAILY_CREDIT_CAP} credits/day). Come back tomorrow!` };
-  // }
+  // Check daily cap BEFORE attempting deduction
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayUsage = await db.select({ total: sql<number>`COALESCE(SUM(ABS(amount)), 0)` })
+      .from(creditTransactions)
+      .where(and(
+        eq(creditTransactions.userId, userId),
+        eq(creditTransactions.type, 'tool_usage'),
+        sql`createdAt >= ${today}`
+      ));
+    const usedToday = todayUsage[0]?.total || 0;
+    if (usedToday + cost > DAILY_CREDIT_CAP) {
+      const currentBalance = await getUserCredits(userId);
+      return { success: false, newBalance: currentBalance, cost, error: `وصلت الحد اليومي (${DAILY_CREDIT_CAP} كريدت/يوم). حاول بكره!` };
+    }
+  } catch {
+    // If daily cap check fails — allow the deduction (fail open)
+  }
 
   try {
     // ATOMIC deduction: only deducts if credits >= cost

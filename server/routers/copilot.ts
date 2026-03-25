@@ -17,8 +17,9 @@ import { resilientLLM } from "../_core/llmRouter";
 import { getDb, deductCredits, getUserCredits } from "../db";
 import { copilotMessages, diagnosisHistory, users } from "../../drizzle/schema";
 import { eq, desc } from "drizzle-orm";
+import type { InferSelectModel } from "drizzle-orm";
 
-type CopilotMessageRow = typeof copilotMessages.$inferSelect;
+type CopilotMessageRow = InferSelectModel<typeof copilotMessages>;
 
 // Rate limit: track last message time per user
 const lastMessageTime = new Map<number, number>();

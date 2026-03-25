@@ -71,7 +71,6 @@ export async function fireEmailTrigger(
           .replace(/\{\{CREDITS\}\}/g, String(metadata?.credits || ''))
           .replace(/\{\{TOOL_NAME\}\}/g, String(metadata?.toolName || ''));
 
-        // Try to send (Resend HTTP API — no resend npm package)
         try {
           const apiKey = process.env.EMAIL_API_KEY;
           const from = process.env.EMAIL_FROM || 'WZRD AI <noreply@wzrd.ai>';

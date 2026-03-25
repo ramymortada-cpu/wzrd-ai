@@ -26,10 +26,11 @@ import { sendToolResultEmail } from "../wzrdEmails";
 import { getToolSystemPrompt, isToolEnabled } from "../siteConfig";
 import { diagnosisHistory, userChecklists } from "../../drizzle/schema";
 import { eq, desc, and } from "drizzle-orm";
-import { fireEmailTrigger } from "../emailTrigger";
+import type { InferSelectModel } from "drizzle-orm";
 
-type DiagnosisHistoryRow = typeof diagnosisHistory.$inferSelect;
-type UserChecklistRow = typeof userChecklists.$inferSelect;
+type DiagnosisHistoryRow = InferSelectModel<typeof diagnosisHistory>;
+type UserChecklistRow = InferSelectModel<typeof userChecklists>;
+import { fireEmailTrigger } from "../emailTrigger";
 
 /**
  * Save diagnosis result to history (non-blocking).
