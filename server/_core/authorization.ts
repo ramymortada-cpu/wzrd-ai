@@ -115,11 +115,21 @@ export function createRoleCheck(requiredRole: UserRole) {
   };
 }
 
-// Pre-built role checks — checkOwner: simple email/role check (bypasses role hierarchy)
+/** Owner / super-admin: role admin, or email in ADMIN_EMAILS (comma-separated), or legacy default. */
+function isOwnerAdmin(user: { email?: string; role?: string }): boolean {
+  if (user.role === 'admin') return true;
+  const email = (user.email || '').trim().toLowerCase();
+  if (!email) return false;
+  const fromEnv = process.env.ADMIN_EMAILS?.split(',').map((e) => e.trim().toLowerCase()).filter(Boolean) ?? [];
+  if (fromEnv.length > 0) return fromEnv.includes(email);
+  return email === 'ramy.mortada@gmail.com';
+}
+
+// Pre-built role checks — checkOwner: admin role or allowlisted email(s)
 export function checkOwner(ctx: TrpcContext) {
   const user = ctx.user as { id?: number; email?: string; role?: string } | null;
   if (!user) throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Not authenticated' });
-  if (user.role !== 'admin' && user.email !== 'ramy.mortada@gmail.com') {
+  if (!isOwnerAdmin(user)) {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });
   }
   return user;

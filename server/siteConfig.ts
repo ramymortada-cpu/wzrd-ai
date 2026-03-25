@@ -43,6 +43,11 @@ export interface SiteConfig {
   prompts: ToolPrompt[];
 }
 
+/** Stripped config for /api/public/site-config — never expose systemPrompt. */
+export type PublicToolPromptMeta = Pick<ToolPrompt, 'toolId' | 'toolName' | 'enabled'>;
+
+export type PublicSiteConfig = Omit<SiteConfig, 'prompts'> & { prompts: PublicToolPromptMeta[] };
+
 // ════════════════════════════════════════════
 // DEFAULT CONFIG
 // ════════════════════════════════════════════
@@ -181,7 +186,22 @@ async function saveSectionToDb(key: string, value: unknown): Promise<void> {
 // PUBLIC API
 // ════════════════════════════════════════════
 
-export function getSiteConfig(): SiteConfig { return config; }
+export function getSiteConfig(): SiteConfig {
+  return config;
+}
+
+export function getPublicSiteConfig(): PublicSiteConfig {
+  return {
+    homepage: config.homepage,
+    services: config.services,
+    site: config.site,
+    prompts: config.prompts.map((p) => ({
+      toolId: p.toolId,
+      toolName: p.toolName,
+      enabled: p.enabled,
+    })),
+  };
+}
 
 export function updateHomepage(updates: Partial<HomepageConfig>): HomepageConfig {
   config.homepage = { ...config.homepage, ...updates };

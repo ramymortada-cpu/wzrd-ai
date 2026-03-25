@@ -55,7 +55,8 @@ export const adminRouter = router({
       promptName: z.string().min(1).max(200),
       conversationId: z.number().optional(),
     }))
-    .query(({ input }) => {
+    .query(({ input, ctx }) => {
+      checkOwner(ctx);
       return getActivePrompt(input.promptName, input.conversationId);
     }),
 
@@ -79,17 +80,20 @@ export const adminRouter = router({
   /** Analyze A/B test results */
   promptAnalyze: protectedProcedure
     .input(z.object({ promptName: z.string().min(1).max(200) }))
-    .query(({ input }) => {
+    .query(({ input, ctx }) => {
+      checkOwner(ctx);
       return analyzeABTest(input.promptName);
     }),
 
   /** Prompt Lab dashboard — all prompts + metrics + tests */
-  promptDashboard: protectedProcedure.query(() => {
+  promptDashboard: protectedProcedure.query(({ ctx }) => {
+    checkOwner(ctx);
     return getPromptLabDashboard();
   }),
 
   /** List all prompt names */
-  promptList: protectedProcedure.query(() => {
+  promptList: protectedProcedure.query(({ ctx }) => {
+    checkOwner(ctx);
     return listPrompts();
   }),
 
@@ -98,7 +102,8 @@ export const adminRouter = router({
   // ════════════════════════════════════════════
 
   /** Get research quota stats for today */
-  quotaStats: protectedProcedure.query(() => {
+  quotaStats: protectedProcedure.query(({ ctx }) => {
+    checkOwner(ctx);
     return getQuotaStats();
   }),
 
@@ -121,7 +126,8 @@ export const adminRouter = router({
   // ════════════════════════════════════════════
 
   /** Full system health check */
-  systemHealth: protectedProcedure.query(() => {
+  systemHealth: protectedProcedure.query(({ ctx }) => {
+    checkOwner(ctx);
     const llmStats = getLLMStats();
     const cacheStats = getCacheStats();
     const quotaStats = getQuotaStats();
@@ -147,7 +153,8 @@ export const adminRouter = router({
     .input(z.object({
       role: z.enum(['owner', 'editor', 'viewer']),
     }))
-    .query(({ input }) => {
+    .query(({ input, ctx }) => {
+      checkOwner(ctx);
       return {
         role: input.role,
         permissions: getPermissionsForRole(input.role as UserRole),

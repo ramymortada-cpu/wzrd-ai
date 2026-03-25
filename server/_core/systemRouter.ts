@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { notifyOwner } from "./notification";
-import { adminProcedure, publicProcedure, router } from "./trpc";
+import { adminProcedure, protectedProcedure, publicProcedure, router } from "./trpc";
+import { checkOwner } from "./authorization";
 import { isLLMHealthy, getLLMStats } from "./llmRouter";
-import { logger } from "./logger";
 
 export const systemRouter = router({
   /** Comprehensive health check — DB, LLM, system */
@@ -37,12 +37,13 @@ export const systemRouter = router({
       };
     }),
 
-  /** Debug: Test Groq API directly (public, no auth — for debugging) */
-  testGroq: publicProcedure.mutation(async () => {
+  /** Test Groq connectivity — owner/admin only; does not expose API key material. */
+  testGroq: protectedProcedure.mutation(async ({ ctx }) => {
+    checkOwner(ctx);
     try {
       const { ENV } = await import("./env");
       const apiKey = ENV.groqApiKey;
-      if (!apiKey) return { success: false, error: 'GROQ_API_KEY not set', key: '' };
+      if (!apiKey) return { success: false as const, error: 'GROQ_API_KEY not set' };
 
       const response = await fetch(`${ENV.groqApiUrl}/v1/chat/completions`, {
         method: 'POST',
@@ -62,13 +63,11 @@ export const systemRouter = router({
         success: response.ok,
         status: response.status,
         response: text.substring(0, 500),
-        key: apiKey.substring(0, 8) + '...',
         model: ENV.groqModel,
-        url: ENV.groqApiUrl,
       };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      return { success: false, error: msg, key: '' };
+      return { success: false as const, error: msg };
     }
   }),
 
