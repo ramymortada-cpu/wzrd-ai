@@ -52,6 +52,12 @@ export default function WzrdPublicHeader({ credits, showCredits = true }: WzrdPu
           >
             {locale === "ar" ? "صحة البراند" : "My Brand"}
           </a>
+          <a
+            href="/copilot"
+            className="text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+          >
+            {locale === "ar" ? "المستشار" : "Copilot"}
+          </a>
         </nav>
 
         {/* Right: credits pill + theme + language */}

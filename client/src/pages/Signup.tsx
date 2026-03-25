@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { toErrorString } from '@/lib/errorUtils';
 import { useI18n } from '@/lib/i18n';
@@ -11,6 +11,14 @@ export default function Signup() {
   const [form, setForm] = useState({ name: '', email: '', company: '', industry: '', newsletterOptIn: true });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [refCode, setRefCode] = useState<string | null>(null);
+
+  // Read referral code from URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref');
+    if (ref) setRefCode(ref.toUpperCase());
+  }, []);
 
   const handleSubmit = async () => {
     if (!form.name.trim() || !form.email.trim()) {
@@ -36,6 +44,14 @@ export default function Signup() {
       const result = data?.result?.data?.json ?? data?.result?.data;
 
       if (result?.success) {
+        // Apply referral code if present (non-blocking)
+        if (refCode && result.user?.id) {
+          fetch('/api/trpc/referral.apply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ json: { code: refCode, newUserId: result.user.id } }),
+          }).catch(() => {});
+        }
         navigate('/tools/brand-diagnosis');
       } else {
         setError(toErrorString(result?.message, 'Something went wrong'));
@@ -59,6 +75,12 @@ export default function Signup() {
             <div className="inline-flex items-center gap-2 text-xs font-mono text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 rounded-full px-3 py-1.5 mb-6">
               ⚡ {t('wzrd.creditsFree')}
             </div>
+
+            {refCode && (
+              <div className="mb-4 p-4 rounded-xl bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 text-green-700 dark:text-green-400 text-sm flex items-center gap-2">
+                🎁 {locale === 'ar' ? `صاحبك بعتلك دعوة! هتاخدوا ٥٠ كريدت إضافي لكل واحد.` : `You've been invited! You'll both get 50 bonus credits.`}
+              </div>
+            )}
 
             {error && (
               <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm">{error}</div>

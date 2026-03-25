@@ -24,6 +24,8 @@ export const TOOL_COSTS: Record<string, number> = {
   presence_audit: 25,
   identity_snapshot: 20,
   launch_readiness: 30,
+  competitive_benchmark: 40,
+  copilot_message: 5,
 };
 
 export const SIGNUP_BONUS = 100;
@@ -89,7 +91,13 @@ export interface CreditHistoryItem {
 export async function addCredits(
   userId: number,
   amount: number,
-  type: 'signup_bonus' | 'purchase' | 'refund' | 'admin',
+  type:
+    | "signup_bonus"
+    | "purchase"
+    | "refund"
+    | "admin"
+    | "referral_bonus"
+    | "copilot_refund",
   reason?: string,
   metadata?: Record<string, unknown>
 ): Promise<{ success: boolean; newBalance: number }> {

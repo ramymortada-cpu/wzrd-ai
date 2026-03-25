@@ -607,4 +607,168 @@ Score 0-100 on launch readiness. Identify what's missing and what's the priority
 
       return { items, completedCount, totalCount: items.length };
     }),
+
+  // ════════════════════════════════════════════
+  // COMPETITIVE BENCHMARK
+  // ════════════════════════════════════════════
+
+  /** Compare brand against 1-3 competitors */
+  competitiveBenchmark: protectedProcedure
+    .input(z.object({
+      companyName: z.string().min(1).max(255),
+      competitors: z.array(z.string().min(1).max(255)).min(1).max(3),
+      industry: z.string().min(1).max(100),
+      socialLinks: z.string().max(1000).optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      // Validate: company != competitor
+      const lowerCompany = input.companyName.toLowerCase().trim();
+      for (const comp of input.competitors) {
+        if (comp.toLowerCase().trim() === lowerCompany) {
+          throw new Error('متقدرش تقارن الشركة بنفسها — دخل منافس مختلف.');
+        }
+      }
+
+      // Deduct 40 credits
+      const deduction = await deductCredits(ctx.user!.id, 'competitive_benchmark');
+      if (!deduction.success) {
+        throw new Error(deduction.error || 'مفيش كريدت كافي. محتاج ٤٠ كريدت.');
+      }
+
+      const allCompanies = [input.companyName, ...input.competitors];
+      const benchmarkPrompt = `You are WZRD AI Competitive Benchmark Engine. Analyze and compare these ${allCompanies.length} brands in the "${input.industry}" industry:
+
+${allCompanies.map((c, i) => `${i + 1}. ${c}`).join('\n')}
+${input.socialLinks ? `\nSocial links: ${input.socialLinks}` : ''}
+
+For EACH company, score 0-100 on these 5 pillars:
+1. Positioning (clarity + differentiation)
+2. Messaging (consistency + tone)
+3. Offer Structure (pricing + packaging logic)
+4. Visual Identity (professional + cohesive)
+5. Customer Journey (touchpoints + experience)
+
+CRITICAL RULES:
+- DIFFERENTIATE clearly between companies. Don't give similar scores to everyone.
+- Be SPECIFIC to each company — no generic advice.
+- If you don't have enough info about a competitor, say so honestly and estimate conservatively.
+- Respond in Egyptian Arabic.
+
+Respond ONLY in this JSON format:
+{
+  "companies": [
+    {
+      "name": "company name",
+      "totalScore": 65,
+      "pillars": { "positioning": 70, "messaging": 55, "offer": 60, "identity": 75, "journey": 65 },
+      "strengths": ["strength 1", "strength 2"],
+      "weaknesses": ["weakness 1", "weakness 2"]
+    }
+  ],
+  "gaps": [
+    { "pillar": "messaging", "yourScore": 55, "bestCompetitor": "CompetitorX", "bestScore": 80, "gap": 25, "recommendation": "specific recommendation in Arabic" }
+  ],
+  "overallInsight": "one paragraph analysis in Arabic"
+}`;
+
+      try {
+        const response = await resilientLLM({
+          messages: [
+            { role: 'system', content: 'You are a brand competitive analysis expert. Respond ONLY with valid JSON. No markdown.' },
+            { role: 'user', content: benchmarkPrompt },
+          ],
+        }, { context: 'benchmark' });
+
+        const text = response.choices[0]?.message?.content as string;
+        let parsed: any;
+        try {
+          parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
+        } catch {
+          // Fallback
+          parsed = {
+            companies: allCompanies.map((c, i) => ({
+              name: c,
+              totalScore: 50 + Math.floor(Math.random() * 30),
+              pillars: { positioning: 50, messaging: 50, offer: 50, identity: 50, journey: 50 },
+              strengths: ['تحليل أولي'],
+              weaknesses: ['محتاج بيانات أكتر'],
+            })),
+            gaps: [],
+            overallInsight: 'حصل مشكلة في التحليل المقارن — حاول تاني مع تفاصيل أكتر.',
+          };
+          logger.warn({ textLength: text.length }, 'Benchmark JSON parse failed — used fallback');
+        }
+
+        // Clamp all scores
+        if (parsed.companies) {
+          parsed.companies = parsed.companies.map((c: any) => ({
+            ...c,
+            totalScore: Math.max(0, Math.min(100, c.totalScore || 50)),
+            pillars: Object.fromEntries(
+              Object.entries(c.pillars || {}).map(([k, v]) => [k, Math.max(0, Math.min(100, (v as number) || 50))])
+            ),
+          }));
+        }
+
+        // Save to history
+        const yourCompany = parsed.companies?.[0];
+        if (yourCompany) {
+          saveDiagnosisHistory(ctx.user!.id, 'competitive_benchmark', {
+            score: yourCompany.totalScore,
+            label: scoreLabel(yourCompany.totalScore),
+            findings: (parsed.gaps || []).slice(0, 5).map((g: any) => ({
+              title: `فجوة في ${g.pillar}: ${g.gap} نقطة`,
+              detail: g.recommendation || '',
+              severity: g.gap > 20 ? 'high' : g.gap > 10 ? 'medium' : 'low',
+            })),
+            actionItems: [],
+            recommendation: parsed.overallInsight || '',
+            nextStep: { type: 'service', title: 'Brand Strategy', url: '/services-info' },
+            serviceRecommendation: null,
+            creditsUsed: deduction.cost,
+            creditsRemaining: deduction.newBalance ?? 0,
+          }).catch(() => {});
+        }
+
+        return {
+          ...parsed,
+          creditsUsed: deduction.cost,
+          creditsRemaining: deduction.newBalance ?? 0,
+        };
+      } catch (err: any) {
+        logger.error({ err }, 'Competitive benchmark failed');
+        throw new Error('حصل مشكلة في التحليل — حاول تاني.');
+      }
+    }),
+
+  // ════════════════════════════════════════════
+  // QUICK MODE — 5 questions instead of 12
+  // ════════════════════════════════════════════
+
+  /** Quick Brand Diagnosis — 5 questions, faster but less detailed */
+  quickDiagnosis: protectedProcedure
+    .input(z.object({
+      companyName: z.string().min(1).max(255),
+      industry: z.string().min(1).max(100),
+      targetAudience: z.string().min(1).max(500),
+      biggestChallenge: z.string().min(1).max(500),
+      socialLink: z.string().max(500).optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const userPrompt = `Quick brand diagnosis for:
+Company: ${input.companyName}
+Industry: ${input.industry}
+Target audience: ${input.targetAudience}
+Biggest challenge: ${input.biggestChallenge}
+Social link: ${input.socialLink || 'Not provided'}
+
+This is a QUICK diagnosis — be concise but specific. Score 0-100 and give top 3 findings + 5 action items.
+Respond in Egyptian Arabic.`;
+
+      const result = await runToolAI('brand_diagnosis', 'Quick Brand Diagnosis', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
+      // Quick mode uses same credits as brand_diagnosis (20)
+      result.nextStep = { type: 'tool', title: 'Full Diagnosis', url: '/tools/brand-diagnosis' };
+      logger.info({ userId: ctx.user!.id, tool: 'quick_diagnosis', score: result.score }, 'Quick Diagnosis completed');
+      return result;
+    }),
 });

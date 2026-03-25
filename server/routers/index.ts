@@ -32,6 +32,8 @@ import { premiumRouter } from "./premium";
 import { emailAutomationRouter } from "./emailAutomation";
 import { reportPdfRouter } from "./reportPdf";
 import { dashboardRouter } from "./dashboard";
+import { referralRouter } from "./referral";
+import { copilotRouter } from "./copilot";
 
 export const appRouter = router({
   system: systemRouter,
@@ -63,6 +65,8 @@ export const appRouter = router({
   premium: premiumRouter,
   emailAutomation: emailAutomationRouter,
   reportPdf: reportPdfRouter,
+  referral: referralRouter,
+  copilot: copilotRouter,
 });
 
 export type AppRouter = typeof appRouter;

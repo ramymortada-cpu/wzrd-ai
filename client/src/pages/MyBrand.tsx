@@ -314,6 +314,41 @@ export default function MyBrand() {
               </div>
             )}
 
+            {/* ═══ REFERRAL + COPILOT CARDS ═══ */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {/* Copilot Card */}
+              <button
+                onClick={() => navigate('/copilot')}
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 text-center hover:shadow-md transition"
+              >
+                <div className="text-2xl mb-2">🧙‍♂️</div>
+                <h4 className="text-sm font-bold text-gray-900">{isAr ? 'المستشار الذكي' : 'AI Copilot'}</h4>
+                <p className="text-xs text-gray-400 mt-1">{isAr ? 'اسأل أي سؤال' : 'Ask anything'}</p>
+              </button>
+
+              {/* Referral Card */}
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/trpc/referral.myCode');
+                    const d = await res.json();
+                    const data = d.result?.data?.json ?? d.result?.data ?? {};
+                    if (data.shareUrl) {
+                      await navigator.clipboard.writeText(data.shareUrl);
+                      alert(isAr ? 'تم نسخ رابط الإحالة! ✅\nابعته لصاحبك — كل واحد فيكم هياخد ٥٠ كريدت.' : 'Referral link copied! ✅\nShare it — you both get 50 credits.');
+                    }
+                  } catch {
+                    alert(isAr ? 'سجّل دخول الأول' : 'Please login first');
+                  }
+                }}
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 text-center hover:shadow-md transition"
+              >
+                <div className="text-2xl mb-2">🎁</div>
+                <h4 className="text-sm font-bold text-gray-900">{isAr ? 'ادعي صاحبك' : 'Invite Friends'}</h4>
+                <p className="text-xs text-gray-400 mt-1">{isAr ? '٥٠ كريدت لكل واحد' : '50 credits each'}</p>
+              </button>
+            </div>
+
             {/* Re-diagnose CTA */}
             <div className="mt-4">
               <button

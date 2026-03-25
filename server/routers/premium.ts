@@ -26,8 +26,11 @@ import { eq, sql } from "drizzle-orm";
 // ════════════════════════════════════════════
 
 export const PREMIUM_PRICES = {
-  single_report: { credits: 200, egp: 199, label: 'تقرير مفصّل', labelEn: 'Full Report' },
-  bundle_6: { credits: 800, egp: 799, label: 'باقة ٦ تقارير', labelEn: '6-Report Bundle' },
+  single_report: { credits: 100, egp: 99, label: 'تقرير مفصّل', labelEn: 'Full Report' },
+  single_report_pro: { credits: 200, egp: 199, label: 'تقرير مفصّل Pro', labelEn: 'Full Report Pro' },
+  bundle_6: { credits: 800, egp: 499, label: 'باقة ٦ تقارير', labelEn: '6-Report Bundle (Save 45%)' },
+  credits_500: { credits: 500, egp: 499, label: '٥٠٠ كريدت', labelEn: '500 Credits' },
+  credits_1500: { credits: 1500, egp: 999, label: '١٥٠٠ كريدت (الأوفر)', labelEn: '1500 Credits (Best Value)' },
 };
 
 // ════════════════════════════════════════════

@@ -17,6 +17,8 @@ export const users = mysqlTable("users", {
   market: varchar("market", { length: 50 }),
   newsletterOptIn: int("newsletterOptIn").notNull().default(0),
   signupSource: varchar("signupSource", { length: 50 }).default("website"),
+  referralCode: varchar("referralCode", { length: 20 }),
+  referredBy: int("referredBy"),
   // Timestamps
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -34,7 +36,15 @@ export const creditTransactions = mysqlTable("credit_transactions", {
   userId: int("userId").notNull(),
   amount: int("amount").notNull(),
   balance: int("balance").notNull().default(0),
-  type: mysqlEnum("type", ["signup_bonus", "purchase", "tool_usage", "refund", "admin"]).notNull(),
+  type: mysqlEnum("type", [
+    "signup_bonus",
+    "purchase",
+    "tool_usage",
+    "refund",
+    "admin",
+    "referral_bonus",
+    "copilot_refund",
+  ]).notNull(),
   toolName: varchar("toolName", { length: 100 }),
   reason: varchar("reason", { length: 500 }),
   metadata: json("metadata"),
@@ -874,5 +884,38 @@ export const userChecklists = mysqlTable("user_checklists", {
   completedCount: int("completed_count").notNull().default(0),
   totalCount: int("total_count").notNull().default(0),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+/** Referrals — track user invitations */
+export const referrals = mysqlTable("referrals", {
+  id: int("id").autoincrement().primaryKey(),
+  referrerId: int("referrer_id").notNull(),
+  referredUserId: int("referred_user_id").notNull(),
+  code: varchar("code", { length: 20 }).notNull(),
+  creditsAwarded: int("credits_awarded").notNull().default(50),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+/** Copilot messages — AI Brand Copilot chat history */
+export const copilotMessages = mysqlTable("copilot_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id").notNull(),
+  sessionId: varchar("session_id", { length: 50 }).notNull(),
+  role: mysqlEnum("role", ["user", "assistant"]).notNull(),
+  content: text("content").notNull(),
+  tokensUsed: int("tokens_used").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+/** Abandoned carts — track premium purchase attempts that didn't complete */
+export const abandonedCarts = mysqlTable("abandoned_carts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id").notNull(),
+  productType: varchar("product_type", { length: 50 }).notNull(),
+  amountEgp: int("amount_egp").notNull(),
+  clickedAt: timestamp("clicked_at").defaultNow().notNull(),
+  completed: int("completed").notNull().default(0),
+  followUpSent: int("follow_up_sent").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
