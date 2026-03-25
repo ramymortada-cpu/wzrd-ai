@@ -26,6 +26,7 @@ import { sendToolResultEmail } from "../wzrdEmails";
 import { getToolSystemPrompt, isToolEnabled } from "../siteConfig";
 import { diagnosisHistory, userChecklists } from "../../drizzle/schema";
 import { eq, desc, and } from "drizzle-orm";
+import { fireEmailTrigger } from "../emailTrigger";
 
 type DiagnosisHistoryRow = typeof diagnosisHistory.$inferSelect;
 type UserChecklistRow = typeof userChecklists.$inferSelect;
@@ -233,6 +234,12 @@ async function runToolAI(
   saveDiagnosisHistory(userId, toolId, result).catch(err => {
     logger.error({ err, userId, toolId }, 'Failed to save diagnosis history — result still shown to user');
   });
+
+  // 4b. Fire email automation triggers (non-blocking)
+  fireEmailTrigger('first_tool_run', userId, { score, toolName: toolDisplayName }).catch(() => {});
+  if (score < 40) {
+    fireEmailTrigger('low_score', userId, { score, toolName: toolDisplayName }).catch(() => {});
+  }
 
   // 5. Send result email (non-blocking)
   if (userEmail) {

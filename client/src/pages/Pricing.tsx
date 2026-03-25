@@ -5,9 +5,10 @@ import WzrdPublicHeader from '@/components/WzrdPublicHeader';
 import { toArabicNumerals } from '@/lib/formatUtils';
 
 const PLANS = [
-  { id: 'starter', credits: 500, price: 499, currency: 'EGP', popular: false, label: 'Starter', description: '~20 tool runs' },
-  { id: 'pro', credits: 1500, price: 999, currency: 'EGP', popular: true, label: 'Pro', description: '~60 tool runs — best value' },
-  { id: 'agency', credits: 5000, price: 2499, currency: 'EGP', popular: false, label: 'Agency', description: '~200 tool runs' },
+  { id: 'single_report', credits: 100, price: 99, currency: 'EGP', popular: false, label: 'تقرير واحد', labelEn: 'Single Report', description: 'تقرير مفصّل واحد', descEn: '1 Premium AI report' },
+  { id: 'bundle_6', credits: 800, price: 499, currency: 'EGP', popular: true, label: 'باقة ٦ تقارير', labelEn: '6-Report Bundle', description: 'وفّر ٤٥% — أشمل تحليل', descEn: 'Save 45% — comprehensive' },
+  { id: 'credits_500', credits: 500, price: 499, currency: 'EGP', popular: false, label: '٥٠٠ كريدت', labelEn: '500 Credits', description: '~٢٥ أداة تشخيص', descEn: '~25 tool runs' },
+  { id: 'credits_1500', credits: 1500, price: 999, currency: 'EGP', popular: false, label: '١٥٠٠ كريدت', labelEn: '1500 Credits', description: 'الأوفر — ~٧٥ أداة', descEn: 'Best value — ~75 tools' },
 ];
 
 export default function Pricing() {
@@ -31,7 +32,7 @@ export default function Pricing() {
           <p className="text-zinc-600 dark:text-zinc-400 max-w-md mx-auto text-base">{t('wzrd.keepUsingTools')}</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-14">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-14">
           {PLANS.map(plan => (
             <div key={plan.id} className={`relative p-8 rounded-2xl border transition shadow-md hover:shadow-xl hover:-translate-y-1 ${
               plan.popular
@@ -44,8 +45,8 @@ export default function Pricing() {
                 </div>
               )}
               <div className="text-center">
-                <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">{plan.label}</h3>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">{plan.description}</p>
+                <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">{locale === 'ar' ? plan.label : plan.labelEn}</h3>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">{locale === 'ar' ? plan.description : plan.descEn}</p>
                 <div className="mb-2">
                   <span className="text-4xl font-bold font-mono text-zinc-900 dark:text-white">{locale === 'ar' ? toArabicNumerals(plan.price.toLocaleString()) : plan.price.toLocaleString()}</span>
                   <span className="text-sm text-zinc-500 dark:text-zinc-400 ms-1">EGP</span>

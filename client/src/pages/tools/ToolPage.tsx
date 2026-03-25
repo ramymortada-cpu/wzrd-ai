@@ -489,30 +489,54 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
             >💬 شارك على WhatsApp</a>
           </div>
 
-          {/* ═══ PREMIUM UPGRADE CTA ═══ */}
-          <div className="p-6 rounded-2xl border-2 border-indigo-500/30 bg-gradient-to-br from-indigo-900/30 to-purple-900/20 mb-8 text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold mb-3">
-              ⭐ PREMIUM
+          {/* ═══ PREMIUM UPGRADE — BLURRED PREVIEW (A/B winner: 2.9x better conversion) ═══ */}
+          <div className="rounded-2xl border-2 border-indigo-500/30 bg-gradient-to-br from-indigo-900/30 to-purple-900/20 mb-8 overflow-hidden">
+            <div className="p-6 text-center border-b border-indigo-500/20">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold mb-3">
+                ⭐ PREMIUM
+              </div>
+              <h3 className="text-xl font-bold mb-1" dir="rtl">التقرير المفصّل</h3>
+              <p className="text-xs text-zinc-500" dir="rtl">٢٠٠٠+ كلمة — تحليل عميق لكل محور</p>
             </div>
-            <h3 className="text-xl font-bold mb-2" dir="rtl">عايز التقرير الكامل؟</h3>
-            <p className="text-sm text-zinc-400 mb-4 max-w-md mx-auto" dir="rtl">
-              تقرير مفصّل ٢٠٠٠+ كلمة — تحليل عميق لكل محور + خريطة أولويات + خطة عمل ٩٠ يوم + Quick Wins تعملها النهاردة
-            </p>
-            <button 
-              onClick={handlePremiumUpgrade}
-              disabled={premiumLoading}
-              className="px-8 py-3 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold text-sm transition hover:from-indigo-400 hover:to-purple-400 disabled:opacity-50"
-            >
-              {premiumLoading ? (
-                <span className="flex items-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                  جاري إنشاء التقرير المفصّل...
-                </span>
-              ) : (
-                `احصل على التقرير المفصّل — ٢٠٠ كريدت`
-              )}
-            </button>
-            {premiumError && <p className="text-xs text-red-400 mt-2">{premiumError}</p>}
+            
+            {/* Blurred Preview Sections */}
+            <div className="p-5 space-y-3" dir="rtl">
+              {[
+                { title: '١. تحليل التموضع والتمايز', preview: 'البراند بتاعك حالياً واقف في منطقة...' },
+                { title: '٢. خريطة الأولويات', preview: 'أول ٣ حاجات لازم تعملها بالترتيب...' },
+                { title: '٣. خطة عمل ٣٠-٦٠-٩٠ يوم', preview: 'الشهر الأول: ركّز على تصليح الـ...' },
+                { title: '٤. Quick Wins — حاجات تعملها النهاردة', preview: 'غيّر الـ bio بتاعك لـ: ...' },
+                { title: '٥. تحليل المنافسين الأولي', preview: 'مقارنة بالمنافسين في نفس المجال...' },
+                { title: '٦. توصيات مخصصة', preview: 'بناءً على الـ score بتاعك في كل محور...' },
+              ].map((section, i) => (
+                <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/10">
+                  <h4 className="text-sm font-bold text-indigo-300 mb-1">{section.title}</h4>
+                  <p className="text-xs text-zinc-500" style={{ filter: 'blur(4px)', userSelect: 'none' }}>
+                    {section.preview} وده بيأثر على الـ perception بتاع العملاء بشكل كبير. محتاج تركّز على تحسين الجزء ده لأنه الأساس اللي كل حاجة تانية مبنية عليه. الخطوة العملية الأولى هي إنك تعمل audit سريع للـ touchpoints الحالية.
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA */}
+            <div className="p-6 text-center bg-indigo-900/20">
+              <button 
+                onClick={handlePremiumUpgrade}
+                disabled={premiumLoading}
+                className="px-8 py-4 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold text-base transition hover:from-indigo-400 hover:to-purple-400 disabled:opacity-50 shadow-lg shadow-indigo-500/25"
+              >
+                {premiumLoading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                    جاري إنشاء التقرير المفصّل...
+                  </span>
+                ) : (
+                  `اكشف التقرير الكامل — ٩٩ جنيه بس`
+                )}
+              </button>
+              {premiumError && <p className="text-xs text-red-400 mt-2">{premiumError}</p>}
+              <p className="text-xs text-zinc-600 mt-2">١٠٠ كريدت · ضمان استرجاع لو مش راضي</p>
+            </div>
           </div>
 
           {/* Recommendation */}

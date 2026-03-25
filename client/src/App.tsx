@@ -53,6 +53,8 @@ const WzrdAdminPage = lazy(() => import("./pages/WzrdAdmin"));
 const ProfilePage = lazy(() => import("./pages/Profile"));
 const MyBrandPage = lazy(() => import("./pages/MyBrand"));
 const CopilotPage = lazy(() => import("./pages/Copilot"));
+const CompetitiveBenchmarkPage = lazy(() => import("./pages/CompetitiveBenchmark"));
+const QuickDiagnosisPage = lazy(() => import("./pages/QuickDiagnosis"));
 
 function SuspenseWrapper({ children, fallback }: { children: React.ReactNode; fallback?: React.ReactNode }) {
   return (
@@ -118,6 +120,8 @@ function App() {
               <Route path="/pricing">{() => <SuspenseWrapper><PricingPage /></SuspenseWrapper>}</Route>
               <Route path="/my-brand">{() => <SuspenseWrapper><MyBrandPage /></SuspenseWrapper>}</Route>
               <Route path="/copilot">{() => <SuspenseWrapper><CopilotPage /></SuspenseWrapper>}</Route>
+              <Route path="/tools/benchmark">{() => <SuspenseWrapper><CompetitiveBenchmarkPage /></SuspenseWrapper>}</Route>
+              <Route path="/tools/quick">{() => <SuspenseWrapper><QuickDiagnosisPage /></SuspenseWrapper>}</Route>
               <Route path="/wzrd-admin">{() => <SuspenseWrapper><WzrdAdminPage /></SuspenseWrapper>}</Route>
               <Route path="/profile">{() => <SuspenseWrapper><ProfilePage /></SuspenseWrapper>}</Route>
               {/* Existing public routes */}

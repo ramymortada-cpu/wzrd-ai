@@ -13,6 +13,7 @@ import { getSessionCookieOptions } from "../_core/cookies";
 import { publicProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { logger } from "../_core/logger";
+import { fireEmailTrigger } from "../emailTrigger";
 import { createPublicUser, getUserByEmail } from "../db";
 import { addCredits, SIGNUP_BONUS } from "../db";
 import { sendWelcomeEmail } from "../wzrdEmails";
@@ -86,6 +87,9 @@ export const authRouter = router({
 
       // Send welcome email (async, don't block)
       sendWelcomeEmail(input.email, input.name).catch(() => {});
+
+      // Fire email automation trigger (non-blocking)
+      fireEmailTrigger('signup', result.id, { credits: SIGNUP_BONUS }).catch(() => {});
 
       return {
         success: true,

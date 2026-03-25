@@ -42,7 +42,6 @@ CREATE TABLE IF NOT EXISTS `abandoned_carts` (
   INDEX `idx_ac_pending` (`completed`, `follow_up_sent`)
 );
 
--- Credit ledger: copilot refunds + referral bonuses
 ALTER TABLE `credit_transactions` MODIFY COLUMN `type` ENUM(
   'signup_bonus','purchase','tool_usage','refund','admin','referral_bonus','copilot_refund'
 ) NOT NULL;
