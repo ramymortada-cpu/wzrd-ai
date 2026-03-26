@@ -122,23 +122,8 @@ test.describe('WZRD AI Smoke Tests', () => {
     expect(body).toContain('Primo');
   });
 
-  test('no debug whoami session leak', async ({ request }) => {
+  test('/api/debug/whoami returns 404', async ({ request }) => {
     const res = await request.get(`${BASE}/api/debug/whoami`);
-    if (res.status() === 404) {
-      expect(res.status()).toBe(404);
-      return;
-    }
-    // Older deploys: unknown /api/* fell through to SPA (200 HTML). Must not return JSON user.
-    const ct = (res.headers()['content-type'] || '').toLowerCase();
-    if (ct.includes('application/json')) {
-      const body = await res.json();
-      // `user: null` is ok; a populated user object without auth would be a leak
-      if (body?.user != null) {
-        expect(typeof body.user).not.toBe('object');
-      }
-      expect(body?.email).toBeUndefined();
-    } else {
-      expect(ct).toContain('text/html');
-    }
+    expect(res.status()).toBe(404);
   });
 });

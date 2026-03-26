@@ -9,7 +9,19 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { ENV } from './env';
 
-const secret = () => new TextEncoder().encode(ENV.cookieSecret || 'fallback-dev-secret-change-me');
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET?.trim()) {
+  throw new Error('JWT_SECRET is required in production');
+}
+
+function getSecretKey(): Uint8Array {
+  const raw = ENV.cookieSecret?.trim();
+  if (process.env.NODE_ENV === 'production' && !raw) {
+    throw new Error('JWT_SECRET is required in production');
+  }
+  return new TextEncoder().encode(raw || 'fallback-dev-secret-change-me');
+}
+
+const secret = () => getSecretKey();
 
 export interface SessionPayload {
   id: number;

@@ -99,6 +99,15 @@ const DEFAULT_CONFIG: SiteConfig = {
 let config: SiteConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
 let dbReady = false;
 
+const PLACEHOLDER_WHATSAPP = '201XXXXXXXXX';
+
+function normalizeSiteWhatsApp(): void {
+  const w = (config.site?.whatsapp || '').trim();
+  if (!w || w === PLACEHOLDER_WHATSAPP) {
+    config.site = { ...config.site, whatsapp: DEFAULT_CONFIG.site.whatsapp };
+  }
+}
+
 // ════════════════════════════════════════════
 // DB OPERATIONS
 // ════════════════════════════════════════════
@@ -130,10 +139,11 @@ export async function loadConfigFromDb(): Promise<void> {
           const val = JSON.parse(row.value);
           if (row.key === 'homepage') config.homepage = val;
           else if (row.key === 'services') config.services = val;
-          else if (row.key === 'site') config.site = val;
+          else if (row.key === 'site') config.site = { ...DEFAULT_CONFIG.site, ...val };
           else if (row.key === 'prompts') config.prompts = val;
         } catch { /* skip bad rows */ }
       }
+      normalizeSiteWhatsApp();
       logger.info('[SiteConfig] Loaded from DB (%d keys)', rows.length);
     }
     dbReady = true;
@@ -191,6 +201,7 @@ export function getSiteConfig(): SiteConfig {
 }
 
 export function getPublicSiteConfig(): PublicSiteConfig {
+  normalizeSiteWhatsApp();
   return {
     homepage: config.homepage,
     services: config.services,

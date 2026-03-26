@@ -69,6 +69,9 @@ async function startServer() {
   app.use('/api/trpc/tools.presenceAudit', rateLimiters.toolUsage);
   app.use('/api/trpc/tools.identitySnapshot', rateLimiters.toolUsage);
   app.use('/api/trpc/tools.launchReadiness', rateLimiters.toolUsage);
+  app.use('/api/trpc/tools.competitiveBenchmark', rateLimiters.toolUsage);
+  app.use('/api/trpc/tools.quickDiagnosis', rateLimiters.toolUsage);
+  app.use('/api/trpc/copilot.chat', rateLimiters.ai);
   // Signup (3 per hour — prevents spam accounts)
   app.use('/api/trpc/auth.signup', rateLimiters.signup);
   // Credits purchase (5 per hour)
