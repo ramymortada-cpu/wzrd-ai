@@ -35,6 +35,9 @@ import { dashboardRouter } from "./dashboard";
 import { referralRouter } from "./referral";
 import { copilotRouter } from "./copilot";
 import { serviceRequestRouter } from "./serviceRequest";
+import { cartsRouter } from "./carts";
+import { requestUpdatesRouter } from "./requestUpdates";
+import { requestFilesRouter } from "./requestFiles";
 
 export const appRouter = router({
   system: systemRouter,
@@ -69,6 +72,9 @@ export const appRouter = router({
   referral: referralRouter,
   copilot: copilotRouter,
   serviceRequest: serviceRequestRouter,
+  carts: cartsRouter,
+  requestUpdates: requestUpdatesRouter,
+  requestFiles: requestFilesRouter,
 });
 
 export type AppRouter = typeof appRouter;
