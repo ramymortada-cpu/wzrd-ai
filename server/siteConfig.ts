@@ -113,6 +113,7 @@ const DEFAULT_CONFIG: SiteConfig = {
   creditPlans: {
     plans: [
       { id: 'single_report', credits: 100, priceEGP: 99, name: 'Single Report', nameAr: 'تقرير واحد', descEn: '1 Premium AI report', descAr: 'تقرير مفصّل واحد', popular: false, sortOrder: 10 },
+      { id: 'single_report_pro', credits: 200, priceEGP: 199, name: 'Full Report Pro', nameAr: 'تقرير مفصّل Pro', descEn: 'Extended premium analysis', descAr: 'تحليل بريميوم موسّع', popular: false, hideFromPricing: true, sortOrder: 12 },
       { id: 'bundle_6', credits: 800, priceEGP: 499, name: '6-Report Bundle', nameAr: 'باقة ٦ تقارير', descEn: 'Save 45% — comprehensive', descAr: 'وفّر ٤٥% — أشمل تحليل', popular: true, sortOrder: 20 },
       { id: 'credits_500', credits: 500, priceEGP: 499, name: '500 Credits', nameAr: '٥٠٠ كريدت', descEn: '~25 tool runs', descAr: '~٢٥ أداة تشخيص', popular: false, sortOrder: 30 },
       { id: 'credits_1500', credits: 1500, priceEGP: 999, name: '1500 Credits', nameAr: '١٥٠٠ كريدت', descEn: 'Best value — ~75 tools', descAr: 'الأوفر — ~٧٥ أداة', popular: false, sortOrder: 40 },
@@ -136,6 +137,21 @@ function normalizeSiteWhatsApp(): void {
   const w = (config.site?.whatsapp || '').trim();
   if (!w || w === PLACEHOLDER_WHATSAPP) {
     config.site = { ...config.site, whatsapp: DEFAULT_CONFIG.site.whatsapp };
+  }
+}
+
+/** After DB load: ensure new default plan IDs exist (e.g. `single_report_pro`) without removing admin edits. */
+function mergeMissingCreditPlansFromDefaults(): void {
+  let added = false;
+  for (const d of DEFAULT_CONFIG.creditPlans.plans) {
+    if (!config.creditPlans.plans.some((p) => p.id === d.id)) {
+      config.creditPlans.plans.push(JSON.parse(JSON.stringify(d)));
+      added = true;
+    }
+  }
+  if (added) {
+    void saveSectionToDb('creditPlans', config.creditPlans);
+    logger.info('[SiteConfig] Merged missing default credit plans into stored config');
   }
 }
 
@@ -177,6 +193,8 @@ export async function loadConfigFromDb(): Promise<void> {
       }
       if (!config.creditPlans?.plans?.length) {
         config.creditPlans = JSON.parse(JSON.stringify(DEFAULT_CONFIG.creditPlans));
+      } else {
+        mergeMissingCreditPlansFromDefaults();
       }
       normalizeSiteWhatsApp();
       logger.info('[SiteConfig] Loaded from DB (%d keys)', rows.length);
@@ -272,6 +290,56 @@ export function getPaymobPlansMap(): Record<
 export function getCreditPlansList(): CreditPlanDef[] {
   const plans = [...(config.creditPlans?.plans || [])];
   return plans.sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999) || a.id.localeCompare(b.id));
+}
+
+/** Premium tool pricing (API + UI) — synced to credit plan IDs editable in admin. */
+export interface PremiumPriceEntry {
+  credits: number;
+  egp: number;
+  label: string;
+  labelEn: string;
+}
+
+export type PremiumPricesMap = {
+  single_report: PremiumPriceEntry;
+  single_report_pro: PremiumPriceEntry;
+  bundle_6: PremiumPriceEntry;
+  credits_500: PremiumPriceEntry;
+  credits_1500: PremiumPriceEntry;
+};
+
+const PREMIUM_PRICES_FALLBACK: PremiumPricesMap = {
+  single_report: { credits: 100, egp: 99, label: 'تقرير مفصّل', labelEn: 'Full Report' },
+  single_report_pro: { credits: 200, egp: 199, label: 'تقرير مفصّل Pro', labelEn: 'Full Report Pro' },
+  bundle_6: { credits: 800, egp: 499, label: 'باقة ٦ تقارير', labelEn: '6-Report Bundle (Save 45%)' },
+  credits_500: { credits: 500, egp: 499, label: '٥٠٠ كريدت', labelEn: '500 Credits' },
+  credits_1500: { credits: 1500, egp: 999, label: '١٥٠٠ كريدت (الأوفر)', labelEn: '1500 Credits (Best Value)' },
+};
+
+function premiumEntryFromPlan(planId: string, fallback: PremiumPriceEntry): PremiumPriceEntry {
+  const p = config.creditPlans.plans.find((x) => x.id === planId);
+  if (!p) return fallback;
+  return {
+    credits: p.credits,
+    egp: p.priceEGP,
+    label: p.nameAr || fallback.label,
+    labelEn: p.name || fallback.labelEn,
+  };
+}
+
+export function getPremiumPrices(): PremiumPricesMap {
+  return {
+    single_report: premiumEntryFromPlan('single_report', PREMIUM_PRICES_FALLBACK.single_report),
+    single_report_pro: premiumEntryFromPlan('single_report_pro', PREMIUM_PRICES_FALLBACK.single_report_pro),
+    bundle_6: premiumEntryFromPlan('bundle_6', PREMIUM_PRICES_FALLBACK.bundle_6),
+    credits_500: premiumEntryFromPlan('credits_500', PREMIUM_PRICES_FALLBACK.credits_500),
+    credits_1500: premiumEntryFromPlan('credits_1500', PREMIUM_PRICES_FALLBACK.credits_1500),
+  };
+}
+
+/** Credits deducted for in-app «full premium report» (Claude) — uses `single_report` plan. */
+export function getPremiumReportCreditCost(): number {
+  return getPremiumPrices().single_report.credits;
 }
 
 export function upsertCreditPlan(

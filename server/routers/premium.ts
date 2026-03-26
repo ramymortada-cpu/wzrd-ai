@@ -21,6 +21,7 @@ import { getDb } from "../db/index";
 import { users, creditTransactions } from "../../drizzle/schema";
 import { eq, sql } from "drizzle-orm";
 import { validatePromoCode, type PromoValidation } from "../db/promoCodes";
+import { getPremiumPrices, getPremiumReportCreditCost } from "../siteConfig";
 
 function mapPromoToClient(v: PromoValidation) {
   return {
@@ -41,14 +42,6 @@ const promoInput = z.object({
 // ════════════════════════════════════════════
 // PRICING
 // ════════════════════════════════════════════
-
-export const PREMIUM_PRICES = {
-  single_report: { credits: 100, egp: 99, label: 'تقرير مفصّل', labelEn: 'Full Report' },
-  single_report_pro: { credits: 200, egp: 199, label: 'تقرير مفصّل Pro', labelEn: 'Full Report Pro' },
-  bundle_6: { credits: 800, egp: 499, label: 'باقة ٦ تقارير', labelEn: '6-Report Bundle (Save 45%)' },
-  credits_500: { credits: 500, egp: 499, label: '٥٠٠ كريدت', labelEn: '500 Credits' },
-  credits_1500: { credits: 1500, egp: 999, label: '١٥٠٠ كريدت (الأوفر)', labelEn: '1500 Credits (Best Value)' },
-};
 
 // ════════════════════════════════════════════
 // PREMIUM SYSTEM PROMPT
@@ -166,8 +159,8 @@ export const premiumRouter = router({
       return mapPromoToClient(v);
     }),
 
-  /** Get premium pricing (public — show on landing/tools) */
-  pricing: publicProcedure.query(() => PREMIUM_PRICES),
+  /** Get premium pricing (public — show on landing/tools) — synced to admin credit plans */
+  pricing: publicProcedure.query(() => getPremiumPrices()),
 
   /** Generate premium full report */
   generateReport: protectedProcedure
@@ -181,7 +174,8 @@ export const premiumRouter = router({
       const userEmail = (ctx.user as any)?.email;
 
       // 1. Deduct credits
-      const deduction = await deductPremiumCredits(userId, PREMIUM_PRICES.single_report.credits, input.toolId);
+      const premiumCredits = getPremiumReportCreditCost();
+      const deduction = await deductPremiumCredits(userId, premiumCredits, input.toolId);
       if (!deduction.success) {
         return { success: false, error: deduction.error };
       }
@@ -240,7 +234,7 @@ export const premiumRouter = router({
         return {
           success: true,
           report,
-          creditsUsed: PREMIUM_PRICES.single_report.credits,
+          creditsUsed: premiumCredits,
           creditsRemaining: remaining,
           model: 'Claude',
         };
@@ -257,7 +251,7 @@ export const premiumRouter = router({
     return {
       claudeAvailable: !!ENV.claudeApiKey,
       model: ENV.claudeModel,
-      prices: PREMIUM_PRICES,
+      prices: getPremiumPrices(),
     };
   }),
 });

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { waMeHref } from '@/lib/waContact';
+import { toArabicNumerals } from '@/lib/formatUtils';
 
 export interface ToolField {
   name: string;
@@ -219,6 +220,20 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
   const [premiumReport, setPremiumReport] = useState<any>(null);
   const [premiumLoading, setPremiumLoading] = useState(false);
   const [premiumError, setPremiumError] = useState('');
+  const [premiumOffer, setPremiumOffer] = useState({ credits: 100, egp: 99 });
+
+  useEffect(() => {
+    fetch('/api/trpc/premium.pricing')
+      .then((r) => r.json())
+      .then((d) => {
+        const prices = d?.result?.data?.json ?? d?.result?.data;
+        const sr = prices?.single_report;
+        if (sr && typeof sr.credits === 'number' && typeof sr.egp === 'number') {
+          setPremiumOffer({ credits: sr.credits, egp: sr.egp });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const updateField = (name: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -592,11 +607,13 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
                     جاري إنشاء التقرير المفصّل...
                   </span>
                 ) : (
-                  `اكشف التقرير الكامل — ٩٩ جنيه بس`
+                  `اكشف التقرير الكامل — ${toArabicNumerals(String(premiumOffer.egp))} جنيه بس`
                 )}
               </button>
               {premiumError && <p className="text-xs text-red-400 mt-2">{premiumError}</p>}
-              <p className="text-xs text-zinc-600 mt-2">١٠٠ كريدت · ضمان استرجاع لو مش راضي</p>
+              <p className="text-xs text-zinc-600 mt-2">
+                {toArabicNumerals(String(premiumOffer.credits))} كريدت · ضمان استرجاع لو مش راضي
+              </p>
             </div>
           </div>
 
