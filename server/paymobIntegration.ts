@@ -23,7 +23,7 @@ import { logger } from './_core/logger';
 import type { Express, Request, Response } from 'express';
 import { validatePromoCode, incrementPromoUsage } from './db/promoCodes';
 import { getDb } from './db/index';
-import { abandonedCarts } from '../drizzle/schema';
+import { abandonedCarts, paymobProcessedTransactions } from '../drizzle/schema';
 import { eq, and } from 'drizzle-orm';
 import { getPaymobPlansMap } from './siteConfig';
 
@@ -220,12 +220,9 @@ function verifyHmac(data: Record<string, unknown>, receivedHmac: string): boolea
  * 
  * Safety features:
  * - HMAC signature verification
- * - Idempotency: tracks processed transaction IDs to prevent double-crediting
+ * - Idempotency: `paymob_processed_transactions` row per Paymob transaction (multi-instance safe)
  * - Retry: if addCredits fails, retries up to 3 times with delay
  */
-
-// Idempotency guard — stores processed transaction IDs (in-memory, reset on restart)
-const processedTransactions = new Set<string>();
 
 // Webhook event log (in-memory, last 100 events)
 interface WebhookEvent {
@@ -249,6 +246,54 @@ function logWebhookEvent(event: WebhookEvent) {
 /** Get webhook event log (for admin panel) */
 export function getWebhookLog() {
   return webhookLog.slice(0, 50);
+}
+
+function isMysqlDuplicateKey(err: unknown): boolean {
+  const e = err as { errno?: number; code?: string };
+  return e.errno === 1062 || e.code === 'ER_DUP_ENTRY';
+}
+
+/**
+ * Claim this Paymob transaction in DB (atomic). Only one instance wins per transaction ID.
+ * If addCredits fails later, call releasePaymobClaim so Paymob retries can re-attempt.
+ */
+async function claimPaymobTransaction(
+  transactionId: string,
+  meta: { userId: number; planId: string; credits: number; amountCents: number },
+): Promise<'claimed' | 'duplicate' | 'error'> {
+  const db = await getDb();
+  if (!db) {
+    logger.error({ transactionId }, '[Paymob] claim failed — no DB');
+    return 'error';
+  }
+  try {
+    await db.insert(paymobProcessedTransactions).values({
+      paymobTransactionId: transactionId,
+      userId: meta.userId,
+      planId: meta.planId,
+      credits: meta.credits,
+      amountCents: meta.amountCents,
+    });
+    return 'claimed';
+  } catch (err: unknown) {
+    if (isMysqlDuplicateKey(err)) {
+      return 'duplicate';
+    }
+    logger.error({ err, transactionId }, '[Paymob] claim insert failed');
+    return 'error';
+  }
+}
+
+async function releasePaymobClaim(transactionId: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  try {
+    await db
+      .delete(paymobProcessedTransactions)
+      .where(eq(paymobProcessedTransactions.paymobTransactionId, transactionId));
+  } catch (err) {
+    logger.error({ err, transactionId }, '[Paymob] release claim failed');
+  }
 }
 
 async function addCreditsWithRetry(
@@ -312,14 +357,6 @@ export function mountPaymobWebhook(app: Express) {
           ? (() => { const parts = transaction.special_reference.split('-'); return { userId: parts[1], planId: parts[2] }; })() : null) ||
         {};
 
-      // Idempotency: skip if already processed
-      if (transactionId && processedTransactions.has(transactionId)) {
-        logger.info({ transactionId }, '[Paymob] Transaction already processed — skipping (idempotency)');
-        logWebhookEvent({ id: `dup-${Date.now()}`, transactionId, status: 'duplicate', userId: 0, planId: '', credits: 0, amountCents: 0, timestamp: Date.now() });
-        res.status(200).json({ received: true, duplicate: true });
-        return;
-      }
-
       if (success) {
         const userId = parseInt(extras.userId || '0');
         const planId = extras.planId || '';
@@ -334,10 +371,25 @@ export function mountPaymobWebhook(app: Express) {
         }
 
         if (userId && credits) {
-          // Mark as processed BEFORE attempting (prevents race condition)
-          if (transactionId) processedTransactions.add(transactionId);
+          if (transactionId) {
+            const claim = await claimPaymobTransaction(transactionId, {
+              userId,
+              planId,
+              credits,
+              amountCents: transaction.amount_cents || 0,
+            });
+            if (claim === 'duplicate') {
+              logger.info({ transactionId }, '[Paymob] Transaction already processed — skipping (idempotency)');
+              logWebhookEvent({ id: `dup-${Date.now()}`, transactionId, status: 'duplicate', userId: 0, planId: '', credits: 0, amountCents: 0, timestamp: Date.now() });
+              res.status(200).json({ received: true, duplicate: true });
+              return;
+            }
+            if (claim === 'error') {
+              res.status(500).json({ error: 'Idempotency claim failed' });
+              return;
+            }
+          }
 
-          // Add credits with retry
           const added = await addCreditsWithRetry(
             userId, credits, planId,
             transactionId, orderId, transaction.amount_cents
@@ -371,7 +423,7 @@ export function mountPaymobWebhook(app: Express) {
               logger.warn({ err, userId, planId }, '[Paymob] abandoned cart completion update failed');
             }
           } else if (transactionId) {
-            processedTransactions.delete(transactionId);
+            await releasePaymobClaim(transactionId);
           }
         }
       } else {

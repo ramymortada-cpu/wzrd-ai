@@ -55,6 +55,23 @@ export type CreditTransaction = typeof creditTransactions.$inferSelect;
 export type InsertCreditTransaction = typeof creditTransactions.$inferInsert;
 
 /**
+ * Paymob webhook idempotency — one row per Paymob transaction ID (multi-instance safe).
+ * Not the CRM `payments` table (project/client invoices).
+ */
+export const paymobProcessedTransactions = mysqlTable("paymob_processed_transactions", {
+  id: int("id").autoincrement().primaryKey(),
+  paymobTransactionId: varchar("paymobTransactionId", { length: 64 }).notNull().unique(),
+  userId: int("userId"),
+  planId: varchar("planId", { length: 100 }),
+  credits: int("credits"),
+  amountCents: int("amountCents"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PaymobProcessedTransaction = typeof paymobProcessedTransactions.$inferSelect;
+export type InsertPaymobProcessedTransaction = typeof paymobProcessedTransactions.$inferInsert;
+
+/**
  * Clients table - stores all client information
  */
 export const clients = mysqlTable("clients", {
