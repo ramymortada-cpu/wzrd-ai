@@ -12,6 +12,8 @@
     "db:migrate:sql": "node scripts/run-drizzle-mysql-migrations.mjs",
     "format": "prettier --write .",
     "test": "vitest run",
+    "test:smoke": "playwright test e2e/smoke.test.ts",
+    "test:release": "pnpm check && pnpm build && pnpm test:smoke",
     "db:push": "drizzle-kit generate && drizzle-kit migrate"
   },
   "dependencies": {

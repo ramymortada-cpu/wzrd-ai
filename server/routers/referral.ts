@@ -3,7 +3,7 @@
  * 
  * - referral.myCode → get/create user's unique referral code
  * - referral.myStats → referral count + credits earned
- * - referral.apply → apply referral code during signup (called from auth)
+ * - referral.applyReferral → apply referral code during signup (called from auth)
  * 
  * Each referral = 50 credits to referrer + 50 credits to new user.
  * Anti-abuse: self-referral check, max 3 referrals per IP/day.
@@ -92,8 +92,8 @@ export const referralRouter = router({
       };
     }),
 
-  /** Apply referral code (called during/after signup) */
-  apply: publicProcedure
+  /** Apply referral code (called during/after signup). Not named `apply` — reserved in tRPC router. */
+  applyReferral: publicProcedure
     .input(z.object({
       code: z.string().min(4).max(20),
       newUserId: z.number(),

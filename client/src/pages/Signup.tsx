@@ -46,7 +46,7 @@ export default function Signup() {
       if (result?.success) {
         // Apply referral code if present (non-blocking)
         if (refCode && result.user?.id) {
-          fetch('/api/trpc/referral.apply', {
+          fetch('/api/trpc/referral.applyReferral', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ json: { code: refCode, newUserId: result.user.id } }),

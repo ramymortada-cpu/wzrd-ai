@@ -47,6 +47,9 @@ async function startServer() {
   // === SIMPLE HEALTH CHECK (for Docker/Railway — no auth, no params) ===
   app.get('/healthz', (_req, res) => res.status(200).json({ ok: true, uptime: Math.floor(process.uptime()) }));
 
+  // Legacy path — do not expose session debug on any environment
+  app.get('/api/debug/whoami', (_req, res) => res.status(404).json({ error: 'not_found' }));
+
   // === RATE LIMITING ON PUBLIC ENDPOINTS ===
   // Quick-check uses LLM — most aggressive limiting (3 req/min)
   app.use('/api/trpc/leads.submitQuickCheck', rateLimiters.quickCheck);

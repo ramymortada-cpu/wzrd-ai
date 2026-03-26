@@ -1709,7 +1709,13 @@ export default function WzrdAdmin() {
   };
 
   useEffect(() => {
-    fetch('/api/debug/whoami', { credentials: 'include' }).then(r => r.json()).then(d => setAdminUser(d.user || null)).catch(() => setAdminUser(null));
+    fetch('/api/trpc/auth.me', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => {
+        const u = d.result?.data?.json ?? d.result?.data;
+        setAdminUser(u ? { name: u.name } : null);
+      })
+      .catch(() => setAdminUser(null));
   }, []);
 
   useEffect(() => {
