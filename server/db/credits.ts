@@ -12,18 +12,14 @@
 import { eq, desc, sql, and } from "drizzle-orm";
 import { users, creditTransactions } from "../../drizzle/schema";
 import { getDb } from "./index";
+import { WZRD_DIAGNOSIS_TOOL_COSTS } from "@shared/wzrdDiagnosisToolCosts";
 
 // ════════════════════════════════════════════
 // TOOL CREDIT COSTS
 // ════════════════════════════════════════════
 
 export const TOOL_COSTS: Record<string, number> = {
-  brand_diagnosis: 20,
-  offer_check: 25,
-  message_check: 20,
-  presence_audit: 25,
-  identity_snapshot: 20,
-  launch_readiness: 30,
+  ...WZRD_DIAGNOSIS_TOOL_COSTS,
   competitive_benchmark: 40,
   copilot_message: 5,
 };
