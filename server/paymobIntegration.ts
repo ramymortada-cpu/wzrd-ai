@@ -21,6 +21,10 @@
 import crypto from 'crypto';
 import { logger } from './_core/logger';
 import type { Express, Request, Response } from 'express';
+import { validatePromoCode, incrementPromoUsage } from './db/promoCodes';
+import { getDb } from './db/index';
+import { abandonedCarts } from '../drizzle/schema';
+import { eq, and } from 'drizzle-orm';
 
 // ════════════════════════════════════════════
 // CONFIG
@@ -38,8 +42,12 @@ interface PaymobPlan {
 
 const PLANS: Record<string, PaymobPlan> = {
   starter: { credits: 500, amountEGP: 499, amountCents: 49900, name: 'Starter — 500 Credits', nameAr: 'ستارتر — 500 نقطة' },
-  pro:     { credits: 1500, amountEGP: 999, amountCents: 99900, name: 'Pro — 1,500 Credits', nameAr: 'برو — 1,500 نقطة' },
-  agency:  { credits: 5000, amountEGP: 2499, amountCents: 249900, name: 'Agency — 5,000 Credits', nameAr: 'وكالة — 5,000 نقطة' },
+  pro: { credits: 1500, amountEGP: 999, amountCents: 99900, name: 'Pro — 1,500 Credits', nameAr: 'برو — 1,500 نقطة' },
+  agency: { credits: 5000, amountEGP: 2499, amountCents: 249900, name: 'Agency — 5,000 Credits', nameAr: 'وكالة — 5,000 نقطة' },
+  single_report: { credits: 100, amountEGP: 99, amountCents: 9900, name: 'Premium Report — 100 Credits', nameAr: 'تقرير مميز — ١٠٠ كريدت' },
+  bundle_6: { credits: 800, amountEGP: 499, amountCents: 49900, name: '6-Report Bundle — 800 Credits', nameAr: 'باقة ٦ تقارير — ٨٠٠ كريدت' },
+  credits_500: { credits: 500, amountEGP: 499, amountCents: 49900, name: '500 Credits', nameAr: '٥٠٠ كريدت' },
+  credits_1500: { credits: 1500, amountEGP: 999, amountCents: 99900, name: '1500 Credits', nameAr: '١٥٠٠ كريدت' },
 };
 
 export { PLANS as PAYMOB_PLANS };
@@ -57,7 +65,8 @@ export async function createPaymentIntention(
   userId: number,
   userEmail: string,
   userName: string,
-  appUrl: string
+  appUrl: string,
+  options?: { promoCode?: string | null }
 ): Promise<{ clientSecret: string; publicKey: string; redirectUrl: string } | { error: string }> {
   const secretKey = process.env.PAYMOB_SECRET_KEY;
   const publicKey = process.env.PAYMOB_PUBLIC_KEY;
@@ -69,6 +78,16 @@ export async function createPaymentIntention(
 
   const plan = PLANS[planId];
   if (!plan) return { error: 'Invalid plan.' };
+
+  const promoRaw = options?.promoCode?.trim();
+  let chargeCents = plan.amountCents;
+  if (promoRaw) {
+    const promoCheck = await validatePromoCode(promoRaw, plan.amountEGP);
+    if (!promoCheck.valid) {
+      return { error: promoCheck.message || 'كود الخصم غير صالح.' };
+    }
+    chargeCents = promoCheck.finalAmountCents;
+  }
 
   const integrationIds = [
     integrationId,
@@ -87,12 +106,12 @@ export async function createPaymentIntention(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        amount: plan.amountCents,
+        amount: chargeCents,
         currency: 'EGP',
         payment_methods: integrationIds,
         items: [{
           name: plan.name,
-          amount: plan.amountCents,
+          amount: chargeCents,
           description: `WZRD AI ${plan.name}`,
           quantity: 1,
         }],
@@ -113,6 +132,7 @@ export async function createPaymentIntention(
           userId: String(userId),
           planId,
           credits: String(plan.credits),
+          ...(promoRaw ? { promoCode: promoRaw.toUpperCase() } : {}),
         },
         special_reference: `wzrd-${userId}-${planId}-${Date.now()}`,
         redirection_url: `${appUrl}/tools?purchase=success&plan=${planId}`,
@@ -303,6 +323,9 @@ export function mountPaymobWebhook(app: Express) {
       if (success) {
         const userId = parseInt(extras.userId || '0');
         const planId = extras.planId || '';
+        const promoCodeExtra = typeof (extras as Record<string, unknown>).promoCode === 'string'
+          ? String((extras as Record<string, unknown>).promoCode)
+          : '';
         // Get credits from extras, or look up from plan if missing
         let credits = parseInt(extras.credits || '0');
         if (!credits && planId && PLANS[planId]) {
@@ -321,7 +344,32 @@ export function mountPaymobWebhook(app: Express) {
 
           logWebhookEvent({ id: `txn-${transactionId}`, transactionId, status: added ? 'success' : 'failed', userId, planId, credits, amountCents: transaction.amount_cents || 0, timestamp: Date.now(), error: added ? undefined : 'Credits add failed after retries' });
 
-          if (!added) {
+          if (added) {
+            if (promoCodeExtra) {
+              try {
+                await incrementPromoUsage(promoCodeExtra);
+              } catch (err) {
+                logger.warn({ err, promoCodeExtra }, '[Paymob] incrementPromoUsage failed');
+              }
+            }
+            try {
+              const db = await getDb();
+              if (db) {
+                await db
+                  .update(abandonedCarts)
+                  .set({ completed: 1 })
+                  .where(
+                    and(
+                      eq(abandonedCarts.userId, userId),
+                      eq(abandonedCarts.productType, planId),
+                      eq(abandonedCarts.completed, 0)
+                    )
+                  );
+              }
+            } catch (err) {
+              logger.warn({ err, userId, planId }, '[Paymob] abandoned cart completion update failed');
+            }
+          } else if (transactionId) {
             processedTransactions.delete(transactionId);
           }
         }

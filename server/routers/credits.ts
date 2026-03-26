@@ -16,6 +16,18 @@ import {
   getUserCredits, getCreditHistory, addCredits,
   getCreditStats, TOOL_COSTS, SIGNUP_BONUS,
 } from "../db";
+import { getDb } from "../db/index";
+import { abandonedCarts } from "../../drizzle/schema";
+
+const PAYMENT_PLAN_IDS = [
+  "starter",
+  "pro",
+  "agency",
+  "single_report",
+  "bundle_6",
+  "credits_500",
+  "credits_1500",
+] as const;
 
 export const creditsRouter = router({
   /** Get current user's credit balance */
@@ -62,22 +74,40 @@ export const creditsRouter = router({
   /** Purchase credits via Paymob Checkout */
   purchase: protectedProcedure
     .input(z.object({
-      planId: z.enum(['starter', 'pro', 'agency']),
+      planId: z.enum(PAYMENT_PLAN_IDS),
+      promoCode: z.string().max(50).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const { createPaymentIntention } = await import('../paymobIntegration');
+      const { createPaymentIntention, PAYMOB_PLANS } = await import('../paymobIntegration');
       const appUrl = process.env.APP_URL || 'http://localhost:3000';
       const result = await createPaymentIntention(
         input.planId,
         ctx.user!.id,
         ctx.user!.email || '',
         ctx.user!.name || 'User',
-        appUrl
+        appUrl,
+        { promoCode: input.promoCode?.trim() || undefined }
       );
 
       if ('error' in result) {
         logger.warn({ userId: ctx.user!.id, plan: input.planId, error: result.error }, 'Paymob checkout failed');
         return { success: false, redirectUrl: null, message: result.error };
+      }
+
+      try {
+        const db = await getDb();
+        const plan = PAYMOB_PLANS[input.planId];
+        if (db && plan) {
+          await db.insert(abandonedCarts).values({
+            userId: ctx.user!.id,
+            productType: input.planId,
+            amountEgp: plan.amountEGP,
+            completed: 0,
+            followUpSent: 0,
+          });
+        }
+      } catch (err) {
+        logger.warn({ err, userId: ctx.user!.id, planId: input.planId }, 'Abandoned cart insert failed (non-fatal)');
       }
 
       return { success: true, redirectUrl: result.redirectUrl, message: 'Redirecting to payment...' };

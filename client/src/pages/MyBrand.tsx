@@ -1,7 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { useI18n } from '@/lib/i18n';
 import WzrdPublicHeader from '@/components/WzrdPublicHeader';
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 interface DiagnosisEntry {
   id: number;
@@ -105,12 +115,27 @@ export default function MyBrand() {
     return d.toLocaleDateString(isAr ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric' });
   };
 
-  const toolName = (id: string) => {
+  const toolName = useCallback((id: string) => {
     const names: Record<string, string> = isAr
       ? { brand_diagnosis: 'تشخيص البراند', offer_check: 'فحص العرض', message_check: 'فحص الرسالة', presence_audit: 'فحص الحضور', identity_snapshot: 'لقطة الهوية', launch_readiness: 'جاهزية الإطلاق' }
       : { brand_diagnosis: 'Brand Diagnosis', offer_check: 'Offer Check', message_check: 'Message Check', presence_audit: 'Presence Audit', identity_snapshot: 'Identity Snapshot', launch_readiness: 'Launch Readiness' };
     return names[id] || id;
-  };
+  }, [isAr]);
+
+  const chartData = useMemo(() => {
+    return [...history]
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+      .map((e) => ({
+        label: new Date(e.createdAt).toLocaleDateString(isAr ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric' }),
+        score: e.score,
+        tool: toolName(e.toolId),
+      }));
+  }, [history, isAr, toolName]);
+
+  const firstScore = chartData[0]?.score ?? null;
+  const lastScore = chartData.length ? chartData[chartData.length - 1].score : null;
+  const totalDelta =
+    firstScore !== null && lastScore !== null && chartData.length >= 2 ? lastScore - firstScore : null;
 
   if (loading) {
     return (
@@ -200,6 +225,63 @@ export default function MyBrand() {
                 <span>{isAr ? 'قوي' : 'Strong'}</span>
               </div>
             </div>
+
+            {/* Stats + score trend chart */}
+            {chartData.length > 0 && (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 text-center">
+                    <div className="text-xs text-gray-500 mb-1">{isAr ? 'عدد التشخيصات' : 'Diagnoses'}</div>
+                    <div className="text-2xl font-bold text-gray-900">{history.length}</div>
+                  </div>
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 text-center">
+                    <div className="text-xs text-gray-500 mb-1">{isAr ? 'من أول لآخر نتيجة' : 'First → latest'}</div>
+                    <div
+                      className={`text-2xl font-bold ${
+                        totalDelta === null ? 'text-gray-400' : totalDelta > 0 ? 'text-green-600' : totalDelta < 0 ? 'text-red-600' : 'text-gray-700'
+                      }`}
+                    >
+                      {totalDelta === null ? '—' : `${totalDelta > 0 ? '+' : ''}${totalDelta}`}
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 text-center">
+                    <div className="text-xs text-gray-500 mb-1">{isAr ? 'الحالة' : 'Status'}</div>
+                    <div className={`text-lg font-semibold ${trendColor}`}>
+                      {trendIcon} {trendLabel}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-2">
+                    {isAr ? 'تطور النتيجة' : 'Score trend'}
+                  </h3>
+                  <div className="w-full" style={{ height: 220 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="wzrdScoreFill" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#6366f1" stopOpacity={0.35} />
+                            <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="#9ca3af" />
+                        <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} stroke="#9ca3af" width={32} />
+                        <ReferenceLine y={70} stroke="#22c55e" strokeDasharray="4 4" label={{ value: '70', fill: '#22c55e', fontSize: 10 }} />
+                        <ReferenceLine y={40} stroke="#ef4444" strokeDasharray="4 4" label={{ value: '40', fill: '#ef4444', fontSize: 10 }} />
+                        <Tooltip
+                          contentStyle={{ borderRadius: 12, border: '1px solid #e5e7eb' }}
+                          formatter={(value: number) => [`${value}/100`, isAr ? 'النتيجة' : 'Score']}
+                          labelFormatter={(_, payload) => (payload?.[0]?.payload?.tool as string) || ''}
+                        />
+                        <Area type="monotone" dataKey="score" stroke="#6366f1" strokeWidth={2} fill="url(#wzrdScoreFill)" dot={{ r: 3, fill: '#6366f1' }} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Timeline */}
             {history.length > 1 && (

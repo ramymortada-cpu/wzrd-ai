@@ -20,6 +20,23 @@ import { invokeClaude } from "../_core/llmProviders";
 import { getDb } from "../db/index";
 import { users, creditTransactions } from "../../drizzle/schema";
 import { eq, sql } from "drizzle-orm";
+import { validatePromoCode, type PromoValidation } from "../db/promoCodes";
+
+function mapPromoToClient(v: PromoValidation) {
+  return {
+    valid: v.valid,
+    message: v.message ?? null,
+    discountPercent: v.discountPercent ?? null,
+    discountFixedEGP: v.discountFixedEGP ?? null,
+    finalAmountEGP: Math.round(v.finalAmountCents) / 100,
+    originalAmountEGP: Math.round(v.originalAmountCents) / 100,
+  };
+}
+
+const promoInput = z.object({
+  code: z.string().min(1).max(50),
+  amountEGP: z.number().positive(),
+});
 
 // ════════════════════════════════════════════
 // PRICING
@@ -132,6 +149,22 @@ async function deductPremiumCredits(userId: number, amount: number, tool: string
 // ════════════════════════════════════════════
 
 export const premiumRouter = router({
+
+  /** Validate promo against list price (expiry, uses, min amount) */
+  validatePromo: publicProcedure
+    .input(promoInput)
+    .mutation(async ({ input }) => {
+      const v = await validatePromoCode(input.code, input.amountEGP);
+      return mapPromoToClient(v);
+    }),
+
+  /** Alias of validatePromo — same checks (used by pricing UI / clients) */
+  applyPromo: publicProcedure
+    .input(promoInput)
+    .mutation(async ({ input }) => {
+      const v = await validatePromoCode(input.code, input.amountEGP);
+      return mapPromoToClient(v);
+    }),
 
   /** Get premium pricing (public — show on landing/tools) */
   pricing: publicProcedure.query(() => PREMIUM_PRICES),

@@ -76,6 +76,8 @@ async function startServer() {
   app.use('/api/trpc/auth.signup', rateLimiters.signup);
   // Credits purchase (5 per hour)
   app.use('/api/trpc/credits.purchase', rateLimiters.purchase);
+  app.use('/api/trpc/premium.validatePromo', rateLimiters.publicWrite);
+  app.use('/api/trpc/premium.applyPromo', rateLimiters.publicWrite);
   // AI endpoints — expensive LLM calls (5 req/min)
   app.use('/api/trpc/ai.chat', rateLimiters.ai);
   app.use('/api/trpc/ai.analyzeNotes', rateLimiters.ai);
@@ -188,6 +190,13 @@ async function startServer() {
         const { startNewsletterScheduler } = await import('../newsletter');
         startNewsletterScheduler();
       } catch {}
+
+      try {
+        const { startAbandonedCartWorker } = await import('../abandonedCartWorker');
+        startAbandonedCartWorker();
+      } catch (err) {
+        logger.warn({ err }, 'Abandoned cart worker failed to start');
+      }
     }, 5000); // Wait 5s after startup to not block
   });
 }
