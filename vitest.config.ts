@@ -14,6 +14,8 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    // Playwright lives under e2e/ — use `pnpm test:smoke`, not Vitest
+    exclude: ["**/node_modules/**", "**/dist/**", "**/e2e/**"],
     include: [
       "server/**/*.test.ts",
       "server/**/*.spec.ts",
