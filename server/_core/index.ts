@@ -86,9 +86,9 @@ async function startServer() {
   // General API rate limit (100 req/min)
   app.use('/api/', rateLimiters.general);
 
-  // Configure body parser with larger size limit for file uploads
-  app.use(express.json({ limit: "50mb" }));
-  app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  // Body size capped to reduce DoS surface; use presigned S3 for large uploads
+  app.use(express.json({ limit: "2mb" }));
+  app.use(express.urlencoded({ limit: "2mb", extended: true }));
 
   // === CSRF PROTECTION ===
   // Sets token cookie on first request, validates on mutations

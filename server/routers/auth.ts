@@ -23,6 +23,14 @@ import { signSession } from "../_core/session";
 // In production with multiple servers, use Redis instead
 const otpStore = new Map<string, { code: string; expires: number }>();
 
+// Clean expired OTPs every 10 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, val] of otpStore) {
+    if (val.expires < now) otpStore.delete(key);
+  }
+}, 10 * 60 * 1000);
+
 export const authRouter = router({
   /** Get current user */
   me: publicProcedure.query(opts => opts.ctx.user),

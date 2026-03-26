@@ -22,6 +22,14 @@ import { eq, desc } from "drizzle-orm";
 const lastMessageTime = new Map<number, number>();
 const RATE_LIMIT_MS = 3000; // 3 seconds between messages
 
+// Clean old rate-limit entries every 30 minutes
+setInterval(() => {
+  const cutoff = Date.now() - 30 * 60 * 1000;
+  for (const [key, val] of lastMessageTime) {
+    if (val < cutoff) lastMessageTime.delete(key);
+  }
+}, 30 * 60 * 1000);
+
 const COPILOT_SYSTEM = `You are WZRD AI Brand Copilot — a personal brand advisor for Arabic-speaking entrepreneurs.
 
 You speak in Egyptian Arabic dialect. You're direct, practical, and specific. No fluff.
