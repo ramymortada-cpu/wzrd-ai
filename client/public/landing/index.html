@@ -126,7 +126,7 @@ section{padding:90px 28px}
 .ex-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .ex-dot.h{background:var(--red)}.ex-dot.m{background:var(--amber)}.ex-dot.l{background:var(--green)}
 
-/* ═══ WHY ═══ */
+/* ═══ WHY (+ shared feature grids) ═══ */
 .wg{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:48px}
 .wc{padding:28px;border-radius:var(--R);background:var(--card);border:1.5px solid var(--border);transition:.35s}
 .wc:hover{border-color:var(--accent);box-shadow:var(--S);transform:translateY(-3px)}
@@ -134,6 +134,21 @@ section{padding:90px 28px}
 .wc h3{font-size:15px;font-weight:700;margin-bottom:6px}
 .wc p{font-size:13px;color:var(--text2);line-height:1.65}
 @media(max-width:768px){.wg{grid-template-columns:1fr}}
+
+/* #why — premium glass (matches React funnel UI overhaul) */
+.sec-why{position:relative;overflow:hidden;background:radial-gradient(ellipse 110% 70% at 50% -20%,rgba(99,102,241,.12),transparent 50%),radial-gradient(ellipse 80% 50% at 100% 80%,rgba(6,182,212,.08),transparent 45%),linear-gradient(180deg,#f1f5f9 0%,#fff 55%,#faf5ff 100%)}
+.sec-why::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 60% 40% at 0% 60%,rgba(139,92,246,.07),transparent 50%);animation:why-mesh 18s ease-in-out infinite alternate}
+@keyframes why-mesh{0%{opacity:.85;transform:scale(1)}100%{opacity:1;transform:scale(1.03) translate(1%,-1%)}}
+.sec-why .sec-in{position:relative;z-index:1}
+.sec-why .sec-h{font-size:clamp(28px,4vw,42px);letter-spacing:-.03em;margin-bottom:18px;background:linear-gradient(135deg,var(--text) 0%,var(--accent) 45%,#0891b2 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sec-why .wg{gap:22px;margin-top:52px}
+.sec-why .wc{position:relative;overflow:hidden;padding:32px 28px;border-radius:20px;background:rgba(255,255,255,.74);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border:0.5px solid rgba(255,255,255,.65);box-shadow:0 20px 44px -18px rgba(15,23,42,.1),0 0 0 1px rgba(255,255,255,.5) inset;transition:transform .45s ease,box-shadow .45s ease,border-color .3s}
+.sec-why .wc::after{content:'';position:absolute;inset:0;opacity:0;transition:opacity .5s ease;background:radial-gradient(ellipse 90% 70% at 100% 0%,rgba(99,102,241,.14),transparent 55%),radial-gradient(ellipse 70% 60% at 0% 100%,rgba(6,182,212,.1),transparent 50%);pointer-events:none}
+.sec-why .wc:hover{transform:translateY(-8px);border-color:rgba(79,70,229,.4);box-shadow:0 28px 56px -14px rgba(79,70,229,.2),0 0 0 1px rgba(255,255,255,.6) inset}
+.sec-why .wc:hover::after{opacity:1}
+.sec-why .wi{position:relative;z-index:1;width:52px;height:52px;border-radius:16px;font-size:24px;background:linear-gradient(145deg,rgba(99,102,241,.22),rgba(255,255,255,.9));box-shadow:0 10px 28px -10px rgba(99,102,241,.45),inset 0 1px 0 rgba(255,255,255,.8);border:0.5px solid rgba(99,102,241,.15)}
+.sec-why .wc h3{position:relative;z-index:1;font-size:16px}
+.sec-why .wc p{position:relative;z-index:1;font-size:13.5px;line-height:1.7}
 
 /* ═══ ABOUT ═══ */
 .about{background:var(--bg2)}
@@ -267,7 +282,7 @@ footer{padding:48px 28px 32px;text-align:center;border-top:1px solid var(--borde
  </div>
 </section>
 
-<section id="why">
+<section id="why" class="sec-why">
  <div class="sec-in tc">
   <div class="sec-lab fi" data-ar="ليه WZRD AI؟" data-en="Why WZRD AI?">ليه WZRD AI؟</div>
   <h2 class="sec-h fi" data-ar="مش أداة عشوائية — ده نظام تشخيص حقيقي" data-en="Not Random — A Real Diagnostic System">مش أداة عشوائية — ده نظام تشخيص حقيقي</h2>
