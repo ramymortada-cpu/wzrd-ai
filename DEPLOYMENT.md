@@ -9,6 +9,13 @@
 - تحت **Networking** → اضغط **Generate Domain**
 - هيديك URL زي `wzrd-ai-production.up.railway.app` — **انسخه**
 
+#### دومين خاص (مثال: `wzzrdai.com`)
+1. عند مسجّل الدومين: أنشئ **سجل CNAME** للـ subdomain اللي هتستخدمه (مثلاً `@` أو `www`) نحو الهدف اللي Railway يعطيك إياه (أو انسخ تعليمات **Custom Domain** من لوحة Railway).
+2. في Railway → **Networking** → **Custom Domain** → أضف `wzzrdai.com` (و`/www` لو حابب) واتبع خطوات التحقق (DNS / CNAME).
+3. حدّث المتغير **`APP_URL=https://wzzrdai.com`** (مع `https`، بدون شرطة أخيرة إن كان الكود يتوقع كده).
+4. لو عندك **`OAUTH_SERVER_URL`** في البيئة، خليه نفس أصل الموقع العام (مثلاً `https://wzzrdai.com`) عشان الربط مع OAuth ما يكسرش.
+5. أعد نشر الخدمة بعد حفظ المتغيرات.
+
 ### Step 2: أضف الـ Variables
 - اضغط **Variables** tab (فوق جنب Settings)
 - اضغط **Raw Editor**
@@ -21,9 +28,9 @@ DATABASE_URL=<الصق MYSQL_URL من MySQL service>
 JWT_SECRET=xK9mP2vL8nQ4rT6wY1bJ3cF5hA7dG0eU
 GROQ_API_KEY=<الـ key الجديد بتاعك>
 GROQ_MODEL=llama-3.3-70b-versatile
-APP_URL=<الصق الـ domain URL من Step 1>
+APP_URL=https://wzzrdai.com
 EMAIL_PROVIDER=none
-EMAIL_FROM=WZRD AI <noreply@primomarca.com>
+EMAIL_FROM=WZRD AI <noreply@wzzrdai.com>
 ```
 
 - اضغط **Add** أو **Save**

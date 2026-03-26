@@ -51,7 +51,7 @@ async function sendStatusEmail(opts: {
 }): Promise<void> {
   try {
     const apiKey = process.env.EMAIL_API_KEY;
-    const from = process.env.EMAIL_FROM || 'WZRD AI <noreply@wzrd.ai>';
+    const from = process.env.EMAIL_FROM || 'WZRD AI <noreply@wzzrdai.com>';
     if (!apiKey) { logger.warn('EMAIL_API_KEY not set — skipping status email'); return; }
 
     const db = await getDb();
@@ -62,7 +62,7 @@ async function sendStatusEmail(opts: {
     if (!user?.email) return;
 
     const label = STATUS_LABELS[opts.newStatus] || STATUS_LABELS.received;
-    const appUrl = process.env.APP_URL || 'https://wzrd-ai-production.up.railway.app';
+    const appUrl = process.env.APP_URL || 'https://wzzrdai.com';
     const name = user.name || 'عميلنا العزيز';
 
     // Build email body

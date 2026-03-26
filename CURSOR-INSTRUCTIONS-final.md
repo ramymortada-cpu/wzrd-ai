@@ -95,7 +95,7 @@ SOURCE drizzle/0016_referrals_copilot_carts.sql;
 
 ### Feature 8: Referral System ✅
 - كل user ياخد referral code فريد
-- wzrd.ai/signup?ref=CODE → ٥٠ كريدت للمُحيل + ٥٠ للجديد
+- wzzrdai.com/signup?ref=CODE → ٥٠ كريدت للمُحيل + ٥٠ للجديد
 - Signup page يعرض referral welcome banner
 - MyBrand page فيها 'ادعي صاحبك' card
 - Anti-abuse: self-referral + duplicate prevention

@@ -19,7 +19,7 @@
 
 import { test, expect } from '@playwright/test';
 
-const BASE = process.env.TEST_URL || 'https://wzrd-ai-production.up.railway.app';
+const BASE = process.env.TEST_URL || 'https://wzzrdai.com';
 
 test.describe('WZRD AI Smoke Tests', () => {
 

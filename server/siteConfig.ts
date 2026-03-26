@@ -73,7 +73,7 @@ const DEFAULT_CONFIG: SiteConfig = {
   },
   site: {
     companyName: 'Primo Marca', whatsapp: '201107107012', email: 'hello@primomarca.com',
-    instagram: '@primomarca', linkedin: 'primomarca', website: 'https://primomarca.com',
+    instagram: '@primomarca', linkedin: 'primomarca', website: 'https://wzzrdai.com',
     taglineEn: 'Marks Fade, MARCAS Don\'t.', taglineAr: 'العلامات بتختفي، الـ MARCAS لا.',
   },
   prompts: [

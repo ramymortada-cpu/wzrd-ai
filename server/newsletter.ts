@@ -205,7 +205,7 @@ export async function sendWeeklyNewsletter(): Promise<{ sent: number; failed: nu
   const weekNum = getWeekNumber();
   const tipIndex = weekNum % WEEKLY_TIPS.length;
   const tip = WEEKLY_TIPS[tipIndex];
-  const appUrl = process.env.APP_URL || 'https://wzrd.ai';
+  const appUrl = process.env.APP_URL || 'https://wzzrdai.com';
   const from = process.env.EMAIL_FROM || 'WZRD AI <noreply@primomarca.com>';
 
   let sent = 0, failed = 0;

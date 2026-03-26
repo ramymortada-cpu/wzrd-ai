@@ -38,7 +38,7 @@ export const referralRouter = router({
         .where(eq(users.id, ctx.user!.id));
 
       if (user?.referralCode) {
-        const baseUrl = process.env.APP_URL || 'https://wzrd.ai';
+        const baseUrl = process.env.APP_URL || 'https://wzzrdai.com';
         return {
           code: user.referralCode,
           shareUrl: `${baseUrl}/signup?ref=${user.referralCode}`,
@@ -60,7 +60,7 @@ export const referralRouter = router({
         }
       }
 
-      const baseUrl = process.env.APP_URL || 'https://wzrd.ai';
+      const baseUrl = process.env.APP_URL || 'https://wzzrdai.com';
       return {
         code,
         shareUrl: `${baseUrl}/signup?ref=${code}`,

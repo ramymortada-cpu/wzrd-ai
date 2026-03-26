@@ -14,7 +14,7 @@ import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { logger } from "../_core/logger";
 
-const APP_URL = process.env.APP_URL || 'https://wzrd-ai-production.up.railway.app';
+const APP_URL = process.env.APP_URL || 'https://wzzrdai.com';
 
 function generateReportHtml(data: {
   toolName: string;

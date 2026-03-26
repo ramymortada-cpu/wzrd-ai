@@ -141,7 +141,7 @@ async function sendAndLog(params: {
   const { sendEmail } = await import('../wzrdEmails');
 
   // Replace variables in HTML
-  const appUrl = process.env.APP_URL || 'https://wzrd-ai-production.up.railway.app';
+  const appUrl = process.env.APP_URL || 'https://wzzrdai.com';
   let finalHtml = params.html
     .replace(/\{\{APP_URL\}\}/g, appUrl);
 
