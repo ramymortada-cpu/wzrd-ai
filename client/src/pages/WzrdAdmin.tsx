@@ -762,12 +762,12 @@ function ConfigTab({ t }: { t: T }) {
       {/* Credit Plans */}
       <div className="mb-6">
         <h4 className="text-sm font-bold text-gray-600 mb-2">Credit Plans (EGP)</h4>
-        <div className="grid grid-cols-3 gap-2">
-          {config?.creditPlans && Object.entries(config.creditPlans).map(([plan, info]: [string, any]) => (
-            <div key={plan} className="p-3 rounded-lg border border-gray-200 bg-white text-center">
-              <p className="text-xs text-gray-500 capitalize">{plan}</p>
-              <p className="text-lg font-bold text-gray-900">{info.priceEGP} EGP</p>
-              <p className="text-xs text-amber-600">{info.credits} credits</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          {config?.creditPlans?.plans?.map((p: { id: string; priceEGP: number; credits: number; name?: string }) => (
+            <div key={p.id} className="p-3 rounded-lg border border-gray-200 bg-white text-center">
+              <p className="text-xs text-gray-500 truncate" title={p.id}>{p.name || p.id}</p>
+              <p className="text-lg font-bold text-gray-900">{p.priceEGP} EGP</p>
+              <p className="text-xs text-amber-600">{p.credits} credits</p>
             </div>
           ))}
         </div>
@@ -1055,8 +1055,13 @@ function PricingTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; o
                 <div className="flex gap-2 items-center flex-wrap">
                   <input value={editDraft.credits ?? p.credits} onChange={e => setEditDraft({...editDraft, credits: parseInt(e.target.value) || 0})} type="number" className="w-20 px-2 py-1 rounded border text-sm" placeholder="Credits" />
                   <input value={editDraft.priceEGP ?? p.priceEGP} onChange={e => setEditDraft({...editDraft, priceEGP: parseInt(e.target.value) || 0})} type="number" className="w-20 px-2 py-1 rounded border text-sm" placeholder="EGP" />
-                  <input value={editDraft.name ?? p.name} onChange={e => setEditDraft({...editDraft, name: e.target.value})} className="w-24 px-2 py-1 rounded border text-sm" placeholder="Name" />
-                  <button onClick={() => { savePlan(p.id, { credits: editDraft.credits ?? p.credits, priceEGP: editDraft.priceEGP ?? p.priceEGP, name: editDraft.name ?? p.name, nameAr: editDraft.nameAr ?? p.nameAr }); setEditDraft({}); setEditingPlan(null); }} className="px-3 py-1 rounded bg-green-600 text-white text-xs">✓</button>
+                  <input value={editDraft.name ?? p.name} onChange={e => setEditDraft({...editDraft, name: e.target.value})} className="w-28 px-2 py-1 rounded border text-sm" placeholder="Name EN" />
+                  <input value={editDraft.nameAr ?? p.nameAr} onChange={e => setEditDraft({...editDraft, nameAr: e.target.value})} className="w-28 px-2 py-1 rounded border text-sm" placeholder="Name AR" />
+                  <label className="flex items-center gap-1 text-xs">
+                    <input type="checkbox" checked={Boolean(editDraft.popular ?? p.popular)} onChange={e => setEditDraft({ ...editDraft, popular: e.target.checked })} />
+                    {t('مميز', 'Popular')}
+                  </label>
+                  <button onClick={() => { savePlan(p.id, { credits: editDraft.credits ?? p.credits, priceEGP: editDraft.priceEGP ?? p.priceEGP, name: editDraft.name ?? p.name, nameAr: editDraft.nameAr ?? p.nameAr, descEn: editDraft.descEn ?? p.descEn, descAr: editDraft.descAr ?? p.descAr, popular: editDraft.popular ?? p.popular }); setEditDraft({}); setEditingPlan(null); }} className="px-3 py-1 rounded bg-green-600 text-white text-xs">✓</button>
                   <button onClick={() => { setEditingPlan(null); setEditDraft({}); }} className="px-3 py-1 rounded text-gray-500 text-xs">✕</button>
                 </div>
               ) : (
@@ -1067,7 +1072,7 @@ function PricingTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; o
                     <span className="ml-2 text-gray-600 font-mono">{p.priceEGP} EGP</span>
                   </div>
                   <div className="flex gap-1">
-                    <button onClick={() => { setEditingPlan(p.id); setEditDraft({ credits: p.credits, priceEGP: p.priceEGP, name: p.name, nameAr: p.nameAr }); }} className="px-2 py-1 rounded bg-indigo-50 text-indigo-600 text-xs">{t('تعديل', 'Edit')}</button>
+                    <button onClick={() => { setEditingPlan(p.id); setEditDraft({ credits: p.credits, priceEGP: p.priceEGP, name: p.name, nameAr: p.nameAr, descEn: p.descEn, descAr: p.descAr, popular: p.popular }); }} className="px-2 py-1 rounded bg-indigo-50 text-indigo-600 text-xs">{t('تعديل', 'Edit')}</button>
                     <button onClick={() => removePlan(p.id)} className="px-2 py-1 rounded text-red-500 text-xs hover:bg-red-50">🗑</button>
                   </div>
                 </>

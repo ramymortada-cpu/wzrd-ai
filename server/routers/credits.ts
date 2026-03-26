@@ -19,16 +19,6 @@ import {
 import { getDb } from "../db/index";
 import { abandonedCarts } from "../../drizzle/schema";
 
-const PAYMENT_PLAN_IDS = [
-  "starter",
-  "pro",
-  "agency",
-  "single_report",
-  "bundle_6",
-  "credits_500",
-  "credits_1500",
-] as const;
-
 export const creditsRouter = router({
   /** Get current user's credit balance */
   balance: protectedProcedure.query(async ({ ctx }) => {
@@ -74,11 +64,16 @@ export const creditsRouter = router({
   /** Purchase credits via Paymob Checkout */
   purchase: protectedProcedure
     .input(z.object({
-      planId: z.enum(PAYMENT_PLAN_IDS),
+      planId: z.string().min(1).max(64),
       promoCode: z.string().max(50).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const { createPaymentIntention, PAYMOB_PLANS } = await import('../paymobIntegration');
+      const { createPaymentIntention } = await import('../paymobIntegration');
+      const { getPaymobPlansMap } = await import('../siteConfig');
+      const plansMap = getPaymobPlansMap();
+      if (!plansMap[input.planId]) {
+        return { success: false, redirectUrl: null, message: 'Invalid plan.' };
+      }
       const appUrl = process.env.APP_URL || 'http://localhost:3000';
       const result = await createPaymentIntention(
         input.planId,
@@ -96,7 +91,7 @@ export const creditsRouter = router({
 
       try {
         const db = await getDb();
-        const plan = PAYMOB_PLANS[input.planId];
+        const plan = plansMap[input.planId];
         if (db && plan) {
           await db.insert(abandonedCarts).values({
             userId: ctx.user!.id,

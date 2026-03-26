@@ -36,11 +36,31 @@ export interface ToolPrompt {
   systemPrompt: string; enabled: boolean;
 }
 
+/** Credit purchase plans — editable from admin; drives Paymob + pricing page. */
+export interface CreditPlanDef {
+  id: string;
+  credits: number;
+  priceEGP: number;
+  name: string;
+  nameAr: string;
+  descEn?: string;
+  descAr?: string;
+  popular?: boolean;
+  /** Legacy Paymob plans (starter/pro/agency): keep purchasable but hide from marketing grid. */
+  hideFromPricing?: boolean;
+  sortOrder?: number;
+}
+
+export interface CreditPlansConfig {
+  plans: CreditPlanDef[];
+}
+
 export interface SiteConfig {
   homepage: HomepageConfig;
   services: { services: ServiceItem[] };
   site: SiteSettings;
   prompts: ToolPrompt[];
+  creditPlans: CreditPlansConfig;
 }
 
 /** Stripped config for /api/public/site-config — never expose systemPrompt. */
@@ -90,6 +110,17 @@ const DEFAULT_CONFIG: SiteConfig = {
     { toolId: 'launch_readiness', toolName: 'Launch Readiness', enabled: true,
       systemPrompt: 'You are a go-to-market readiness assessor. Score readiness across 5 dimensions.' },
   ],
+  creditPlans: {
+    plans: [
+      { id: 'single_report', credits: 100, priceEGP: 99, name: 'Single Report', nameAr: 'تقرير واحد', descEn: '1 Premium AI report', descAr: 'تقرير مفصّل واحد', popular: false, sortOrder: 10 },
+      { id: 'bundle_6', credits: 800, priceEGP: 499, name: '6-Report Bundle', nameAr: 'باقة ٦ تقارير', descEn: 'Save 45% — comprehensive', descAr: 'وفّر ٤٥% — أشمل تحليل', popular: true, sortOrder: 20 },
+      { id: 'credits_500', credits: 500, priceEGP: 499, name: '500 Credits', nameAr: '٥٠٠ كريدت', descEn: '~25 tool runs', descAr: '~٢٥ أداة تشخيص', popular: false, sortOrder: 30 },
+      { id: 'credits_1500', credits: 1500, priceEGP: 999, name: '1500 Credits', nameAr: '١٥٠٠ كريدت', descEn: 'Best value — ~75 tools', descAr: 'الأوفر — ~٧٥ أداة', popular: false, sortOrder: 40 },
+      { id: 'starter', credits: 500, priceEGP: 499, name: 'Starter — 500 Credits', nameAr: 'ستارتر — 500 نقطة', descEn: '', descAr: '', popular: false, hideFromPricing: true, sortOrder: 100 },
+      { id: 'pro', credits: 1500, priceEGP: 999, name: 'Pro — 1,500 Credits', nameAr: 'برو — 1,500 نقطة', popular: false, hideFromPricing: true, sortOrder: 101 },
+      { id: 'agency', credits: 5000, priceEGP: 2499, name: 'Agency — 5,000 Credits', nameAr: 'وكالة — 5,000 نقطة', popular: false, hideFromPricing: true, sortOrder: 102 },
+    ],
+  },
 };
 
 // ════════════════════════════════════════════
@@ -141,7 +172,11 @@ export async function loadConfigFromDb(): Promise<void> {
           else if (row.key === 'services') config.services = val;
           else if (row.key === 'site') config.site = { ...DEFAULT_CONFIG.site, ...val };
           else if (row.key === 'prompts') config.prompts = val;
+          else if (row.key === 'creditPlans') config.creditPlans = { plans: Array.isArray(val?.plans) ? val.plans : [] };
         } catch { /* skip bad rows */ }
+      }
+      if (!config.creditPlans?.plans?.length) {
+        config.creditPlans = JSON.parse(JSON.stringify(DEFAULT_CONFIG.creditPlans));
       }
       normalizeSiteWhatsApp();
       logger.info('[SiteConfig] Loaded from DB (%d keys)', rows.length);
@@ -166,6 +201,7 @@ async function saveConfigToDb(): Promise<void> {
       { key: 'services', value: JSON.stringify(config.services) },
       { key: 'site', value: JSON.stringify(config.site) },
       { key: 'prompts', value: JSON.stringify(config.prompts) },
+      { key: 'creditPlans', value: JSON.stringify(config.creditPlans) },
     ];
 
     for (const s of sections) {
@@ -206,12 +242,76 @@ export function getPublicSiteConfig(): PublicSiteConfig {
     homepage: config.homepage,
     services: config.services,
     site: config.site,
+    creditPlans: { plans: getCreditPlansList().filter((p) => !p.hideFromPricing) },
     prompts: config.prompts.map((p) => ({
       toolId: p.toolId,
       toolName: p.toolName,
       enabled: p.enabled,
     })),
   };
+}
+
+/** Paymob-compatible map (all plans including hidden-from-pricing). */
+export function getPaymobPlansMap(): Record<
+  string,
+  { credits: number; amountEGP: number; amountCents: number; name: string; nameAr: string }
+> {
+  const map: Record<string, { credits: number; amountEGP: number; amountCents: number; name: string; nameAr: string }> = {};
+  for (const p of getCreditPlansList()) {
+    map[p.id] = {
+      credits: p.credits,
+      amountEGP: p.priceEGP,
+      amountCents: Math.round(p.priceEGP * 100),
+      name: p.name,
+      nameAr: p.nameAr,
+    };
+  }
+  return map;
+}
+
+export function getCreditPlansList(): CreditPlanDef[] {
+  const plans = [...(config.creditPlans?.plans || [])];
+  return plans.sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999) || a.id.localeCompare(b.id));
+}
+
+export function upsertCreditPlan(
+  planId: string,
+  updates: Partial<Omit<CreditPlanDef, 'id'>>
+): void {
+  if (!planId.trim()) return;
+  const id = planId.trim();
+  const list = config.creditPlans.plans;
+  const idx = list.findIndex((p) => p.id === id);
+  const existing = idx >= 0 ? list[idx] : null;
+  const merged: CreditPlanDef = {
+    id,
+    credits: updates.credits ?? existing?.credits ?? 100,
+    priceEGP: updates.priceEGP ?? existing?.priceEGP ?? 99,
+    name: updates.name ?? existing?.name ?? id,
+    nameAr: updates.nameAr ?? existing?.nameAr ?? id,
+    descEn: updates.descEn ?? existing?.descEn ?? '',
+    descAr: updates.descAr ?? existing?.descAr ?? '',
+    popular: updates.popular ?? existing?.popular ?? false,
+    hideFromPricing: updates.hideFromPricing ?? existing?.hideFromPricing ?? false,
+    sortOrder: updates.sortOrder ?? existing?.sortOrder ?? (list.length ? Math.max(...list.map((p) => p.sortOrder ?? 0)) + 1 : 0),
+  };
+  if (updates.popular === true) {
+    for (const p of list) {
+      if (p.id !== id) p.popular = false;
+    }
+  }
+  if (idx >= 0) list[idx] = merged;
+  else list.push(merged);
+  saveSectionToDb('creditPlans', config.creditPlans);
+  logger.info({ planId: id }, '[SiteConfig] Credit plan upserted + saved to DB');
+}
+
+export function removeCreditPlan(planId: string): boolean {
+  const before = config.creditPlans.plans.length;
+  config.creditPlans.plans = config.creditPlans.plans.filter((p) => p.id !== planId);
+  if (config.creditPlans.plans.length === before) return false;
+  saveSectionToDb('creditPlans', config.creditPlans);
+  return true;
 }
 
 export function updateHomepage(updates: Partial<HomepageConfig>): HomepageConfig {

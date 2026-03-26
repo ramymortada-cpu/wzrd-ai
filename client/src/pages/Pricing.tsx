@@ -5,12 +5,39 @@ import WzrdPublicHeader from '@/components/WzrdPublicHeader';
 import { toArabicNumerals } from '@/lib/formatUtils';
 import { waMeHref } from '@/lib/waContact';
 
-const PLANS = [
+type PlanRow = {
+  id: string;
+  credits: number;
+  price: number;
+  currency: string;
+  popular: boolean;
+  label: string;
+  labelEn: string;
+  description: string;
+  descEn: string;
+};
+
+const FALLBACK_PLANS: PlanRow[] = [
   { id: 'single_report', credits: 100, price: 99, currency: 'EGP', popular: false, label: 'تقرير واحد', labelEn: 'Single Report', description: 'تقرير مفصّل واحد', descEn: '1 Premium AI report' },
   { id: 'bundle_6', credits: 800, price: 499, currency: 'EGP', popular: true, label: 'باقة ٦ تقارير', labelEn: '6-Report Bundle', description: 'وفّر ٤٥% — أشمل تحليل', descEn: 'Save 45% — comprehensive' },
   { id: 'credits_500', credits: 500, price: 499, currency: 'EGP', popular: false, label: '٥٠٠ كريدت', labelEn: '500 Credits', description: '~٢٥ أداة تشخيص', descEn: '~25 tool runs' },
   { id: 'credits_1500', credits: 1500, price: 999, currency: 'EGP', popular: false, label: '١٥٠٠ كريدت', labelEn: '1500 Credits', description: 'الأوفر — ~٧٥ أداة', descEn: 'Best value — ~75 tools' },
 ];
+
+function mapApiPlans(raw: unknown): PlanRow[] | null {
+  if (!Array.isArray(raw) || raw.length === 0) return null;
+  return raw.map((p: any) => ({
+    id: String(p.id),
+    credits: Number(p.credits) || 0,
+    price: Number(p.priceEGP) || 0,
+    currency: 'EGP',
+    popular: Boolean(p.popular),
+    label: String(p.nameAr || p.name || p.id),
+    labelEn: String(p.name || p.id),
+    description: String(p.descAr || ''),
+    descEn: String(p.descEn || ''),
+  }));
+}
 
 type PromoResult = {
   valid: boolean;
@@ -25,12 +52,26 @@ export default function Pricing() {
   const [, navigate] = useLocation();
   const { t, locale } = useI18n();
   const [credits, setCredits] = useState<number | null>(null);
+  const [plans, setPlans] = useState<PlanRow[]>(FALLBACK_PLANS);
   const [promoCode, setPromoCode] = useState('');
-  const [promoPlanId, setPromoPlanId] = useState(PLANS[0].id);
+  const [promoPlanId, setPromoPlanId] = useState(FALLBACK_PLANS[0].id);
   const [promoResult, setPromoResult] = useState<PromoResult | null>(null);
   const [promoLoading, setPromoLoading] = useState(false);
 
-  const planForPromo = useMemo(() => PLANS.find((p) => p.id === promoPlanId) ?? PLANS[0], [promoPlanId]);
+  useEffect(() => {
+    fetch('/api/public/site-config')
+      .then((r) => r.json())
+      .then((d) => {
+        const mapped = mapApiPlans(d?.creditPlans?.plans);
+        if (mapped && mapped.length) {
+          setPlans(mapped);
+          setPromoPlanId(mapped[0].id);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const planForPromo = useMemo(() => plans.find((p) => p.id === promoPlanId) ?? plans[0], [plans, promoPlanId]);
 
   useEffect(() => {
     fetch('/api/trpc/credits.balance')
@@ -105,7 +146,7 @@ export default function Pricing() {
               onChange={(e) => { setPromoPlanId(e.target.value); setPromoResult(null); }}
               className="px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-sm min-w-[180px]"
             >
-              {PLANS.map((p) => (
+              {plans.map((p) => (
                 <option key={p.id} value={p.id}>
                   {locale === 'ar' ? p.label : p.labelEn} — {p.price} EGP
                 </option>
@@ -132,7 +173,7 @@ export default function Pricing() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-14 items-stretch">
-          {PLANS.map(plan => (
+          {plans.map(plan => (
             <div
               key={plan.id}
               className={`relative rounded-3xl transition-all duration-500 ${
@@ -148,7 +189,7 @@ export default function Pricing() {
               )}
               <div className={`p-8 sm:p-10 text-center ${plan.popular ? '' : ''}`}>
                 <h3 className="text-xl font-extrabold tracking-tight text-zinc-900 dark:text-white mb-2">{locale === 'ar' ? plan.label : plan.labelEn}</h3>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-6 leading-relaxed">{locale === 'ar' ? plan.description : plan.descEn}</p>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-6 leading-relaxed">{locale === 'ar' ? (plan.description || plan.descEn) : (plan.descEn || plan.description)}</p>
                 <div className="mb-2">
                   <span className="text-5xl sm:text-6xl font-bold font-mono tabular-nums tracking-tight text-zinc-900 dark:text-white">
                     {locale === 'ar' ? toArabicNumerals(plan.price.toLocaleString()) : plan.price.toLocaleString()}

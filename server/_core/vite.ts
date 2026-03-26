@@ -47,7 +47,12 @@ export async function setupVite(app: Express, server: Server) {
     });
 
     app.get("/api/public/site-config", (_req, res) => {
-      try { const { getSiteConfig } = require('../siteConfig'); res.json(getSiteConfig()); } catch { res.json({}); }
+      try {
+        const { getPublicSiteConfig } = require('../siteConfig');
+        res.json(getPublicSiteConfig());
+      } catch {
+        res.json({});
+      }
     });
 
     app.get("/welcome", (_req, res) => res.sendFile(path.resolve(landingPath, "index.html")));
@@ -108,7 +113,12 @@ export function serveStatic(app: Express) {
     });
 
     app.get("/api/public/site-config", (_req, res) => {
-      try { const { getSiteConfig } = require('../siteConfig'); res.json(getSiteConfig()); } catch { res.json({}); }
+      try {
+        const { getPublicSiteConfig } = require('../siteConfig');
+        res.json(getPublicSiteConfig());
+      } catch {
+        res.json({});
+      }
     });
 
     app.get("/welcome", (_req, res) => res.sendFile(path.resolve(activeLandingPath, "index.html")));

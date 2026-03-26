@@ -347,14 +347,11 @@ export const wzrdAdminRouter = router({
   /** WZRD AI config — read tool costs + credit plans */
   config: protectedProcedure.query(({ ctx }) => {
     checkOwner(ctx);
+    const { getCreditPlansList } = require('../siteConfig');
     return {
       toolCosts: TOOL_COSTS,
       signupBonus: SIGNUP_BONUS,
-      creditPlans: {
-        starter: { credits: 500, priceEGP: 499 },
-        pro: { credits: 1500, priceEGP: 999 },
-        agency: { credits: 5000, priceEGP: 2499 },
-      },
+      creditPlans: { plans: getCreditPlansList() },
       dailyCreditCap: 200,
       emailProvider: process.env.EMAIL_PROVIDER || 'none',
       paymobConfigured: !!(process.env.PAYMOB_SECRET_KEY && process.env.PAYMOB_PUBLIC_KEY),
@@ -810,4 +807,92 @@ export const wzrdAdminRouter = router({
       return { activities: [] };
     }
   }),
+
+  creditPlansList: protectedProcedure.query(({ ctx }) => {
+    checkOwner(ctx);
+    const { getCreditPlansList } = require('../siteConfig');
+    return { plans: getCreditPlansList() };
+  }),
+
+  updateCreditPlan: protectedProcedure
+    .input(z.object({
+      planId: z.string().min(1).max(64),
+      credits: z.number().int().min(1).max(1_000_000).optional(),
+      priceEGP: z.number().int().min(1).max(10_000_000).optional(),
+      name: z.string().max(200).optional(),
+      nameAr: z.string().max(200).optional(),
+      descEn: z.string().max(500).optional(),
+      descAr: z.string().max(500).optional(),
+      popular: z.boolean().optional(),
+      hideFromPricing: z.boolean().optional(),
+      sortOrder: z.number().int().optional(),
+    }))
+    .mutation(({ input, ctx }) => {
+      checkOwner(ctx);
+      const { upsertCreditPlan, getCreditPlansList } = require('../siteConfig');
+      const { planId, ...rest } = input;
+      upsertCreditPlan(planId, rest);
+      return { success: true, plans: getCreditPlansList() };
+    }),
+
+  removeCreditPlan: protectedProcedure
+    .input(z.object({ planId: z.string().min(1).max(64) }))
+    .mutation(({ input, ctx }) => {
+      checkOwner(ctx);
+      const { removeCreditPlan: deletePlanById, getCreditPlansList } = require('../siteConfig');
+      const ok = deletePlanById(input.planId);
+      return { success: ok, plans: getCreditPlansList() };
+    }),
+
+  promoCodeList: protectedProcedure.query(async ({ ctx }) => {
+    checkOwner(ctx);
+    const { listPromoCodes } = await import('../db/promoCodes');
+    const codes = await listPromoCodes();
+    return { codes };
+  }),
+
+  promoCodeCreate: protectedProcedure
+    .input(z.object({
+      code: z.string().min(1).max(50),
+      discountType: z.enum(['percent', 'fixed']),
+      discountValue: z.number().int().min(0),
+      minAmountEGP: z.number().int().min(0).optional(),
+      maxUses: z.number().int().positive().nullable().optional(),
+      validUntil: z.string().nullable().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      checkOwner(ctx);
+      const { createPromoCode } = await import('../db/promoCodes');
+      await createPromoCode({
+        code: input.code,
+        discountType: input.discountType,
+        discountValue: input.discountValue,
+        minAmountEGP: input.minAmountEGP,
+        maxUses: input.maxUses ?? null,
+        validUntil: input.validUntil ? new Date(input.validUntil) : null,
+      });
+      return { success: true };
+    }),
+
+  promoCodeUpdate: protectedProcedure
+    .input(z.object({
+      id: z.number().int(),
+      enabled: z.number().int().min(0).max(1).optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      checkOwner(ctx);
+      const { updatePromoCode } = await import('../db/promoCodes');
+      const { id, ...updates } = input;
+      await updatePromoCode(id, updates);
+      return { success: true };
+    }),
+
+  promoCodeDelete: protectedProcedure
+    .input(z.object({ id: z.number().int() }))
+    .mutation(async ({ input, ctx }) => {
+      checkOwner(ctx);
+      const { deletePromoCode } = await import('../db/promoCodes');
+      await deletePromoCode(input.id);
+      return { success: true };
+    }),
 });

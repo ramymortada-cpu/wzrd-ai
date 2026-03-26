@@ -25,6 +25,7 @@ import { validatePromoCode, incrementPromoUsage } from './db/promoCodes';
 import { getDb } from './db/index';
 import { abandonedCarts } from '../drizzle/schema';
 import { eq, and } from 'drizzle-orm';
+import { getPaymobPlansMap } from './siteConfig';
 
 // ════════════════════════════════════════════
 // CONFIG
@@ -40,17 +41,16 @@ interface PaymobPlan {
   nameAr: string;
 }
 
-const PLANS: Record<string, PaymobPlan> = {
-  starter: { credits: 500, amountEGP: 499, amountCents: 49900, name: 'Starter — 500 Credits', nameAr: 'ستارتر — 500 نقطة' },
-  pro: { credits: 1500, amountEGP: 999, amountCents: 99900, name: 'Pro — 1,500 Credits', nameAr: 'برو — 1,500 نقطة' },
-  agency: { credits: 5000, amountEGP: 2499, amountCents: 249900, name: 'Agency — 5,000 Credits', nameAr: 'وكالة — 5,000 نقطة' },
-  single_report: { credits: 100, amountEGP: 99, amountCents: 9900, name: 'Premium Report — 100 Credits', nameAr: 'تقرير مميز — ١٠٠ كريدت' },
-  bundle_6: { credits: 800, amountEGP: 499, amountCents: 49900, name: '6-Report Bundle — 800 Credits', nameAr: 'باقة ٦ تقارير — ٨٠٠ كريدت' },
-  credits_500: { credits: 500, amountEGP: 499, amountCents: 49900, name: '500 Credits', nameAr: '٥٠٠ كريدت' },
-  credits_1500: { credits: 1500, amountEGP: 999, amountCents: 99900, name: '1500 Credits', nameAr: '١٥٠٠ كريدت' },
-};
+function resolvePlan(planId: string): PaymobPlan | undefined {
+  return getPaymobPlansMap()[planId];
+}
 
-export { PLANS as PAYMOB_PLANS };
+/** @deprecated Use getPaymobPlansMap from siteConfig — kept for imports that expect PAYMOB_PLANS */
+export const PAYMOB_PLANS: Record<string, PaymobPlan> = new Proxy({} as Record<string, PaymobPlan>, {
+  get(_, k: string) {
+    return resolvePlan(k);
+  },
+});
 
 // ════════════════════════════════════════════
 // CREATE PAYMENT INTENTION
@@ -76,7 +76,7 @@ export async function createPaymentIntention(
     return { error: 'Paymob not configured. Set PAYMOB_SECRET_KEY and PAYMOB_PUBLIC_KEY.' };
   }
 
-  const plan = PLANS[planId];
+  const plan = resolvePlan(planId);
   if (!plan) return { error: 'Invalid plan.' };
 
   const promoRaw = options?.promoCode?.trim();
@@ -328,8 +328,9 @@ export function mountPaymobWebhook(app: Express) {
           : '';
         // Get credits from extras, or look up from plan if missing
         let credits = parseInt(extras.credits || '0');
-        if (!credits && planId && PLANS[planId]) {
-          credits = PLANS[planId].credits;
+        if (!credits && planId) {
+          const pl = resolvePlan(planId);
+          if (pl) credits = pl.credits;
         }
 
         if (userId && credits) {
