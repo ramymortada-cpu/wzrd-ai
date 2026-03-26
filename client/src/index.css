@@ -12,7 +12,8 @@
   --card-foreground: oklch(0.18 0.015 280);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.015 280);
-  --primary: oklch(0.52 0.12 55);
+  /* Midnight violet + readable foreground (WZRD premium) */
+  --primary: oklch(0.48 0.16 290);
   --primary-foreground: oklch(0.98 0.005 80);
   --secondary: oklch(0.96 0.005 80);
   --secondary-foreground: oklch(0.18 0.015 280);
@@ -24,7 +25,7 @@
   --destructive-foreground: oklch(0.98 0.005 80);
   --border: oklch(0.93 0.005 80);
   --input: oklch(0.93 0.005 80);
-  --ring: oklch(0.52 0.12 55);
+  --ring: oklch(0.55 0.15 290);
   --chart-1: oklch(0.52 0.12 55);
   --chart-2: oklch(0.6 0.15 160);
   --chart-3: oklch(0.55 0.15 250);
@@ -48,8 +49,8 @@
   --card-foreground: oklch(0.93 0.005 80);
   --popover: oklch(0.17 0.012 280);
   --popover-foreground: oklch(0.93 0.005 80);
-  --primary: oklch(0.58 0.14 55);
-  --primary-foreground: oklch(0.13 0.012 280);
+  --primary: oklch(0.62 0.17 290);
+  --primary-foreground: oklch(0.98 0.01 280);
   --secondary: oklch(0.23 0.012 280);
   --secondary-foreground: oklch(0.93 0.005 80);
   --muted: oklch(0.23 0.012 280);
@@ -60,7 +61,7 @@
   --destructive-foreground: oklch(0.93 0.005 80);
   --border: oklch(0.28 0.012 280);
   --input: oklch(0.28 0.012 280);
-  --ring: oklch(0.58 0.14 55);
+  --ring: oklch(0.65 0.16 195);
   --chart-1: oklch(0.58 0.14 55);
   --chart-2: oklch(0.6 0.15 160);
   --chart-3: oklch(0.55 0.15 250);
@@ -113,8 +114,10 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --font-sans: "Inter", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-sans: "Inter", "IBM Plex Sans Arabic", "Tajawal", system-ui, sans-serif;
   --font-serif: "Playfair Display", serif;
+  --wzrd-accent: oklch(0.78 0.14 195);
+  --wzrd-glow: oklch(0.62 0.2 290 / 0.45);
 }
 
 @layer base {
@@ -175,6 +178,116 @@
       padding-right: 2rem;
       max-width: 1400px;
     }
+  }
+
+  /* WZRD premium shell — radial mesh (light / dark) */
+  .wzrd-page-radial {
+    background: radial-gradient(ellipse 120% 90% at 50% -15%, oklch(0.94 0.05 290 / 0.55), transparent 52%),
+      radial-gradient(ellipse 70% 55% at 100% 20%, oklch(0.92 0.04 220 / 0.4), transparent 48%),
+      radial-gradient(ellipse 60% 45% at 0% 80%, oklch(0.93 0.03 200 / 0.35), transparent 50%),
+      oklch(0.99 0.004 280);
+    min-height: 100vh;
+  }
+  .dark .wzrd-page-radial {
+    background: radial-gradient(ellipse 120% 90% at 50% -10%, oklch(0.38 0.1 290 / 0.45), transparent 52%),
+      radial-gradient(ellipse 70% 50% at 100% 30%, oklch(0.32 0.08 240 / 0.3), transparent 45%),
+      radial-gradient(ellipse 55% 40% at 0% 90%, oklch(0.28 0.06 200 / 0.22), transparent 45%),
+      oklch(0.11 0.02 280);
+  }
+
+  .wzrd-glass {
+    background: oklch(1 0 0 / 0.72);
+    border: 0.5px solid oklch(1 0 0 / 0.35);
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.07), 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+  .dark .wzrd-glass {
+    background: oklch(0.17 0.02 280 / 0.55);
+    border-color: oklch(0.4 0.02 280 / 0.45);
+    box-shadow: 0 24px 48px -18px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  }
+
+  .wzrd-auth-mesh {
+    min-height: 100vh;
+    background: linear-gradient(-45deg, #1a0a2e, #2d1b69, #0c1929, #115e59, #4c1d95, #1a0a2e);
+    background-size: 400% 400%;
+    animation: wzrd-mesh-shift 20s ease infinite;
+  }
+
+  .wzrd-shimmer-btn {
+    position: relative;
+    overflow: hidden;
+  }
+  .wzrd-shimmer-btn::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      transparent 38%,
+      rgba(255, 255, 255, 0.22) 50%,
+      transparent 62%
+    );
+    transform: translateX(-100%);
+    transition: transform 0.65s ease;
+    pointer-events: none;
+  }
+  .wzrd-shimmer-btn:hover::after {
+    transform: translateX(100%);
+  }
+
+  .wzrd-popular-glow {
+    box-shadow: 0 0 0 2px oklch(0.55 0.18 290 / 0.5), 0 0 32px -6px oklch(0.55 0.2 290 / 0.55), 0 24px 48px -16px rgba(0, 0, 0, 0.12);
+  }
+  .dark .wzrd-popular-glow {
+    box-shadow: 0 0 0 2px oklch(0.65 0.16 290 / 0.45), 0 0 40px -8px oklch(0.55 0.22 290 / 0.4), 0 24px 48px -12px rgba(0, 0, 0, 0.5);
+  }
+
+  .wzrd-public-pt {
+    padding-top: 5.5rem;
+  }
+
+  @keyframes wzrd-mesh-shift {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  @keyframes wzrd-fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes wzrd-pulse-ring {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 oklch(0.55 0.2 290 / 0.35);
+    }
+    50% {
+      box-shadow: 0 0 0 10px oklch(0.55 0.2 290 / 0);
+    }
+  }
+
+  .wzrd-fade-in-stagger {
+    animation: wzrd-fade-up 0.55s ease-out forwards;
+    opacity: 0;
+  }
+
+  .wzrd-courier-pulse {
+    animation: wzrd-pulse-ring 2s ease-out infinite;
   }
 }
 

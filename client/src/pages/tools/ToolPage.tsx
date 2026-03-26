@@ -65,8 +65,53 @@ interface ToolResult {
   creditsRemaining: number;
 }
 
-const severityColor = (s: string) => s === 'high' ? 'text-red-400 border-red-400/20 bg-red-400/5' : s === 'medium' ? 'text-amber-400 border-amber-400/20 bg-amber-400/5' : 'text-green-400 border-green-400/20 bg-green-400/5';
-const scoreColor = (s: number) => s >= 70 ? 'from-green-400 to-cyan-400' : s >= 40 ? 'from-amber-400 to-orange-400' : 'from-red-400 to-pink-400';
+const severityColor = (s: string) =>
+  s === 'high'
+    ? 'text-rose-200/90 border-rose-400/20 bg-rose-500/[0.06] shadow-[inset_3px_0_0_0_rgba(244,63,94,0.35)]'
+    : s === 'medium'
+      ? 'text-amber-100/90 border-amber-400/18 bg-amber-500/[0.06] shadow-[inset_3px_0_0_0_rgba(251,191,36,0.35)]'
+      : 'text-emerald-200/85 border-emerald-400/18 bg-emerald-500/[0.06] shadow-[inset_3px_0_0_0_rgba(52,211,153,0.35)]';
+
+function ScoreRing({ score }: { score: number }) {
+  const r = 52;
+  const c = 2 * Math.PI * r;
+  const pct = Math.min(100, Math.max(0, score)) / 100;
+  const dash = pct * c;
+  const { c1, c2 } =
+    score >= 70
+      ? { c1: '#4ade80', c2: '#22d3ee' }
+      : score >= 40
+        ? { c1: '#fbbf24', c2: '#fb923c' }
+        : { c1: '#f87171', c2: '#f472b6' };
+  const gid = `wzrd-score-grad-${score}-${Math.round(pct * 1000)}`;
+  return (
+    <div className="relative mx-auto mb-2 h-[7.75rem] w-[7.75rem]" aria-hidden>
+      <svg className="h-full w-full -rotate-90" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id={gid} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={c1} />
+            <stop offset="100%" stopColor={c2} />
+          </linearGradient>
+        </defs>
+        <circle cx="60" cy="60" r={r} fill="none" stroke="rgba(39,39,42,0.55)" strokeWidth="10" />
+        <circle
+          cx="60"
+          cy="60"
+          r={r}
+          fill="none"
+          stroke={`url(#${gid})`}
+          strokeWidth="10"
+          strokeLinecap="round"
+          strokeDasharray={`${dash} ${c}`}
+        />
+      </svg>
+      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-4xl font-bold font-mono text-white tabular-nums">{score}</span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">/100</span>
+      </div>
+    </div>
+  );
+}
 
 // ═══════════════════════════════════════
 // PROCESSING ANIMATION — shows analysis steps
@@ -110,7 +155,7 @@ function ProcessingScreen({ toolName }: { toolName: string }) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center">
+    <div className="wzrd-auth-mesh flex min-h-screen items-center justify-center text-white">
       <div className="max-w-md mx-auto px-6 text-center">
         {/* Animated brain icon */}
         <div className="relative mx-auto w-24 h-24 mb-8">
@@ -262,9 +307,11 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
   if (premiumReport) {
     const r = premiumReport;
     return (
-      <div className="min-h-screen bg-white dark:bg-zinc-950 text-gray-900 dark:text-white">
-        <div className="max-w-3xl mx-auto px-6 py-16" dir="rtl">
-          <button onClick={() => navigate('/tools')} className="text-xs text-gray-500 hover:text-indigo-600 mb-8 transition">رجوع للأدوات →</button>
+      <div className="wzrd-page-radial text-zinc-900 dark:text-white">
+        <div className="mx-auto max-w-3xl px-6 py-16" dir="rtl">
+          <button onClick={() => navigate('/tools')} className="mb-8 text-xs text-zinc-500 transition hover:text-primary">
+            رجوع للأدوات →
+          </button>
           
           {/* Header */}
           <div className="text-center mb-10">
@@ -277,7 +324,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
 
           {/* Executive Summary */}
           {r.report?.executiveSummary && (
-            <div className="p-6 rounded-2xl border-2 border-indigo-200 bg-indigo-50/50 dark:bg-indigo-900/10 dark:border-indigo-800 mb-8">
+            <div className="wzrd-glass mb-8 rounded-3xl border-indigo-200/60 p-6 dark:border-indigo-800/50">
               <h2 className="text-lg font-bold mb-3">١. الملخص التنفيذي</h2>
               <div className="flex items-center gap-4 mb-4">
                 <span className="text-4xl font-bold font-mono text-indigo-600">{r.report.executiveSummary.score}<span className="text-lg text-gray-400">/١٠٠</span></span>
@@ -395,29 +442,39 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
   // ═══ RESULT VIEW (Free) ═══
   if (result) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-white">
-        <div className="max-w-2xl mx-auto px-6 py-16">
+      <div className="relative min-h-screen overflow-hidden bg-zinc-950 text-white">
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_-8%,rgba(99,102,241,0.2),transparent_52%),radial-gradient(ellipse_45%_35%_at_100%_100%,rgba(6,182,212,0.07),transparent_42%),radial-gradient(ellipse_40%_30%_at_0%_80%,rgba(192,132,252,0.06),transparent_45%)]"
+          aria-hidden
+        />
+        <div className="relative z-10 max-w-2xl mx-auto px-6 py-16">
           {/* Back */}
           <button onClick={() => navigate('/tools')} className="text-xs text-zinc-500 hover:text-amber-400 mb-8 transition">← Back to Tools</button>
 
           {/* Score */}
           <div className="text-center mb-10">
-            <div className={`inline-flex items-center justify-center w-28 h-28 rounded-full bg-gradient-to-br ${scoreColor(result.score)} mb-4`}>
-              <span className="text-4xl font-bold text-zinc-950 font-mono">{result.score}</span>
+            <div className="wzrd-fade-in-stagger mx-auto inline-block rounded-3xl border border-white/10 bg-white/[0.04] px-8 py-6 backdrop-blur-xl" style={{ animationDelay: '0s' }}>
+              <ScoreRing score={result.score} />
+              <h2 className="text-2xl font-bold tracking-tight">{config.name}</h2>
+              <p className="mt-1 text-sm text-zinc-500">
+                {result.label} · {result.creditsUsed} credits used · {result.creditsRemaining} remaining
+              </p>
             </div>
-            <h2 className="text-2xl font-bold">{config.name}</h2>
-            <p className="text-sm text-zinc-500 mt-1">{result.label} · {result.creditsUsed} credits used · {result.creditsRemaining} remaining</p>
           </div>
 
           {/* Findings */}
           <div className="space-y-3 mb-8">
             {result.findings.map((f, i) => (
-              <div key={i} className={`p-4 rounded-xl border ${severityColor(f.severity)}`}>
-                <div className="flex items-center gap-2 mb-1">
+              <div
+                key={i}
+                className={`wzrd-fade-in-stagger rounded-2xl border p-4 backdrop-blur-xl ${severityColor(f.severity)}`}
+                style={{ animationDelay: `${0.08 + i * 0.07}s` }}
+              >
+                <div className="mb-1 flex items-center gap-2">
                   <span className="text-xs font-mono uppercase tracking-wider opacity-60">{f.severity}</span>
-                  <h4 className="font-bold text-sm">{f.title}</h4>
+                  <h4 className="text-sm font-bold">{f.title}</h4>
                 </div>
-                <p className="text-xs opacity-80 leading-relaxed">{f.detail}</p>
+                <p className="text-xs leading-relaxed opacity-85">{f.detail}</p>
               </div>
             ))}
           </div>
@@ -493,17 +550,18 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
           </div>
 
           {/* ═══ PREMIUM UPGRADE — BLURRED PREVIEW (A/B winner: 2.9x better conversion) ═══ */}
-          <div className="rounded-2xl border-2 border-indigo-500/30 bg-gradient-to-br from-indigo-900/30 to-purple-900/20 mb-8 overflow-hidden">
-            <div className="p-6 text-center border-b border-indigo-500/20">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold mb-3">
+          <div className="relative mb-8 overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-indigo-950/80 via-zinc-950/90 to-violet-950/70 shadow-[0_0_60px_-12px_rgba(99,102,241,0.35)] ring-1 ring-indigo-400/20">
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(125deg,transparent_20%,rgba(255,255,255,0.06)_45%,transparent_70%)]" aria-hidden />
+            <div className="relative border-b border-indigo-500/20 p-6 text-center">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-amber-400/35 bg-gradient-to-r from-amber-500/25 to-yellow-500/15 px-3 py-1 text-xs font-bold text-amber-100 shadow-inner">
                 ⭐ PREMIUM
               </div>
-              <h3 className="text-xl font-bold mb-1" dir="rtl">التقرير المفصّل</h3>
+              <h3 className="mb-1 text-xl font-bold" dir="rtl">التقرير المفصّل</h3>
               <p className="text-xs text-zinc-500" dir="rtl">٢٠٠٠+ كلمة — تحليل عميق لكل محور</p>
             </div>
             
             {/* Blurred Preview Sections */}
-            <div className="p-5 space-y-3" dir="rtl">
+            <div className="relative space-y-3 p-5" dir="rtl">
               {[
                 { title: '١. تحليل التموضع والتمايز', preview: 'البراند بتاعك حالياً واقف في منطقة...' },
                 { title: '٢. خريطة الأولويات', preview: 'أول ٣ حاجات لازم تعملها بالترتيب...' },
@@ -512,7 +570,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
                 { title: '٥. تحليل المنافسين الأولي', preview: 'مقارنة بالمنافسين في نفس المجال...' },
                 { title: '٦. توصيات مخصصة', preview: 'بناءً على الـ score بتاعك في كل محور...' },
               ].map((section, i) => (
-                <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/10">
+                <div key={i} className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 backdrop-blur-md">
                   <h4 className="text-sm font-bold text-indigo-300 mb-1">{section.title}</h4>
                   <p className="text-xs text-zinc-500" style={{ filter: 'blur(4px)', userSelect: 'none' }}>
                     {section.preview} وده بيأثر على الـ perception بتاع العملاء بشكل كبير. محتاج تركّز على تحسين الجزء ده لأنه الأساس اللي كل حاجة تانية مبنية عليه. الخطوة العملية الأولى هي إنك تعمل audit سريع للـ touchpoints الحالية.
@@ -522,11 +580,11 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
             </div>
 
             {/* CTA */}
-            <div className="p-6 text-center bg-indigo-900/20">
+            <div className="relative bg-indigo-950/40 p-6 text-center backdrop-blur-sm">
               <button 
                 onClick={handlePremiumUpgrade}
                 disabled={premiumLoading}
-                className="px-8 py-4 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold text-base transition hover:from-indigo-400 hover:to-purple-400 disabled:opacity-50 shadow-lg shadow-indigo-500/25"
+                className="wzrd-shimmer-btn relative overflow-hidden rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-8 py-4 text-base font-bold text-white shadow-[0_12px_40px_-8px_rgba(99,102,241,0.55)] transition hover:brightness-110 disabled:opacity-50"
               >
                 {premiumLoading ? (
                   <span className="flex items-center gap-2">
@@ -563,8 +621,12 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
 
           {/* ═══ DONE-FOR-YOU CTA — shows for score < 65 ═══ */}
           {result.score < 65 && (
-            <div className="p-6 rounded-2xl border-2 border-emerald-500/20 bg-gradient-to-br from-emerald-900/20 to-teal-900/10 mb-8" dir="rtl">
-              <div className="text-center">
+            <div
+              className="relative mb-8 overflow-hidden rounded-3xl border border-emerald-400/25 bg-gradient-to-br from-emerald-950/50 via-teal-950/35 to-zinc-950/80 p-6 shadow-[0_0_48px_-12px_rgba(16,185,129,0.35)] ring-1 ring-emerald-400/15"
+              dir="rtl"
+            >
+              <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(110deg,transparent_25%,rgba(255,255,255,0.04)_48%,transparent_70%)]" aria-hidden />
+              <div className="relative text-center">
                 <div className="text-3xl mb-3">🤝</div>
                 <h3 className="text-lg font-bold text-white mb-2">
                   {result.score < 40
@@ -632,70 +694,105 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
   }
 
   // ═══ FORM VIEW ═══
-  return (
-    <div className="min-h-screen bg-zinc-950 text-white">
-      <div className="max-w-lg mx-auto px-6 py-16">
-        <button onClick={() => navigate('/tools')} className="text-xs text-zinc-500 hover:text-amber-400 mb-8 transition">← Back to Tools</button>
+  const fieldShell =
+    'w-full rounded-2xl border border-zinc-200/90 bg-white/65 px-4 py-3 text-sm text-zinc-900 shadow-inner outline-none transition placeholder:text-zinc-400 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 dark:border-zinc-600 dark:bg-zinc-900/45 dark:text-white dark:placeholder:text-zinc-500';
 
-        <div className="flex items-center gap-3 mb-6">
+  return (
+    <div className="wzrd-page-radial text-zinc-900 dark:text-white">
+      <div className="mx-auto max-w-lg px-6 py-16">
+        <button
+          onClick={() => navigate('/tools')}
+          className="mb-8 text-xs text-zinc-500 transition hover:text-primary dark:text-zinc-400 dark:hover:text-amber-400"
+        >
+          ← Back to Tools
+        </button>
+
+        <div className="wzrd-glass mb-6 flex items-center gap-3 rounded-3xl p-4">
           <span className="text-4xl">{config.icon}</span>
           <div>
             <h1 className="text-xl font-bold">{config.name}</h1>
-            <p className="text-xs text-zinc-500">{config.description} · ~{config.cost} credits</p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              {config.description} · ~{config.cost} credits
+            </p>
           </div>
         </div>
 
         {/* Intro section — what this tool does */}
         {config.intro && (
-          <div className="mb-8 p-5 rounded-2xl border border-zinc-800 bg-zinc-900/20">
-            <h2 className="text-base font-bold text-white mb-2">{config.intro.headline}</h2>
-            <p className="text-sm text-zinc-400 leading-relaxed mb-4">{config.intro.body}</p>
+          <div className="wzrd-glass mb-8 rounded-3xl p-5">
+            <h2 className="mb-2 text-base font-bold">{config.intro.headline}</h2>
+            <p className="mb-4 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{config.intro.body}</p>
             <div className="mb-3">
-              <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider mb-2">What it measures:</p>
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">What it measures:</p>
               <div className="flex flex-wrap gap-1.5">
                 {config.intro.measures.map((m, i) => (
-                  <span key={i} className="text-[11px] text-zinc-400 bg-zinc-800/60 px-2 py-0.5 rounded-full">{m}</span>
+                  <span
+                    key={i}
+                    className="rounded-full bg-zinc-100/90 px-2 py-0.5 text-[11px] text-zinc-600 dark:bg-zinc-800/80 dark:text-zinc-300"
+                  >
+                    {m}
+                  </span>
                 ))}
               </div>
             </div>
-            <p className="text-xs text-amber-400/80 leading-relaxed">
+            <p className="text-xs leading-relaxed text-amber-700/90 dark:text-amber-300/90">
               <span className="font-bold">Best for:</span> {config.intro.bestFor}
             </p>
           </div>
         )}
 
         {error && (
-          <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{error}</div>
+          <div className="mb-4 rounded-xl border border-red-500/25 bg-red-500/10 p-3 text-sm text-red-600 dark:text-red-400">
+            {error}
+          </div>
         )}
 
-        <div className="space-y-4">
+        <div className="wzrd-glass space-y-4 rounded-3xl p-5">
           {config.fields.map(field => (
             <div key={field.name}>
-              <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">{field.label}</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                {field.label}
+              </label>
               {field.type === 'textarea' ? (
                 <textarea
-                  placeholder={field.placeholder} maxLength={field.maxLength || 1000} rows={3}
-                  className="w-full px-4 py-3 rounded-lg bg-white/3 border border-zinc-800 text-white placeholder-zinc-600 text-sm outline-none focus:border-indigo-500 transition resize-none"
-                  value={(formData[field.name] as string) || ''} onChange={e => updateField(field.name, e.target.value)}
+                  placeholder={field.placeholder}
+                  maxLength={field.maxLength || 1000}
+                  rows={3}
+                  className={`${fieldShell} resize-none backdrop-blur-md`}
+                  value={(formData[field.name] as string) || ''}
+                  onChange={e => updateField(field.name, e.target.value)}
                 />
               ) : field.type === 'select' ? (
                 <select
-                  className="w-full px-4 py-3 rounded-lg bg-white/3 border border-zinc-800 text-white text-sm outline-none focus:border-indigo-500 transition"
-                  value={(formData[field.name] as string) || ''} onChange={e => updateField(field.name, e.target.value)}
+                  className={`${fieldShell} backdrop-blur-md`}
+                  value={(formData[field.name] as string) || ''}
+                  onChange={e => updateField(field.name, e.target.value)}
                 >
                   <option value="">Select...</option>
-                  {field.options?.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  {field.options?.map(o => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
                 </select>
               ) : field.type === 'checkbox' ? (
                 <label className="flex items-center gap-2">
-                  <input type="checkbox" className="accent-indigo-500" checked={!!formData[field.name]} onChange={e => updateField(field.name, e.target.checked)} />
-                  <span className="text-sm text-zinc-400">{field.placeholder}</span>
+                  <input
+                    type="checkbox"
+                    className="accent-primary"
+                    checked={!!formData[field.name]}
+                    onChange={e => updateField(field.name, e.target.checked)}
+                  />
+                  <span className="text-sm text-zinc-600 dark:text-zinc-400">{field.placeholder}</span>
                 </label>
               ) : (
                 <input
-                  type="text" placeholder={field.placeholder} maxLength={field.maxLength || 255}
-                  className="w-full px-4 py-3 rounded-lg bg-white/3 border border-zinc-800 text-white placeholder-zinc-600 text-sm outline-none focus:border-indigo-500 transition"
-                  value={(formData[field.name] as string) || ''} onChange={e => updateField(field.name, e.target.value)}
+                  type="text"
+                  placeholder={field.placeholder}
+                  maxLength={field.maxLength || 255}
+                  className={`${fieldShell} backdrop-blur-md`}
+                  value={(formData[field.name] as string) || ''}
+                  onChange={e => updateField(field.name, e.target.value)}
                 />
               )}
             </div>
@@ -703,8 +800,9 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
         </div>
 
         <button
-          onClick={handleSubmit} disabled={loading}
-          className="w-full mt-6 py-3.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-400 text-zinc-950 font-bold text-sm transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-amber-500/20 disabled:opacity-50"
+          onClick={handleSubmit}
+          disabled={loading}
+          className="wzrd-shimmer-btn relative mt-6 w-full overflow-hidden rounded-full bg-gradient-to-r from-amber-500 to-amber-400 py-3.5 text-sm font-bold text-zinc-950 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-amber-500/25 disabled:opacity-50"
         >
           تحليل — {config.cost} كريدت
         </button>

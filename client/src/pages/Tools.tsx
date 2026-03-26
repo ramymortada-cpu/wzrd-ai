@@ -66,23 +66,22 @@ export default function Tools() {
   const heroTitle = locale === 'ar' ? 'أدوات التحليل الذكي' : 'AI Toolkit';
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50/50 via-white to-white dark:bg-zinc-950 text-zinc-900 dark:text-white">
+    <div className="wzrd-page-radial text-zinc-900 dark:text-white">
       <WzrdPublicHeader credits={credits} />
 
-      {/* Hero section */}
-      <div className="max-w-5xl mx-auto px-6 pt-16 pb-12">
+      <div className="wzrd-public-pt max-w-5xl mx-auto px-6 pb-16">
         {credits === 100 && (
-          <div className="mb-8 p-6 rounded-2xl border border-indigo-200 dark:border-indigo-500/20 bg-gradient-to-r from-indigo-500/5 to-cyan-500/5 dark:from-indigo-500/5 dark:to-cyan-500/5 shadow-sm">
+          <div className="mb-8 wzrd-glass rounded-3xl p-6 sm:p-8">
             <div className="flex items-start gap-4">
-              <span className="text-3xl">🎉</span>
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-cyan-500/20 text-2xl shadow-inner">🎉</span>
               <div>
-                <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-1">{t('wzrd.welcomeStart')}</h3>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed mb-3">{t('wzrd.youHaveCredits')}</p>
+                <h3 className="text-lg font-bold tracking-tight text-zinc-900 dark:text-white mb-1">{t('wzrd.welcomeStart')}</h3>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed mb-4">{t('wzrd.youHaveCredits')}</p>
                 <div className="flex gap-3 flex-wrap">
-                  <button onClick={() => navigate('/tools/brand-diagnosis')} className="px-4 py-2 rounded-full bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-500 transition hover:-translate-y-0.5">
+                  <button type="button" onClick={() => navigate('/tools/brand-diagnosis')} className="wzrd-shimmer-btn rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/25 transition duration-500 hover:-translate-y-0.5">
                     🔬 {t('wzrd.startDiagnosis')}
                   </button>
-                  <button onClick={() => document.getElementById('tools-grid')?.scrollIntoView({ behavior: 'smooth' })} className="px-4 py-2 rounded-full border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 text-sm hover:text-zinc-900 dark:hover:text-white transition">
+                  <button type="button" onClick={() => document.getElementById('tools-grid')?.scrollIntoView({ behavior: 'smooth' })} className="rounded-full border-[0.5px] border-zinc-300/80 bg-white/50 px-5 py-2.5 text-sm font-medium text-zinc-700 backdrop-blur-sm transition hover:border-primary/40 dark:border-zinc-600 dark:bg-zinc-900/40 dark:text-zinc-300">
                     {t('wzrd.browseTools')}
                   </button>
                 </div>
@@ -92,49 +91,59 @@ export default function Tools() {
         )}
 
         {typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('purchase') === 'success' && (
-          <div className="mb-8 p-4 rounded-xl border border-green-500/20 bg-green-500/5 dark:bg-green-500/10 text-center">
-            <p className="text-green-600 dark:text-green-400 font-semibold">✅ {t('wzrd.paymentSuccess')}</p>
+          <div className="mb-8 rounded-2xl border-[0.5px] border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-center backdrop-blur-md">
+            <p className="font-semibold text-emerald-700 dark:text-emerald-300">✅ {t('wzrd.paymentSuccess')}</p>
           </div>
         )}
 
-        <div className="text-center mb-14">
-          <h2 className="text-4xl font-bold text-zinc-900 dark:text-white mb-4 tracking-tight">{heroTitle}</h2>
-          <p className="text-zinc-600 dark:text-zinc-400 max-w-xl mx-auto text-base leading-relaxed">{t('wzrd.eachToolDesc')}</p>
+        <div className="text-center mb-12 sm:mb-16">
+          <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 text-transparent bg-clip-text bg-gradient-to-r from-zinc-900 via-primary to-cyan-500 dark:from-white dark:via-violet-200 dark:to-cyan-300 leading-tight">
+            {heroTitle}
+          </h2>
+          <p className="text-zinc-600 dark:text-zinc-400 max-w-xl mx-auto text-base sm:text-lg leading-relaxed">{t('wzrd.eachToolDesc')}</p>
         </div>
 
-        {/* Tools grid — 2-col desktop, 1-col mobile */}
-        <div id="tools-grid" className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div id="tools-grid" className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
           {tools.map(tool => {
             const canAfford = credits !== null && credits >= tool.cost;
             return (
               <button
                 key={tool.id}
+                type="button"
                 onClick={() => canAfford && navigate(tool.route)}
                 disabled={!canAfford}
-                className={`text-left p-8 rounded-2xl border transition-all duration-300 group shadow-md ${
+                className={`group relative overflow-hidden rounded-3xl border-[0.5px] p-8 sm:p-10 text-left transition-all duration-500 ease-out ${
                   canAfford
-                    ? 'bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 hover:shadow-xl hover:-translate-y-1 hover:border-indigo-300 dark:hover:border-indigo-500/40 cursor-pointer'
-                    : 'bg-zinc-50/50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800/50 opacity-60 cursor-not-allowed'
+                    ? 'wzrd-glass border-white/40 hover:-translate-y-2 hover:shadow-2xl dark:border-zinc-600/50 cursor-pointer'
+                    : 'cursor-not-allowed border-zinc-200/50 bg-zinc-100/40 opacity-55 dark:border-zinc-800 dark:bg-zinc-900/30'
                 }`}
               >
-                <div className="text-4xl mb-5">{tool.icon}</div>
-                <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">
-                  {locale === 'ar' ? tool.nameAr : tool.name}
-                </h3>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6 leading-relaxed" style={{ lineHeight: 1.7 }}>
-                  {locale === 'ar' ? tool.descAr : tool.desc}
-                </p>
-                <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20">
-                  <span className="font-mono text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-                    {locale === 'ar' ? toArabicNumerals(tool.cost) : tool.cost} {t('wzrd.credits')}
-                  </span>
-                  {canAfford ? (
-                    <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-                      {t('wzrd.run')} →
+                <div
+                  className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                  style={{
+                    background: `radial-gradient(ellipse 80% 60% at 90% 10%, ${tool.color}33, transparent 55%), radial-gradient(ellipse 60% 50% at 10% 90%, ${tool.color}22, transparent 50%)`,
+                  }}
+                />
+
+                <span className="absolute right-5 top-5 z-10 rounded-full border-[0.5px] border-primary/20 bg-gradient-to-r from-primary/15 to-cyan-500/10 px-3 py-1 font-mono text-xs font-bold text-primary backdrop-blur-sm dark:from-primary/25">
+                  {locale === 'ar' ? toArabicNumerals(tool.cost) : tool.cost} {t('wzrd.credits')}
+                </span>
+
+                <div className="relative z-[1]">
+                  <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-white/90 to-zinc-100/80 text-3xl shadow-lg shadow-black/5 ring-1 ring-white/60 dark:from-zinc-800 dark:to-zinc-900 dark:ring-zinc-700/50">
+                    {tool.icon}
+                  </div>
+                  <h3 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white mb-2 transition group-hover:text-primary">
+                    {locale === 'ar' ? tool.nameAr : tool.name}
+                  </h3>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-8 leading-loose">
+                    {locale === 'ar' ? tool.descAr : tool.desc}
+                  </p>
+                  <div className="flex items-center justify-between rounded-2xl border-[0.5px] border-zinc-200/60 bg-white/40 px-4 py-3 backdrop-blur-sm dark:border-zinc-700/50 dark:bg-zinc-950/30">
+                    <span className="text-sm font-semibold text-primary">
+                      {canAfford ? `${t('wzrd.run')} →` : <span className="text-red-500 dark:text-red-400">{t('wzrd.notEnoughCredits')}</span>}
                     </span>
-                  ) : (
-                    <span className="text-sm text-red-500 dark:text-red-400">{t('wzrd.notEnoughCredits')}</span>
-                  )}
+                  </div>
                 </div>
               </button>
             );
@@ -142,12 +151,14 @@ export default function Tools() {
         </div>
 
         {credits !== null && credits < 20 && (
-          <div className="mt-12 p-8 rounded-2xl border border-amber-200 dark:border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 text-center">
-            <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">{t('wzrd.needMoreCredits')}</h3>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">{t('wzrd.buyCreditsDesc')}</p>
-            <div className="flex gap-3 justify-center">
-              <a href="/pricing" className="px-6 py-2.5 rounded-full bg-amber-500 text-zinc-950 text-sm font-bold hover:-translate-y-0.5 transition shadow-md">{t('wzrd.buyCredits')}</a>
-              <a href={waMeHref()} target="_blank" rel="noreferrer" className="px-6 py-2.5 rounded-full border border-zinc-300 dark:border-zinc-700 text-sm hover:border-amber-500 transition">{t('wzrd.talkToPrimo')}</a>
+          <div className="mt-14 wzrd-glass rounded-3xl p-8 sm:p-10 text-center border-amber-200/40 dark:border-amber-500/20">
+            <h3 className="text-lg font-bold tracking-tight text-zinc-900 dark:text-white mb-2">{t('wzrd.needMoreCredits')}</h3>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-6 leading-relaxed">{t('wzrd.buyCreditsDesc')}</p>
+            <div className="flex gap-3 justify-center flex-wrap">
+              <a href="/pricing" className="wzrd-shimmer-btn inline-flex rounded-full bg-gradient-to-r from-amber-400 to-amber-500 px-6 py-2.5 text-sm font-bold text-zinc-950 shadow-lg transition hover:-translate-y-0.5">{t('wzrd.buyCredits')}</a>
+              <a href={waMeHref()} target="_blank" rel="noreferrer" className="inline-flex rounded-full border-[0.5px] border-zinc-300 px-6 py-2.5 text-sm font-semibold text-zinc-700 transition hover:border-primary dark:border-zinc-600 dark:text-zinc-300">
+                {t('wzrd.talkToPrimo')}
+              </a>
             </div>
           </div>
         )}

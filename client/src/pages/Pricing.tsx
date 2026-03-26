@@ -77,15 +77,17 @@ export default function Pricing() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50/50 via-white to-white dark:bg-zinc-950 text-zinc-900 dark:text-white">
+    <div className="wzrd-page-radial text-zinc-900 dark:text-white">
       <WzrdPublicHeader credits={credits} />
-      <div className="max-w-4xl mx-auto px-6 py-20">
+      <div className="wzrd-public-pt max-w-4xl mx-auto px-6 pb-20">
         <div className="text-center mb-14">
-          <h2 className="text-4xl font-bold text-zinc-900 dark:text-white mb-4">{t('wzrd.buyMoreCredits')}</h2>
-          <p className="text-zinc-600 dark:text-zinc-400 max-w-md mx-auto text-base">{t('wzrd.keepUsingTools')}</p>
+          <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 text-transparent bg-clip-text bg-gradient-to-r from-zinc-900 via-primary to-cyan-500 dark:from-white dark:to-cyan-300">
+            {t('wzrd.buyMoreCredits')}
+          </h2>
+          <p className="text-zinc-600 dark:text-zinc-400 max-w-md mx-auto text-base leading-relaxed">{t('wzrd.keepUsingTools')}</p>
         </div>
 
-        <div className="mb-10 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/60 shadow-sm">
+        <div className="mb-10 wzrd-glass rounded-3xl p-6 sm:p-8">
           <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-3">
             {locale === 'ar' ? 'كود خصم (اختياري)' : 'Promo code (optional)'}
           </p>
@@ -129,27 +131,35 @@ export default function Pricing() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-14">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-14 items-stretch">
           {PLANS.map(plan => (
-            <div key={plan.id} className={`relative p-8 rounded-2xl border transition shadow-md hover:shadow-xl hover:-translate-y-1 ${
-              plan.popular
-                ? 'border-indigo-300 dark:border-indigo-500/40 bg-indigo-50/50 dark:bg-indigo-500/5'
-                : 'border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900'
-            }`}>
+            <div
+              key={plan.id}
+              className={`relative rounded-3xl transition-all duration-500 ${
+                plan.popular
+                  ? 'md:-my-2 md:scale-[1.05] z-10 wzrd-popular-glow wzrd-glass ring-2 ring-primary/60 ring-offset-4 ring-offset-transparent dark:ring-offset-zinc-950/80'
+                  : 'wzrd-glass border-white/30 dark:border-zinc-700/50'
+              }`}
+            >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-indigo-600 text-xs font-bold text-white">
+                <div className="absolute -top-3 left-1/2 z-20 -translate-x-1/2 rounded-full bg-gradient-to-r from-primary to-cyan-500 px-4 py-1 text-xs font-bold text-white shadow-lg">
                   {t('wzrd.bestValue')}
                 </div>
               )}
-              <div className="text-center">
-                <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">{locale === 'ar' ? plan.label : plan.labelEn}</h3>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">{locale === 'ar' ? plan.description : plan.descEn}</p>
+              <div className={`p-8 sm:p-10 text-center ${plan.popular ? '' : ''}`}>
+                <h3 className="text-xl font-extrabold tracking-tight text-zinc-900 dark:text-white mb-2">{locale === 'ar' ? plan.label : plan.labelEn}</h3>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-6 leading-relaxed">{locale === 'ar' ? plan.description : plan.descEn}</p>
                 <div className="mb-2">
-                  <span className="text-4xl font-bold font-mono text-zinc-900 dark:text-white">{locale === 'ar' ? toArabicNumerals(plan.price.toLocaleString()) : plan.price.toLocaleString()}</span>
-                  <span className="text-sm text-zinc-500 dark:text-zinc-400 ms-1">EGP</span>
+                  <span className="text-5xl sm:text-6xl font-bold font-mono tabular-nums tracking-tight text-zinc-900 dark:text-white">
+                    {locale === 'ar' ? toArabicNumerals(plan.price.toLocaleString()) : plan.price.toLocaleString()}
+                  </span>
+                  <span className="text-sm font-medium text-zinc-500 dark:text-zinc-400 ms-1">EGP</span>
                 </div>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-8">{locale === 'ar' ? toArabicNumerals(plan.credits.toLocaleString()) : plan.credits.toLocaleString()} {t('wzrd.credits')}</p>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-8 leading-relaxed">
+                  {locale === 'ar' ? toArabicNumerals(plan.credits.toLocaleString()) : plan.credits.toLocaleString()} {t('wzrd.credits')}
+                </p>
                 <button
+                  type="button"
                   onClick={async () => {
                     try {
                       const res = await fetch('/api/trpc/credits.purchase', {
@@ -171,21 +181,23 @@ export default function Pricing() {
                       }
                     } catch { alert('Connection error. Please try again.'); }
                   }}
-                  className={`w-full py-4 rounded-xl font-bold text-base transition hover:-translate-y-0.5 ${
+                  className={`wzrd-shimmer-btn w-full rounded-2xl py-4 font-bold text-base transition duration-500 hover:-translate-y-0.5 ${
                     plan.popular
-                      ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-500/20 hover:from-indigo-700 hover:to-indigo-600'
-                      : 'bg-amber-500 text-zinc-950 hover:bg-amber-400'
+                      ? 'bg-gradient-to-r from-primary via-violet-600 to-cyan-500 text-white shadow-xl shadow-primary/30'
+                      : 'bg-gradient-to-r from-amber-400 to-amber-500 text-zinc-950 shadow-lg'
                   }`}
                 >
                   {t('wzrd.buy')} {locale === 'ar' ? toArabicNumerals(plan.credits) : plan.credits} {t('wzrd.credits')}
                 </button>
-                <p className="text-xs text-zinc-500 dark:text-zinc-500 mt-3">{locale === 'ar' ? toArabicNumerals((plan.price / plan.credits).toFixed(1)) : (plan.price / plan.credits).toFixed(1)} EGP per credit</p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-500 mt-3">
+                  {locale === 'ar' ? toArabicNumerals((plan.price / plan.credits).toFixed(1)) : (plan.price / plan.credits).toFixed(1)} EGP per credit
+                </p>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="p-8 rounded-2xl border border-amber-200 dark:border-amber-500/20 bg-amber-50/50 dark:bg-amber-500/10 text-center shadow-sm">
+        <div className="wzrd-glass rounded-3xl p-8 sm:p-10 text-center border-amber-200/35 dark:border-amber-500/25">
           <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-3">{t('wzrd.diyAlternative')}</h3>
           <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-6 max-w-md mx-auto" style={{ lineHeight: 1.7 }}>
             {t('wzrd.letPrimoHandle')}

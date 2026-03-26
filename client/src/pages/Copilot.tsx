@@ -30,7 +30,6 @@ export default function Copilot() {
   const inputRef = useRef<HTMLInputElement>(null);
   const userScrolled = useRef(false);
 
-  // Load credits + suggestions
   useEffect(() => {
     fetch('/api/trpc/credits.balance')
       .then(r => r.json())
@@ -46,7 +45,6 @@ export default function Copilot() {
       .catch(() => {});
   }, []);
 
-  // Auto-scroll to bottom
   useEffect(() => {
     if (!userScrolled.current && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -61,7 +59,6 @@ export default function Copilot() {
     setError('');
     setLoading(true);
 
-    // Optimistic UI — add user message immediately
     const userMsg: Message = { id: Date.now(), role: 'user', content: msg };
     setMessages(prev => [...prev, userMsg]);
 
@@ -99,155 +96,169 @@ export default function Copilot() {
     }
   };
 
+  const userBubbleSide = isAr ? 'justify-start' : 'justify-end';
+  const aiBubbleSide = isAr ? 'justify-end' : 'justify-start';
+
   return (
-    <div className="flex flex-col h-screen bg-gray-50" dir={isAr ? 'rtl' : 'ltr'}>
-      {/* Header */}
-      <div className="flex-shrink-0 border-b border-gray-200 bg-white px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <a href="/my-brand" className="text-gray-400 hover:text-gray-600 transition">←</a>
-          <div>
-            <h1 className="text-base font-bold text-gray-900">
-              {isAr ? 'مستشار البراند' : 'Brand Copilot'}
-            </h1>
-            <p className="text-xs text-gray-400">
-              {isAr ? 'اسأل أي سؤال عن البراند بتاعك' : 'Ask anything about your brand'}
-            </p>
+    <div className="flex min-h-screen flex-col wzrd-page-radial text-zinc-900 dark:text-white" dir={isAr ? 'rtl' : 'ltr'}>
+      <WzrdPublicHeader credits={credits} />
+
+      <div className="wzrd-public-pt flex flex-1 flex-col px-3 pb-28 sm:px-6">
+        <div className="mx-auto mb-4 flex w-full max-w-3xl items-center justify-between rounded-3xl border-[0.5px] border-white/40 bg-white/50 px-4 py-3 backdrop-blur-xl dark:border-zinc-700/50 dark:bg-zinc-950/40">
+          <div className="flex items-center gap-3 min-w-0">
+            <a href="/my-brand" className="shrink-0 rounded-full border border-zinc-200/80 p-2 text-zinc-500 transition hover:border-primary hover:text-primary dark:border-zinc-600 dark:text-zinc-400">
+              ←
+            </a>
+            <div className="min-w-0">
+              <h1 className="truncate text-base font-extrabold tracking-tight text-zinc-900 dark:text-white">
+                {isAr ? 'مستشار البراند' : 'Brand Copilot'}
+              </h1>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                {isAr ? 'اسأل أي سؤال عن البراند بتاعك' : 'Ask anything about your brand'}
+              </p>
+            </div>
           </div>
+          {credits !== null && (
+            <div className="flex shrink-0 items-center gap-1.5 rounded-full border border-primary/25 bg-gradient-to-r from-primary/12 to-cyan-500/10 px-3 py-1 text-xs font-bold text-primary">
+              {credits} {isAr ? 'كريدت' : 'CR'}
+            </div>
+          )}
         </div>
-        {credits !== null && (
-          <div className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold">
-            {credits} {isAr ? 'كريدت' : 'CR'}
-          </div>
-        )}
-      </div>
 
-      {/* Messages */}
-      <div
-        className="flex-1 overflow-y-auto px-4 py-4 space-y-4"
-        onScroll={(e) => {
-          const el = e.currentTarget;
-          userScrolled.current = el.scrollTop < el.scrollHeight - el.clientHeight - 100;
-        }}
-      >
-        {/* Welcome message */}
-        {messages.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-4xl mb-3">🧙‍♂️</div>
-            <h2 className="text-lg font-bold text-gray-800 mb-2">
-              {isAr ? 'أهلاً! أنا مستشار البراند بتاعك.' : "Hi! I'm your Brand Copilot."}
-            </h2>
-            <p className="text-sm text-gray-500 mb-6 max-w-sm mx-auto">
-              {isAr
-                ? 'اسألني أي سؤال عن البراند بتاعك — عندي context من كل التشخيصات اللي عملتها.'
-                : 'Ask me anything about your brand — I have context from all your diagnoses.'}
-            </p>
-
-            {/* Suggestions */}
-            {suggestions.length > 0 && (
-              <div className="flex flex-wrap gap-2 justify-center max-w-md mx-auto">
-                {suggestions.map((s, i) => (
-                  <button
-                    key={i}
-                    onClick={() => sendMessage(s.text)}
-                    className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-700 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700 transition"
-                  >
-                    {s.icon} {s.text}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Messages list */}
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${msg.role === 'user' ? (isAr ? 'justify-start' : 'justify-end') : (isAr ? 'justify-end' : 'justify-start')}`}
-          >
-            <div
-              className={`max-w-[85%] rounded-2xl px-4 py-3 ${
-                msg.role === 'user'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-white border border-gray-200 text-gray-800'
-              }`}
-            >
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+        <div
+          className="mx-auto flex w-full max-w-3xl flex-1 flex-col overflow-y-auto rounded-3xl border-[0.5px] border-white/30 bg-white/25 px-3 py-4 backdrop-blur-xl dark:border-zinc-700/40 dark:bg-zinc-950/35 sm:px-5"
+          onScroll={(e) => {
+            const el = e.currentTarget;
+            userScrolled.current = el.scrollTop < el.scrollHeight - el.clientHeight - 100;
+          }}
+        >
+          {messages.length === 0 && (
+            <div className="flex flex-1 flex-col items-center justify-center py-12 text-center">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-cyan-500/20 text-3xl shadow-inner">🧙‍♂️</div>
+              <h2 className="mb-2 text-lg font-extrabold tracking-tight text-zinc-900 dark:text-white">
+                {isAr ? 'أهلاً! أنا مستشار البراند بتاعك.' : "Hi! I'm your Brand Copilot."}
+              </h2>
+              <p className="mb-6 max-w-sm text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+                {isAr
+                  ? 'اسألني أي سؤال عن البراند بتاعك — عندي context من كل التشخيصات اللي عملتها.'
+                  : 'Ask me anything about your brand — I have context from all your diagnoses.'}
+              </p>
+              {suggestions.length > 0 && (
+                <div className="flex max-w-md flex-wrap justify-center gap-2">
+                  {suggestions.map((s, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => sendMessage(s.text)}
+                      className="rounded-full border-[0.5px] border-zinc-200/80 bg-white/60 px-4 py-2 text-sm text-zinc-700 backdrop-blur-sm transition hover:border-primary/40 hover:bg-primary/10 dark:border-zinc-600 dark:bg-zinc-900/50 dark:text-zinc-200"
+                    >
+                      {s.icon} {s.text}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          )}
 
-        {/* Loading indicator */}
-        {loading && (
-          <div className={`flex ${isAr ? 'justify-end' : 'justify-start'}`}>
-            <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3">
-              <div className="flex gap-1">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Error */}
-        {error && (
-          <div className="text-center">
-            <p className="text-sm text-red-500 bg-red-50 inline-block px-4 py-2 rounded-xl">{error}</p>
-          </div>
-        )}
-
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Input area — sticky bottom */}
-      <div className="flex-shrink-0 border-t border-gray-200 bg-white px-4 py-3 safe-area-bottom">
-        {/* Quick suggestions (show after messages exist) */}
-        {messages.length > 0 && messages.length < 6 && (
-          <div className="flex gap-2 overflow-x-auto pb-2 mb-2 scrollbar-hide">
-            {[
-              isAr ? 'اكتبلي bio' : 'Write a bio',
-              isAr ? 'اقترحلي tagline' : 'Suggest tagline',
-              isAr ? 'إزاي أسعّر؟' : 'Pricing help',
-            ].map((q, i) => (
-              <button
-                key={i}
-                onClick={() => sendMessage(q)}
-                disabled={loading}
-                className="flex-shrink-0 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-full text-xs hover:bg-indigo-50 hover:text-indigo-600 transition disabled:opacity-50"
+          <div className="space-y-4">
+            {messages.map((msg) => (
+              <div
+                key={msg.id}
+                className={`flex items-end gap-2 ${msg.role === 'user' ? userBubbleSide : aiBubbleSide}`}
               >
-                {q}
-              </button>
+                {msg.role === 'assistant' && !isAr && (
+                  <span className="mt-1 hidden h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-cyan-500 text-xs font-bold text-white sm:flex">
+                    W
+                  </span>
+                )}
+                <div
+                  className={`max-w-[88%] rounded-3xl px-4 py-3 sm:max-w-[80%] ${
+                    msg.role === 'user'
+                      ? 'border-[0.5px] border-primary/20 bg-gradient-to-br from-primary to-violet-700 text-white shadow-lg shadow-primary/20'
+                      : 'border-[0.5px] border-white/50 bg-white/55 text-zinc-900 shadow-md backdrop-blur-md dark:border-zinc-600/50 dark:bg-zinc-900/55 dark:text-zinc-100'
+                  }`}
+                >
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed">{msg.content}</p>
+                </div>
+                {msg.role === 'assistant' && isAr && (
+                  <span className="mt-1 hidden h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-cyan-500 text-xs font-bold text-white sm:flex">
+                    W
+                  </span>
+                )}
+              </div>
             ))}
           </div>
-        )}
 
-        <div className="flex gap-2">
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={isAr ? 'اكتب سؤالك...' : 'Type your question...'}
-            disabled={loading}
-            className="flex-1 px-4 py-3 bg-gray-100 rounded-2xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-300 disabled:opacity-50"
-            style={{ minHeight: '48px' }}
-          />
-          <button
-            onClick={() => sendMessage()}
-            disabled={!input.trim() || loading}
-            className="flex-shrink-0 w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center hover:bg-indigo-500 transition disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-            </svg>
-          </button>
+          {loading && (
+            <div className={`mt-4 flex ${aiBubbleSide}`}>
+              <div className="rounded-3xl border border-white/40 bg-white/50 px-4 py-3 backdrop-blur-md dark:border-zinc-600/50 dark:bg-zinc-900/50">
+                <div className="flex gap-1.5">
+                  <div className="h-2 w-2 animate-bounce rounded-full bg-primary" style={{ animationDelay: '0ms' }} />
+                  <div className="h-2 w-2 animate-bounce rounded-full bg-primary" style={{ animationDelay: '150ms' }} />
+                  <div className="h-2 w-2 animate-bounce rounded-full bg-primary" style={{ animationDelay: '300ms' }} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="mt-4 text-center">
+              <p className="inline-block rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-2 text-sm text-red-600 dark:text-red-300">{error}</p>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
         </div>
+      </div>
 
-        <p className="text-xs text-gray-400 mt-2 text-center">
-          {isAr ? '٥ كريدت لكل رسالة' : '5 credits per message'}
-        </p>
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t-[0.5px] border-white/30 bg-white/55 px-3 py-3 backdrop-blur-2xl dark:border-zinc-800/60 dark:bg-zinc-950/75 sm:px-6">
+        <div className="mx-auto max-w-3xl">
+          {messages.length > 0 && messages.length < 6 && (
+            <div className="mb-2 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              {[
+                isAr ? 'اكتبلي bio' : 'Write a bio',
+                isAr ? 'اقترحلي tagline' : 'Suggest tagline',
+                isAr ? 'إزاي أسعّر؟' : 'Pricing help',
+              ].map((q, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => sendMessage(q)}
+                  disabled={loading}
+                  className="flex-shrink-0 rounded-full border border-zinc-200/80 bg-white/70 px-3 py-1.5 text-xs text-zinc-600 transition hover:border-primary/30 dark:border-zinc-700 dark:bg-zinc-900/60 dark:text-zinc-300 disabled:opacity-50"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-center gap-2 rounded-full border-[0.5px] border-zinc-200/80 bg-white/80 py-1.5 pl-4 pr-1.5 shadow-lg dark:border-zinc-600 dark:bg-zinc-900/80">
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={isAr ? 'اكتب سؤالك...' : 'Type your question...'}
+              disabled={loading}
+              className="min-h-[48px] flex-1 bg-transparent text-sm text-zinc-900 outline-none placeholder:text-zinc-400 dark:text-white"
+            />
+            <button
+              type="button"
+              onClick={() => sendMessage()}
+              disabled={!input.trim() || loading}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-cyan-500 text-white shadow-lg shadow-primary/35 transition hover:scale-105 disabled:opacity-30 disabled:hover:scale-100"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+            </button>
+          </div>
+          <p className="mt-2 text-center text-xs text-zinc-500 dark:text-zinc-400">
+            {isAr ? '٥ كريدت لكل رسالة' : '5 credits per message'}
+          </p>
+        </div>
       </div>
     </div>
   );

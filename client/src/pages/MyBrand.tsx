@@ -139,13 +139,13 @@ export default function MyBrand() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="wzrd-page-radial min-h-screen text-zinc-900 dark:text-white" dir={isAr ? 'rtl' : 'ltr'}>
         <WzrdPublicHeader />
-        <div className="max-w-2xl mx-auto px-4 py-12">
+        <div className="wzrd-public-pt mx-auto max-w-2xl px-4 py-12">
           <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 rounded w-1/2" />
-            <div className="h-40 bg-gray-200 rounded-2xl" />
-            <div className="h-32 bg-gray-200 rounded-2xl" />
+            <div className="h-8 w-1/2 rounded-lg bg-zinc-200/80 dark:bg-zinc-700/80" />
+            <div className="h-40 rounded-3xl bg-zinc-200/80 dark:bg-zinc-700/80" />
+            <div className="h-32 rounded-3xl bg-zinc-200/80 dark:bg-zinc-700/80" />
           </div>
         </div>
       </div>
@@ -153,20 +153,20 @@ export default function MyBrand() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" dir={isAr ? 'rtl' : 'ltr'}>
+    <div className="wzrd-page-radial min-h-screen text-zinc-900 dark:text-white" dir={isAr ? 'rtl' : 'ltr'}>
       <WzrdPublicHeader />
-      <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
+      <div className="wzrd-public-pt mx-auto max-w-2xl px-4 pb-24 pt-2">
 
         {/* Page Title */}
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">
+        <h1 className="mb-6 text-2xl font-bold tracking-tight">
           {isAr ? 'صحة البراند بتاعك' : 'Your Brand Health'}
         </h1>
 
         {/* Error */}
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+          <div className="mb-4 rounded-2xl border border-red-200/60 bg-red-500/10 p-4 text-sm text-red-700 dark:border-red-500/30 dark:text-red-300">
             {error}
-            <button onClick={() => window.location.reload()} className="underline ml-2">
+            <button onClick={() => window.location.reload()} className="ml-2 underline">
               {isAr ? 'حاول تاني' : 'Retry'}
             </button>
           </div>
@@ -174,17 +174,17 @@ export default function MyBrand() {
 
         {/* Empty State */}
         {history.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
-            <div className="text-5xl mb-4">🔬</div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">
+          <div className="wzrd-glass rounded-3xl p-8 text-center">
+            <div className="mb-4 text-5xl">🔬</div>
+            <h2 className="mb-2 text-lg font-semibold">
               {isAr ? 'مفيش تشخيصات لسه' : 'No diagnoses yet'}
             </h2>
-            <p className="text-gray-500 mb-6">
+            <p className="mb-6 text-zinc-600 dark:text-zinc-400">
               {isAr ? 'ابدأ أول تشخيص عشان تشوف صحة البراند بتاعك.' : 'Run your first diagnosis to see your brand health.'}
             </p>
             <button
               onClick={() => navigate('/tools/brand-diagnosis')}
-              className="px-6 py-3 bg-indigo-600 text-white rounded-full font-semibold hover:bg-indigo-500 transition text-base"
+              className="rounded-full bg-gradient-to-r from-primary to-violet-600 px-6 py-3 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:brightness-110"
             >
               {isAr ? 'شغّل أول تشخيص ←' : '→ Run First Diagnosis'}
             </button>
@@ -192,16 +192,16 @@ export default function MyBrand() {
         ) : (
           <>
             {/* Score Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-4">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm text-gray-500">{isAr ? 'آخر نتيجة' : 'Latest Score'}</span>
+            <div className="wzrd-glass mb-4 rounded-3xl p-6">
+              <div className="mb-3 flex items-center justify-between">
+                <span className="text-sm text-zinc-500 dark:text-zinc-400">{isAr ? 'آخر نتيجة' : 'Latest Score'}</span>
                 <span className={`text-sm font-medium ${trendColor}`}>
                   {trendIcon} {trendLabel}
                 </span>
               </div>
               <div className="flex items-end gap-3">
-                <span className="text-5xl font-bold text-gray-900">{latest!.score}</span>
-                <span className="text-xl text-gray-400 mb-1">/100</span>
+                <span className="text-5xl font-bold tabular-nums">{latest!.score}</span>
+                <span className="mb-1 text-xl text-zinc-400">/100</span>
                 {scoreDiff !== null && (
                   <span className={`text-lg font-semibold mb-1 ${scoreDiff > 0 ? 'text-green-600' : scoreDiff < 0 ? 'text-red-600' : 'text-gray-400'}`}>
                     {scoreDiff > 0 ? '+' : ''}{scoreDiff}
@@ -209,7 +209,7 @@ export default function MyBrand() {
                 )}
               </div>
               {/* Score Bar */}
-              <div className="mt-4 h-3 bg-gray-100 rounded-full overflow-hidden">
+              <div className="mt-4 h-3 overflow-hidden rounded-full bg-zinc-200/80 dark:bg-zinc-800/80">
                 <div
                   className="h-full rounded-full transition-all duration-700"
                   style={{
@@ -218,7 +218,7 @@ export default function MyBrand() {
                   }}
                 />
               </div>
-              <div className="flex justify-between mt-1 text-xs text-gray-400">
+              <div className="mt-1 flex justify-between text-xs text-zinc-400">
                 <span>{isAr ? 'حرج' : 'Critical'}</span>
                 <span>{isAr ? 'ضعيف' : 'Weak'}</span>
                 <span>{isAr ? 'محتاج شغل' : 'Needs Work'}</span>
@@ -230,30 +230,30 @@ export default function MyBrand() {
             {chartData.length > 0 && (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 text-center">
-                    <div className="text-xs text-gray-500 mb-1">{isAr ? 'عدد التشخيصات' : 'Diagnoses'}</div>
-                    <div className="text-2xl font-bold text-gray-900">{history.length}</div>
+                  <div className="wzrd-glass rounded-3xl p-4 text-center">
+                    <div className="mb-1 text-xs text-zinc-500 dark:text-zinc-400">{isAr ? 'عدد التشخيصات' : 'Diagnoses'}</div>
+                    <div className="text-2xl font-bold tabular-nums">{history.length}</div>
                   </div>
-                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 text-center">
-                    <div className="text-xs text-gray-500 mb-1">{isAr ? 'من أول لآخر نتيجة' : 'First → latest'}</div>
+                  <div className="wzrd-glass rounded-3xl p-4 text-center">
+                    <div className="mb-1 text-xs text-zinc-500 dark:text-zinc-400">{isAr ? 'من أول لآخر نتيجة' : 'First → latest'}</div>
                     <div
-                      className={`text-2xl font-bold ${
-                        totalDelta === null ? 'text-gray-400' : totalDelta > 0 ? 'text-green-600' : totalDelta < 0 ? 'text-red-600' : 'text-gray-700'
+                      className={`text-2xl font-bold tabular-nums ${
+                        totalDelta === null ? 'text-zinc-400' : totalDelta > 0 ? 'text-green-600' : totalDelta < 0 ? 'text-red-600' : 'text-zinc-700 dark:text-zinc-300'
                       }`}
                     >
                       {totalDelta === null ? '—' : `${totalDelta > 0 ? '+' : ''}${totalDelta}`}
                     </div>
                   </div>
-                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 text-center">
-                    <div className="text-xs text-gray-500 mb-1">{isAr ? 'الحالة' : 'Status'}</div>
+                  <div className="wzrd-glass rounded-3xl p-4 text-center">
+                    <div className="mb-1 text-xs text-zinc-500 dark:text-zinc-400">{isAr ? 'الحالة' : 'Status'}</div>
                     <div className={`text-lg font-semibold ${trendColor}`}>
                       {trendIcon} {trendLabel}
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-2">
+                <div className="wzrd-glass mb-4 rounded-3xl p-4">
+                  <h3 className="mb-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300">
                     {isAr ? 'تطور النتيجة' : 'Score trend'}
                   </h3>
                   <div className="w-full" style={{ height: 220 }}>
@@ -261,7 +261,8 @@ export default function MyBrand() {
                       <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
                         <defs>
                           <linearGradient id="wzrdScoreFill" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#6366f1" stopOpacity={0.35} />
+                            <stop offset="0%" stopColor="#6366f1" stopOpacity={0.38} />
+                            <stop offset="55%" stopColor="#22d3ee" stopOpacity={0.14} />
                             <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
                           </linearGradient>
                         </defs>
@@ -285,8 +286,8 @@ export default function MyBrand() {
 
             {/* Timeline */}
             {history.length > 1 && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-4">
-                <h3 className="text-sm font-semibold text-gray-700 mb-4">
+              <div className="wzrd-glass mb-4 rounded-3xl p-6">
+                <h3 className="mb-4 text-sm font-semibold text-zinc-700 dark:text-zinc-300">
                   {isAr ? 'السجل' : 'History'}
                 </h3>
                 <div className="space-y-3">
@@ -294,7 +295,7 @@ export default function MyBrand() {
                     <button
                       key={entry.id}
                       onClick={() => setSelectedDiagnosis(selectedDiagnosis?.id === entry.id ? null : entry)}
-                      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition text-left"
+                      className="flex w-full items-center gap-3 rounded-2xl p-3 text-left transition hover:bg-zinc-100/70 dark:hover:bg-zinc-800/50"
                     >
                       <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
                         style={{
@@ -304,8 +305,8 @@ export default function MyBrand() {
                         {entry.score}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-gray-900 truncate">{toolName(entry.toolId)}</div>
-                        <div className="text-xs text-gray-400">{formatDate(entry.createdAt)}</div>
+                        <div className="truncate text-sm font-medium">{toolName(entry.toolId)}</div>
+                        <div className="text-xs text-zinc-400">{formatDate(entry.createdAt)}</div>
                       </div>
                       {i === 0 && (
                         <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-1 rounded-full font-medium">
@@ -320,15 +321,15 @@ export default function MyBrand() {
 
             {/* Selected Diagnosis Details */}
             {selectedDiagnosis && (
-              <div className="bg-indigo-50 rounded-2xl border border-indigo-100 p-5 mb-4">
-                <h3 className="text-sm font-semibold text-indigo-900 mb-3">
+              <div className="wzrd-glass mb-4 rounded-3xl border border-indigo-200/50 p-5 dark:border-indigo-500/25">
+                <h3 className="mb-3 text-sm font-semibold text-indigo-800 dark:text-indigo-200">
                   {toolName(selectedDiagnosis.toolId)} — {formatDate(selectedDiagnosis.createdAt)}
                 </h3>
                 {(selectedDiagnosis.findings || []).map((f: any, i: number) => (
                   <div key={i} className="mb-2 text-sm">
                     <span className={`inline-block w-2 h-2 rounded-full mr-2 ${f.severity === 'high' ? 'bg-red-500' : f.severity === 'low' ? 'bg-green-500' : 'bg-yellow-500'}`} />
-                    <span className="font-medium text-gray-800">{f.title}</span>
-                    {f.detail && <span className="text-gray-500 ml-1">— {f.detail.substring(0, 100)}</span>}
+                    <span className="font-medium">{f.title}</span>
+                    {f.detail && <span className="ml-1 text-zinc-500">— {f.detail.substring(0, 100)}</span>}
                   </div>
                 ))}
               </div>
@@ -336,8 +337,8 @@ export default function MyBrand() {
 
             {/* Action Checklist */}
             {checklists.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-4">
-                <h3 className="text-base font-semibold text-gray-900 mb-1">
+              <div className="wzrd-glass mb-4 rounded-3xl p-6">
+                <h3 className="mb-1 text-base font-semibold">
                   {isAr ? 'خطواتك العملية' : 'Your Action Items'}
                 </h3>
                 {checklists.slice(0, 3).map(cl => {
@@ -359,11 +360,13 @@ export default function MyBrand() {
                           <button
                             key={idx}
                             onClick={() => toggleItem(cl.id, idx)}
-                            className={`w-full flex items-start gap-3 p-3 rounded-xl transition text-left ${item.completed ? 'bg-green-50' : 'bg-gray-50 hover:bg-gray-100'}`}
+                            className={`flex w-full items-start gap-3 rounded-xl p-3 text-left transition ${item.completed ? 'bg-emerald-500/10' : 'bg-zinc-100/60 hover:bg-zinc-200/50 dark:bg-zinc-800/40 dark:hover:bg-zinc-800/70'}`}
                             style={{ minHeight: '48px' }}
                           >
-                            <div className={`flex-shrink-0 w-6 h-6 rounded-md border-2 flex items-center justify-center mt-0.5 transition ${item.completed ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300'}`}
-                              style={{ minWidth: '24px', minHeight: '24px' }}>
+                            <div
+                              className={`mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border-2 transition ${item.completed ? 'border-green-500 bg-green-500 text-white' : 'border-zinc-300 dark:border-zinc-600'}`}
+                              style={{ minWidth: '24px', minHeight: '24px' }}
+                            >
                               {item.completed && <span className="text-xs">✓</span>}
                             </div>
                             <div className="flex-1 min-w-0">
@@ -381,13 +384,13 @@ export default function MyBrand() {
 
                 {/* CTA after high completion */}
                 {checklists[0] && checklists[0].completedCount >= checklists[0].totalCount * 0.7 && (
-                  <div className="mt-6 p-4 bg-indigo-50 rounded-xl text-center">
-                    <p className="text-sm text-indigo-800 font-medium mb-3">
+                  <div className="mt-6 rounded-2xl border border-indigo-200/50 bg-indigo-500/10 p-4 text-center dark:border-indigo-500/25">
+                    <p className="mb-3 text-sm font-medium text-indigo-800 dark:text-indigo-200">
                       {isAr ? 'خلّصت أغلب المهام! شغّل تشخيص جديد وشوف التحسّن.' : 'Almost done! Run a new diagnosis to see improvement.'}
                     </p>
                     <button
                       onClick={() => navigate('/tools/brand-diagnosis')}
-                      className="px-5 py-2.5 bg-indigo-600 text-white rounded-full text-sm font-semibold hover:bg-indigo-500 transition"
+                      className="rounded-full bg-gradient-to-r from-primary to-violet-600 px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 transition hover:brightness-110"
                     >
                       {isAr ? 'شغّل تشخيص جديد ←' : '→ Run New Diagnosis'}
                     </button>
@@ -397,35 +400,35 @@ export default function MyBrand() {
             )}
 
             {/* ═══ FEATURE CARDS ═══ */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="mb-4 grid grid-cols-2 gap-3">
               {/* Copilot Card */}
               <button
                 onClick={() => navigate('/copilot')}
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 text-center hover:shadow-md transition"
+                className="wzrd-glass rounded-3xl p-4 text-center transition hover:ring-2 hover:ring-primary/15"
               >
-                <div className="text-2xl mb-2">🧙‍♂️</div>
-                <h4 className="text-sm font-bold text-gray-900">{isAr ? 'المستشار الذكي' : 'AI Copilot'}</h4>
-                <p className="text-xs text-gray-400 mt-1">{isAr ? 'اسأل أي سؤال' : 'Ask anything'}</p>
+                <div className="mb-2 text-2xl">🧙‍♂️</div>
+                <h4 className="text-sm font-bold">{isAr ? 'المستشار الذكي' : 'AI Copilot'}</h4>
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{isAr ? 'اسأل أي سؤال' : 'Ask anything'}</p>
               </button>
 
               {/* Benchmark Card */}
               <button
                 onClick={() => navigate('/tools/benchmark')}
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 text-center hover:shadow-md transition"
+                className="wzrd-glass rounded-3xl p-4 text-center transition hover:ring-2 hover:ring-primary/15"
               >
-                <div className="text-2xl mb-2">📊</div>
-                <h4 className="text-sm font-bold text-gray-900">{isAr ? 'قارن بالمنافسين' : 'Benchmark'}</h4>
-                <p className="text-xs text-gray-400 mt-1">{isAr ? '٤٠ كريدت' : '40 credits'}</p>
+                <div className="mb-2 text-2xl">📊</div>
+                <h4 className="text-sm font-bold">{isAr ? 'قارن بالمنافسين' : 'Benchmark'}</h4>
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{isAr ? '٤٠ كريدت' : '40 credits'}</p>
               </button>
 
               {/* Quick Diagnosis Card */}
               <button
                 onClick={() => navigate('/tools/quick')}
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 text-center hover:shadow-md transition"
+                className="wzrd-glass rounded-3xl p-4 text-center transition hover:ring-2 hover:ring-primary/15"
               >
-                <div className="text-2xl mb-2">⚡</div>
-                <h4 className="text-sm font-bold text-gray-900">{isAr ? 'تشخيص سريع' : 'Quick Check'}</h4>
-                <p className="text-xs text-gray-400 mt-1">{isAr ? '٥ أسئلة بس' : '5 questions'}</p>
+                <div className="mb-2 text-2xl">⚡</div>
+                <h4 className="text-sm font-bold">{isAr ? 'تشخيص سريع' : 'Quick Check'}</h4>
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{isAr ? '٥ أسئلة بس' : '5 questions'}</p>
               </button>
 
               {/* Referral Card */}
@@ -443,11 +446,11 @@ export default function MyBrand() {
                     alert(isAr ? 'سجّل دخول الأول' : 'Please login first');
                   }
                 }}
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 text-center hover:shadow-md transition"
+                className="wzrd-glass rounded-3xl p-4 text-center transition hover:ring-2 hover:ring-primary/15"
               >
-                <div className="text-2xl mb-2">🎁</div>
-                <h4 className="text-sm font-bold text-gray-900">{isAr ? 'ادعي صاحبك' : 'Invite Friends'}</h4>
-                <p className="text-xs text-gray-400 mt-1">{isAr ? '٥٠ كريدت لكل واحد' : '50 credits each'}</p>
+                <div className="mb-2 text-2xl">🎁</div>
+                <h4 className="text-sm font-bold">{isAr ? 'ادعي صاحبك' : 'Invite Friends'}</h4>
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{isAr ? '٥٠ كريدت لكل واحد' : '50 credits each'}</p>
               </button>
             </div>
 
@@ -455,7 +458,7 @@ export default function MyBrand() {
             <div className="mt-4">
               <button
                 onClick={() => navigate('/tools/brand-diagnosis')}
-                className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-semibold text-base hover:bg-indigo-500 transition shadow-sm"
+                className="w-full rounded-3xl bg-gradient-to-r from-primary via-violet-600 to-cyan-600 py-4 text-base font-semibold text-white shadow-lg shadow-primary/25 transition hover:brightness-110"
               >
                 {isAr ? 'شغّل تشخيص جديد وقارن' : 'Run New Diagnosis & Compare'}
               </button>
