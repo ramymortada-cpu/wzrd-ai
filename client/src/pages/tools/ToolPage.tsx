@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { waMeHref } from '@/lib/waContact';
 import { toArabicNumerals } from '@/lib/formatUtils';
+import { useI18n } from '@/lib/i18n';
 
 export interface ToolField {
   name: string;
@@ -128,6 +129,8 @@ const ANALYSIS_STEPS = [
 ];
 
 function ProcessingScreen({ toolName }: { toolName: string }) {
+  const { locale } = useI18n();
+  const isAr = locale === 'ar';
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
 
@@ -179,29 +182,57 @@ function ProcessingScreen({ toolName }: { toolName: string }) {
           />
         </div>
 
-        {/* Steps */}
-        <div className="space-y-3 text-right" dir="rtl">
-          {ANALYSIS_STEPS.map((step, i) => (
-            <div
-              key={i}
-              className={`flex items-center gap-3 transition-all duration-500 ${
-                i < currentStep ? 'opacity-40' : i === currentStep ? 'opacity-100' : 'opacity-0'
-              }`}
-            >
-              {i < currentStep ? (
-                <span className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-green-400 text-xs">✓</span>
-                </span>
-              ) : i === currentStep ? (
-                <span className="w-5 h-5 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin flex-shrink-0" />
-              ) : (
-                <span className="w-5 h-5 rounded-full bg-zinc-800 flex-shrink-0" />
-              )}
-              <span className={`text-sm ${i === currentStep ? 'text-white font-medium' : 'text-zinc-500'}`}>
-                {step.label}
-              </span>
-            </div>
-          ))}
+        {/* Courier-style tracking timeline */}
+        <div
+          className="relative mx-auto max-w-md px-2 text-start"
+          dir={isAr ? 'rtl' : 'ltr'}
+        >
+          <div
+            className={`absolute top-3 bottom-3 w-px bg-gradient-to-b from-emerald-400/30 via-white/20 to-zinc-600/40 ${isAr ? 'right-[13px]' : 'left-[13px]'}`}
+            aria-hidden
+          />
+          <ul className="relative space-y-4">
+            {ANALYSIS_STEPS.map((step, i) => {
+              const label = isAr ? step.label : step.labelEn;
+              const done = i < currentStep;
+              const active = i === currentStep;
+              return (
+                <li key={i} className="relative flex gap-4 pe-1">
+                  <div
+                    className={`relative z-[1] flex h-7 w-7 shrink-0 items-center justify-center rounded-full border ${
+                      done
+                        ? 'border-emerald-400/50 bg-emerald-500/20 text-emerald-300'
+                        : active
+                          ? 'wzrd-courier-pulse border-cyan-400/60 bg-cyan-500/25 text-cyan-100'
+                          : 'border-zinc-600/60 bg-zinc-900/80 text-zinc-600'
+                    }`}
+                  >
+                    {done ? (
+                      <span className="text-xs font-bold">✓</span>
+                    ) : active ? (
+                      <span className="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-cyan-200 to-primary shadow-[0_0_12px_oklch(0.75_0.15_200)]" />
+                    ) : (
+                      <span className="h-1.5 w-1.5 rounded-full bg-zinc-600" />
+                    )}
+                  </div>
+                  <div className="min-w-0 pt-0.5">
+                    <p
+                      className={`text-sm leading-snug transition-colors duration-300 ${
+                        active ? 'font-semibold text-white' : done ? 'text-zinc-400' : 'text-zinc-600'
+                      }`}
+                    >
+                      {label}
+                    </p>
+                    {active && (
+                      <p className="mt-1 text-[10px] font-mono uppercase tracking-wider text-cyan-200/80">
+                        {isAr ? 'جاري المعالجة…' : 'In progress…'}
+                      </p>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         </div>
 
         {/* Subtle branding */}
@@ -624,15 +655,37 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
 
           {/* Service Recommendation (only shows for score < 70) */}
           {result.serviceRecommendation?.show && (
-            <div className="p-5 rounded-xl border border-amber-500/20 bg-amber-500/5 mb-8">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-mono font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded">{result.serviceRecommendation.tier}</span>
-                <span className="text-sm font-bold text-white">{result.serviceRecommendation.service}</span>
+            <div
+              className="relative mb-8 overflow-hidden rounded-3xl border border-white/10 p-6 shadow-[0_0_40px_-10px_rgba(245,158,11,0.35)] ring-1 ring-amber-400/25"
+              style={{
+                background: 'linear-gradient(145deg, oklch(0.22 0.03 280) 0%, oklch(0.16 0.04 290) 40%, oklch(0.12 0.02 260) 100%)',
+              }}
+            >
+              <div
+                className="pointer-events-none absolute inset-0 opacity-90"
+                style={{
+                  background:
+                    'radial-gradient(ellipse 80% 60% at 20% 0%, rgba(251, 191, 36, 0.12), transparent 50%), radial-gradient(ellipse 60% 50% at 100% 100%, rgba(99, 102, 241, 0.15), transparent 45%)',
+                }}
+                aria-hidden
+              />
+              <div className="relative">
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <span className="rounded-full border border-amber-400/35 bg-amber-400/15 px-3 py-1 text-[10px] font-mono font-bold uppercase tracking-wider text-amber-200">
+                    {result.serviceRecommendation.tier}
+                  </span>
+                  <span className="text-base font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-amber-100 via-white to-amber-100">
+                    {result.serviceRecommendation.service}
+                  </span>
+                </div>
+                <p className="mb-4 text-xs leading-relaxed text-zinc-300">{result.serviceRecommendation.reason}</p>
+                <a
+                  href={result.serviceRecommendation.url}
+                  className="wzrd-shimmer-btn inline-flex rounded-full border border-amber-400/40 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-200 px-5 py-2.5 text-xs font-bold text-zinc-950 shadow-lg shadow-amber-500/20 transition hover:brightness-105"
+                >
+                  Learn about {result.serviceRecommendation.service} →
+                </a>
               </div>
-              <p className="text-xs text-zinc-400 leading-relaxed mb-3">{result.serviceRecommendation.reason}</p>
-              <a href={result.serviceRecommendation.url} className="inline-block px-4 py-2 rounded-full bg-amber-500 text-zinc-950 text-xs font-bold hover:bg-amber-400 transition">
-                Learn about {result.serviceRecommendation.service} →
-              </a>
             </div>
           )}
 
@@ -711,9 +764,6 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
   }
 
   // ═══ FORM VIEW ═══
-  const fieldShell =
-    'w-full rounded-2xl border border-zinc-200/90 bg-white/65 px-4 py-3 text-sm text-zinc-900 shadow-inner outline-none transition placeholder:text-zinc-400 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 dark:border-zinc-600 dark:bg-zinc-900/45 dark:text-white dark:placeholder:text-zinc-500';
-
   return (
     <div className="wzrd-page-radial text-zinc-900 dark:text-white">
       <div className="mx-auto max-w-lg px-6 py-16">
@@ -764,9 +814,13 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
           </div>
         )}
 
-        <div className="wzrd-glass space-y-4 rounded-3xl p-5">
-          {config.fields.map(field => (
-            <div key={field.name}>
+        <div className="wzrd-glass space-y-4 rounded-3xl p-6 sm:p-8">
+          {config.fields.map((field, fi) => (
+            <div
+              key={field.name}
+              className="wzrd-fade-in-stagger"
+              style={{ animationDelay: `${0.04 + fi * 0.05}s` }}
+            >
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                 {field.label}
               </label>
@@ -775,13 +829,13 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
                   placeholder={field.placeholder}
                   maxLength={field.maxLength || 1000}
                   rows={3}
-                  className={`${fieldShell} resize-none backdrop-blur-md`}
+                  className="wzrd-field-premium resize-none backdrop-blur-md"
                   value={(formData[field.name] as string) || ''}
                   onChange={e => updateField(field.name, e.target.value)}
                 />
               ) : field.type === 'select' ? (
                 <select
-                  className={`${fieldShell} backdrop-blur-md`}
+                  className="wzrd-field-premium backdrop-blur-md"
                   value={(formData[field.name] as string) || ''}
                   onChange={e => updateField(field.name, e.target.value)}
                 >
@@ -800,14 +854,14 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
                     checked={!!formData[field.name]}
                     onChange={e => updateField(field.name, e.target.checked)}
                   />
-                  <span className="text-sm text-zinc-600 dark:text-zinc-400">{field.placeholder}</span>
+                  <span className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{field.placeholder}</span>
                 </label>
               ) : (
                 <input
                   type="text"
                   placeholder={field.placeholder}
                   maxLength={field.maxLength || 255}
-                  className={`${fieldShell} backdrop-blur-md`}
+                  className="wzrd-field-premium backdrop-blur-md"
                   value={(formData[field.name] as string) || ''}
                   onChange={e => updateField(field.name, e.target.value)}
                 />

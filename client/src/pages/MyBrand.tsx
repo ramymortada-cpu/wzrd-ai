@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { useI18n } from '@/lib/i18n';
+import { useTheme } from '@/contexts/ThemeContext';
 import WzrdPublicHeader from '@/components/WzrdPublicHeader';
 import {
   Area,
@@ -40,10 +41,34 @@ interface Checklist {
   createdAt: string;
 }
 
+function BrandHealthEmptyIllustration({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+      <defs>
+        <linearGradient id="wmb-e1" x1="20" y1="20" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+          <stop stopColor="oklch(0.55 0.18 290)" stopOpacity="0.55" />
+          <stop offset="1" stopColor="oklch(0.72 0.12 200)" stopOpacity="0.35" />
+        </linearGradient>
+        <linearGradient id="wmb-e2" x1="0" y1="60" x2="120" y2="60" gradientUnits="userSpaceOnUse">
+          <stop stopColor="oklch(0.62 0.14 290)" stopOpacity="0.25" />
+          <stop offset="1" stopColor="oklch(0.75 0.1 200)" stopOpacity="0.15" />
+        </linearGradient>
+      </defs>
+      <circle cx="60" cy="60" r="52" stroke="url(#wmb-e2)" strokeWidth="0.75" />
+      <path d="M30 78 Q48 42 60 52 T90 38" stroke="url(#wmb-e1)" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+      <path d="M28 85 Q55 58 72 68 T94 72" stroke="oklch(0.55 0.15 290 / 0.35)" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+      <circle cx="60" cy="48" r="8" fill="oklch(0.55 0.18 290 / 0.4)" />
+      <circle cx="60" cy="48" r="4" fill="oklch(0.95 0.02 80)" className="dark:fill-white/90" />
+    </svg>
+  );
+}
+
 export default function MyBrand() {
   const [, navigate] = useLocation();
   const { locale } = useI18n();
+  const { theme } = useTheme();
   const isAr = locale === 'ar';
+  const isDark = theme === 'dark';
 
   const [history, setHistory] = useState<DiagnosisEntry[]>([]);
   const [trend, setTrend] = useState<string>('new');
@@ -158,7 +183,7 @@ export default function MyBrand() {
       <div className="wzrd-public-pt mx-auto max-w-2xl px-4 pb-24 pt-2">
 
         {/* Page Title */}
-        <h1 className="mb-6 text-2xl font-bold tracking-tight">
+        <h1 className="mb-6 text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-zinc-900 via-primary to-cyan-600 dark:from-white dark:via-violet-200 dark:to-cyan-300">
           {isAr ? 'صحة البراند بتاعك' : 'Your Brand Health'}
         </h1>
 
@@ -174,17 +199,19 @@ export default function MyBrand() {
 
         {/* Empty State */}
         {history.length === 0 ? (
-          <div className="wzrd-glass rounded-3xl p-8 text-center">
-            <div className="mb-4 text-5xl">🔬</div>
-            <h2 className="mb-2 text-lg font-semibold">
+          <div className="wzrd-glass rounded-3xl p-10 text-center sm:p-12">
+            <div className="mx-auto mb-6 flex h-28 w-28 items-center justify-center rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/10 to-cyan-500/10 shadow-inner">
+              <BrandHealthEmptyIllustration className="h-20 w-20" />
+            </div>
+            <h2 className="mb-2 text-xl font-bold tracking-tight text-zinc-900 dark:text-white">
               {isAr ? 'مفيش تشخيصات لسه' : 'No diagnoses yet'}
             </h2>
-            <p className="mb-6 text-zinc-600 dark:text-zinc-400">
+            <p className="mx-auto mb-8 max-w-sm text-sm leading-loose text-zinc-600 dark:text-zinc-400">
               {isAr ? 'ابدأ أول تشخيص عشان تشوف صحة البراند بتاعك.' : 'Run your first diagnosis to see your brand health.'}
             </p>
             <button
               onClick={() => navigate('/tools/brand-diagnosis')}
-              className="rounded-full bg-gradient-to-r from-primary to-violet-600 px-6 py-3 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:brightness-110"
+              className="wzrd-shimmer-btn rounded-full bg-gradient-to-r from-primary to-violet-600 px-8 py-3.5 text-base font-bold text-primary-foreground shadow-lg shadow-primary/25 transition hover:-translate-y-0.5 hover:brightness-110"
             >
               {isAr ? 'شغّل أول تشخيص ←' : '→ Run First Diagnosis'}
             </button>
@@ -261,22 +288,39 @@ export default function MyBrand() {
                       <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
                         <defs>
                           <linearGradient id="wzrdScoreFill" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#6366f1" stopOpacity={0.38} />
-                            <stop offset="55%" stopColor="#22d3ee" stopOpacity={0.14} />
-                            <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
+                            <stop offset="0%" stopColor="#6366f1" stopOpacity={isDark ? 0.5 : 0.38} />
+                            <stop offset="50%" stopColor="#22d3ee" stopOpacity={isDark ? 0.22 : 0.14} />
+                            <stop offset="100%" stopColor="#a78bfa" stopOpacity={0} />
+                          </linearGradient>
+                          <linearGradient id="wzrdScoreStroke" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stopColor={isDark ? '#a5b4fc' : '#6366f1'} />
+                            <stop offset="100%" stopColor={isDark ? '#22d3ee' : '#4f46e5'} />
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                        <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="#9ca3af" />
-                        <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} stroke="#9ca3af" width={32} />
+                        <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#3f3f46' : '#e5e7eb'} opacity={0.6} />
+                        <XAxis dataKey="label" tick={{ fontSize: 11, fill: isDark ? '#a1a1aa' : '#71717a' }} stroke="transparent" />
+                        <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: isDark ? '#a1a1aa' : '#71717a' }} stroke="transparent" width={32} />
                         <ReferenceLine y={70} stroke="#22c55e" strokeDasharray="4 4" label={{ value: '70', fill: '#22c55e', fontSize: 10 }} />
                         <ReferenceLine y={40} stroke="#ef4444" strokeDasharray="4 4" label={{ value: '40', fill: '#ef4444', fontSize: 10 }} />
                         <Tooltip
-                          contentStyle={{ borderRadius: 12, border: '1px solid #e5e7eb' }}
+                          contentStyle={{
+                            borderRadius: 12,
+                            border: isDark ? '1px solid #3f3f46' : '1px solid #e5e7eb',
+                            background: isDark ? 'rgba(24,24,27,0.92)' : 'rgba(255,255,255,0.95)',
+                            backdropFilter: 'blur(8px)',
+                          }}
                           formatter={(value: number) => [`${value}/100`, isAr ? 'النتيجة' : 'Score']}
                           labelFormatter={(_, payload) => (payload?.[0]?.payload?.tool as string) || ''}
                         />
-                        <Area type="monotone" dataKey="score" stroke="#6366f1" strokeWidth={2} fill="url(#wzrdScoreFill)" dot={{ r: 3, fill: '#6366f1' }} />
+                        <Area
+                          type="monotone"
+                          dataKey="score"
+                          stroke="url(#wzrdScoreStroke)"
+                          strokeWidth={2.5}
+                          fill="url(#wzrdScoreFill)"
+                          dot={{ r: 4, strokeWidth: 2, stroke: isDark ? '#fafafa' : '#fff', fill: '#6366f1' }}
+                          activeDot={{ r: 6 }}
+                        />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>

@@ -96,11 +96,11 @@ export default function Tools() {
           </div>
         )}
 
-        <div className="text-center mb-12 sm:mb-16">
-          <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 text-transparent bg-clip-text bg-gradient-to-r from-zinc-900 via-primary to-cyan-500 dark:from-white dark:via-violet-200 dark:to-cyan-300 leading-tight">
+        <div className="text-center mb-12 sm:mb-20">
+          <h2 className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight mb-5 text-transparent bg-clip-text bg-gradient-to-r from-zinc-900 via-primary to-cyan-500 dark:from-white dark:via-violet-200 dark:to-cyan-300 leading-[1.05]">
             {heroTitle}
           </h2>
-          <p className="text-zinc-600 dark:text-zinc-400 max-w-xl mx-auto text-base sm:text-lg leading-relaxed">{t('wzrd.eachToolDesc')}</p>
+          <p className="text-zinc-600 dark:text-zinc-400 max-w-xl mx-auto text-base sm:text-lg leading-loose">{t('wzrd.eachToolDesc')}</p>
         </div>
 
         <div id="tools-grid" className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
@@ -130,8 +130,13 @@ export default function Tools() {
                 </span>
 
                 <div className="relative z-[1]">
-                  <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-white/90 to-zinc-100/80 text-3xl shadow-lg shadow-black/5 ring-1 ring-white/60 dark:from-zinc-800 dark:to-zinc-900 dark:ring-zinc-700/50">
-                    {tool.icon}
+                  <div
+                    className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-white/95 to-zinc-100/90 text-4xl ring-1 ring-white/70 dark:from-zinc-800/95 dark:to-zinc-950/90 dark:ring-zinc-600/45"
+                    style={{
+                      boxShadow: `0 16px 44px -14px ${tool.color}66, 0 0 0 1px ${tool.color}22 inset`,
+                    }}
+                  >
+                    <span className="drop-shadow-sm">{tool.icon}</span>
                   </div>
                   <h3 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white mb-2 transition group-hover:text-primary">
                     {locale === 'ar' ? tool.nameAr : tool.name}

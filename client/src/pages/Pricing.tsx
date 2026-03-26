@@ -178,7 +178,7 @@ export default function Pricing() {
               key={plan.id}
               className={`relative rounded-3xl transition-all duration-500 ${
                 plan.popular
-                  ? 'md:-my-2 md:scale-[1.05] z-10 wzrd-popular-glow wzrd-glass ring-2 ring-primary/60 ring-offset-4 ring-offset-transparent dark:ring-offset-zinc-950/80'
+                  ? 'wzrd-pricing-popular-shimmer md:-my-3 md:scale-[1.06] z-10 wzrd-glass ring-2 ring-primary/60 ring-offset-4 ring-offset-transparent dark:ring-offset-zinc-950/80'
                   : 'wzrd-glass border-white/30 dark:border-zinc-700/50'
               }`}
             >

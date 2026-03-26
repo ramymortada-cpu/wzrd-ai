@@ -73,7 +73,7 @@ export default function Signup() {
       </a>
       <div className="flex min-h-screen items-center justify-center p-6 pb-20 pt-24 sm:p-8">
         <div className="w-full max-w-md">
-          <div className="rounded-3xl border-[0.5px] border-white/25 bg-white/15 p-8 shadow-2xl backdrop-blur-3xl dark:bg-black/35 sm:p-10">
+          <div className="wzrd-glass wzrd-auth-card rounded-3xl p-8 sm:p-10">
             <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-white">{t('wzrd.getCredits')}</h2>
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/15 px-3 py-1.5 font-mono text-xs font-bold text-cyan-100">
               ⚡ {t('wzrd.creditsFree')}

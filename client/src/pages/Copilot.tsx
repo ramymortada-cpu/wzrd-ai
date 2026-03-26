@@ -174,8 +174,8 @@ export default function Copilot() {
                 <div
                   className={`max-w-[88%] rounded-3xl px-4 py-3 sm:max-w-[80%] ${
                     msg.role === 'user'
-                      ? 'border-[0.5px] border-primary/20 bg-gradient-to-br from-primary to-violet-700 text-white shadow-lg shadow-primary/20'
-                      : 'border-[0.5px] border-white/50 bg-white/55 text-zinc-900 shadow-md backdrop-blur-md dark:border-zinc-600/50 dark:bg-zinc-900/55 dark:text-zinc-100'
+                      ? 'wzrd-chat-bubble-user text-white'
+                      : 'wzrd-chat-bubble-ai text-zinc-900 dark:text-zinc-100'
                   }`}
                 >
                   <p className="whitespace-pre-wrap text-sm leading-relaxed">{msg.content}</p>
@@ -191,7 +191,7 @@ export default function Copilot() {
 
           {loading && (
             <div className={`mt-4 flex ${aiBubbleSide}`}>
-              <div className="rounded-3xl border border-white/40 bg-white/50 px-4 py-3 backdrop-blur-md dark:border-zinc-600/50 dark:bg-zinc-900/50">
+              <div className="wzrd-chat-bubble-ai rounded-3xl px-4 py-3 dark:text-zinc-100">
                 <div className="flex gap-1.5">
                   <div className="h-2 w-2 animate-bounce rounded-full bg-primary" style={{ animationDelay: '0ms' }} />
                   <div className="h-2 w-2 animate-bounce rounded-full bg-primary" style={{ animationDelay: '150ms' }} />
@@ -211,8 +211,8 @@ export default function Copilot() {
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t-[0.5px] border-white/30 bg-white/55 px-3 py-3 backdrop-blur-2xl dark:border-zinc-800/60 dark:bg-zinc-950/75 sm:px-6">
-        <div className="mx-auto max-w-3xl">
+      <div className="pointer-events-none fixed bottom-0 left-0 right-0 z-40 px-3 pb-4 pt-2 sm:px-6 sm:pb-6">
+        <div className="pointer-events-auto mx-auto max-w-3xl rounded-3xl p-3 sm:p-4 wzrd-floating-composer">
           {messages.length > 0 && messages.length < 6 && (
             <div className="mb-2 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
               {[
@@ -233,7 +233,7 @@ export default function Copilot() {
             </div>
           )}
 
-          <div className="flex items-center gap-2 rounded-full border-[0.5px] border-zinc-200/80 bg-white/80 py-1.5 pl-4 pr-1.5 shadow-lg dark:border-zinc-600 dark:bg-zinc-900/80">
+          <div className="flex items-center gap-2 rounded-full border-[0.5px] border-zinc-200/60 bg-white/50 py-1.5 pl-4 pr-1.5 dark:border-zinc-600/50 dark:bg-zinc-950/40">
             <input
               ref={inputRef}
               type="text"

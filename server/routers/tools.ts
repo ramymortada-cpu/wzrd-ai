@@ -19,6 +19,14 @@
 
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { z } from "zod";
+import {
+  brandDiagnosisInputSchema,
+  offerCheckInputSchema,
+  messageCheckInputSchema,
+  presenceAuditInputSchema,
+  identitySnapshotInputSchema,
+  launchReadinessInputSchema,
+} from "@shared/wzrdDiagnosisToolSchemas";
 import { logger } from "../_core/logger";
 import { resilientLLM } from "../_core/llmRouter";
 import { deductCredits, getUserCredits, TOOL_COSTS, getDb } from "../db";
@@ -283,37 +291,37 @@ export const toolsRouter = router({
       { id: 'brand_diagnosis', name: 'Brand Diagnosis', nameAr: 'تشخيص البراند', icon: '🔬', color: '#6d5cff', cost: 20,
         desc: 'Comprehensive health score across positioning, messaging, offers, identity, and customer journey.',
         descAr: 'نتيجة صحة شاملة عبر التموضع، الرسائل، العروض، الهوية، ورحلة العميل.',
-        inputs: ['companyName', 'industry', 'market', 'website', 'challenge'],
+        inputs: ['companyName', 'industry', 'market', 'targetAudience', 'biggestChallenge', 'currentPositioning', 'socialMedia', 'yearsInBusiness', 'teamSize', 'monthlyRevenue', 'previousBranding', 'website'],
         guideUrl: '/guides/brand-health', guideTitle: 'How to Audit Your Brand Health',
         serviceUrl: '/services-info#audit', serviceTitle: 'Full Health Check' },
       { id: 'offer_check', name: 'Offer Logic Check', nameAr: 'فحص منطق العرض', icon: '📦', color: '#c8a24e', cost: 25,
         desc: 'Analyzes your packages, pricing logic, ICP clarity, and proof stack.',
         descAr: 'تحليل الباكدجات، منطق التسعير، وضوح الشريحة، وكومة الإثبات.',
-        inputs: ['companyName', 'packages', 'pricing', 'targetAudience'],
+        inputs: ['companyName', 'industry', 'currentPackages', 'numberOfPackages', 'pricingModel', 'cheapestPrice', 'highestPrice', 'targetAudience', 'commonObjections', 'competitorPricing'],
         guideUrl: '/guides/offer-logic', guideTitle: 'Offer Logic 101',
         serviceUrl: '/services-info#build', serviceTitle: 'Starting Business Logic' },
       { id: 'message_check', name: 'Message Check', nameAr: 'فحص الرسالة', icon: '💬', color: '#44ddc9', cost: 20,
         desc: 'Checks if your messaging is consistent, clear, and differentiated across touchpoints.',
         descAr: 'فحص لو الرسالة متسقة، واضحة، ومميّزة عبر نقاط التواصل.',
-        inputs: ['companyName', 'tagline', 'keyMessage', 'socialBio', 'websiteHeadline'],
+        inputs: ['companyName', 'industry', 'tagline', 'elevatorPitch', 'websiteHeadline', 'instagramBio', 'linkedinAbout', 'keyDifferentiator', 'toneOfVoice', 'customerQuote'],
         guideUrl: '/guides/brand-identity', guideTitle: 'What Is Brand Identity',
         serviceUrl: '/services-info#build', serviceTitle: 'Brand Identity' },
       { id: 'presence_audit', name: 'Presence Audit', nameAr: 'فحص الحضور', icon: '🌐', color: '#ff6b6b', cost: 25,
         desc: 'Reviews how your brand appears across social, web, and inquiry channels.',
         descAr: 'مراجعة إزاي البراند بيظهر على السوشيال، الويب، وقنوات الاستفسار.',
-        inputs: ['companyName', 'instagramHandle', 'website', 'otherChannels', 'inquiryFlow'],
+        inputs: ['companyName', 'industry', 'website', 'instagramHandle', 'instagramFollowers', 'otherPlatforms', 'postingFrequency', 'contentType', 'inquiryMethod', 'avgResponseTime', 'googleBusiness'],
         guideUrl: '/guides/brand-health', guideTitle: 'Brand Health Audit',
         serviceUrl: '/services-info#audit', serviceTitle: 'Full Health Check' },
       { id: 'identity_snapshot', name: 'Identity Snapshot', nameAr: 'لقطة الهوية', icon: '🪞', color: '#a78bfa', cost: 20,
         desc: 'Checks if your brand personality matches your target audience using Kapferer\'s Prism.',
         descAr: 'فحص لو شخصية البراند بتتوافق مع جمهورك باستخدام منظور Kapferer.',
-        inputs: ['companyName', 'brandDescription', 'targetAudience', 'competitors'],
+        inputs: ['companyName', 'industry', 'brandPersonality', 'targetAudience', 'brandColors', 'hasLogo', 'hasGuidelines', 'competitors', 'desiredPerception', 'currentGap'],
         guideUrl: '/guides/brand-identity', guideTitle: 'What Is Brand Identity',
         serviceUrl: '/services-info#build', serviceTitle: 'Brand Identity' },
       { id: 'launch_readiness', name: 'Launch Readiness', nameAr: 'جاهزية الإطلاق', icon: '🚀', color: '#f59e0b', cost: 30,
         desc: 'Scores how ready you are to go to market — identifies gaps and priority order.',
         descAr: 'تقييم أد إيه أنت جاهز تنزل السوق — يحدد الفجوات وترتيب الأولوية.',
-        inputs: ['companyName', 'hasGuidelines', 'hasOfferStructure', 'hasContentPlan', 'hasWebsite', 'launchGoal'],
+        inputs: ['companyName', 'industry', 'launchType', 'targetLaunchDate', 'hasGuidelines', 'hasOfferStructure', 'hasWebsite', 'hasContentPlan', 'marketingBudget', 'teamCapacity', 'biggestConcern', 'successMetric'],
         guideUrl: '/guides/offer-logic', guideTitle: 'Offer Logic 101',
         serviceUrl: '/services-info#takeoff', serviceTitle: 'Business Takeoff' },
     ],
@@ -330,20 +338,21 @@ export const toolsRouter = router({
 
   /** Tool 1: Brand Diagnosis */
   brandDiagnosis: protectedProcedure
-    .input(z.object({
-      companyName: z.string().min(1).max(255),
-      industry: z.string().max(100).optional(),
-      market: z.string().max(50).optional(),
-      website: z.string().max(500).optional(),
-      challenge: z.string().max(1000).optional(),
-    }))
+    .input(brandDiagnosisInputSchema)
     .mutation(async ({ input, ctx }) => {
       const userPrompt = `Analyze brand health for:
 Company: ${input.companyName}
-Industry: ${input.industry || 'Not specified'}
-Market: ${input.market || 'MENA'}
+Industry: ${input.industry}
+Market: ${input.market}
+Years in business: ${input.yearsInBusiness || 'Not specified'}
+Team size: ${input.teamSize || 'Not specified'}
 Website: ${input.website || 'Not provided'}
-Main challenge: ${input.challenge || 'Not specified'}
+Social accounts: ${input.socialMedia || 'Not provided'}
+Differentiation vs competitors: ${input.currentPositioning || 'Not specified'}
+Target audience: ${input.targetAudience}
+Monthly revenue (band): ${input.monthlyRevenue || 'Not specified'}
+Main brand challenge: ${input.biggestChallenge}
+Previous branding work: ${input.previousBranding || 'Not specified'}
 
 Score the brand 0-100. Identify the top 3-5 issues across: positioning clarity, messaging consistency, offer logic, visual perception, and customer journey. Be specific to THIS company.`;
 
@@ -353,20 +362,20 @@ Score the brand 0-100. Identify the top 3-5 issues across: positioning clarity, 
       return result;
     }),
 
-  /** Tool 2: Offer Logic Check */
+  /** Tool 2: Offer Logic Check — client field \`currentPackages\` feeds packages copy */
   offerCheck: protectedProcedure
-    .input(z.object({
-      companyName: z.string().min(1).max(255),
-      packages: z.string().max(2000),
-      pricing: z.string().max(500).optional(),
-      targetAudience: z.string().max(500).optional(),
-    }))
+    .input(offerCheckInputSchema)
     .mutation(async ({ input, ctx }) => {
       const userPrompt = `Analyze offer logic for:
 Company: ${input.companyName}
-Current packages/services: ${input.packages}
-Pricing approach: ${input.pricing || 'Not specified'}
-Target audience: ${input.targetAudience || 'Not specified'}
+Industry: ${input.industry}
+Packages/services (detail): ${input.currentPackages}
+Number of packages (band): ${input.numberOfPackages || 'Not specified'}
+Pricing model: ${input.pricingModel || 'Not specified'}
+Price range: ${input.cheapestPrice || '?'} – ${input.highestPrice || '?'} (local currency)
+Target audience / ICP: ${input.targetAudience}
+Common objections: ${input.commonObjections || 'Not specified'}
+Competitor pricing context: ${input.competitorPricing || 'Not specified'}
 
 Score 0-100. Check: Is the offer clear? Does pricing logic make sense? Are there too many/few options? Is the value proposition obvious? Is there a clear path from free→paid?`;
 
@@ -378,20 +387,19 @@ Score 0-100. Check: Is the offer clear? Does pricing logic make sense? Are there
 
   /** Tool 3: Message Check */
   messageCheck: protectedProcedure
-    .input(z.object({
-      companyName: z.string().min(1).max(255),
-      tagline: z.string().max(500).optional(),
-      keyMessage: z.string().max(1000).optional(),
-      socialBio: z.string().max(500).optional(),
-      websiteHeadline: z.string().max(500).optional(),
-    }))
+    .input(messageCheckInputSchema)
     .mutation(async ({ input, ctx }) => {
       const userPrompt = `Analyze messaging consistency for:
 Company: ${input.companyName}
+Industry: ${input.industry}
 Tagline: ${input.tagline || 'None'}
-Key message: ${input.keyMessage || 'Not provided'}
-Social bio: ${input.socialBio || 'Not provided'}
+Elevator pitch (what you do): ${input.elevatorPitch}
 Website headline: ${input.websiteHeadline || 'Not provided'}
+Instagram bio: ${input.instagramBio || 'Not provided'}
+LinkedIn/Facebook about: ${input.linkedinAbout || 'Not provided'}
+Key differentiator: ${input.keyDifferentiator || 'Not provided'}
+Tone of voice (selected): ${input.toneOfVoice || 'Not specified'}
+Customer quote (social proof): ${input.customerQuote || 'Not provided'}
 
 Score 0-100. Check: Are these consistent? Is the differentiation clear? Is the tone appropriate? Is there a Clarity Gap? Would a new customer understand this brand in 5 seconds?`;
 
@@ -403,20 +411,20 @@ Score 0-100. Check: Are these consistent? Is the differentiation clear? Is the t
 
   /** Tool 4: Presence Audit */
   presenceAudit: protectedProcedure
-    .input(z.object({
-      companyName: z.string().min(1).max(255),
-      instagramHandle: z.string().max(255).optional(),
-      website: z.string().max(500).optional(),
-      otherChannels: z.string().max(500).optional(),
-      inquiryFlow: z.string().max(500).optional(),
-    }))
+    .input(presenceAuditInputSchema)
     .mutation(async ({ input, ctx }) => {
       const userPrompt = `Audit digital presence for:
 Company: ${input.companyName}
-Instagram: ${input.instagramHandle || 'Not provided'}
+Industry: ${input.industry}
 Website: ${input.website || 'Not provided'}
-Other channels: ${input.otherChannels || 'None'}
-Inquiry flow: ${input.inquiryFlow || 'Not described'}
+Instagram handle: ${input.instagramHandle || 'Not provided'}
+Instagram followers (band): ${input.instagramFollowers || 'Not specified'}
+Other platforms: ${input.otherPlatforms || 'None'}
+Posting frequency: ${input.postingFrequency || 'Not specified'}
+Content types posted: ${input.contentType || 'Not specified'}
+How customers reach you: ${input.inquiryMethod}
+Typical response time: ${input.avgResponseTime || 'Not specified'}
+Google Business Profile: ${input.googleBusiness || 'Not specified'}
 
 Score 0-100. Check: Cross-channel consistency, premium perception, CTA clarity, inquiry flow friction, content-proof-CTA alignment. Why is this brand "present but not chosen"?`;
 
@@ -428,18 +436,19 @@ Score 0-100. Check: Cross-channel consistency, premium perception, CTA clarity, 
 
   /** Tool 5: Identity Snapshot */
   identitySnapshot: protectedProcedure
-    .input(z.object({
-      companyName: z.string().min(1).max(255),
-      brandDescription: z.string().max(1000),
-      targetAudience: z.string().max(500).optional(),
-      competitors: z.string().max(500).optional(),
-    }))
+    .input(identitySnapshotInputSchema)
     .mutation(async ({ input, ctx }) => {
       const userPrompt = `Analyze brand identity match for:
 Company: ${input.companyName}
-Brand describes itself as: ${input.brandDescription}
-Target audience: ${input.targetAudience || 'Not specified'}
-Main competitors: ${input.competitors || 'Not specified'}
+Industry: ${input.industry}
+Brand personality (if it were a person): ${input.brandPersonality}
+Target audience: ${input.targetAudience}
+Brand colors: ${input.brandColors || 'Not specified'}
+Logo status: ${input.hasLogo || 'Not specified'}
+Brand guidelines status: ${input.hasGuidelines || 'Not specified'}
+Competitors: ${input.competitors || 'Not specified'}
+Desired perception (what people should feel): ${input.desiredPerception}
+Gap between desired and actual: ${input.currentGap || 'Not specified'}
 
 Score 0-100. Using Kapferer's Identity Prism, check: Does the brand personality match the audience? Is the visual quality matching the positioning? Is there a "Commodity Trap" — looking like everyone else? What archetype does this brand project vs. what it should project?`;
 
@@ -449,24 +458,23 @@ Score 0-100. Using Kapferer's Identity Prism, check: Does the brand personality 
       return result;
     }),
 
-  /** Tool 6: Launch Readiness */
+  /** Tool 6: Launch Readiness — form sends string enum values, not booleans */
   launchReadiness: protectedProcedure
-    .input(z.object({
-      companyName: z.string().min(1).max(255),
-      hasGuidelines: z.boolean().default(false),
-      hasOfferStructure: z.boolean().default(false),
-      hasContentPlan: z.boolean().default(false),
-      hasWebsite: z.boolean().default(false),
-      launchGoal: z.string().max(500).optional(),
-    }))
+    .input(launchReadinessInputSchema)
     .mutation(async ({ input, ctx }) => {
       const userPrompt = `Assess launch readiness for:
 Company: ${input.companyName}
-Has brand guidelines: ${input.hasGuidelines ? 'Yes' : 'No'}
-Has structured offers: ${input.hasOfferStructure ? 'Yes' : 'No'}
-Has content plan: ${input.hasContentPlan ? 'Yes' : 'No'}
-Has website: ${input.hasWebsite ? 'Yes' : 'No'}
-Launch goal: ${input.launchGoal || 'Not specified'}
+Industry: ${input.industry}
+Launch type: ${input.launchType}
+Target launch window: ${input.targetLaunchDate || 'Not set'}
+Brand guidelines status: ${input.hasGuidelines || 'Not specified'}
+Structured packages/pricing status: ${input.hasOfferStructure || 'Not specified'}
+Website status: ${input.hasWebsite || 'Not specified'}
+Content plan status: ${input.hasContentPlan || 'Not specified'}
+Monthly marketing budget (band): ${input.marketingBudget || 'Not specified'}
+Team capacity for launch: ${input.teamCapacity || 'Not specified'}
+Biggest concern: ${input.biggestConcern}
+Success metric after ~3 months: ${input.successMetric || 'Not specified'}
 
 Score 0-100 on launch readiness. Identify what's missing and what's the priority order. Be specific about what "ready to launch" means for THIS type of business.`;
 

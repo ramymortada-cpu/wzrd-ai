@@ -78,7 +78,7 @@ export default function Login() {
 
       <div className="flex min-h-screen items-center justify-center px-4 pb-16 pt-24">
         <div className="w-full max-w-md">
-          <div className="rounded-3xl border-[0.5px] border-white/25 bg-white/15 p-8 shadow-2xl backdrop-blur-3xl dark:bg-black/35 sm:p-10">
+          <div className="wzrd-glass wzrd-auth-card rounded-3xl p-8 sm:p-10">
             {step === 'email' ? (
               <>
                 <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-white">{t('wzrd.welcomeBack')}</h2>
