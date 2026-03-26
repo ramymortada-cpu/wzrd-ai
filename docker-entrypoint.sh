@@ -8,7 +8,7 @@ set -e
 
 echo "🔄 Running database migrations..."
 if [ -f "node_modules/.bin/drizzle-kit" ]; then
-  npx drizzle-kit migrate 2>&1 || echo "⚠️ Migration failed or already up to date"
+  npx drizzle-kit migrate --force 2>&1 || echo "⚠️ Migration failed or already up to date"
 else
   echo "⚠️ drizzle-kit not found — skipping migrations"
 fi
