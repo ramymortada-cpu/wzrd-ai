@@ -919,3 +919,60 @@ export const abandonedCarts = mysqlTable("abandoned_carts", {
   followUpSent: int("follow_up_sent").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+/** Service requests — client project tracking (like shipping status) */
+export const serviceRequests = mysqlTable("service_requests", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id").notNull(),
+  requestNumber: varchar("request_number", { length: 20 }).notNull(),
+  serviceType: varchar("service_type", { length: 100 }).notNull(),
+  serviceTypeAr: varchar("service_type_ar", { length: 100 }).notNull(),
+  status: mysqlEnum("status", [
+    "received", "reviewing", "info_needed", "meeting_scheduled",
+    "in_progress", "internal_review", "revision",
+    "ready_for_delivery", "delivered", "completed"
+  ]).notNull().default("received"),
+  priority: mysqlEnum("priority", ["normal", "urgent"]).notNull().default("normal"),
+  description: text("description"),
+  descriptionAr: text("description_ar"),
+  sourceDiagnosisId: int("source_diagnosis_id"),
+  assignedTo: varchar("assigned_to", { length: 100 }),
+  estimatedDelivery: timestamp("estimated_delivery"),
+  actualDelivery: timestamp("actual_delivery"),
+  totalPriceEgp: int("total_price_egp"),
+  paid: int("paid").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+/** Request updates — timeline entries for each service request */
+export const requestUpdates = mysqlTable("request_updates", {
+  id: int("id").autoincrement().primaryKey(),
+  requestId: int("request_id").notNull(),
+  status: varchar("status", { length: 50 }).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  titleAr: varchar("title_ar", { length: 255 }).notNull(),
+  detail: text("detail"),
+  detailAr: text("detail_ar"),
+  updateType: mysqlEnum("update_type", ["status_change", "info_request", "file_upload", "meeting", "note", "delivery"]).notNull().default("status_change"),
+  fileUrl: varchar("file_url", { length: 500 }),
+  fileName: varchar("file_name", { length: 255 }),
+  meetingLink: varchar("meeting_link", { length: 500 }),
+  meetingDate: timestamp("meeting_date"),
+  isClientVisible: int("is_client_visible").notNull().default(1),
+  createdBy: varchar("created_by", { length: 100 }).default("system"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+/** Request files — deliverables + client uploads */
+export const requestFiles = mysqlTable("request_files", {
+  id: int("id").autoincrement().primaryKey(),
+  requestId: int("request_id").notNull(),
+  fileName: varchar("file_name", { length: 255 }).notNull(),
+  fileUrl: varchar("file_url", { length: 500 }).notNull(),
+  fileType: varchar("file_type", { length: 50 }),
+  fileSizeKb: int("file_size_kb"),
+  uploadedBy: mysqlEnum("uploaded_by", ["client", "team"]).notNull().default("team"),
+  description: varchar("description", { length: 500 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});

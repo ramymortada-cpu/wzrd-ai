@@ -91,13 +91,7 @@ export interface CreditHistoryItem {
 export async function addCredits(
   userId: number,
   amount: number,
-  type:
-    | "signup_bonus"
-    | "purchase"
-    | "refund"
-    | "admin"
-    | "referral_bonus"
-    | "copilot_refund",
+  type: 'signup_bonus' | 'purchase' | 'refund' | 'admin' | 'referral_bonus' | 'copilot_refund',
   reason?: string,
   metadata?: Record<string, unknown>
 ): Promise<{ success: boolean; newBalance: number }> {

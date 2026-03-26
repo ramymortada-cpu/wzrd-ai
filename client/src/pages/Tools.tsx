@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { useI18n } from '@/lib/i18n';
 import WzrdPublicHeader from '@/components/WzrdPublicHeader';
 import { toArabicNumerals } from '@/lib/formatUtils';
+import { waMeHref } from '@/lib/waContact';
 
 interface ToolInfo {
   id: string;
@@ -146,7 +147,7 @@ export default function Tools() {
             <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">{t('wzrd.buyCreditsDesc')}</p>
             <div className="flex gap-3 justify-center">
               <a href="/pricing" className="px-6 py-2.5 rounded-full bg-amber-500 text-zinc-950 text-sm font-bold hover:-translate-y-0.5 transition shadow-md">{t('wzrd.buyCredits')}</a>
-              <a href="https://wa.me/201000000000" target="_blank" rel="noreferrer" className="px-6 py-2.5 rounded-full border border-zinc-300 dark:border-zinc-700 text-sm hover:border-amber-500 transition">{t('wzrd.talkToPrimo')}</a>
+              <a href={waMeHref()} target="_blank" rel="noreferrer" className="px-6 py-2.5 rounded-full border border-zinc-300 dark:border-zinc-700 text-sm hover:border-amber-500 transition">{t('wzrd.talkToPrimo')}</a>
             </div>
           </div>
         )}

@@ -26,10 +26,6 @@ import { sendToolResultEmail } from "../wzrdEmails";
 import { getToolSystemPrompt, isToolEnabled } from "../siteConfig";
 import { diagnosisHistory, userChecklists } from "../../drizzle/schema";
 import { eq, desc, and } from "drizzle-orm";
-import type { InferSelectModel } from "drizzle-orm";
-
-type DiagnosisHistoryRow = InferSelectModel<typeof diagnosisHistory>;
-type UserChecklistRow = InferSelectModel<typeof userChecklists>;
 import { fireEmailTrigger } from "../emailTrigger";
 
 /**
@@ -523,7 +519,7 @@ Score 0-100 on launch readiness. Identify what's missing and what's the priority
           .limit(12);
 
         // Defensive parsing — handle different schema versions
-        const safe = history.map((h: DiagnosisHistoryRow) => ({
+        const safe = history.map((h: (typeof history)[number]) => ({
           ...h,
           pillarScores: typeof h.pillarScores === 'object' && h.pillarScores ? h.pillarScores : {},
           findings: Array.isArray(h.findings) ? h.findings : [],
@@ -562,7 +558,7 @@ Score 0-100 on launch readiness. Identify what's missing and what's the priority
           .orderBy(desc(userChecklists.createdAt))
           .limit(10);
 
-        return checklists.map((cl: UserChecklistRow) => ({
+        return checklists.map((cl: (typeof checklists)[number]) => ({
           ...cl,
           items: Array.isArray(cl.items) ? cl.items : [],
         }));

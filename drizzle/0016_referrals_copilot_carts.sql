@@ -41,7 +41,3 @@ CREATE TABLE IF NOT EXISTS `abandoned_carts` (
   INDEX `idx_ac_user` (`user_id`),
   INDEX `idx_ac_pending` (`completed`, `follow_up_sent`)
 );
-
-ALTER TABLE `credit_transactions` MODIFY COLUMN `type` ENUM(
-  'signup_bonus','purchase','tool_usage','refund','admin','referral_bonus','copilot_refund'
-) NOT NULL;

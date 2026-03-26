@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { useI18n } from '@/lib/i18n';
 import WzrdPublicHeader from '@/components/WzrdPublicHeader';
 import { toArabicNumerals } from '@/lib/formatUtils';
+import { waMeHref } from '@/lib/waContact';
 
 const PLANS = [
   { id: 'single_report', credits: 100, price: 99, currency: 'EGP', popular: false, label: 'تقرير واحد', labelEn: 'Single Report', description: 'تقرير مفصّل واحد', descEn: '1 Premium AI report' },
@@ -89,7 +90,7 @@ export default function Pricing() {
             {t('wzrd.letPrimoHandle')}
           </p>
           <div className="flex gap-3 justify-center">
-            <a href="https://wa.me/201000000000" target="_blank" rel="noreferrer" className="px-6 py-3 rounded-xl bg-amber-500 text-zinc-950 font-bold text-sm hover:-translate-y-0.5 transition shadow-md">
+            <a href={waMeHref()} target="_blank" rel="noreferrer" className="px-6 py-3 rounded-xl bg-amber-500 text-zinc-950 font-bold text-sm hover:-translate-y-0.5 transition shadow-md">
               {t('wzrd.bookClarityCall')}
             </a>
             <button onClick={() => navigate('/landing/services.html')} className="px-6 py-3 rounded-xl border border-zinc-300 dark:border-zinc-700 text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:border-amber-500 transition">

@@ -55,6 +55,7 @@ const MyBrandPage = lazy(() => import("./pages/MyBrand"));
 const CopilotPage = lazy(() => import("./pages/Copilot"));
 const CompetitiveBenchmarkPage = lazy(() => import("./pages/CompetitiveBenchmark"));
 const QuickDiagnosisPage = lazy(() => import("./pages/QuickDiagnosis"));
+const MyRequestsPage = lazy(() => import("./pages/MyRequests"));
 
 function SuspenseWrapper({ children, fallback }: { children: React.ReactNode; fallback?: React.ReactNode }) {
   return (
@@ -122,6 +123,7 @@ function App() {
               <Route path="/copilot">{() => <SuspenseWrapper><CopilotPage /></SuspenseWrapper>}</Route>
               <Route path="/tools/benchmark">{() => <SuspenseWrapper><CompetitiveBenchmarkPage /></SuspenseWrapper>}</Route>
               <Route path="/tools/quick">{() => <SuspenseWrapper><QuickDiagnosisPage /></SuspenseWrapper>}</Route>
+              <Route path="/my-requests">{() => <SuspenseWrapper><MyRequestsPage /></SuspenseWrapper>}</Route>
               <Route path="/wzrd-admin">{() => <SuspenseWrapper><WzrdAdminPage /></SuspenseWrapper>}</Route>
               <Route path="/profile">{() => <SuspenseWrapper><ProfilePage /></SuspenseWrapper>}</Route>
               {/* Existing public routes */}

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
+import { waMeHref } from '@/lib/waContact';
 
 export interface ToolField {
   name: string;
@@ -483,7 +484,9 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
               className="flex-1 py-3 rounded-full border border-green-500/30 text-sm text-green-400 hover:bg-green-500/10 transition flex items-center justify-center gap-2"
             >📧 ابعت على إيميلي</button>
             <a
-              href={`https://wa.me/?text=${encodeURIComponent(`نتيجة تشخيص البراند بتاعي: ${result.score}/100\n${result.findings.map(f => '• ' + f.title).join('\n')}\n\nشخّص البراند بتاعك مجاناً:\n${typeof window !== 'undefined' ? window.location.origin : ''}/welcome`)}`}
+              href={waMeHref(
+                `نتيجة تشخيص البراند بتاعي: ${result.score}/100\n${result.findings.map(f => '• ' + f.title).join('\n')}\n\nشخّص البراند بتاعك مجاناً:\n${typeof window !== 'undefined' ? window.location.origin : ''}/welcome`,
+              )}
               target="_blank" rel="noopener"
               className="flex-1 py-3 rounded-full border border-emerald-500/30 text-sm text-emerald-400 hover:bg-emerald-500/10 transition flex items-center justify-center gap-2"
             >💬 شارك على WhatsApp</a>
@@ -555,6 +558,53 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
               <a href={result.serviceRecommendation.url} className="inline-block px-4 py-2 rounded-full bg-amber-500 text-zinc-950 text-xs font-bold hover:bg-amber-400 transition">
                 Learn about {result.serviceRecommendation.service} →
               </a>
+            </div>
+          )}
+
+          {/* ═══ DONE-FOR-YOU CTA — shows for score < 65 ═══ */}
+          {result.score < 65 && (
+            <div className="p-6 rounded-2xl border-2 border-emerald-500/20 bg-gradient-to-br from-emerald-900/20 to-teal-900/10 mb-8" dir="rtl">
+              <div className="text-center">
+                <div className="text-3xl mb-3">🤝</div>
+                <h3 className="text-lg font-bold text-white mb-2">
+                  {result.score < 40
+                    ? 'البراند بتاعك محتاج تدخل متخصص'
+                    : 'عايز نتيجة أسرع؟ خلّينا نشتغل عليها'}
+                </h3>
+                <p className="text-sm text-zinc-400 mb-4 max-w-md mx-auto leading-relaxed">
+                  {result.score < 40
+                    ? 'النتيجة بتقول إن فيه مشاكل أساسية محتاجة خبير. فريقنا يقدر يصلحها في أسبوع — مش شهور.'
+                    : 'بدل ما تصلح كل حاجة بنفسك — فريقنا يقدر يعمل اللي محتاج يتعمل وأنت تركّز على شغلك.'}
+                </p>
+                <div className="flex gap-3 justify-center flex-wrap">
+                  <button
+                    onClick={() => {
+                      // Save diagnosis context for the service request form
+                      try {
+                        sessionStorage.setItem('wzrd_service_context', JSON.stringify({
+                          toolName: config.name,
+                          toolNameAr: config.nameAr || config.name,
+                          score: result.score,
+                          topFindings: result.findings.slice(0, 3).map(f => f.title).join(' | '),
+                          timestamp: new Date().toISOString(),
+                        }));
+                      } catch {}
+                      window.location.href = '/my-requests?from=diagnosis';
+                    }}
+                    className="px-6 py-3 rounded-full bg-emerald-500 text-white font-bold text-sm hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/20"
+                  >
+                    اطلب خدمة — فريقنا يشتغل عليها ←
+                  </button>
+                  <a
+                    href={waMeHref(`أهلاً — عملت تشخيص وجبت ${result.score}/100 وعايز مساعدة متخصصة`)}
+                    target="_blank" rel="noopener"
+                    className="px-6 py-3 rounded-full border border-emerald-500/30 text-emerald-400 font-bold text-sm hover:bg-emerald-500/10 transition"
+                  >
+                    💬 كلّمنا على WhatsApp
+                  </a>
+                </div>
+                <p className="text-xs text-zinc-600 mt-3">أسعار تبدأ من ٥,٠٠٠ جنيه · Clarity Call مجاني · بدون التزام</p>
+              </div>
             </div>
           )}
 

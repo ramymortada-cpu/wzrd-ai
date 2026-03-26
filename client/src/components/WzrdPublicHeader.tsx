@@ -58,6 +58,12 @@ export default function WzrdPublicHeader({ credits, showCredits = true }: WzrdPu
           >
             {locale === "ar" ? "المستشار" : "Copilot"}
           </a>
+          <a
+            href="/my-requests"
+            className="text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+          >
+            {locale === "ar" ? "طلباتي" : "My Requests"}
+          </a>
         </nav>
 
         {/* Right: credits pill + theme + language */}

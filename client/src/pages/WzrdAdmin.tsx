@@ -5,21 +5,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
-type Tab =
-  | 'command'
-  | 'overview'
-  | 'users'
-  | 'credits'
-  | 'tools'
-  | 'payments'
-  | 'webhooks'
-  | 'cms'
-  | 'prompts'
-  | 'pricing'
-  | 'email'
-  | 'team'
-  | 'agency'
-  | 'config';
+type Tab = 'overview' | 'users' | 'credits' | 'tools' | 'payments' | 'webhooks' | 'cms' | 'prompts' | 'pricing' | 'team' | 'agency' | 'config' | 'requests';
 
 const FETCH_OPTS: RequestInit = { credentials: 'include' };
 
@@ -64,13 +50,13 @@ function timeAgo(date: Date) {
 function LoadingSkeleton() {
   return (
     <div className="space-y-4 animate-pulse">
-      <div className="h-9 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded-xl w-2/5" />
+      <div className="h-8 bg-gray-200 rounded w-1/3" />
       <div className="grid grid-cols-4 gap-4">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-28 bg-gradient-to-br from-slate-100 to-slate-200/80 rounded-2xl" />
+          <div key={i} className="h-24 bg-gray-200 rounded-xl" />
         ))}
       </div>
-      <div className="h-52 bg-slate-100 rounded-2xl" />
+      <div className="h-48 bg-gray-200 rounded-xl" />
     </div>
   );
 }
@@ -89,35 +75,21 @@ function StatusBadge({ status, t }: { status: string; t: (ar: string, en: string
 
 function EmptyState({ icon, message }: { icon: string; message: string }) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-6 text-center rounded-2xl border border-dashed border-gray-200 bg-white/60">
-      <span className="text-5xl mb-4 drop-shadow-sm" aria-hidden>{icon}</span>
-      <p className="text-gray-500 text-sm max-w-sm leading-relaxed">{message}</p>
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <span className="text-5xl mb-4 opacity-50">{icon}</span>
+      <p className="text-gray-500 text-sm">{message}</p>
     </div>
   );
 }
 
 function Toast({ message, onDismiss, type = 'success' }: { message: string; onDismiss: () => void; type?: 'success' | 'error' }) {
   useEffect(() => {
-    const t = setTimeout(onDismiss, 5200);
+    const t = setTimeout(onDismiss, 4000);
     return () => clearTimeout(t);
   }, [onDismiss]);
-  const ok = type === 'success';
   return (
-    <div
-      role="status"
-      className={`fixed top-4 left-1/2 -translate-x-1/2 md:left-auto md:right-6 md:translate-x-0 z-[100] flex items-center gap-3 pl-4 pr-2 py-3 max-w-[min(100vw-2rem,28rem)] rounded-2xl text-sm font-medium shadow-xl shadow-gray-900/10 border ${
-        ok ? 'bg-emerald-50 text-emerald-900 border-emerald-200/80' : 'bg-red-50 text-red-900 border-red-200/80'
-      }`}
-    >
-      <span className="text-lg shrink-0" aria-hidden>{ok ? '✓' : '!'}</span>
-      <span className="flex-1 text-start leading-snug">{message}</span>
-      <button
-        type="button"
-        onClick={onDismiss}
-        className={`shrink-0 rounded-xl px-2.5 py-1.5 text-xs font-semibold transition ${ok ? 'hover:bg-emerald-100' : 'hover:bg-red-100'}`}
-      >
-        ✕
-      </button>
+    <div className={`fixed top-0 left-0 right-0 z-[100] py-3 px-6 text-center text-sm font-medium shadow-lg ${type === 'error' ? 'bg-red-600' : 'bg-green-600'} text-white`}>
+      {message}
     </div>
   );
 }
@@ -125,17 +97,17 @@ function Toast({ message, onDismiss, type = 'success' }: { message: string; onDi
 // ═══════════════════════════════════════
 // STAT CARD — icon, accent border, gradient, count-up
 // ═══════════════════════════════════════
-function StatCard({ label, value, sub, icon, accent = 'border-s-indigo-500', gradient = 'from-indigo-50/50 to-white' }: {
+function StatCard({ label, value, sub, icon, accent = 'border-l-indigo-500', gradient = 'from-indigo-50/50 to-white' }: {
   label: string; value: string | number; sub?: string; icon: string; accent?: string; gradient?: string;
 }) {
   return (
-    <div className={`group p-5 rounded-2xl border border-gray-200/90 bg-gradient-to-br ${gradient} shadow-sm hover:shadow-md hover:border-indigo-200/60 transition-all duration-200 border-s-4 ${accent}`}>
-      <div className="flex items-center gap-2 mb-1.5">
-        <span className="text-xl grayscale group-hover:grayscale-0 transition-[filter]">{icon}</span>
-        <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">{label}</p>
+    <div className={`p-5 rounded-xl border border-gray-200 bg-gradient-to-br ${gradient} shadow-sm hover:shadow-md transition-all border-l-4 ${accent}`}>
+      <div className="flex items-center gap-2 mb-1">
+        <span className="text-xl">{icon}</span>
+        <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">{label}</p>
       </div>
-      <p className="text-2xl font-bold font-mono text-gray-900 tracking-tight">{typeof value === 'number' ? value.toLocaleString() : value}</p>
-      {sub && <p className="text-[11px] text-gray-500 mt-1.5">{sub}</p>}
+      <p className="text-2xl font-bold font-mono text-gray-900">{typeof value === 'number' ? value.toLocaleString() : value}</p>
+      {sub && <p className="text-[10px] text-gray-400 mt-1">{sub}</p>}
     </div>
   );
 }
@@ -183,59 +155,31 @@ function OverviewTab({ t }: { t: T }) {
   if (!data) return <LoadingSkeleton />;
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-gray-500">{t('تحديث كل 30 ثانية', 'Auto-refresh every 30s')}</span>
-        <button type="button" onClick={load} disabled={refreshing} className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 disabled:opacity-50 transition-colors shadow-sm">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs text-gray-400">{t('تحديث كل 30 ثانية', 'Auto-refresh every 30s')}</span>
+        <button onClick={load} disabled={refreshing} className="text-xs text-indigo-600 hover:text-indigo-500 disabled:opacity-50">
           {refreshing ? t('جاري...', 'Refreshing...') : t('تحديث', 'Refresh')}
         </button>
       </div>
-
-      <div className="p-5 md:p-6 rounded-2xl border border-gray-200/90 bg-white shadow-sm space-y-4">
-        <h4 className="text-sm font-bold text-gray-800">{t('روابط سريعة', 'Quick links')}</h4>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-          {[
-            { href: '/welcome', ar: 'الرئيسية', en: 'Home' },
-            { href: '/tools', ar: 'الأدوات', en: 'Tools' },
-            { href: '/tools/quick', ar: 'تشخيص سريع', en: 'Quick dx' },
-            { href: '/pricing', ar: 'الأسعار', en: 'Pricing' },
-            { href: '/signup', ar: 'تسجيل', en: 'Signup' },
-            { href: '/my-brand', ar: 'براندي', en: 'My brand' },
-            { href: '/copilot', ar: 'كوبايلوت', en: 'Copilot' },
-            { href: '/services-info', ar: 'الخدمات', en: 'Services' },
-          ].map((L) => (
-            <a key={L.href} href={L.href} target="_blank" rel="noopener noreferrer"
-              className="block text-center px-3 py-2.5 rounded-xl border border-gray-100 bg-gray-50/90 text-xs font-semibold text-indigo-700 hover:bg-white hover:border-indigo-200 hover:shadow-md transition-all active:scale-[0.98]">
-              {t(L.ar, L.en)}
-            </a>
-          ))}
-        </div>
-        <p className="text-[11px] text-gray-600 leading-relaxed border-t border-gray-100 pt-4">
-          {t(
-            'تقديرات تكلفة الطرفية (Groq وغيره): تعتمد على الموديل وحجم التوكن. راقب استهلاكك في كونسول المزوّد — كل تشخيص/أداة ≈ عدة آلاف توكن.',
-            'API cost (Groq, etc.) depends on model and tokens. Check your provider console — each tool run is typically a few thousand tokens.',
-          )}
-        </p>
-      </div>
-
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label={t('إجمالي التسجيلات', 'Total Signups')} value={data.users?.total || 0} sub={`+${data.users?.today || 0} ${t('النهاردة', 'today')}`} icon="👥" accent="border-s-indigo-500" gradient="from-indigo-50/50 to-white" />
-        <StatCard label={t('هذا الأسبوع', 'This Week')} value={data.users?.thisWeek || 0} icon="📅" accent="border-s-cyan-500" gradient="from-cyan-50/50 to-white" />
-        <StatCard label={t('عمليات التشخيص', 'Tool Runs')} value={data.tools?.totalRuns || 0} sub={`${t('متوسط النتيجة', 'Avg score')}: ${data.tools?.avgScore || '—'}`} icon="🔬" accent="border-s-amber-500" gradient="from-amber-50/50 to-white" />
-        <StatCard label={t('مشتركين النشرة', 'Newsletter Subs')} value={data.newsletter?.subscribers || 0} icon="📬" accent="border-s-green-500" gradient="from-green-50/50 to-white" />
+        <StatCard label={t('إجمالي التسجيلات', 'Total Signups')} value={data.users?.total || 0} sub={`+${data.users?.today || 0} ${t('النهاردة', 'today')}`} icon="👥" accent="border-l-indigo-500" gradient="from-indigo-50/50 to-white" />
+        <StatCard label={t('هذا الأسبوع', 'This Week')} value={data.users?.thisWeek || 0} icon="📅" accent="border-l-cyan-500" gradient="from-cyan-50/50 to-white" />
+        <StatCard label={t('عمليات التشخيص', 'Tool Runs')} value={data.tools?.totalRuns || 0} sub={`${t('متوسط النتيجة', 'Avg score')}: ${data.tools?.avgScore || '—'}`} icon="🔬" accent="border-l-amber-500" gradient="from-amber-50/50 to-white" />
+        <StatCard label={t('مشتركين النشرة', 'Newsletter Subs')} value={data.newsletter?.subscribers || 0} icon="📬" accent="border-l-green-500" gradient="from-green-50/50 to-white" />
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <StatCard label={t('كريدت صادر', 'Credits Issued')} value={data.credits?.totalIssued || 0} icon="⚡" accent="border-s-emerald-500" gradient="from-emerald-50/50 to-white" />
-        <StatCard label={t('كريدت مستخدم', 'Credits Used')} value={data.credits?.totalUsed || 0} icon="📉" accent="border-s-red-500" gradient="from-red-50/50 to-white" />
-        <StatCard label={t('إيرادات الكريدت', 'Credit Revenue')} value={`${(data.revenue?.totalCreditsRevenue || 0).toLocaleString()} ${t('كريدت', 'credits')}`} icon="💰" accent="border-s-amber-500" gradient="from-amber-50/50 to-white" />
+        <StatCard label={t('كريدت صادر', 'Credits Issued')} value={data.credits?.totalIssued || 0} icon="⚡" accent="border-l-emerald-500" gradient="from-emerald-50/50 to-white" />
+        <StatCard label={t('كريدت مستخدم', 'Credits Used')} value={data.credits?.totalUsed || 0} icon="📉" accent="border-l-red-500" gradient="from-red-50/50 to-white" />
+        <StatCard label={t('إيرادات الكريدت', 'Credit Revenue')} value={`${(data.revenue?.totalCreditsRevenue || 0).toLocaleString()} ${t('كريدت', 'credits')}`} icon="💰" accent="border-l-amber-500" gradient="from-amber-50/50 to-white" />
       </div>
 
       {(recentRuns?.runs?.length ?? 0) > 0 && (
-        <div className="p-5 md:p-6 rounded-2xl border border-gray-200/90 bg-white shadow-sm">
-          <h4 className="text-sm font-bold text-gray-800 mb-3">{t('آخر النشاطات', 'Recent Activity')}</h4>
-          <div className="divide-y divide-gray-100 rounded-xl border border-gray-100 overflow-hidden">
+        <div className="p-5 rounded-xl border border-gray-200 bg-white shadow-sm">
+          <h4 className="text-sm font-bold text-gray-600 mb-3">{t('آخر النشاطات', 'Recent Activity')}</h4>
+          <div className="space-y-2">
             {recentRuns!.runs.slice(0, 5).map((r: any) => (
-              <div key={r.id} className="flex items-center justify-between py-3 px-3 hover:bg-slate-50/80">
+              <div key={r.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
                 <div>
                   <span className="text-sm font-medium">User #{r.userId}</span>
                   <span className="text-gray-500 mx-2">·</span>
@@ -249,11 +193,11 @@ function OverviewTab({ t }: { t: T }) {
       )}
 
       {data.tools?.topTools?.length > 0 && (
-        <div className="p-5 md:p-6 rounded-2xl border border-gray-200/90 bg-white shadow-sm">
-          <h4 className="text-sm font-bold text-gray-800 mb-3">{t('أكتر الأدوات استخداماً', 'Top Tools')}</h4>
+        <div className="p-5 rounded-xl border border-gray-200 bg-white shadow-sm">
+          <h4 className="text-sm font-bold text-gray-600 mb-3">{t('أكتر الأدوات استخداماً', 'Top Tools')}</h4>
           <div className="space-y-2">
             {data.tools.topTools.map((item: any) => (
-              <div key={item.tool} className="flex items-center justify-between p-3 rounded-xl bg-gray-50/90 border border-gray-100 hover:border-indigo-100 hover:bg-white transition-colors">
+              <div key={item.tool} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition">
                 <span className="text-sm font-medium">{item.tool?.replace(/_/g, ' ')}</span>
                 <div className="flex gap-4">
                   <span className="text-xs text-gray-500">{item.uses} {t('عملية', 'runs')}</span>
@@ -264,275 +208,48 @@ function OverviewTab({ t }: { t: T }) {
           </div>
         </div>
       )}
-    </div>
-  );
-}
 
-// ═══════════════════════════════════════
-// COMMAND CENTER — unified control hub
-// ═══════════════════════════════════════
-function CommandCenterTab({ t, setTab }: { t: T; setTab: (id: Tab) => void }) {
-  const [snap, setSnap] = useState<Record<string, unknown> | null>(null);
-  const [act, setAct] = useState<{ activities?: any[] } | null>(null);
-
-  useEffect(() => {
-    api('wzrdAdmin.commandCenter').then(setSnap);
-    api('wzrdAdmin.activityLog').then(setAct);
-  }, []);
-
-  const quick: Array<{ id: Tab; ar: string; en: string; icon: string }> = [
-    { id: 'overview', ar: 'نظرة عامة', en: 'Overview', icon: '📊' },
-    { id: 'cms', ar: 'محتوى الموقع', en: 'Site CMS', icon: '📝' },
-    { id: 'users', ar: 'المستخدمين', en: 'Users', icon: '👥' },
-    { id: 'credits', ar: 'الكريدت', en: 'Credits', icon: '⚡' },
-    { id: 'tools', ar: 'الأدوات', en: 'Tools', icon: '🔬' },
-    { id: 'prompts', ar: 'برومبتات AI', en: 'AI Prompts', icon: '🧠' },
-    { id: 'pricing', ar: 'باقات وخصومات', en: 'Plans & promos', icon: '💰' },
-    { id: 'email', ar: 'إيميل وأتمتة', en: 'Email automation', icon: '📧' },
-    { id: 'payments', ar: 'مدفوعات', en: 'Payments', icon: '💳' },
-    { id: 'webhooks', ar: 'Webhooks', en: 'Webhooks', icon: '🔔' },
-    { id: 'agency', ar: 'الوكالة', en: 'Agency', icon: '🏢' },
-    { id: 'team', ar: 'الفريق', en: 'Team', icon: '👔' },
-    { id: 'config', ar: 'إعدادات تقنية', en: 'Tech config', icon: '⚙️' },
-  ];
-
-  const flag = (on: boolean) => (on ? '✓' : '—');
-
-  return (
-    <div className="space-y-8">
-      <div className="rounded-2xl border border-indigo-100/80 bg-gradient-to-br from-indigo-50/50 via-white to-white px-5 py-4 shadow-sm">
-        <h2 className="text-xl font-bold text-gray-900 tracking-tight">{t('مركز القيادة', 'Command center')}</h2>
-        <p className="text-sm text-gray-600 mt-1 max-w-2xl leading-relaxed">{t('تشغيل كل أجزاء WZRD من مكان واحد.', 'Run WZRD from one place.')}</p>
-      </div>
-
-      {snap && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-          <StatCard label={t('بيئة', 'Environment')} value={String(snap.environment || '—')} icon="🌐" accent="border-s-slate-500" gradient="from-slate-50/80 to-white" />
-          <StatCard label={t('إحالات', 'Referrals')} value={Number(snap.referralRecords || 0)} icon="🎁" accent="border-s-pink-500" gradient="from-pink-50/50 to-white" />
-          <StatCard label={t('رسائل كوبايلوت', 'Copilot msgs')} value={Number(snap.copilotMessages || 0)} icon="💬" accent="border-s-violet-500" gradient="from-violet-50/50 to-white" />
-          <StatCard label={t('قاعدة البيانات', 'Database')} value={snap.databaseConnected ? t('متصل', 'OK') : t('لا', 'No')} icon="🗄️" accent="border-s-teal-500" gradient="from-teal-50/50 to-white" />
-        </div>
-      )}
-
-      <div className="p-5 md:p-6 rounded-2xl border border-gray-200/90 bg-white/90 shadow-sm shadow-slate-900/5">
-        <h4 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" aria-hidden />
-          {t('حالة التكامل', 'Integrations')}
-        </h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 text-xs">
+      {/* Quick Links — New Features */}
+      <div className="p-5 rounded-xl border border-gray-200 bg-white shadow-sm">
+        <h4 className="text-sm font-bold text-gray-600 mb-3">{t('روابط سريعة', 'Quick Links')}</h4>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {[
-            { k: 'hasGroq', label: t('Groq', 'Groq') },
-            { k: 'hasClaude', label: 'Claude' },
-            { k: 'hasPaymob', label: 'Paymob' },
-            { k: 'hasEmailApiKey', label: t('مفتاح البريد', 'Email key') },
-            { k: 'adminEmailsFromEnv', label: 'ADMIN_EMAILS' },
-          ].map(({ k, label }) => {
-            const on = !!(snap as any)?.[k];
-            return (
-              <div key={k} className={`flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border ${on ? 'bg-emerald-50/80 border-emerald-200/60' : 'bg-slate-50 border-slate-200/60'}`}>
-                <span className="font-medium text-gray-700 truncate">{label}</span>
-                <span className={`shrink-0 w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-bold ${on ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}`}>{flag(on)}</span>
-              </div>
-            );
-          })}
-          <div className="sm:col-span-2 md:col-span-3 flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border border-slate-200/60 bg-slate-50/80">
-            <span className="font-medium text-gray-700">APP_URL</span>
-            <code className="text-[10px] text-gray-600 truncate max-w-[65%] font-mono">{String(snap?.appUrl || '—')}</code>
-          </div>
-        </div>
-        <p className="text-[11px] text-gray-500 mt-4 leading-relaxed">
-          {t('المفاتيح الحقيقية على Railway — هنا عرض الحالة فقط.', 'Secrets live in Railway — status only here.')}
-        </p>
-      </div>
-
-      <div className="p-5 md:p-6 rounded-2xl border border-gray-200/90 bg-white/90 shadow-sm">
-        <h4 className="text-sm font-bold text-gray-800 mb-4">{t('انتقال سريع', 'Quick navigation')}</h4>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
-          {quick.map((q) => (
-            <button
-              key={q.id}
-              type="button"
-              onClick={() => setTab(q.id)}
-              className="group flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-gray-100 bg-gray-50/90 text-start hover:bg-white hover:border-indigo-200 hover:shadow-md hover:shadow-indigo-900/5 text-xs font-semibold text-gray-800 transition-all duration-150 active:scale-[0.98]"
-            >
-              <span className="text-base opacity-80 group-hover:opacity-100 transition-opacity">{q.icon}</span>
-              <span className="truncate">{t(q.ar, q.en)}</span>
-            </button>
+            { href: '/my-brand', icon: '📈', label: t('صحة البراند', 'Brand Health') },
+            { href: '/copilot', icon: '🧙‍♂️', label: t('المستشار', 'Copilot') },
+            { href: '/tools/benchmark', icon: '📊', label: t('مقارنة', 'Benchmark') },
+            { href: '/tools/quick', icon: '⚡', label: t('سريع', 'Quick') },
+            { href: '/pricing', icon: '💰', label: t('الأسعار', 'Pricing') },
+            { href: '/seo/brand-diagnosis', icon: '🔍', label: t('SEO', 'SEO') },
+            { href: '/services-info', icon: '🏢', label: t('خدمات', 'Services') },
+            { href: '/welcome', icon: '🏠', label: t('الرئيسية', 'Home') },
+          ].map(l => (
+            <a key={l.href} href={l.href} target="_blank" rel="noopener"
+              className="flex items-center gap-2 p-3 rounded-lg bg-gray-50 hover:bg-indigo-50 hover:text-indigo-600 transition text-sm">
+              <span>{l.icon}</span>
+              <span>{l.label}</span>
+            </a>
           ))}
         </div>
       </div>
 
-      {(act?.activities?.length ?? 0) > 0 && (
-        <div className="p-5 md:p-6 rounded-2xl border border-gray-200/90 bg-white shadow-sm">
-          <h4 className="text-sm font-bold text-gray-800 mb-3">{t('نشاط نموذجي (LLM)', 'Recent LLM usage')}</h4>
-          <div className="space-y-0 max-h-52 overflow-y-auto rounded-xl border border-gray-100 divide-y divide-gray-100">
-            {act!.activities!.slice(0, 15).map((a: any, i: number) => (
-              <div key={i} className="flex justify-between gap-3 text-[11px] py-2 px-3 hover:bg-slate-50/80">
-                <span className="text-gray-700 truncate">{a.model || a.context || '—'}</span>
-                <span className="text-gray-400 tabular-nums shrink-0">{a.createdAt ? timeAgo(new Date(a.createdAt)) : ''}</span>
-              </div>
-            ))}
+      {/* Estimated API Costs */}
+      <div className="p-5 rounded-xl border border-amber-200 bg-amber-50/50 shadow-sm">
+        <h4 className="text-sm font-bold text-amber-700 mb-2">{t('تكلفة API المقدّرة', 'Estimated API Costs')}</h4>
+        <div className="grid grid-cols-3 gap-3 text-center">
+          <div>
+            <div className="text-lg font-bold text-amber-800">{data.tools?.totalRuns || 0}</div>
+            <div className="text-xs text-amber-600">{t('تشخيصات (Groq: مجاني)', 'Diagnoses (Groq: free)')}</div>
+          </div>
+          <div>
+            <div className="text-lg font-bold text-amber-800">~{Math.round((data.credits?.totalUsed || 0) * 0.012)}</div>
+            <div className="text-xs text-amber-600">{t('جنيه تقديري Claude', 'EGP est. Claude')}</div>
+          </div>
+          <div>
+            <div className="text-lg font-bold text-amber-800">{data.revenue?.totalCreditsRevenue || 0}</div>
+            <div className="text-xs text-amber-600">{t('كريدت مباع', 'Credits sold')}</div>
           </div>
         </div>
-      )}
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════
-// EMAIL AUTOMATION TAB
-// ═══════════════════════════════════════
-function EmailAutomationTab({ t, onToast }: { t: T; onToast: (msg: string, err?: boolean) => void }) {
-  const [templates, setTemplates] = useState<any[] | null>(null);
-  const [rules, setRules] = useState<any[] | null>(null);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [draft, setDraft] = useState({ subject: '', subjectAr: '', html: '' });
-
-  const load = useCallback(() => {
-    api('emailAutomation.listTemplates').then((d: any) => setTemplates(d?.templates || []));
-    api('emailAutomation.listRules').then((d: any) => setRules(d?.rules || []));
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
-
-  const seed = async () => {
-    const r = await apiMutation('emailAutomation.seedDefaults', {});
-    if (r?.success) { onToast(t('تم زرع القوالب', 'Templates seeded')); load(); }
-    else onToast((r as { error?: string })?.error || t('فشل أو موجود مسبقاً', 'Failed or already exists'), true);
-  };
-
-  const toggleRule = async (id: number, currentlyActive: number) => {
-    await apiMutation('emailAutomation.updateRule', { id, isActive: currentlyActive ? 0 : 1 });
-    load();
-  };
-
-  const openEditor = (tm: any) => {
-    setEditingId(tm.id);
-    setDraft({
-      subject: tm.subject || '',
-      subjectAr: tm.subjectAr || '',
-      html: tm.html || '',
-    });
-  };
-
-  const saveTemplate = async () => {
-    if (!editingId) return;
-    const r = await apiMutation('emailAutomation.updateTemplate', {
-      id: editingId,
-      subject: draft.subject,
-      subjectAr: draft.subjectAr,
-      html: draft.html,
-    });
-    if (r?.success) {
-      onToast(t('تم حفظ القالب', 'Template saved'));
-      setEditingId(null);
-      load();
-    } else onToast(t('فشل الحفظ', 'Save failed'), true);
-  };
-
-  const deleteTemplate = async (id: number) => {
-    if (!confirm(t('تأكيد حذف القالب؟', 'Delete this template?'))) return;
-    const r = await apiMutation('emailAutomation.deleteTemplate', { id });
-    if (r?.success) {
-      onToast(t('تم الحذف', 'Deleted'));
-      if (editingId === id) setEditingId(null);
-      load();
-    } else onToast(t('فشل الحذف', 'Delete failed'), true);
-  };
-
-  const toggleTplActive = async (tm: any) => {
-    await apiMutation('emailAutomation.updateTemplate', { id: tm.id, isActive: tm.isActive ? 0 : 1 });
-    load();
-  };
-
-  return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h3 className="text-lg font-bold text-gray-900 tracking-tight">{t('الإيميل والأتمتة', 'Email & automation')}</h3>
-          <p className="text-sm text-gray-600 mt-1 max-w-xl leading-relaxed">{t('تحرير HTML كامل للقوالب المرسلة من المنتج العام.', 'Full HTML for public-product emails.')}</p>
-        </div>
-        <button type="button" onClick={seed} className="px-4 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-500 shadow-md shadow-indigo-600/20 shrink-0 transition-colors">
-          {t('زرع القوالب الافتراضية', 'Seed default templates')}
-        </button>
-      </div>
-
-      <div className="p-5 md:p-6 rounded-2xl border border-gray-200/90 bg-white shadow-sm">
-        <h4 className="text-sm font-bold text-gray-600 mb-3">{t('القوالب', 'Templates')} ({templates?.length ?? '…'})</h4>
-        {!templates?.length ? (
-          <p className="text-sm text-gray-400">{t('لا قوالب — اضغط زرع.', 'No templates — tap seed.')}</p>
-        ) : (
-          <ul className="divide-y divide-gray-100">
-            {templates.map((tm: any) => (
-              <li key={tm.id} className="py-3 flex flex-wrap items-start justify-between gap-2 text-sm">
-                <div>
-                  <b>{tm.name}</b> <span className="text-gray-400 text-xs">({tm.type})</span>
-                  <p className="text-xs text-gray-500 mt-0.5 truncate max-w-md">{tm.subject}</p>
-                </div>
-                <div className="flex flex-wrap gap-1 shrink-0">
-                  <button type="button" onClick={() => openEditor(tm)} className="text-xs px-2 py-1 rounded bg-indigo-100 text-indigo-700 hover:bg-indigo-200">{t('تحرير', 'Edit')}</button>
-                  <button type="button" onClick={() => toggleTplActive(tm)} className={`text-xs px-2 py-1 rounded ${tm.isActive ? 'bg-gray-100 text-gray-600' : 'bg-amber-100 text-amber-800'}`}>
-                    {tm.isActive ? t('إيقاف', 'Off') : t('تشغيل', 'On')}
-                  </button>
-                  <button type="button" onClick={() => deleteTemplate(tm.id)} className="text-xs px-2 py-1 rounded bg-red-50 text-red-600 hover:bg-red-100">{t('حذف', 'Del')}</button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {editingId !== null && (
-        <div className="p-5 md:p-6 rounded-2xl border-2 border-indigo-200/90 bg-gradient-to-br from-indigo-50/40 to-white shadow-lg shadow-indigo-900/5 space-y-4">
-          <h4 className="text-sm font-bold text-gray-900">{t('محرر القالب', 'Template editor')} <span className="text-indigo-600">#{editingId}</span></h4>
-          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide">{t('العنوان EN', 'Subject EN')}</label>
-          <input
-            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
-            placeholder="Subject (EN)"
-            value={draft.subject}
-            onChange={(e) => setDraft((d) => ({ ...d, subject: e.target.value }))}
-          />
-          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide">{t('العنوان AR', 'Subject AR')}</label>
-          <input
-            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
-            placeholder="Subject (AR)"
-            value={draft.subjectAr}
-            onChange={(e) => setDraft((d) => ({ ...d, subjectAr: e.target.value }))}
-          />
-          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide">HTML</label>
-          <textarea
-            className="w-full px-3 py-3 rounded-xl border border-gray-200 text-xs font-mono min-h-[240px] leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
-            placeholder="HTML"
-            value={draft.html}
-            onChange={(e) => setDraft((d) => ({ ...d, html: e.target.value }))}
-          />
-          <div className="flex flex-wrap gap-2 pt-1">
-            <button type="button" onClick={saveTemplate} className="px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-500 shadow-md shadow-emerald-600/20 transition-colors">{t('حفظ', 'Save')}</button>
-            <button type="button" onClick={() => setEditingId(null)} className="px-5 py-2.5 rounded-xl border border-gray-300 bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors">{t('إلغاء', 'Cancel')}</button>
-          </div>
-        </div>
-      )}
-
-      <div className="p-5 md:p-6 rounded-2xl border border-gray-200/90 bg-white shadow-sm">
-        <h4 className="text-sm font-bold text-gray-600 mb-3">{t('قواعد الأتمتة', 'Automation rules')} ({rules?.length ?? '…'})</h4>
-        {!rules?.length ? (
-          <p className="text-sm text-gray-400">{t('لا قواعد بعد.', 'No rules yet.')}</p>
-        ) : (
-          <ul className="divide-y divide-gray-100">
-            {rules.map((r: any) => (
-              <li key={r.id} className="py-2 flex flex-wrap items-center justify-between gap-2 text-sm">
-                <span><b>{r.name}</b> <span className="text-gray-400 text-xs">{r.trigger}</span></span>
-                <button
-                  type="button"
-                  onClick={() => toggleRule(r.id, Number(r.isActive))}
-                  className={`text-xs px-2 py-1 rounded ${r.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}
-                >
-                  {r.isActive ? t('تعطيل', 'Disable') : t('تفعيل', 'Enable')}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+        <p className="text-xs text-amber-500 mt-2 text-center">{t('التقدير مبني على متوسط ٦ جنيه/تقرير Claude', 'Based on avg 6 EGP/Claude report')}</p>
       </div>
     </div>
   );
@@ -732,8 +449,6 @@ function CreditsTab({ t }: { t: T }) {
     tool_usage: 'text-red-600 bg-red-400/10',
     refund: 'text-blue-400 bg-blue-400/10',
     admin: 'text-purple-400 bg-purple-400/10',
-    referral_bonus: 'text-cyan-600 bg-cyan-400/10',
-    copilot_refund: 'text-orange-600 bg-orange-400/10',
   };
 
   const filterLabels: Record<string, string> = {
@@ -743,8 +458,6 @@ function CreditsTab({ t }: { t: T }) {
     tool_usage: t('استخدام أداة', 'tool usage'),
     refund: t('استرجاع', 'refund'),
     admin: t('أدمن', 'admin'),
-    referral_bonus: t('إحالة', 'referral'),
-    copilot_refund: t('استرداد كوبايلوت', 'copilot refund'),
   };
 
   return (
@@ -762,7 +475,7 @@ function CreditsTab({ t }: { t: T }) {
             ↓ {t('تصدير CSV', 'Export CSV')}
           </button>
           <div className="flex gap-1">
-          {['all', 'signup_bonus', 'purchase', 'tool_usage', 'refund', 'admin', 'referral_bonus', 'copilot_refund'].map(f => (
+          {['all', 'signup_bonus', 'purchase', 'tool_usage', 'refund', 'admin'].map(f => (
             <button key={f} onClick={() => setFilter(f)}
               className={`px-3 py-1 rounded-full text-xs font-medium transition ${filter === f ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-gray-50 text-gray-500 hover:text-indigo-600'}`}>
               {filterLabels[f] || f.replace(/_/g, ' ')}
@@ -1100,9 +813,9 @@ function EmailStatsSection({ t }: { t: T }) {
     <div className="mt-6">
       <h4 className="text-sm font-bold text-gray-600 mb-3">📧 {t('تحليلات البريد', 'Email Analytics')}</h4>
       <div className="grid grid-cols-3 gap-3 mb-4">
-        <StatCard label="Sent" value={stats.totalSent} icon="✓" accent="border-s-green-500" gradient="from-green-50/50 to-white" />
-        <StatCard label="Failed" value={stats.totalFailed} icon="✕" accent="border-s-red-500" gradient="from-red-50/50 to-white" />
-        <StatCard label="Skipped" value={stats.totalSkipped} icon="—" accent="border-s-gray-400" gradient="from-gray-50 to-white" />
+        <StatCard label="Sent" value={stats.totalSent} icon="✓" accent="border-l-green-500" gradient="from-green-50/50 to-white" />
+        <StatCard label="Failed" value={stats.totalFailed} icon="✕" accent="border-l-red-500" gradient="from-red-50/50 to-white" />
+        <StatCard label="Skipped" value={stats.totalSkipped} icon="—" accent="border-l-gray-400" gradient="from-gray-50 to-white" />
       </div>
       {Object.keys(stats.byTemplate || {}).length > 0 && (
         <div className="mb-4">
@@ -1674,7 +1387,7 @@ function AgencyTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; on
       {projectsList?.byStatus && Object.keys(projectsList.byStatus).length > 0 && (
         <div className="grid grid-cols-4 gap-2 mb-4">
           {Object.entries(projectsList.byStatus).map(([status, count]) => (
-            <StatCard key={status} label={t(status === 'active' ? 'نشط' : status === 'completed' ? 'مكتمل' : status === 'paused' ? 'متوقف' : status === 'cancelled' ? 'ملغي' : status, status)} value={count as number} icon="📊" accent={status === 'active' ? 'border-s-green-500' : status === 'completed' ? 'border-s-blue-500' : 'border-s-gray-400'} gradient={status === 'active' ? 'from-green-50/50 to-white' : status === 'completed' ? 'from-blue-50/50 to-white' : 'from-gray-50 to-white'} />
+            <StatCard key={status} label={t(status === 'active' ? 'نشط' : status === 'completed' ? 'مكتمل' : status === 'paused' ? 'متوقف' : status === 'cancelled' ? 'ملغي' : status, status)} value={count as number} icon="📊" accent={status === 'active' ? 'border-l-green-500' : status === 'completed' ? 'border-l-blue-500' : 'border-l-gray-400'} gradient={status === 'active' ? 'from-green-50/50 to-white' : status === 'completed' ? 'from-blue-50/50 to-white' : 'from-gray-50 to-white'} />
           ))}
         </div>
       )}
@@ -1723,30 +1436,267 @@ function AgencyTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; on
 // ═══════════════════════════════════════
 // MAIN PAGE
 // ═══════════════════════════════════════
+// ═══════════════════════════════════════
+// REQUESTS ADMIN TAB
+// ═══════════════════════════════════════
+
+const STATUS_OPTIONS = [
+  { value: 'received', ar: 'تم الاستلام', en: 'Received', icon: '📩' },
+  { value: 'reviewing', ar: 'مراجعة', en: 'Reviewing', icon: '👀' },
+  { value: 'info_needed', ar: 'محتاج معلومات', en: 'Info Needed', icon: '❓' },
+  { value: 'meeting_scheduled', ar: 'اجتماع محدد', en: 'Meeting Set', icon: '📅' },
+  { value: 'in_progress', ar: 'جاري التنفيذ', en: 'In Progress', icon: '⚙️' },
+  { value: 'internal_review', ar: 'مراجعة داخلية', en: 'Internal Review', icon: '🔍' },
+  { value: 'revision', ar: 'تعديلات', en: 'Revision', icon: '✏️' },
+  { value: 'ready_for_delivery', ar: 'جاهز للتسليم', en: 'Ready', icon: '📦' },
+  { value: 'delivered', ar: 'تم التسليم', en: 'Delivered', icon: '✅' },
+  { value: 'completed', ar: 'مكتمل', en: 'Completed', icon: '🏆' },
+];
+
+function RequestsAdminTab({ t }: { t: T }) {
+  const [requests, setRequests] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<any>(null);
+  const [timeline, setTimeline] = useState<any[]>([]);
+  const [updateForm, setUpdateForm] = useState({
+    newStatus: '', title: '', titleAr: '', detail: '', detailAr: '',
+    estimatedDelivery: '', fileUrl: '', fileName: '', meetingLink: '', meetingDate: '',
+    isClientVisible: true,
+  });
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const data = await api('serviceRequest.listAll');
+    setRequests(Array.isArray(data) ? data : []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const loadTimeline = async (req: any) => {
+    setSelected(req);
+    setUpdateForm(f => ({ ...f, newStatus: req.status }));
+    const data = await api('serviceRequest.getTimeline', { requestId: req.id });
+    setTimeline(data?.updates || []);
+  };
+
+  const submitUpdate = async () => {
+    if (!updateForm.newStatus || !updateForm.title || !updateForm.titleAr) return;
+    setSaving(true);
+    try {
+      await apiMutation('serviceRequest.updateStatus', {
+        requestId: selected.id,
+        ...updateForm,
+      });
+      await load();
+      await loadTimeline({ ...selected, status: updateForm.newStatus });
+      setUpdateForm(f => ({ ...f, title: '', titleAr: '', detail: '', detailAr: '', fileUrl: '', fileName: '', meetingLink: '', meetingDate: '' }));
+    } catch {}
+    setSaving(false);
+  };
+
+  if (loading) return <LoadingSkeleton />;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold text-gray-800">{t('طلبات العملاء', 'Client Requests')}</h2>
+        <span className="text-sm text-gray-400">{requests.length} {t('طلب', 'requests')}</span>
+      </div>
+
+      {selected ? (
+        /* Detail View */
+        <div className="space-y-4">
+          <button onClick={() => setSelected(null)} className="text-sm text-indigo-600 hover:underline">
+            {t('← رجوع', '← Back')}
+          </button>
+
+          {/* Request info */}
+          <div className="p-5 rounded-xl border border-gray-200 bg-white">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-mono text-xs text-gray-400">#{selected.requestNumber}</span>
+              <span className="px-3 py-1 rounded-full text-xs font-bold" style={{
+                backgroundColor: (selected.statusLabel?.color || '#6366f1') + '20',
+                color: selected.statusLabel?.color || '#6366f1'
+              }}>
+                {selected.statusLabel?.icon} {t(selected.statusLabel?.ar, selected.statusLabel?.en)}
+              </span>
+            </div>
+            <h3 className="text-base font-bold text-gray-900">{t(selected.serviceTypeAr, selected.serviceType)}</h3>
+            <p className="text-xs text-gray-400 mt-1">User #{selected.userId} · {new Date(selected.createdAt).toLocaleDateString()}</p>
+            {selected.description && <p className="text-sm text-gray-600 mt-2 p-3 bg-gray-50 rounded-lg">{selected.description}</p>}
+          </div>
+
+          {/* Status Update Form */}
+          <div className="p-5 rounded-xl border-2 border-indigo-200 bg-indigo-50/50">
+            <h4 className="text-sm font-bold text-indigo-800 mb-3">{t('تحديث الحالة', 'Update Status')}</h4>
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('الحالة الجديدة', 'New Status')}</label>
+                <select value={updateForm.newStatus} onChange={e => setUpdateForm({ ...updateForm, newStatus: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white">
+                  {STATUS_OPTIONS.map(s => (
+                    <option key={s.value} value={s.value}>{s.icon} {t(s.ar, s.en)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('موعد التسليم', 'Est. Delivery')}</label>
+                <input type="date" value={updateForm.estimatedDelivery} onChange={e => setUpdateForm({ ...updateForm, estimatedDelivery: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('العنوان (عربي)', 'Title (Arabic)')}</label>
+                <input value={updateForm.titleAr} onChange={e => setUpdateForm({ ...updateForm, titleAr: e.target.value })}
+                  placeholder={t('مثال: بدأنا الشغل', 'e.g. Work started')}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('العنوان (إنجليزي)', 'Title (English)')}</label>
+                <input value={updateForm.title} onChange={e => setUpdateForm({ ...updateForm, title: e.target.value })}
+                  placeholder="e.g. Work started"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('تفاصيل (عربي)', 'Detail (Arabic)')}</label>
+                <textarea rows={2} value={updateForm.detailAr} onChange={e => setUpdateForm({ ...updateForm, detailAr: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm resize-none" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('تفاصيل (إنجليزي)', 'Detail (English)')}</label>
+                <textarea rows={2} value={updateForm.detail} onChange={e => setUpdateForm({ ...updateForm, detail: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm resize-none" />
+              </div>
+            </div>
+            {/* Optional: file + meeting + transcript */}
+            <details className="mb-3">
+              <summary className="text-xs text-indigo-600 cursor-pointer font-medium">{t('إضافة ملف / اجتماع / transcript', 'Add file / meeting / transcript')}</summary>
+              <div className="mt-3 space-y-3">
+                {/* Meeting section */}
+                <div className="p-3 rounded-lg bg-blue-50 border border-blue-100">
+                  <p className="text-xs font-bold text-blue-700 mb-2">📅 {t('اجتماع', 'Meeting')}</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input placeholder={t('رابط (Zoom/Meet)', 'Meeting link')} value={updateForm.meetingLink}
+                      onChange={e => setUpdateForm({ ...updateForm, meetingLink: e.target.value })}
+                      className="px-3 py-2 rounded-lg border border-blue-200 text-sm bg-white" />
+                    <input type="datetime-local" value={updateForm.meetingDate}
+                      onChange={e => setUpdateForm({ ...updateForm, meetingDate: e.target.value })}
+                      className="px-3 py-2 rounded-lg border border-blue-200 text-sm bg-white" />
+                  </div>
+                </div>
+                {/* File section */}
+                <div className="p-3 rounded-lg bg-green-50 border border-green-100">
+                  <p className="text-xs font-bold text-green-700 mb-2">📎 {t('ملف / تسليم', 'File / Delivery')}</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input placeholder={t('رابط الملف (Google Drive, etc.)', 'File URL')} value={updateForm.fileUrl}
+                      onChange={e => setUpdateForm({ ...updateForm, fileUrl: e.target.value })}
+                      className="px-3 py-2 rounded-lg border border-green-200 text-sm bg-white" />
+                    <input placeholder={t('اسم الملف (مثال: Brand-Report.pdf)', 'File name')} value={updateForm.fileName}
+                      onChange={e => setUpdateForm({ ...updateForm, fileName: e.target.value })}
+                      className="px-3 py-2 rounded-lg border border-green-200 text-sm bg-white" />
+                  </div>
+                </div>
+                {/* Transcript section */}
+                <div className="p-3 rounded-lg bg-purple-50 border border-purple-100">
+                  <p className="text-xs font-bold text-purple-700 mb-2">📝 {t('ملخص / Transcript الاجتماع', 'Meeting Summary / Transcript')}</p>
+                  <p className="text-xs text-purple-500 mb-2">{t('الصق ملخص الاجتماع أو نقاط الحوار هنا — هيظهر للعميل كتحديث منفصل', 'Paste meeting summary or key discussion points — will show to client as update')}</p>
+                  <textarea rows={5} value={updateForm.detailAr}
+                    onChange={e => setUpdateForm({ ...updateForm, detailAr: e.target.value })}
+                    placeholder={t('النقاط الرئيسية:\n• اتفقنا على ...\n• الخطوة الجاية ...\n• موعد التسليم ...', 'Key points:\n• Agreed on...\n• Next step...\n• Delivery date...')}
+                    className="w-full px-3 py-2 rounded-lg border border-purple-200 text-sm bg-white resize-none" />
+                </div>
+              </div>
+            </details>
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 text-xs text-gray-600">
+                <input type="checkbox" checked={updateForm.isClientVisible}
+                  onChange={e => setUpdateForm({ ...updateForm, isClientVisible: e.target.checked })} />
+                {t('ظاهر للعميل', 'Client visible')}
+              </label>
+              <div className="flex-1" />
+              <button onClick={submitUpdate} disabled={saving || !updateForm.title || !updateForm.titleAr}
+                className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-500 transition disabled:opacity-50">
+                {saving ? t('جاري...', 'Saving...') : t('حفظ التحديث', 'Save Update')}
+              </button>
+            </div>
+          </div>
+
+          {/* Timeline */}
+          {timeline.length > 0 && (
+            <div className="p-5 rounded-xl border border-gray-200 bg-white">
+              <h4 className="text-sm font-bold text-gray-600 mb-3">{t('سجل التحديثات', 'Timeline')}</h4>
+              <div className="space-y-3">
+                {timeline.map((u: any) => (
+                  <div key={u.id} className="flex gap-3 p-3 rounded-lg bg-gray-50">
+                    <div className="w-2 h-2 rounded-full bg-indigo-400 mt-2 flex-shrink-0" />
+                    <div>
+                      <div className="text-sm font-medium text-gray-800">{t(u.titleAr, u.title)}</div>
+                      {(u.detail || u.detailAr) && <p className="text-xs text-gray-500 mt-0.5">{t(u.detailAr, u.detail)}</p>}
+                      {u.fileUrl && <a href={u.fileUrl} target="_blank" rel="noopener" className="text-xs text-indigo-600 mt-1 inline-block">📎 {u.fileName || 'File'}</a>}
+                      {u.meetingLink && <a href={u.meetingLink} target="_blank" rel="noopener" className="text-xs text-blue-600 mt-1 inline-block ml-3">📅 Meeting</a>}
+                      <span className="block text-xs text-gray-300 mt-1">{new Date(u.createdAt).toLocaleString()} · {u.isClientVisible ? '👁 visible' : '🔒 internal'}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* List View */
+        <div className="space-y-2">
+          {requests.length === 0 ? (
+            <p className="text-center text-gray-400 py-8">{t('لا يوجد طلبات', 'No requests')}</p>
+          ) : requests.map((req: any) => (
+            <button key={req.id} onClick={() => loadTimeline(req)}
+              className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition text-left">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-mono text-xs text-gray-400">#{req.requestNumber}</span>
+                  <span className="px-2 py-0.5 rounded-full text-xs font-bold" style={{
+                    backgroundColor: (req.statusLabel?.color || '#6366f1') + '20',
+                    color: req.statusLabel?.color || '#6366f1'
+                  }}>
+                    {req.statusLabel?.icon} {t(req.statusLabel?.ar, req.statusLabel?.en)}
+                  </span>
+                </div>
+                <div className="text-sm font-medium text-gray-800">{t(req.serviceTypeAr, req.serviceType)}</div>
+                <div className="text-xs text-gray-400">User #{req.userId} · {new Date(req.createdAt).toLocaleDateString()}</div>
+              </div>
+              <span className="text-gray-300">→</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const TABS: Array<{ id: Tab; labelAr: string; labelEn: string; icon: string }> = [
-  { id: 'command', labelAr: 'مركز القيادة', labelEn: 'Command', icon: '🎛️' },
   { id: 'overview', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: '📊' },
   { id: 'cms', labelAr: 'المحتوى', labelEn: 'CMS', icon: '📝' },
   { id: 'agency', labelAr: 'الوكالة', labelEn: 'Agency', icon: '🏢' },
+  { id: 'requests', labelAr: 'طلبات العملاء', labelEn: 'Client Requests', icon: '📋' },
   { id: 'users', labelAr: 'المستخدمين', labelEn: 'Users', icon: '👥' },
   { id: 'credits', labelAr: 'الكريدت', labelEn: 'Credits', icon: '⚡' },
   { id: 'tools', labelAr: 'الأدوات', labelEn: 'Tools', icon: '🔬' },
   { id: 'prompts', labelAr: 'الأوامر', labelEn: 'Prompts', icon: '🧠' },
   { id: 'pricing', labelAr: 'الباقات والخصومات', labelEn: 'Plans & Promos', icon: '💰' },
-  { id: 'email', labelAr: 'إيميل وأتمتة', labelEn: 'Email', icon: '📧' },
   { id: 'team', labelAr: 'الفريق', labelEn: 'Team', icon: '👔' },
   { id: 'payments', labelAr: 'المدفوعات', labelEn: 'Payments', icon: '💳' },
   { id: 'webhooks', labelAr: 'الإشعارات', labelEn: 'Webhooks', icon: '🔔' },
   { id: 'config', labelAr: 'الإعدادات', labelEn: 'Config', icon: '⚙️' },
 ];
 
-type AdminGate = 'loading' | 'anon' | 'denied' | 'ok';
-
 export default function WzrdAdmin() {
-  const [tab, setTab] = useState<Tab>('command');
+  const [tab, setTab] = useState<Tab>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [adminUser, setAdminUser] = useState<{ name?: string } | null | undefined>(undefined);
-  const [gate, setGate] = useState<AdminGate>('loading');
   const [toast, setToast] = useState<{ message: string; type?: 'success' | 'error' } | null>(null);
   const [locale, setLocale] = useState<'ar' | 'en'>(() =>
     (typeof window !== 'undefined' && (localStorage.getItem('wzrd-admin-locale') as 'ar' | 'en')) || 'ar'
@@ -1759,25 +1709,7 @@ export default function WzrdAdmin() {
   };
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const meRes = await fetch('/api/trpc/auth.me', { credentials: 'include' });
-      const meJ = await meRes.json().catch(() => ({}));
-      const user = meJ?.result?.data?.json ?? meJ?.result?.data ?? null;
-      if (cancelled) return;
-      setAdminUser(user && typeof user === 'object' ? user : null);
-      if (!user) {
-        setGate('anon');
-        return;
-      }
-      const bsRes = await fetch('/api/trpc/wzrdAdmin.bootstrap', { credentials: 'include' });
-      const bsJ = await bsRes.json().catch(() => ({}));
-      const bs = bsJ?.result?.data?.json ?? bsJ?.result?.data;
-      if (cancelled) return;
-      if (bs?.superAdmin) setGate('ok');
-      else setGate('denied');
-    })();
-    return () => { cancelled = true; };
+    fetch('/api/debug/whoami', { credentials: 'include' }).then(r => r.json()).then(d => setAdminUser(d.user || null)).catch(() => setAdminUser(null));
   }, []);
 
   useEffect(() => {
@@ -1798,139 +1730,84 @@ export default function WzrdAdmin() {
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => setToast({ message: msg, type });
   const dismissToast = () => setToast(null);
 
-  const tabMeta = TABS.find((x) => x.id === tab);
-
   return (
-    <div dir={isRtl ? 'rtl' : 'ltr'} className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/40 text-gray-900 font-sans flex antialiased">
+    <div dir={isRtl ? 'rtl' : 'ltr'} className="min-h-screen bg-gray-50 text-gray-900 font-sans flex">
       {toast && <Toast message={toast.message} type={toast.type} onDismiss={dismissToast} />}
 
-      {gate === 'denied' && (
-        <div className="fixed inset-0 z-[98] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-6">
-          <div className="max-w-md bg-white rounded-3xl p-8 shadow-2xl shadow-indigo-950/10 text-center border border-gray-100 ring-1 ring-black/5">
-            <div className="text-4xl mb-3" aria-hidden>🔒</div>
-            <p className="text-lg font-bold text-gray-900 mb-2">{t('مفيش صلاحية سوبر أدمن', 'Not a super admin')}</p>
-            <p className="text-sm text-gray-600 mb-6">
-              {t('الحساب مسجّل لكن مش من قائمة المالكين. اتواصل مع مدير المنصة أو ضبط ADMIN_EMAILS على Railway.', 'Your account is signed in but is not allowlisted. Ask the owner or set ADMIN_EMAILS in Railway.')}
-            </p>
-            <a href="/welcome" className="inline-flex px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-500 shadow-lg shadow-indigo-600/25 transition-colors">{t('العودة للموقع', 'Back to site')}</a>
-          </div>
-        </div>
-      )}
-
       {/* Session guard — show banner if not logged in */}
-      {gate === 'anon' && (
-        <div className="fixed top-0 left-0 right-0 z-[99] bg-gradient-to-r from-amber-500 to-orange-500 text-white py-2.5 px-4 text-center text-sm shadow-md">
-          {t('سجّل دخولك الأول', 'Please log in first')} —{' '}
-          <a href="/login" className="underline font-bold underline-offset-2 hover:text-white/90">{t('تسجيل الدخول', 'Sign in')}</a>
+      {adminUser === null && (
+        <div className="fixed top-0 left-0 right-0 z-[99] bg-amber-500 text-white py-2 px-4 text-center text-sm">
+          {t('سجّل دخولك الأول', 'Please log in first')} — <a href="/login" className="underline font-bold">{t('تسجيل الدخول', 'Sign in')}</a>
         </div>
       )}
 
       {/* Sidebar - fixed 240px */}
-      <aside className={`fixed top-0 z-40 w-64 h-full bg-white/95 backdrop-blur-md border-s border-gray-200/80 shadow-lg shadow-slate-900/5 flex flex-col md:translate-x-0 transition-transform duration-200 ease-out
+      <aside className={`fixed top-0 z-40 w-60 h-full bg-white border border-gray-200 shadow-sm flex flex-col md:translate-x-0 transition-transform duration-200
         ${isRtl ? 'right-0' : 'left-0'}
         ${sidebarOpen ? 'translate-x-0' : isRtl ? 'translate-x-full md:translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
-        <div className="p-5 border-b border-gray-100/90 bg-gradient-to-b from-white to-slate-50/50">
+        <div className="p-5 border-b border-gray-100">
           <div className="flex items-center gap-2">
             <span className="font-mono text-lg font-bold">WZRD <span className="text-indigo-600">AI</span></span>
             <span className="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full font-bold">{t('أدمن', 'ADMIN')}</span>
           </div>
-          <p className="text-[10px] text-gray-500 mt-2 leading-relaxed">
-            {t('إدارة الموقع والمنتج العام فقط — منفصلة تماماً عن Primo Command Center.', 'Public website & product only — separate from Primo Command Center.')}
-          </p>
         </div>
-        <nav className="flex-1 p-2.5 space-y-1 overflow-y-auto overscroll-contain">
+        <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
           {TABS.map(tabItem => (
             <button key={tabItem.id} onClick={() => { setTab(tabItem.id); setSidebarOpen(false); }}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
-                tab === tabItem.id
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20 ring-1 ring-indigo-500/30'
-                  : 'text-gray-600 hover:bg-gray-100/90 hover:text-gray-900'
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition ${
+                tab === tabItem.id ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'
               }`}
+              style={tab === tabItem.id ? (isRtl ? { borderRight: '4px solid rgb(79 70 229)' } : { borderLeft: '4px solid rgb(79 70 229)' }) : {}}
             >
-              <span className="text-base shrink-0 opacity-90">{tabItem.icon}</span>
-              <span className="truncate text-start">{locale === 'ar' ? tabItem.labelAr : tabItem.labelEn}</span>
+              <span>{tabItem.icon}</span> {locale === 'ar' ? tabItem.labelAr : tabItem.labelEn}
             </button>
           ))}
         </nav>
-        <div className="p-4 border-t border-gray-100 bg-slate-50/60 text-[10px] text-gray-500 text-center leading-relaxed">
-          <span className="inline-flex items-center gap-1 justify-center flex-wrap">
-            <kbd className="px-1.5 py-0.5 rounded-md bg-white border border-gray-200 font-mono text-[9px] shadow-sm">1</kbd>
-            <span className="opacity-50">–</span>
-            <kbd className="px-1.5 py-0.5 rounded-md bg-white border border-gray-200 font-mono text-[9px] shadow-sm">9</kbd>
-            <span className="ms-1">{t('تبويبات', 'tabs')}</span>
-          </span>
-          <div className="mt-1 text-gray-400">WZRD AI · {t('عمليات', 'Operations')}</div>
+        <div className="p-4 border-t border-gray-100 text-[10px] text-gray-400 text-center">
+          <span className="opacity-60">{t('1–9 لوحة', '1–9 tabs')}</span><br />Primo Marca © 2026
         </div>
       </aside>
 
       {/* Overlay for mobile */}
-      {sidebarOpen && <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] z-30 md:hidden" onClick={() => setSidebarOpen(false)} aria-hidden />}
+      {sidebarOpen && <div className="fixed inset-0 bg-black/30 z-30 md:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      {/* Main content — offset for fixed sidebar (logical margin) */}
-      <div className="flex-1 flex flex-col min-w-0 md:ms-64">
+      {/* Main content */}
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="sticky top-0 z-20 border-b border-gray-200/80 bg-white/80 backdrop-blur-md shadow-sm shadow-slate-900/5">
-          <div className="px-4 md:px-6 py-3 flex items-center justify-between gap-4 flex-wrap">
-            <button onClick={() => setSidebarOpen(true)} className="p-2.5 rounded-xl hover:bg-gray-100 md:hidden text-gray-700" aria-label="Menu">
-              <span className="text-xl leading-none">☰</span>
+        <header className="sticky top-0 z-20 border-b border-gray-200 bg-white shadow-sm">
+          <div className="px-4 md:px-6 py-3 flex items-center justify-between gap-4">
+            <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 md:hidden" aria-label="Menu">
+              <span className="text-xl">☰</span>
             </button>
-            <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
-              <div>
-                <p className="text-sm text-gray-500">
-                  {t('مرحباً،', 'Hi,')} <span className="font-semibold text-gray-900">{adminUser?.name || 'Admin'}</span>
-                </p>
-                {gate === 'ok' && tabMeta && (
-                  <p className="text-xs text-indigo-600 font-medium truncate">
-                    {locale === 'ar' ? tabMeta.labelAr : tabMeta.labelEn}
-                  </p>
-                )}
-              </div>
-              <span className="hidden sm:inline text-xs tabular-nums text-gray-400 border-s border-gray-200 ps-4">{timeStr}</span>
+            <div className="flex-1 flex items-center gap-4">
+              <p className="text-sm text-gray-600">{t('مرحباً،', 'Hi,')} {adminUser?.name || 'Admin'}</p>
+              <span className="text-xs text-gray-400">{timeStr}</span>
             </div>
-            <div className="flex items-center gap-2 flex-wrap justify-end">
-              <button type="button" onClick={() => { setTab('agency'); setSidebarOpen(false); }} className="px-3 py-1.5 rounded-xl bg-white border border-indigo-200 text-indigo-700 text-xs font-semibold hover:bg-indigo-50 shadow-sm transition-colors">
-                + {t('عميل', 'Client')}
-              </button>
-              <button type="button" onClick={() => { setTab('users'); setSidebarOpen(false); }} className="px-3 py-1.5 rounded-xl bg-white border border-amber-200 text-amber-800 text-xs font-semibold hover:bg-amber-50 shadow-sm transition-colors">
-                + {t('كريدت', 'Credits')}
-              </button>
-              <button type="button" onClick={toggleLocale} className="text-[11px] px-2.5 py-1.5 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 font-semibold border border-gray-200/80">
-                {locale === 'ar' ? 'EN' : 'ع'}
-              </button>
-              <a href="/welcome" className="text-xs font-medium text-indigo-600 hover:text-indigo-500 px-2 py-1 rounded-lg hover:bg-indigo-50 transition-colors">
-                {t('الموقع العام', 'Public site')} ↗
-              </a>
+            <div className="flex items-center gap-2">
+              <button onClick={() => { setTab('agency'); setSidebarOpen(false); }} className="px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 text-xs font-medium hover:bg-indigo-100">+ {t('عميل', 'Client')}</button>
+              <button onClick={() => { setTab('users'); setSidebarOpen(false); }} className="px-3 py-1.5 rounded-lg bg-amber-50 text-amber-600 text-xs font-medium hover:bg-amber-100">+ {t('كريدت', 'Credits')}</button>
+              <span className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 cursor-pointer" title="Notifications">🔔</span>
+              <button onClick={toggleLocale} className="text-[11px] px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200 font-medium">{locale === 'ar' ? 'EN' : 'ع'}</button>
+              <a href="/" className="text-xs text-gray-500 hover:text-amber-600">{t('← لوحة التحكم', '← Dashboard')}</a>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 overflow-auto">
-          <div className="max-w-5xl mx-auto w-full">
-            {gate === 'loading' && (
-              <div className="py-24 flex flex-col items-center gap-4 text-gray-500 text-sm">
-                <div className="h-10 w-10 rounded-full border-2 border-indigo-200 border-t-indigo-600 animate-spin" aria-hidden />
-                <span>{t('جاري التحقق من الصلاحيات…', 'Verifying access…')}</span>
-              </div>
-            )}
-            {tab === 'command' && gate === 'ok' && <CommandCenterTab t={t} setTab={setTab} />}
-            {tab === 'overview' && gate === 'ok' && <OverviewTab t={t} />}
-            {tab === 'cms' && gate === 'ok' && <CmsTab t={t} onSuccess={() => showToast(t('تم الحفظ', 'Saved!'))} onError={(m) => showToast(m, 'error')} />}
-            {tab === 'agency' && gate === 'ok' && <AgencyTab t={t} onSuccess={() => showToast(t('تم الحفظ', 'Saved!'))} onError={(m) => showToast(m, 'error')} />}
-            {tab === 'users' && gate === 'ok' && <UsersTab t={t} onSuccess={(m) => showToast(m || t('تم إضافة الكريدت', 'Credits added!'))} onError={(m) => showToast(m, 'error')} />}
-            {tab === 'credits' && gate === 'ok' && <CreditsTab t={t} />}
-            {tab === 'tools' && gate === 'ok' && <ToolsTab t={t} />}
-            {tab === 'prompts' && gate === 'ok' && <PromptsTab t={t} />}
-            {tab === 'pricing' && gate === 'ok' && <PricingTab t={t} onSuccess={() => showToast(t('تم الحفظ', 'Saved!'))} onError={(m) => showToast(m, 'error')} />}
-            {tab === 'email' && gate === 'ok' && (
-              <EmailAutomationTab
-                t={t}
-                onToast={(msg, err) => showToast(msg, err ? 'error' : 'success')}
-              />
-            )}
-            {tab === 'team' && gate === 'ok' && <TeamTab t={t} />}
-            {tab === 'payments' && gate === 'ok' && <PaymentsTab t={t} />}
-            {tab === 'webhooks' && gate === 'ok' && <WebhooksTab t={t} />}
-            {tab === 'config' && gate === 'ok' && <ConfigTab t={t} />}
+        <main className="flex-1 p-6 overflow-auto">
+          <div className="max-w-5xl mx-auto">
+            {tab === 'overview' && <OverviewTab t={t} />}
+            {tab === 'cms' && <CmsTab t={t} onSuccess={() => showToast(t('تم الحفظ', 'Saved!'))} onError={(m) => showToast(m, 'error')} />}
+            {tab === 'agency' && <AgencyTab t={t} onSuccess={() => showToast(t('تم الحفظ', 'Saved!'))} onError={(m) => showToast(m, 'error')} />}
+            {tab === 'users' && <UsersTab t={t} onSuccess={(m) => showToast(m || t('تم إضافة الكريدت', 'Credits added!'))} onError={(m) => showToast(m, 'error')} />}
+            {tab === 'credits' && <CreditsTab t={t} />}
+            {tab === 'tools' && <ToolsTab t={t} />}
+            {tab === 'prompts' && <PromptsTab t={t} />}
+            {tab === 'pricing' && <PricingTab t={t} onSuccess={() => showToast(t('تم الحفظ', 'Saved!'))} onError={(m) => showToast(m, 'error')} />}
+            {tab === 'team' && <TeamTab t={t} />}
+            {tab === 'payments' && <PaymentsTab t={t} />}
+            {tab === 'webhooks' && <WebhooksTab t={t} />}
+            {tab === 'config' && <ConfigTab t={t} />}
+            {tab === 'requests' && <RequestsAdminTab t={t} />}
           </div>
         </main>
       </div>

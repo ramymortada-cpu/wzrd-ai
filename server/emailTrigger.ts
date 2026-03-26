@@ -6,7 +6,7 @@
  */
 
 import { logger } from "./_core/logger";
-import { getDb } from "./db";
+import { getDb } from "./db/index";
 import { automationRules, emailTemplates, emailSendLog, users } from "../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 
@@ -71,21 +71,16 @@ export async function fireEmailTrigger(
           .replace(/\{\{CREDITS\}\}/g, String(metadata?.credits || ''))
           .replace(/\{\{TOOL_NAME\}\}/g, String(metadata?.toolName || ''));
 
+        // Try to send
         try {
-          const apiKey = process.env.EMAIL_API_KEY;
-          const from = process.env.EMAIL_FROM || 'WZRD AI <noreply@wzrd.ai>';
-          if (!apiKey) throw new Error('EMAIL_API_KEY not set');
-          const res = await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-            body: JSON.stringify({
-              from,
-              to: [user.email],
-              subject: template.subjectAr || template.subject,
-              html,
-            }),
+          const { Resend } = await import('resend');
+          const resend = new Resend(process.env.EMAIL_API_KEY);
+          await resend.emails.send({
+            from: process.env.EMAIL_FROM || 'WZRD AI <noreply@wzrd.ai>',
+            to: user.email,
+            subject: template.subjectAr || template.subject,
+            html,
           });
-          if (!res.ok) throw new Error(`Resend HTTP ${res.status}`);
 
           await db.insert(emailSendLog).values({
             userId,
