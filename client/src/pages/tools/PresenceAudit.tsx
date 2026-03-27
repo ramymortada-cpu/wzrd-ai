@@ -6,6 +6,9 @@ export default function PresenceAudit() {
   return <ToolPage config={{
     id: 'presence_audit', name: 'Presence Audit', nameAr: 'فحص الحضور الرقمي', icon: '🌐', cost: 25,
     endpoint: 'tools.presenceAudit',
+    paywallAfterFreePreview: true,
+    freePreviewEndpoint: 'tools.freePresenceAuditDiagnosis',
+    unlockEndpoint: 'tools.unlockPresenceAudit',
     description: 'How you appear across social, web, and inquiry channels',
     descriptionAr: 'إزاي بتظهر على السوشيال والويب',
     guideUrl: '/guides/brand-health', guideTitle: 'Brand Health Guide',

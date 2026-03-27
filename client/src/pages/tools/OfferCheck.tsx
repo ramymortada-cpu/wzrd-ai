@@ -6,6 +6,9 @@ export default function OfferCheck() {
   return <ToolPage config={{
     id: 'offer_check', name: 'Offer Logic Check', nameAr: 'فحص منطق العرض', icon: '📦', cost: 25,
     endpoint: 'tools.offerCheck',
+    paywallAfterFreePreview: true,
+    freePreviewEndpoint: 'tools.freeOfferCheckDiagnosis',
+    unlockEndpoint: 'tools.unlockOfferCheck',
     description: 'Is your offer structure clear and your pricing logical?',
     descriptionAr: 'هل عرضك واضح وتسعيرك منطقي؟',
     guideUrl: '/guides/offer-logic', guideTitle: 'Offer Logic 101',

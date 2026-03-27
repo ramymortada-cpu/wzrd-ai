@@ -6,6 +6,9 @@ export default function IdentitySnapshot() {
   return <ToolPage config={{
     id: 'identity_snapshot', name: 'Identity Snapshot', nameAr: 'لقطة الهوية', icon: '🪞', cost: 20,
     endpoint: 'tools.identitySnapshot',
+    paywallAfterFreePreview: true,
+    freePreviewEndpoint: 'tools.freeIdentitySnapshotDiagnosis',
+    unlockEndpoint: 'tools.unlockIdentitySnapshot',
     description: 'Does your brand personality match your audience?',
     descriptionAr: 'هل شخصية البراند بتاعك متوافقة مع جمهورك؟',
     guideUrl: '/guides/brand-identity', guideTitle: 'What Is Brand Identity',

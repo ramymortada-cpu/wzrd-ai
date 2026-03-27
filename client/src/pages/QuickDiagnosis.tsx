@@ -8,9 +8,8 @@ type QDForm = Record<QDFormKey, string>;
 interface QDResult {
   score: number;
   label: string;
-  creditsUsed?: number;
-  findings?: Array<{ title: string; detail?: string; severity: string }>;
-  actionItems?: Array<{ task: string }>;
+  findings?: Array<{ title: string; severity: string }>;
+  criticalCount?: number;
 }
 
 export default function QuickDiagnosis() {
@@ -56,10 +55,9 @@ export default function QuickDiagnosis() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/trpc/tools.quickDiagnosis', {
+      const res = await fetch('/api/trpc/tools.freeQuickDiagnosis', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ json: form }),
       });
       const d = await res.json();
@@ -89,7 +87,7 @@ export default function QuickDiagnosis() {
               <span className="text-4xl font-bold" style={{ color: scoreColor(result.score) }}>{result.score}</span>
             </div>
             <h2 className="text-xl font-bold text-gray-900">{form.companyName}</h2>
-            <p className="text-sm text-gray-500">{result.label} · {result.creditsUsed} {isAr ? 'كريدت' : 'credits'}</p>
+            <p className="text-sm text-gray-500">{result.label} · {isAr ? 'مجاناً — معاينة سريعة' : 'Free quick preview'}</p>
           </div>
 
           {/* Findings */}
@@ -100,31 +98,28 @@ export default function QuickDiagnosis() {
                   <span className={`w-2 h-2 rounded-full ${f.severity === 'high' ? 'bg-red-500' : f.severity === 'low' ? 'bg-green-500' : 'bg-yellow-500'}`} />
                   <h4 className="text-sm font-bold text-gray-900">{f.title}</h4>
                 </div>
-                <p className="text-xs text-gray-500">{f.detail}</p>
+                <p className="text-xs text-gray-400 blur-[2px] select-none">
+                  {isAr ? 'التفاصيل والحلول في التشخيص الكامل ←' : 'Full details in complete diagnosis →'}
+                </p>
               </div>
             ))}
           </div>
 
-          {/* Action Items */}
-          {(result.actionItems?.length ?? 0) > 0 ? (
-            <div className="bg-emerald-50 rounded-2xl border border-emerald-200 p-5 mb-6">
-              <h3 className="text-sm font-bold text-emerald-800 mb-3">{isAr ? 'خطواتك العملية' : 'Your Action Items'}</h3>
-              {(result.actionItems ?? []).map((item, i: number) => (
-                <div key={i} className="flex items-start gap-2 mb-2">
-                  <span className="text-emerald-600 text-xs font-bold mt-0.5">{i + 1}.</span>
-                  <span className="text-xs text-emerald-700">{item.task}</span>
-                </div>
-              ))}
-            </div>
+          {(result.criticalCount ?? 0) > 0 ? (
+            <p className="text-center text-sm font-semibold text-amber-700 mb-4">
+              {isAr
+                ? `${result.criticalCount} تحذير حرج — افتح التشخيص الكامل للخطة`
+                : `${result.criticalCount} critical flags — open full diagnosis for the plan`}
+            </p>
           ) : null}
 
           {/* CTAs */}
           <div className="space-y-3">
-            <a href="/tools/brand-diagnosis" className="block w-full py-4 bg-indigo-600 text-white rounded-2xl font-semibold text-center text-base hover:bg-indigo-500 transition">
-              {isAr ? 'عايز نتيجة أدق؟ شغّل التشخيص الكامل ←' : '→ Want more detail? Run Full Diagnosis'}
+            <a href="/signup" className="block w-full py-4 bg-indigo-600 text-white rounded-2xl font-semibold text-center text-base hover:bg-indigo-500 transition">
+              {isAr ? 'سجّل مجاناً واحصل على تشخيص كامل مع الكريدت ←' : '→ Sign up free — full diagnosis with credits'}
             </a>
-            <a href="/my-brand" className="block w-full py-3 bg-white border border-gray-200 rounded-2xl text-sm font-medium text-gray-700 text-center hover:bg-gray-50 transition">
-              {isAr ? 'تابع صحة البراند' : 'Track Brand Health'}
+            <a href="/tools/brand-diagnosis" className="block w-full py-3 bg-white border border-gray-200 rounded-2xl text-sm font-medium text-gray-700 text-center hover:bg-gray-50 transition">
+              {isAr ? 'عندك حساب؟ التشخيص الكامل ←' : 'Have an account? Full diagnosis →'}
             </a>
           </div>
         </div>

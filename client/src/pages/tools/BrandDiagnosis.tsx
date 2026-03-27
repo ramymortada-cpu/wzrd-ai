@@ -6,6 +6,7 @@ export default function BrandDiagnosis() {
   return <ToolPage config={{
     id: 'brand_diagnosis', name: 'Brand Diagnosis', nameAr: 'تشخيص البراند', icon: '🔬', cost: 20,
     endpoint: 'tools.brandDiagnosis',
+    paywallAfterFreePreview: true,
     description: 'Overall brand health score with top issues identified',
     descriptionAr: 'نتيجة صحة البراند الشاملة مع أهم المشاكل المكتشفة',
     guideUrl: '/guides/brand-health', guideTitle: 'How to Audit Your Brand Health',
