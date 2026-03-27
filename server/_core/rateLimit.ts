@@ -150,6 +150,13 @@ export const rateLimiters = {
     message: 'Too many signup attempts. Please try again later.',
   }),
 
+  /** Free report lead magnet — 3/hour per IP (LLM + DB write) */
+  freeReport: createRateLimit({
+    max: 3,
+    windowMs: 60 * 60_000,
+    message: 'Please wait before requesting another report.',
+  }),
+
   /** Credits purchase — 5 per hour (prevents payment abuse) */
   purchase: createRateLimit({
     max: 5,

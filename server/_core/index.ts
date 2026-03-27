@@ -53,6 +53,8 @@ async function startServer() {
   // === RATE LIMITING ON PUBLIC ENDPOINTS ===
   // Quick-check uses LLM — most aggressive limiting (3 req/min)
   app.use('/api/trpc/leads.submitQuickCheck', rateLimiters.quickCheck);
+  // Free report lead magnet — 3 req/hour per IP
+  app.use('/api/trpc/leads.generateFreeReport', rateLimiters.freeReport);
   // Portal endpoints (30 req/min)
   app.use('/api/trpc/portal.viewProject', rateLimiters.portal);
   app.use('/api/trpc/portal.addComment', rateLimiters.publicWrite);
