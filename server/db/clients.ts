@@ -75,6 +75,20 @@ export async function getClientById(id: number): Promise<Client | null> {
   return result[0] || null;
 }
 
+/** Match CRM client by email (case-insensitive). Used to skip creating leads for existing clients. */
+export async function getClientByEmail(email: string): Promise<Client | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) return null;
+  const result = await db
+    .select()
+    .from(clients)
+    .where(and(isNull(clients.deletedAt), sql`LOWER(${clients.email}) = ${normalized}`))
+    .limit(1);
+  return result[0] || null;
+}
+
 /**
  * Update a client by ID.
  */

@@ -18,6 +18,7 @@ import { createPublicUser, getUserByEmail } from "../db";
 import { addCredits, SIGNUP_BONUS } from "../db";
 import { sendWelcomeEmail } from "../wzrdEmails";
 import { signSession } from "../_core/session";
+import { isOwnerAdmin } from "../_core/authorization";
 
 // In-memory OTP store (email → { code, expires })
 // In production with multiple servers, use Redis instead
@@ -32,8 +33,15 @@ setInterval(() => {
 }, 10 * 60 * 1000);
 
 export const authRouter = router({
-  /** Get current user */
-  me: publicProcedure.query(opts => opts.ctx.user),
+  /** Get current user (+ canAccessCommandCenter for Primo / admin nav) */
+  me: publicProcedure.query((opts) => {
+    const u = opts.ctx.user;
+    if (!u) return null;
+    return {
+      ...u,
+      canAccessCommandCenter: isOwnerAdmin({ email: u.email ?? undefined, role: u.role }),
+    };
+  }),
   
   /** Public signup — creates user + 100 credits */
   signup: publicProcedure

@@ -18,6 +18,10 @@ import { logger } from "../_core/logger";
 import {
   createClient, getClients, getClientById, updateClient, softDeleteClient,
 } from "../db/clients";
+import { getUserByEmail } from "../db/users";
+import { getDb } from "../db";
+import { diagnosisHistory } from "../../drizzle/schema";
+import { desc, eq } from "drizzle-orm";
 import { deepResearch } from "../liveIntelligence";
 
 export const clientsRouter = router({
@@ -35,6 +39,32 @@ export const clientsRouter = router({
     .input(z.object({ id: z.number().int().positive() }))
     .query(async ({ input }) => {
       return getClientById(input.id);
+    }),
+
+  /** WZRD tool diagnosis history for users whose email matches this client (Brand Health Tracker data). */
+  diagnosisForClient: protectedProcedure
+    .input(z.object({ clientId: z.number().int().positive() }))
+    .query(async ({ input, ctx }) => {
+      checkEditor(ctx);
+      const client = await getClientById(input.clientId);
+      const cEmail = client?.email?.trim();
+      if (!cEmail) return [];
+      let user = await getUserByEmail(cEmail);
+      if (!user) user = await getUserByEmail(cEmail.toLowerCase());
+      if (!user) return [];
+      const db = await getDb();
+      if (!db) return [];
+      const rows = await db
+        .select()
+        .from(diagnosisHistory)
+        .where(eq(diagnosisHistory.userId, user.id))
+        .orderBy(desc(diagnosisHistory.createdAt))
+        .limit(50);
+      return rows.map((h: (typeof rows)[number]) => ({
+        ...h,
+        findings: Array.isArray(h.findings) ? h.findings : [],
+        actionItems: Array.isArray(h.actionItems) ? h.actionItems : [],
+      }));
     }),
 
   /** Create a new client — auto-triggers background research */

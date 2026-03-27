@@ -2,6 +2,7 @@ import { useLocation } from "wouter";
 import { useI18n } from "@/lib/i18n";
 import { useTheme } from "@/contexts/ThemeContext";
 import { toArabicNumerals } from "@/lib/formatUtils";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 interface WzrdPublicHeaderProps {
   credits?: number | null;
@@ -15,6 +16,8 @@ export default function WzrdPublicHeader({ credits, showCredits = true }: WzrdPu
   const [, navigate] = useLocation();
   const { locale, toggleLocale, t } = useI18n();
   const { theme, toggleTheme, switchable } = useTheme();
+  const { user } = useAuth();
+  const showCommandCenter = Boolean(user && "canAccessCommandCenter" in user && (user as { canAccessCommandCenter?: boolean }).canAccessCommandCenter);
 
   return (
     <header className="fixed top-4 left-0 right-0 z-50 flex justify-center px-3 sm:px-5 pointer-events-none">
@@ -49,6 +52,14 @@ export default function WzrdPublicHeader({ credits, showCredits = true }: WzrdPu
           <a href="/my-requests" className={navLinkClass}>
             {locale === "ar" ? "طلباتي" : "My Requests"}
           </a>
+          {showCommandCenter && (
+            <a
+              href="/"
+              className={`${navLinkClass} text-primary font-semibold`}
+            >
+              {locale === "ar" ? "مركز القيادة" : "Command Center"}
+            </a>
+          )}
         </nav>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">

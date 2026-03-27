@@ -48,6 +48,7 @@ import {
   Heart,
   Target,
   TrendingUp,
+  Wand2,
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -268,6 +269,42 @@ function DashboardLayoutContent({
                 );
               })}
             </SidebarMenu>
+
+            <div
+              className={`mx-2 mt-3 mb-2 rounded-xl border border-cyan-500/25 bg-gradient-to-br from-cyan-500/[0.08] via-violet-500/[0.06] to-transparent p-2 ${
+                isCollapsed ? "hidden" : ""
+              }`}
+            >
+              <p className="px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
+                WZRD AI Tools
+              </p>
+              <SidebarMenu className="gap-0.5 px-0">
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip={locale === "ar" ? "أدوات التشخيص" : "Diagnostic tools"} className="h-9">
+                    <a href="/tools" className="flex w-full cursor-pointer items-center gap-2">
+                      <Wand2 className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+                      <span>{locale === "ar" ? "الأدوات" : "Tools"}</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip={locale === "ar" ? "صحة البراند" : "My Brand"} className="h-9">
+                    <a href="/my-brand" className="flex w-full cursor-pointer items-center gap-2">
+                      <Heart className="h-4 w-4 text-rose-500/90" />
+                      <span>{locale === "ar" ? "صحة البراند" : "My Brand"}</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip={locale === "ar" ? "المستشار" : "Copilot"} className="h-9">
+                    <a href="/copilot" className="flex w-full cursor-pointer items-center gap-2">
+                      <Brain className="h-4 w-4 text-violet-500/90" />
+                      <span>{locale === "ar" ? "المستشار" : "Copilot"}</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </div>
           </SidebarContent>
 
           {/* Public product admin — separate product surface */}

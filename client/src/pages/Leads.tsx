@@ -259,6 +259,11 @@ export default function LeadsPage() {
                           <Badge variant="outline" className={STATUS_COLORS[lead.status] || ""}>
                             {t(`leads.${lead.status === "proposal_sent" ? "proposalSent" : lead.status}`)}
                           </Badge>
+                          {lead.source === "website" && (
+                            <Badge variant="outline" className="text-cyan-600 dark:text-cyan-400 border-cyan-500/30 bg-cyan-500/5">
+                              {t("leads.sourceTools")}
+                            </Badge>
+                          )}
                           <div className={`flex items-center gap-1 ${SCORE_COLORS[lead.scoreLabel]}`}>
                             <ScoreIcon className="h-4 w-4" />
                             <span className="text-sm font-medium">{lead.score}/100</span>
@@ -361,7 +366,9 @@ export default function LeadsPage() {
                 {selectedLead?.companyName} — Brand Diagnosis
               </DialogTitle>
               <DialogDescription>
-                AI-generated brand health assessment from Quick-Check
+                {selectedLead?.source === "website"
+                  ? t("leads.diagnosisFromTools")
+                  : t("leads.diagnosisFromQuickCheck")}
               </DialogDescription>
             </DialogHeader>
             {selectedLead && (

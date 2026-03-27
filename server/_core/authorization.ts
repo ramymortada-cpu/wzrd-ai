@@ -116,7 +116,7 @@ export function createRoleCheck(requiredRole: UserRole) {
 }
 
 /** Owner / super-admin: role admin, or email in ADMIN_EMAILS (comma-separated), or legacy default. */
-function isOwnerAdmin(user: { email?: string; role?: string }): boolean {
+export function isOwnerAdmin(user: { email?: string; role?: string }): boolean {
   if (user.role === 'admin') return true;
   const email = (user.email || '').trim().toLowerCase();
   if (!email) return false;

@@ -14,7 +14,7 @@ import { useLocation, useParams } from "wouter";
 import { useState } from "react";
 import {
   ArrowLeft, Building2, Mail, Phone, Globe, MapPin, Calendar,
-  FolderKanban, StickyNote, DollarSign, Sparkles, Plus, Loader2, ExternalLink
+  FolderKanban, StickyNote, DollarSign, Sparkles, Plus, Loader2, ExternalLink, Stethoscope,
 } from "lucide-react";
 import { Streamdown } from "streamdown";
 
@@ -50,6 +50,10 @@ export default function ClientDetailPage() {
   const { data: projects } = trpc.projects.getByClient.useQuery({ clientId });
   const { data: notes } = trpc.notes.getByClient.useQuery({ clientId });
   const { data: payments } = trpc.payments.getByClient.useQuery({ clientId });
+  const { data: toolDiagnoses, isLoading: diagLoading } = trpc.clients.diagnosisForClient.useQuery(
+    { clientId },
+    { enabled: Boolean(clientId) && Boolean(client?.email) }
+  );
 
   const [showNoteDialog, setShowNoteDialog] = useState(false);
   const [noteTitle, setNoteTitle] = useState("");
@@ -223,6 +227,10 @@ export default function ClientDetailPage() {
           <TabsTrigger value="projects">{t("clientDetail.projects")} ({projects?.length || 0})</TabsTrigger>
           <TabsTrigger value="notes">{t("clientDetail.notes")} ({notes?.length || 0})</TabsTrigger>
           <TabsTrigger value="payments">{t("clientDetail.payments")} ({payments?.length || 0})</TabsTrigger>
+          <TabsTrigger value="diagnosis" className="gap-1.5">
+            <Stethoscope className="h-3.5 w-3.5 opacity-70" />
+            {t("clientDetail.diagnosis")} ({toolDiagnoses?.length ?? 0})
+          </TabsTrigger>
         </TabsList>
 
         {/* Info Tab */}
@@ -442,6 +450,61 @@ export default function ClientDetailPage() {
               ))
             )}
           </div>
+        </TabsContent>
+
+        <TabsContent value="diagnosis">
+          {!client.email ? (
+            <Card className="shadow-sm">
+              <CardContent className="py-12 text-center text-muted-foreground">
+                {t("clientDetail.noDiagnosisEmail")}
+              </CardContent>
+            </Card>
+          ) : diagLoading ? (
+            <div className="flex justify-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : !toolDiagnoses?.length ? (
+            <Card className="shadow-sm">
+              <CardContent className="py-12 text-center text-muted-foreground">
+                {t("clientDetail.noDiagnosis")}
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {toolDiagnoses.map((row: any) => (
+                <Card key={row.id} className="shadow-sm border-primary/10">
+                  <CardContent className="py-4 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="font-mono text-xs">
+                          {row.toolId}
+                        </Badge>
+                        <span className="text-sm text-muted-foreground">
+                          {row.createdAt ? new Date(row.createdAt).toLocaleString() : ""}
+                        </span>
+                      </div>
+                      <Badge className="bg-primary/15 text-primary border-0">
+                        {row.score}/100
+                      </Badge>
+                    </div>
+                    {row.recommendation && (
+                      <p className="text-sm text-muted-foreground leading-relaxed">{row.recommendation}</p>
+                    )}
+                    {Array.isArray(row.findings) && row.findings.length > 0 && (
+                      <ul className="text-sm space-y-1.5 list-disc ps-4">
+                        {row.findings.slice(0, 5).map((f: any, i: number) => (
+                          <li key={i}>
+                            <span className="font-medium">{f.title}</span>
+                            {f.detail ? <span className="text-muted-foreground"> — {f.detail}</span> : null}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>

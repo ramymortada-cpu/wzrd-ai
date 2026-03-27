@@ -55,6 +55,9 @@ const translations: Record<Locale, Record<string, string>> = {
     "leads.estimatedValue": "Est. Value",
     "leads.convertToClient": "Convert to Client",
     "leads.viewDiagnosis": "View Diagnosis",
+    "leads.sourceTools": "WZRD Tools",
+    "leads.diagnosisFromTools": "Synced from a logged-in WZRD AI tool run.",
+    "leads.diagnosisFromQuickCheck": "AI-generated assessment from the public Quick-Check.",
     "leads.noLeads": "No leads yet. Share your Brand Health Quick-Check link to start capturing leads.",
     "leads.totalLeads": "Total Leads",
     "leads.hotLeads": "Hot Leads",
@@ -117,6 +120,9 @@ const translations: Record<Locale, Record<string, string>> = {
     "clientDetail.noNotes": "No notes yet.",
     "clientDetail.noPayments": "No payments recorded.",
     "clientDetail.aiAnalysis": "AI Analysis",
+    "clientDetail.diagnosis": "WZRD diagnoses",
+    "clientDetail.noDiagnosis": "No WZRD tool runs are linked to this email yet.",
+    "clientDetail.noDiagnosisEmail": "Add an email on this client to view linked WZRD diagnoses.",
 
     // Projects
     "projects.title": "Projects",
@@ -457,6 +463,9 @@ const translations: Record<Locale, Record<string, string>> = {
     "leads.estimatedValue": "القيمة المقدرة",
     "leads.convertToClient": "تحويل لعميل",
     "leads.viewDiagnosis": "عرض التشخيص",
+    "leads.sourceTools": "أدوات WZRD",
+    "leads.diagnosisFromTools": "متزامن من تشغيل أداة WZRD لمستخدم مسجّل.",
+    "leads.diagnosisFromQuickCheck": "تقييم من الـ Quick Check العام.",
     "leads.noLeads": "لا يوجد عملاء محتملين بعد. شارك رابط فحص صحة العلامة التجارية لبدء التقاط العملاء.",
     "leads.totalLeads": "إجمالي العملاء المحتملين",
     "leads.hotLeads": "عملاء ساخنين",
@@ -519,6 +528,9 @@ const translations: Record<Locale, Record<string, string>> = {
     "clientDetail.noNotes": "لا توجد ملاحظات بعد.",
     "clientDetail.noPayments": "لا توجد مدفوعات مسجلة.",
     "clientDetail.aiAnalysis": "تحليل الذكاء الاصطناعي",
+    "clientDetail.diagnosis": "تشخيصات WZRD",
+    "clientDetail.noDiagnosis": "مفيش تشخيصات أدوات مرتبطة بالإيميل ده لسه.",
+    "clientDetail.noDiagnosisEmail": "ضيف إيميل للعميل عشان تظهر تشخيصات WZRD المرتبطة.",
 
     // Projects
     "projects.title": "المشاريع",

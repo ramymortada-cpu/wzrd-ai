@@ -64,6 +64,13 @@ export async function getUserByEmail(email: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+export async function getUserById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
 /**
  * Create a public user (from website signup — no OAuth).
  * Uses email as openId for simplicity.

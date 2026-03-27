@@ -339,6 +339,27 @@ var o=new IntersectionObserver(function(e){e.forEach(function(x){if(x.isIntersec
 document.querySelectorAll('.fi').forEach(function(el){o.observe(el)});
 window.addEventListener('scroll',function(){document.getElementById('nav').classList.toggle('scrolled',window.scrollY>20)});
 var l=(function(){var s=localStorage.getItem('wzrd-locale');return(s==='en'||s==='ar')?s:'ar';})();
+function mergeSiteConfig(cfg){
+ if(!cfg||!cfg.homepage)return;
+ var hp=cfg.homepage;var site=cfg.site||{};
+ var chip=document.querySelector('.hero-chip span[data-ar]');
+ if(chip&&site.companyName){
+  chip.setAttribute('data-ar','من '+site.companyName);
+  chip.setAttribute('data-en','by '+site.companyName);
+ }
+ var h1=document.querySelector('.hero h1');
+ if(h1&&hp.heroTitleAr){h1.setAttribute('data-ar',hp.heroTitleAr);h1.setAttribute('data-en',hp.heroTitle||hp.heroTitleAr);}
+ var sub=document.querySelector('.hero-p');
+ if(sub&&hp.heroSubtitleAr){sub.setAttribute('data-ar',hp.heroSubtitleAr);sub.setAttribute('data-en',hp.heroSubtitle||hp.heroSubtitleAr);}
+ var cta=document.querySelector('.hero-btns .btn-p');
+ if(cta&&hp.ctaTextAr){cta.setAttribute('data-ar',hp.ctaTextAr);cta.setAttribute('data-en',hp.ctaText||hp.ctaTextAr);if(hp.ctaUrl){cta.setAttribute('href',hp.ctaUrl);}}
+ var cta2=document.querySelector('.cta-s .btn-w');
+ if(cta2&&hp.ctaTextAr){cta2.setAttribute('data-ar',hp.ctaTextAr);cta2.setAttribute('data-en',hp.ctaText||hp.ctaTextAr);if(hp.ctaUrl){cta2.setAttribute('href',hp.ctaUrl);}}
+ var navSignup=document.querySelector('.nav-r a.btn-p');
+ if(navSignup&&hp.ctaTextAr){navSignup.setAttribute('data-ar',hp.ctaTextAr);navSignup.setAttribute('data-en',hp.ctaText||hp.ctaTextAr);if(hp.ctaUrl){navSignup.setAttribute('href',hp.ctaUrl);}}
+ var ft=document.querySelector('.ft-tag');
+ if(ft&&site.taglineEn){ft.setAttribute('data-ar',site.taglineAr||site.taglineEn);ft.setAttribute('data-en',site.taglineEn);}
+}
 function apply(){
  document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';
  document.body.classList.toggle('en-mode',l==='en');
@@ -349,8 +370,17 @@ function apply(){
 function tl(){
  l=l==='ar'?'en':'ar';localStorage.setItem('wzrd-locale',l);apply();
 }
-document.addEventListener('DOMContentLoaded',apply);
-(function(){if(document.cookie.includes('app_session_id=')){document.querySelectorAll('[href="/signup"]').forEach(function(e){e.setAttribute('href','/tools/brand-diagnosis');e.innerHTML=l==='ar'?'شغّل التشخيص':'Run Diagnosis'})}})();
+function runSessionSignupSwap(){
+ if(document.cookie.includes('app_session_id=')){document.querySelectorAll('[href="/signup"]').forEach(function(e){e.setAttribute('href','/tools/brand-diagnosis');e.innerHTML=l==='ar'?'شغّل التشخيص':'Run Diagnosis'})}
+}
+document.addEventListener('DOMContentLoaded',function(){
+ apply();
+ runSessionSignupSwap();
+ fetch('/api/public/site-config')
+  .then(function(r){return r.json()})
+  .then(function(cfg){mergeSiteConfig(cfg);apply();runSessionSignupSwap();})
+  .catch(function(){});
+});
 </script>
 </body>
 </html>

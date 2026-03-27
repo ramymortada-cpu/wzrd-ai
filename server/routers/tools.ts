@@ -30,6 +30,7 @@ import {
 import { logger } from "../_core/logger";
 import { resilientLLM } from "../_core/llmRouter";
 import { deductCredits, getUserCredits, TOOL_COSTS, getDb } from "../db";
+import { upsertLeadFromToolDiagnosis } from "../db/leads";
 import { sendToolResultEmail } from "../wzrdEmails";
 import { getToolSystemPrompt, isToolEnabled } from "../siteConfig";
 import { diagnosisHistory, userChecklists } from "../../drizzle/schema";
@@ -75,6 +76,16 @@ async function saveDiagnosisHistory(userId: number, toolId: string, result: Tool
       }).catch((err: any) => logger.warn({ err }, 'Failed to create checklist'));
     }
   }
+
+  await upsertLeadFromToolDiagnosis({
+    userId,
+    toolId,
+    result: {
+      score: result.score,
+      recommendation: result.recommendation,
+      findings: result.findings,
+    },
+  }).catch((err) => logger.warn({ err, userId, toolId }, 'CRM lead sync from diagnosis failed'));
 }
 
 // ════════════════════════════════════════════
