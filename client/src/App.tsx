@@ -14,7 +14,7 @@ import QuickSearch from "./components/QuickSearch";
 
 /** Public WZRD funnel + tools; Command Center (/) stays on default app chrome. */
 const WZRD_PREMIUM_SHELL_RE =
-  /^\/(?:signup|login|pricing|my-brand|copilot|wzrd-admin|profile|my-requests|quick-check|tools|portal|proposal-view)(?:\/|$)/;
+  /^\/(?:signup|login|pricing|my-brand|copilot|wzrd-admin|profile|settings|my-requests|quick-check|tools|portal|proposal-view)(?:\/|$)/;
 
 // ============ LAZY-LOADED PAGES ============
 // Each page is loaded only when the user navigates to it.
@@ -63,6 +63,7 @@ const CopilotPage = lazy(() => import("./pages/Copilot"));
 const CompetitiveBenchmarkPage = lazy(() => import("./pages/CompetitiveBenchmark"));
 const QuickDiagnosisPage = lazy(() => import("./pages/QuickDiagnosis"));
 const MyRequestsPage = lazy(() => import("./pages/MyRequests"));
+const SettingsPage = lazy(() => import("./pages/Settings"));
 
 function SuspenseWrapper({ children, fallback }: { children: React.ReactNode; fallback?: React.ReactNode }) {
   return (
@@ -159,6 +160,8 @@ function App() {
                 <Route path="/my-requests">{() => <SuspenseWrapper><MyRequestsPage /></SuspenseWrapper>}</Route>
                 <Route path="/wzrd-admin">{() => <SuspenseWrapper><WzrdAdminPage /></SuspenseWrapper>}</Route>
                 <Route path="/profile">{() => <SuspenseWrapper><ProfilePage /></SuspenseWrapper>}</Route>
+                <Route path="/settings/whatsapp">{() => <SuspenseWrapper><SettingsPage defaultTab="whatsapp" /></SuspenseWrapper>}</Route>
+                <Route path="/settings">{() => <SuspenseWrapper><SettingsPage /></SuspenseWrapper>}</Route>
                 {/* Existing public routes */}
                 <Route path="/quick-check">{() => <SuspenseWrapper><QuickCheckPage /></SuspenseWrapper>}</Route>
                 <Route path="/portal/:token">{() => <SuspenseWrapper><ClientPortalPage /></SuspenseWrapper>}</Route>
