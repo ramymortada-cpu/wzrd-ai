@@ -1,9 +1,21 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'wouter';
+import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
 import WzrdPublicHeader from '@/components/WzrdPublicHeader';
 import { toArabicNumerals } from '@/lib/formatUtils';
 import { waMeHref } from '@/lib/waContact';
+
+function isPaymobGatewayConfigError(message: string): boolean {
+  const m = (message || '').toLowerCase();
+  return (
+    m.includes('paymob not configured') ||
+    m.includes('paymob_secret') ||
+    m.includes('paymob_public') ||
+    m.includes('no paymob integration') ||
+    (m.includes('paymob') && m.includes('key'))
+  );
+}
 
 type PlanRow = {
   id: string;
@@ -218,9 +230,21 @@ export default function Pricing() {
                       if (result?.success && result?.redirectUrl) {
                         window.location.href = result.redirectUrl;
                       } else {
-                        alert(result?.message || 'Payment failed. Please try again.');
+                        const msg = typeof result?.message === 'string' ? result.message : '';
+                        if (isPaymobGatewayConfigError(msg)) {
+                          toast.info(
+                            locale === 'ar'
+                              ? 'بوابة الدفع تحت التحديث — يرجى المحاولة لاحقاً.'
+                              : 'Payment gateway is initializing. Please try again later.',
+                            { duration: 6000 }
+                          );
+                        } else {
+                          toast.error(msg || (locale === 'ar' ? 'تعذّر إتمام الدفع.' : 'Payment failed. Please try again.'));
+                        }
                       }
-                    } catch { alert('Connection error. Please try again.'); }
+                    } catch {
+                      toast.error(locale === 'ar' ? 'خطأ في الاتصال.' : 'Connection error. Please try again.');
+                    }
                   }}
                   className={`wzrd-shimmer-btn w-full rounded-2xl py-4 font-bold text-base transition duration-500 hover:-translate-y-0.5 ${
                     plan.popular

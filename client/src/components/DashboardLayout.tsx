@@ -76,6 +76,18 @@ const menuItems = [
   { icon: TrendingUp, labelKey: "nav.salesFunnel", path: "/sales-funnel" },
 ];
 
+/** Deep agency surfaces — hidden from sidebar unless user has Command Center access. */
+const AGENCY_COMMAND_CENTER_PATHS = new Set([
+  "/ai",
+  "/brand-twin",
+  "/pipeline",
+  "/research",
+  "/knowledge",
+]);
+
+const coreNavItems = menuItems.filter((i) => !AGENCY_COMMAND_CENTER_PATHS.has(i.path));
+const agencyCommandNavItems = menuItems.filter((i) => AGENCY_COMMAND_CENTER_PATHS.has(i.path));
+
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
 const DEFAULT_WIDTH = 280;
 const MIN_WIDTH = 200;
@@ -162,6 +174,11 @@ function DashboardLayoutContent({
   setSidebarWidth,
 }: DashboardLayoutContentProps) {
   const { user, logout } = useAuth();
+  const canAccessCommandCenter = Boolean(
+    user &&
+      "canAccessCommandCenter" in user &&
+      (user as { canAccessCommandCenter?: boolean }).canAccessCommandCenter
+  );
   const [location, setLocation] = useLocation();
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
@@ -250,7 +267,7 @@ function DashboardLayoutContent({
 
           <SidebarContent className="gap-0">
             <SidebarMenu className="px-2 py-1">
-              {menuItems.map((item) => {
+              {coreNavItems.map((item) => {
                 const isActive = location === item.path || (item.path !== "/" && location.startsWith(item.path));
                 return (
                   <SidebarMenuItem key={item.path}>
@@ -269,6 +286,34 @@ function DashboardLayoutContent({
                 );
               })}
             </SidebarMenu>
+            {canAccessCommandCenter && !isCollapsed && (
+              <p className="mx-3 mt-2 mb-1 text-[10px] font-semibold uppercase tracking-wider text-violet-600/80 dark:text-violet-400/90">
+                {locale === "ar" ? "وكالة — Command Center" : "Agency Command Center"}
+              </p>
+            )}
+            {canAccessCommandCenter && (
+              <SidebarMenu className="px-2 pb-1">
+                {agencyCommandNavItems.map((item) => {
+                  const isActive =
+                    location === item.path || (item.path !== "/" && location.startsWith(item.path));
+                  return (
+                    <SidebarMenuItem key={item.path}>
+                      <SidebarMenuButton
+                        isActive={isActive}
+                        onClick={() => setLocation(item.path)}
+                        tooltip={t(item.labelKey)}
+                        className={`h-10 transition-all font-normal ${isActive ? "border-s-2 border-violet-500/70 bg-violet-500/5" : ""}`}
+                      >
+                        <item.icon
+                          className={`h-4 w-4 ${isActive ? "text-violet-500 dark:text-violet-400" : ""}`}
+                        />
+                        <span>{t(item.labelKey)}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            )}
 
             <div
               className={`mx-2 mt-3 mb-2 rounded-xl border border-cyan-500/25 bg-gradient-to-br from-cyan-500/[0.08] via-violet-500/[0.06] to-transparent p-2 ${
@@ -307,26 +352,28 @@ function DashboardLayoutContent({
             </div>
           </SidebarContent>
 
-          {/* Public product admin — separate product surface */}
-          <div className="px-3 pb-2 space-y-1">
-            <p className="text-[10px] text-muted-foreground px-1 uppercase tracking-wide">
-              {locale === "ar" ? "← منتج منفصل" : "← Separate product"}
-            </p>
-            <a
-              href="/wzrd-admin"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex flex-col gap-0.5 px-3 py-2 rounded-lg bg-indigo-500/5 border border-indigo-500/10 hover:bg-indigo-500/10 hover:border-indigo-500/20 transition text-xs font-medium text-indigo-400"
-            >
-              <span className="flex items-center gap-2">
-                <span>⚡</span>
-                <span>WZRD AI · {locale === "ar" ? "إدارة الموقع العام" : "Public site admin"}</span>
-              </span>
-              <span className="text-[10px] font-normal text-muted-foreground ps-6">
-                {locale === "ar" ? "يفتح في تبويب جديد" : "Opens in new tab"}
-              </span>
-            </a>
-          </div>
+          {/* Public product admin — same access tier as Command Center */}
+          {canAccessCommandCenter && (
+            <div className="px-3 pb-2 space-y-1">
+              <p className="text-[10px] text-muted-foreground px-1 uppercase tracking-wide">
+                {locale === "ar" ? "← منتج منفصل" : "← Separate product"}
+              </p>
+              <a
+                href="/wzrd-admin"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col gap-0.5 px-3 py-2 rounded-lg bg-indigo-500/5 border border-indigo-500/10 hover:bg-indigo-500/10 hover:border-indigo-500/20 transition text-xs font-medium text-indigo-400"
+              >
+                <span className="flex items-center gap-2">
+                  <span>⚡</span>
+                  <span>WZRD AI · {locale === "ar" ? "إدارة الموقع العام" : "Public site admin"}</span>
+                </span>
+                <span className="text-[10px] font-normal text-muted-foreground ps-6">
+                  {locale === "ar" ? "يفتح في تبويب جديد" : "Opens in new tab"}
+                </span>
+              </a>
+            </div>
+          )}
 
           <SidebarFooter className="p-3 space-y-2">
             {/* Language & Theme toggles */}

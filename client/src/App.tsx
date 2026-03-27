@@ -7,6 +7,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { I18nProvider } from "./lib/i18n";
 import DashboardLayout from "./components/DashboardLayout";
+import CommandCenterGuard from "./components/CommandCenterGuard";
 import { PageSkeleton, ChatSkeleton, DetailPageSkeleton } from "./components/PageSkeleton";
 
 // ============ LAZY-LOADED PAGES ============
@@ -77,17 +78,37 @@ function DashboardRouter() {
         <Route path="/deliverables">{() => <SuspenseWrapper><DeliverablesPage /></SuspenseWrapper>}</Route>
         <Route path="/notes">{() => <SuspenseWrapper><NotesPage /></SuspenseWrapper>}</Route>
         <Route path="/financials">{() => <SuspenseWrapper><FinancialsPage /></SuspenseWrapper>}</Route>
-        <Route path="/ai">{() => <SuspenseWrapper fallback={<ChatSkeleton />}><AIEnginePage /></SuspenseWrapper>}</Route>
+        <Route path="/ai">{() => (
+          <CommandCenterGuard>
+            <SuspenseWrapper fallback={<ChatSkeleton />}><AIEnginePage /></SuspenseWrapper>
+          </CommandCenterGuard>
+        )}</Route>
         <Route path="/proposals">{() => <SuspenseWrapper><ProposalsPage /></SuspenseWrapper>}</Route>
         <Route path="/proposals/:id">{() => <SuspenseWrapper fallback={<DetailPageSkeleton />}><ProposalDetailPage /></SuspenseWrapper>}</Route>
         <Route path="/analytics">{() => <SuspenseWrapper><AnalyticsPage /></SuspenseWrapper>}</Route>
         <Route path="/playbooks">{() => <SuspenseWrapper><PlaybooksPage /></SuspenseWrapper>}</Route>
         <Route path="/onboarding">{() => <SuspenseWrapper><OnboardingPage /></SuspenseWrapper>}</Route>
         <Route path="/portal-management">{() => <SuspenseWrapper><PortalManagementPage /></SuspenseWrapper>}</Route>
-        <Route path="/research">{() => <SuspenseWrapper><ResearchEnginePage /></SuspenseWrapper>}</Route>
-        <Route path="/knowledge">{() => <SuspenseWrapper><KnowledgeBasePage /></SuspenseWrapper>}</Route>
-        <Route path="/pipeline">{() => <SuspenseWrapper><PipelinePage /></SuspenseWrapper>}</Route>
-        <Route path="/brand-twin">{() => <SuspenseWrapper><BrandTwinPage /></SuspenseWrapper>}</Route>
+        <Route path="/research">{() => (
+          <CommandCenterGuard>
+            <SuspenseWrapper><ResearchEnginePage /></SuspenseWrapper>
+          </CommandCenterGuard>
+        )}</Route>
+        <Route path="/knowledge">{() => (
+          <CommandCenterGuard>
+            <SuspenseWrapper><KnowledgeBasePage /></SuspenseWrapper>
+          </CommandCenterGuard>
+        )}</Route>
+        <Route path="/pipeline">{() => (
+          <CommandCenterGuard>
+            <SuspenseWrapper><PipelinePage /></SuspenseWrapper>
+          </CommandCenterGuard>
+        )}</Route>
+        <Route path="/brand-twin">{() => (
+          <CommandCenterGuard>
+            <SuspenseWrapper><BrandTwinPage /></SuspenseWrapper>
+          </CommandCenterGuard>
+        )}</Route>
         <Route path="/leads">{() => <SuspenseWrapper><LeadsPage /></SuspenseWrapper>}</Route>
         <Route path="/sales-funnel">{() => <SuspenseWrapper><SalesFunnelPage /></SuspenseWrapper>}</Route>
         <Route path="/404" component={NotFound} />

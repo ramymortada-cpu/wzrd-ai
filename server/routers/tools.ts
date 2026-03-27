@@ -29,7 +29,7 @@ import {
 } from "@shared/wzrdDiagnosisToolSchemas";
 import { logger } from "../_core/logger";
 import { resilientLLM } from "../_core/llmRouter";
-import { deductCredits, getUserCredits, TOOL_COSTS, getDb } from "../db";
+import { deductCredits, getUserCredits, TOOL_COSTS, getDb, toggleChecklistItemForUser } from "../db";
 import { upsertLeadFromToolDiagnosis } from "../db/leads";
 import { sendToolResultEmail } from "../wzrdEmails";
 import { getToolSystemPrompt, isToolEnabled } from "../siteConfig";
@@ -594,41 +594,7 @@ Score 0-100 on launch readiness. Identify what's missing and what's the priority
       itemIndex: z.number(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error('Database unavailable');
-
-      // Get the checklist
-      const [checklist] = await db.select()
-        .from(userChecklists)
-        .where(and(
-          eq(userChecklists.id, input.checklistId),
-          eq(userChecklists.userId, ctx.user!.id),
-        ));
-
-      if (!checklist) {
-        throw new Error('Checklist not found');
-      }
-
-      const items = Array.isArray(checklist.items) ? [...checklist.items] as any[] : [];
-      if (input.itemIndex < 0 || input.itemIndex >= items.length) {
-        throw new Error('Item index out of range');
-      }
-
-      // Toggle completion
-      const item = items[input.itemIndex];
-      item.completed = !item.completed;
-      item.completedAt = item.completed ? new Date().toISOString() : null;
-
-      const completedCount = items.filter((i: any) => i.completed).length;
-
-      await db.update(userChecklists)
-        .set({
-          items,
-          completedCount,
-        })
-        .where(eq(userChecklists.id, input.checklistId));
-
-      return { items, completedCount, totalCount: items.length };
+      return toggleChecklistItemForUser(ctx.user!.id, input.checklistId, input.itemIndex);
     }),
 
   // ════════════════════════════════════════════

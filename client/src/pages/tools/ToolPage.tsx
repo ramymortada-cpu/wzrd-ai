@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { waMeHref } from '@/lib/waContact';
 import { toArabicNumerals } from '@/lib/formatUtils';
 import { useI18n } from '@/lib/i18n';
+import { trpc } from '@/lib/trpc';
 
 export interface ToolField {
   name: string;
@@ -252,6 +253,24 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
   const [premiumLoading, setPremiumLoading] = useState(false);
   const [premiumError, setPremiumError] = useState('');
   const [premiumOffer, setPremiumOffer] = useState({ credits: 100, egp: 99 });
+
+  const utils = trpc.useUtils();
+  const { data: checklistRow } = trpc.checklist.forTool.useQuery(
+    { toolId: config.id },
+    {
+      enabled: Boolean(result?.actionItems?.length),
+      refetchInterval: (q) => {
+        const row = q.state.data as { id?: number } | undefined;
+        if (row?.id) return false;
+        const u = q.state.dataUpdatedAt;
+        if (u > 0 && Date.now() - u > 22000) return false;
+        return 3000;
+      },
+    }
+  );
+  const toggleChecklist = trpc.checklist.toggleItem.useMutation({
+    onSuccess: () => void utils.checklist.forTool.invalidate({ toolId: config.id }),
+  });
 
   useEffect(() => {
     fetch('/api/trpc/premium.pricing')
@@ -525,33 +544,60 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
             ))}
           </div>
 
-          {/* ═══ ACTION ITEMS ═══ */}
+          {/* ═══ ACTION ITEMS (interactive checklist when synced) ═══ */}
           {result.actionItems && result.actionItems.length > 0 && (
             <div className="mb-8 p-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5">
               <h3 className="text-base font-bold text-emerald-300 mb-3" dir="rtl">
                 خطواتك العملية ({result.actionItems.length} مهمة)
               </h3>
               <div className="space-y-2">
-                {result.actionItems.map((item, i) => (
-                  <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-zinc-900/50" dir="rtl">
-                    <div className="flex-shrink-0 w-6 h-6 rounded-md border-2 border-emerald-500/40 flex items-center justify-center text-xs text-emerald-400 mt-0.5">
-                      {i + 1}
+                {result.actionItems.map((item, i) => {
+                  const cli = Array.isArray(checklistRow?.items)
+                    ? (checklistRow!.items[i] as { completed?: boolean } | undefined)
+                    : undefined;
+                  const done = Boolean(cli?.completed);
+                  const canToggle = checklistRow?.id != null;
+                  return (
+                    <div
+                      key={i}
+                      className={`flex items-start gap-3 p-3 rounded-xl bg-zinc-900/50 ${done ? "opacity-70" : ""}`}
+                      dir="rtl"
+                    >
+                      <button
+                        type="button"
+                        disabled={!canToggle || toggleChecklist.isPending}
+                        onClick={() =>
+                          checklistRow?.id != null &&
+                          toggleChecklist.mutate({ checklistId: checklistRow.id, itemIndex: i })
+                        }
+                        className={`flex-shrink-0 w-7 h-7 rounded-md border-2 flex items-center justify-center text-xs mt-0.5 transition shrink-0 ${
+                          done
+                            ? "border-emerald-400 bg-emerald-500/25 text-emerald-300"
+                            : "border-emerald-500/40 text-emerald-400 hover:border-emerald-400/70"
+                        } ${!canToggle ? "opacity-40 cursor-wait" : "cursor-pointer"}`}
+                        aria-pressed={done}
+                        aria-label={done ? "تمت المهمة" : "تعليم المهمة كمنجزة"}
+                      >
+                        {done ? "✓" : i + 1}
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <span className={`text-sm ${done ? "line-through text-zinc-500" : "text-zinc-200"}`}>{item.task}</span>
+                      </div>
+                      <span className={`flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${
+                        item.difficulty === 'easy' ? 'bg-green-500/20 text-green-400' :
+                        item.difficulty === 'hard' ? 'bg-red-500/20 text-red-400' :
+                        'bg-yellow-500/20 text-yellow-400'
+                      }`}>
+                        {item.difficulty === 'easy' ? 'سهل' : item.difficulty === 'hard' ? 'صعب' : 'متوسط'}
+                      </span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="text-sm text-zinc-200">{item.task}</span>
-                    </div>
-                    <span className={`flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${
-                      item.difficulty === 'easy' ? 'bg-green-500/20 text-green-400' :
-                      item.difficulty === 'hard' ? 'bg-red-500/20 text-red-400' :
-                      'bg-yellow-500/20 text-yellow-400'
-                    }`}>
-                      {item.difficulty === 'easy' ? 'سهل' : item.difficulty === 'hard' ? 'صعب' : 'متوسط'}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               <p className="text-xs text-zinc-500 mt-3 text-center" dir="rtl">
-                تابع تقدمك من <a href="/my-brand" className="text-indigo-400 hover:underline">صفحة صحة البراند</a>
+                {checklistRow?.id
+                  ? <>علّم المهام هنا أو تابع من <a href="/my-brand" className="text-indigo-400 hover:underline">صفحة صحة البراند</a>.</>
+                  : <>جاري مزامنة قائمة المهام… يمكنك أيضاً المتابعة من <a href="/my-brand" className="text-indigo-400 hover:underline">صفحة صحة البراند</a>.</>}
               </p>
             </div>
           )}
@@ -566,9 +612,27 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
                     body: JSON.stringify({ json: { toolName: config.name, toolNameAr: config.nameAr || config.name, score: result.score, label: result.label, findings: result.findings, actionItems: result.actionItems || [], recommendation: result.recommendation } }),
                   });
                   const data = await res.json();
-                  const html = data?.result?.data?.json?.html;
-                  if (html) { const w = window.open('', '_blank'); if (w) { w.document.write(html); w.document.close(); } }
-                } catch {}
+                  const html = data?.result?.data?.json?.html as string | undefined;
+                  if (!html) return;
+                  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+                  const url = URL.createObjectURL(blob);
+                  const w = window.open(url, '_blank', 'noopener,noreferrer');
+                  if (w) {
+                    w.addEventListener('load', () => {
+                      try {
+                        w.focus();
+                        w.print();
+                      } catch {
+                        /* print may be blocked */
+                      }
+                    });
+                    setTimeout(() => URL.revokeObjectURL(url), 120_000);
+                  } else {
+                    URL.revokeObjectURL(url);
+                  }
+                } catch {
+                  /* ignore */
+                }
               }}
               className="flex-1 py-3 rounded-full border border-indigo-500/30 text-sm text-indigo-400 hover:bg-indigo-500/10 transition flex items-center justify-center gap-2"
             >📄 حمّل كـ PDF</button>
