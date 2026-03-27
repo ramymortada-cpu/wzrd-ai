@@ -40,6 +40,7 @@ import { whatsappRouter } from "./whatsapp";
 import { workspacesRouter } from "./workspaces";
 import { contractsRouter } from "./contracts";
 import { invoicesRouter } from "./invoices";
+import { blogRouter } from "./blog";
 
 export const appRouter = router({
   system: systemRouter,
@@ -60,6 +61,7 @@ export const appRouter = router({
   pipeline: pipelineRouter,
   brandTwin: brandTwinRouter,
   leads: leadsRouter,
+  blog: blogRouter,
   onboarding: onboardingRouter,
   feedback: feedbackRouter,
   analytics: analyticsRouter,

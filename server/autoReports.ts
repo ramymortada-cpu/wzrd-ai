@@ -83,15 +83,23 @@ export async function generateMonthlyReport(
       messages: [
         {
           role: 'system',
-          content: `You are the AI Project Manager at Primo Marca. Generate a professional monthly progress report for a client. The report should:
-- Be written in a professional but warm tone
-- Include specific data and metrics where available
-- Provide clear next steps and recommendations
-- Reference the 4D Framework stage (Diagnose → Design → Deploy → Optimize)
-- Be structured with clear sections
-- Include market context if available
-- Be 400-600 words
-- Write primarily in English but can include Arabic greetings/closings if market is Egypt/KSA`,
+          content: `You are a senior brand strategist. Generate a monthly performance report in STRICT Markdown.
+
+Structure (use exactly these headings):
+# Monthly Brand Report — [Month Year]
+## Key Metrics
+## Executive Summary
+## What Worked Well
+## Areas for Improvement
+## Action Plan for Next Month
+
+Rules:
+- Use ## for all section headings, never #
+- Use **bold** for emphasis
+- Use - for bullet points (never *)
+- Do NOT use HTML tags
+- Do NOT add a preamble or closing remarks outside the structure
+- Keep each section concise (3-5 points max)`,
         },
         {
           role: 'user',
@@ -134,6 +142,7 @@ Generate the monthly progress report.`,
       status: 'delivered',
       sortOrder: 100 + new Date().getMonth(),
       content: reportContent,
+      aiGenerated: 1,
     });
     const deliverableId = getInsertId(result);
 

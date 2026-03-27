@@ -48,6 +48,8 @@ const ProposalViewPage = lazy(() => import("./pages/ProposalView"));
 // WZRD AI — Public funnel pages
 const SignupPage = lazy(() => import("./pages/Signup"));
 const LoginPage = lazy(() => import("./pages/Login"));
+const BlogIndexPage = lazy(() => import("./pages/public/BlogIndex"));
+const BlogPostPage = lazy(() => import("./pages/public/BlogPost"));
 const ToolsPage = lazy(() => import("./pages/Tools"));
 const BrandDiagnosisPage = lazy(() => import("./pages/tools/BrandDiagnosis"));
 const OfferCheckPage = lazy(() => import("./pages/tools/OfferCheck"));
@@ -57,6 +59,7 @@ const IdentitySnapshotPage = lazy(() => import("./pages/tools/IdentitySnapshot")
 const LaunchReadinessPage = lazy(() => import("./pages/tools/LaunchReadiness"));
 const PricingPage = lazy(() => import("./pages/Pricing"));
 const WzrdAdminPage = lazy(() => import("./pages/WzrdAdmin"));
+const BlogAdminPage = lazy(() => import("./pages/admin/BlogAdmin"));
 const ProfilePage = lazy(() => import("./pages/Profile"));
 const MyBrandPage = lazy(() => import("./pages/MyBrand"));
 const CopilotPage = lazy(() => import("./pages/Copilot"));
@@ -149,6 +152,8 @@ function App() {
                 {/* WZRD AI — Public funnel pages (no auth) */}
                 <Route path="/signup">{() => <SuspenseWrapper><SignupPage /></SuspenseWrapper>}</Route>
                 <Route path="/login">{() => <SuspenseWrapper><LoginPage /></SuspenseWrapper>}</Route>
+                <Route path="/blog">{() => <SuspenseWrapper><BlogIndexPage /></SuspenseWrapper>}</Route>
+                <Route path="/blog/:slug">{() => <SuspenseWrapper><BlogPostPage /></SuspenseWrapper>}</Route>
                 <Route path="/tools">{() => <SuspenseWrapper><ToolsPage /></SuspenseWrapper>}</Route>
                 <Route path="/tools/brand-diagnosis">{() => <SuspenseWrapper><BrandDiagnosisPage /></SuspenseWrapper>}</Route>
                 <Route path="/tools/offer-check">{() => <SuspenseWrapper><OfferCheckPage /></SuspenseWrapper>}</Route>
@@ -162,6 +167,7 @@ function App() {
                 <Route path="/tools/benchmark">{() => <SuspenseWrapper><CompetitiveBenchmarkPage /></SuspenseWrapper>}</Route>
                 <Route path="/tools/quick">{() => <SuspenseWrapper><QuickDiagnosisPage /></SuspenseWrapper>}</Route>
                 <Route path="/my-requests">{() => <SuspenseWrapper><MyRequestsPage /></SuspenseWrapper>}</Route>
+                <Route path="/wzrd-admin/blog">{() => <SuspenseWrapper><BlogAdminPage /></SuspenseWrapper>}</Route>
                 <Route path="/wzrd-admin">{() => <SuspenseWrapper><WzrdAdminPage /></SuspenseWrapper>}</Route>
                 <Route path="/profile">{() => <SuspenseWrapper><ProfilePage /></SuspenseWrapper>}</Route>
                 <Route path="/settings/team">{() => <SuspenseWrapper><SettingsPage defaultTab="team" /></SuspenseWrapper>}</Route>

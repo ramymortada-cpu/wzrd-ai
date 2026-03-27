@@ -211,6 +211,9 @@ importers:
       react-hook-form:
         specifier: ^7.64.0
         version: 7.64.0(react@19.2.1)
+      react-markdown:
+        specifier: ^10.1.0
+        version: 10.1.0(@types/react@19.2.1)(react@19.2.1)
       react-resizable-panels:
         specifier: ^3.0.6
         version: 3.0.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -249,7 +252,7 @@ importers:
         specifier: ^1.49.0
         version: 1.58.2
       '@tailwindcss/typography':
-        specifier: ^0.5.15
+        specifier: ^0.5.19
         version: 0.5.19(tailwindcss@4.1.14)
       '@tailwindcss/vite':
         specifier: ^4.1.3

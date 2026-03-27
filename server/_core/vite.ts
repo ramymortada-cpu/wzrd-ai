@@ -4,6 +4,8 @@ import { type Server } from "http";
 import { nanoid } from "nanoid";
 import path from "path";
 import { fileURLToPath } from "url";
+import { getDb } from "../db";
+import { escapeHtmlAttr } from "./html";
 
 // Safe dirname — works in both dev and esbuild bundle
 const __dir = (() => {
@@ -147,6 +149,63 @@ export function serveStatic(app: Express) {
       } catch { res.status(500).send("Error processing unsubscribe"); }
     });
   }
+
+  // TRUE SEO (Production only): inject meta tags for blog posts into HTML response.
+  // Must be registered BEFORE express.static so it intercepts /blog/:slug routes.
+  app.get("/blog/:slug", async (req, res, next) => {
+    try {
+      const db = await getDb();
+      if (!db) return next();
+
+      const { blogPosts } = await import("../../drizzle/schema");
+      const { and, eq } = await import("drizzle-orm");
+
+      const [post] = await db
+        .select({
+          title: blogPosts.seoTitle,
+          description: blogPosts.seoDescription,
+          coverImage: blogPosts.coverImage,
+        })
+        .from(blogPosts)
+        .where(and(eq(blogPosts.slug, req.params.slug), eq(blogPosts.status, "published")))
+        .limit(1);
+
+      const htmlPath = path.resolve(distPath, "index.html");
+      let html = fs.readFileSync(htmlPath, "utf-8");
+
+      // Clear any prior injected block (defensive in case of template reuse).
+      html = html.replaceAll(/<!-- WZRD_BLOG_SEO_START -->[\s\S]*?<!-- WZRD_BLOG_SEO_END -->/g, "");
+
+      if (post) {
+        const seoTitleRaw = post.title || "WZRD AI Blog";
+        const seoDescRaw = post.description || "";
+        const ogImageRaw = post.coverImage || "";
+
+        const seoTitle = escapeHtmlAttr(seoTitleRaw);
+        const seoDesc = escapeHtmlAttr(seoDescRaw);
+        const ogImage = escapeHtmlAttr(ogImageRaw);
+
+        // Replace <title>…</title> when present, otherwise insert a title.
+        if (/<title>[\s\S]*?<\/title>/i.test(html)) {
+          html = html.replace(/<title>[\s\S]*?<\/title>/i, `<title>${seoTitle}</title>`);
+        } else {
+          html = html.replace(
+            "</head>",
+            `<title>${seoTitle}</title>\n</head>`,
+          );
+        }
+
+        html = html.replace(
+          "</head>",
+          `<!-- WZRD_BLOG_SEO_START -->\n<meta name="description" content="${seoDesc}">\n<meta property="og:title" content="${seoTitle}">\n<meta property="og:description" content="${seoDesc}">\n<meta property="og:image" content="${ogImage}">\n<meta property="og:type" content="article">\n<meta name="twitter:card" content="summary_large_image">\n<!-- WZRD_BLOG_SEO_END -->\n</head>`,
+        );
+      }
+
+      res.status(200).set({ "Content-Type": "text/html" }).end(html);
+    } catch {
+      next();
+    }
+  });
 
   app.use(express.static(distPath));
   app.use("*", (_req, res) => {
