@@ -2,7 +2,7 @@
  * Users DB Helpers — user CRUD operations.
  */
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { users, InsertUser } from "../../drizzle/schema";
 import { getDb } from "./index";
 import { logger } from "../_core/logger";
@@ -69,6 +69,49 @@ export async function getUserById(id: number) {
   if (!db) return undefined;
   const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
   return result.length > 0 ? result[0] : undefined;
+}
+
+/**
+ * Find a user by verified WhatsApp phone (E.164 digits, no + prefix).
+ */
+export async function getUserByWhatsAppPhone(phone: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db
+    .select()
+    .from(users)
+    .where(and(eq(users.whatsappPhone, phone), eq(users.whatsappVerified, 1)))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+/**
+ * Link a WhatsApp number to a user (MVP: no OTP — trust-based / admin).
+ */
+export async function linkWhatsAppPhone(userId: number, phone: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db
+    .update(users)
+    .set({
+      whatsappPhone: phone,
+      whatsappVerified: 1,
+      whatsappLinkedAt: new Date(),
+    })
+    .where(eq(users.id, userId));
+}
+
+export async function unlinkWhatsAppPhone(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db
+    .update(users)
+    .set({
+      whatsappPhone: null,
+      whatsappVerified: 0,
+      whatsappLinkedAt: null,
+    })
+    .where(eq(users.id, userId));
 }
 
 /**
