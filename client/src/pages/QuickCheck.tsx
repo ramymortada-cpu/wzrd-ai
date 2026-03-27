@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, ArrowRight, ArrowLeft, Sparkles, Loader2, Target, TrendingUp, Shield, Zap } from "lucide-react";
 import type { QuickCheckSubmitResult } from "@/lib/routerTypes";
+import { waMeQualifiedLeadHref } from "@/lib/waContact";
 
 const QUICK_CHECK_QUESTIONS = [
   {
@@ -57,6 +58,11 @@ export default function QuickCheckPage() {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [result, setResult] = useState<QuickCheckSubmitResult | null>(null);
+
+  const topIssueForWhatsApp = (result?.diagnosisTeaser || "")
+    .split("\n")[0]
+    .trim()
+    .slice(0, 80);
 
   const submitMutation = trpc.leads.submitQuickCheck.useMutation({
     onSuccess: (data) => {
@@ -451,6 +457,24 @@ export default function QuickCheckPage() {
                 Powered by Wzrd AI — Primo Marca's Brand Engineering Intelligence
               </p>
             </div>
+
+        {/* WhatsApp hand-off CTA */}
+        <div className="flex justify-center">
+          <a
+            href={waMeQualifiedLeadHref({
+              leadName: formData.contactName || null,
+              brandName: formData.companyName || null,
+              diagnosisLabel: "تشخيص البراند",
+              score: result.score,
+              topIssue: topIssueForWhatsApp || null,
+            })}
+            target="_blank"
+            rel="noopener"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-sm font-semibold hover:bg-emerald-500/25 transition"
+          >
+            📱 احجز Clarity Call على WhatsApp
+          </a>
+        </div>
           </div>
         )}
       </main>

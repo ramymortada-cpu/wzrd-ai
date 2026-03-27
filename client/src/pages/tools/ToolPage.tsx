@@ -1,6 +1,7 @@
 import { useState, useEffect, useId } from 'react';
 import { useLocation } from 'wouter';
-import { waMeHref } from '@/lib/waContact';
+import { waMeQualifiedLeadHref } from '@/lib/waContact';
+import { useAuth } from "@/_core/hooks/useAuth";
 import { toArabicNumerals } from '@/lib/formatUtils';
 import { useI18n } from '@/lib/i18n';
 import { trpc } from '@/lib/trpc';
@@ -346,6 +347,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
   const [, navigate] = useLocation();
   const { locale } = useI18n();
   const isAr = locale === 'ar';
+  const { user } = useAuth();
   const [formData, setFormData] = useState<Record<string, string | boolean>>({});
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ToolResult | null>(null);
@@ -975,9 +977,13 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
               className="flex-1 py-3 rounded-full border border-green-500/30 text-sm text-green-400 hover:bg-green-500/10 transition flex items-center justify-center gap-2"
             >📧 ابعت على إيميلي</button>
             <a
-              href={waMeHref(
-                `نتيجة تشخيص البراند بتاعي: ${result.score}/100\n${result.findings.map(f => '• ' + f.title).join('\n')}\n\nشخّص البراند بتاعك مجاناً:\n${typeof window !== 'undefined' ? window.location.origin : ''}/welcome`,
-              )}
+              href={waMeQualifiedLeadHref({
+                leadName: user?.name,
+                brandName: user?.company,
+                diagnosisLabel: config.nameAr || config.name,
+                score: result.score,
+                topIssue: result.findings?.[0]?.title || null,
+              })}
               target="_blank" rel="noopener"
               className="flex-1 py-3 rounded-full border border-emerald-500/30 text-sm text-emerald-400 hover:bg-emerald-500/10 transition flex items-center justify-center gap-2"
             >💬 شارك على WhatsApp</a>
@@ -1116,7 +1122,13 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
                     اطلب خدمة — فريقنا يشتغل عليها ←
                   </button>
                   <a
-                    href={waMeHref(`أهلاً — عملت تشخيص وجبت ${result.score}/100 وعايز مساعدة متخصصة`)}
+                    href={waMeQualifiedLeadHref({
+                      leadName: user?.name,
+                      brandName: user?.company,
+                      diagnosisLabel: config.nameAr || config.name,
+                      score: result.score,
+                      topIssue: result.findings?.[0]?.title || null,
+                    })}
                     target="_blank" rel="noopener"
                     className="px-6 py-3 rounded-full border border-emerald-500/30 text-emerald-400 font-bold text-sm hover:bg-emerald-500/10 transition"
                   >
