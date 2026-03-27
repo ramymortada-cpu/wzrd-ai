@@ -24,6 +24,12 @@ export interface ToolConfig {
   icon: string;
   cost: number;
   endpoint: string;
+  /** If true: first submit runs free AI preview (no credits), then user unlocks full prescription with credits */
+  paywallAfterFreePreview?: boolean;
+  /** tRPC procedure path for free preview (default: tools.freeBrandDiagnosis) */
+  freePreviewEndpoint?: string;
+  /** tRPC procedure path for paid unlock (default: tools.unlockBrandDiagnosis) */
+  unlockEndpoint?: string;
   description: string;
   descriptionAr?: string;
   fields: ToolField[];
@@ -66,6 +72,18 @@ interface ToolResult {
   } | null;
   creditsUsed: number;
   creditsRemaining: number;
+}
+
+/** Free preview payload — brand uses findings+severity; other tools use summary + problemTitles */
+interface FreeToolPreview {
+  score: number;
+  label: string;
+  criticalCount: number;
+  unlockToken: string;
+  unlockCost: number;
+  findings?: Array<{ title: string; severity: string }>;
+  summary?: string;
+  problemTitles?: string[];
 }
 
 /** JSON from premium.generateReport (nested structure varies by tool) */
@@ -326,9 +344,13 @@ function ProcessingScreen({ toolName }: { toolName: string }) {
 
 export default function ToolPage({ config }: { config: ToolConfig }) {
   const [, navigate] = useLocation();
+  const { locale } = useI18n();
+  const isAr = locale === 'ar';
   const [formData, setFormData] = useState<Record<string, string | boolean>>({});
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ToolResult | null>(null);
+  const [freePreview, setFreePreview] = useState<FreeToolPreview | null>(null);
+  const [unlocking, setUnlocking] = useState(false);
   const [error, setError] = useState('');
   const [premiumReport, setPremiumReport] = useState<PremiumReportPayload | null>(null);
   const [premiumLoading, setPremiumLoading] = useState(false);
@@ -410,37 +432,92 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
 
     setLoading(true);
     setError('');
+    setFreePreview(null);
 
-    // Minimum 8 seconds processing time so user sees the full animation
     const minDelay = new Promise(resolve => setTimeout(resolve, 8000));
 
     try {
-      const [, res] = await Promise.all([
-        minDelay,
-        fetch(`/api/trpc/${config.endpoint}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ json: formData }),
-        }),
-      ]);
-      const data = await res.json();
-
-      if (data.error) {
-        const msg = data.error.message || data.error.json?.message || '';
-        setError(typeof msg === 'string' ? msg : 'Analysis failed. You may not have enough credits.');
-      } else {
-        // Handle both tRPC response formats: {result.data.json} or {result.data}
-        const toolResult = data.result?.data?.json ?? data.result?.data;
-        if (toolResult?.score !== undefined) {
-          setResult(toolResult);
+      if (config.paywallAfterFreePreview) {
+        const freePath = config.freePreviewEndpoint ?? 'tools.freeBrandDiagnosis';
+        const [, res] = await Promise.all([
+          minDelay,
+          fetch(`/api/trpc/${freePath}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ json: formData }),
+          }),
+        ]);
+        const data = await res.json();
+        if (data.error) {
+          const msg = data.error.message || data.error.json?.message || '';
+          setError(typeof msg === 'string' ? msg : 'Preview failed. Try again.');
         } else {
-          setError('Unexpected response format. Please try again.');
+          const preview = data.result?.data?.json ?? data.result?.data;
+          if (preview?.score !== undefined && preview?.unlockToken) {
+            setFreePreview(preview as FreeToolPreview);
+          } else {
+            setError('Unexpected response. Please try again.');
+          }
+        }
+      } else {
+        const [, res] = await Promise.all([
+          minDelay,
+          fetch(`/api/trpc/${config.endpoint}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ json: formData }),
+          }),
+        ]);
+        const data = await res.json();
+        if (data.error) {
+          const msg = data.error.message || data.error.json?.message || '';
+          setError(typeof msg === 'string' ? msg : 'Analysis failed. You may not have enough credits.');
+        } else {
+          const toolResult = data.result?.data?.json ?? data.result?.data;
+          if (toolResult?.score !== undefined) {
+            setResult(toolResult);
+          } else {
+            setError('Unexpected response format. Please try again.');
+          }
         }
       }
     } catch {
       setError('Network error. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUnlockFullDiagnosis = async () => {
+    if (!freePreview?.unlockToken) return;
+    setUnlocking(true);
+    setError('');
+    try {
+      const unlockPath = config.unlockEndpoint ?? 'tools.unlockBrandDiagnosis';
+      const res = await fetch(`/api/trpc/${unlockPath}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ json: { unlockToken: freePreview.unlockToken } }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        const msg = data.error.json?.message || data.error.message || '';
+        setError(typeof msg === 'string' ? msg : 'Unlock failed.');
+      } else {
+        const toolResult = data.result?.data?.json ?? data.result?.data;
+        if (toolResult?.score !== undefined) {
+          setResult(toolResult as ToolResult);
+          setFreePreview(null);
+        } else {
+          setError('Unexpected response. Please try again.');
+        }
+      }
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setUnlocking(false);
     }
   };
 
@@ -627,7 +704,131 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
     );
   }
 
-  // ═══ RESULT VIEW (Free) ═══
+  // ═══ FREE PREVIEW + PAYWALL (brand diagnosis) ═══
+  if (freePreview && !result) {
+    const fp = freePreview;
+    return (
+      <div className="relative min-h-screen overflow-hidden bg-zinc-950 text-white">
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_-8%,rgba(99,102,241,0.2),transparent_52%),radial-gradient(ellipse_45%_35%_at_100%_100%,rgba(6,182,212,0.07),transparent_42%),radial-gradient(ellipse_40%_30%_at_0%_80%,rgba(192,132,252,0.06),transparent_45%)]"
+          aria-hidden
+        />
+        <div className="relative z-10 mx-auto max-w-2xl px-6 py-16">
+          <button type="button" onClick={() => navigate('/tools')} className="mb-8 text-xs text-zinc-500 transition hover:text-amber-400">
+            ← {isAr ? 'رجوع للأدوات' : 'Back to Tools'}
+          </button>
+
+          <div className="mb-10 text-center">
+            <div className="wzrd-fade-in-stagger mx-auto inline-block rounded-3xl border border-white/10 bg-white/[0.04] px-8 py-6 backdrop-blur-xl">
+              <ScoreRing score={fp.score} />
+              <h2 className="text-2xl font-bold tracking-tight">{config.name}</h2>
+              <p className="mt-1 text-sm text-zinc-500">
+                {fp.label} · {isAr ? 'معاينة مجانية' : 'Free preview'}
+              </p>
+            </div>
+          </div>
+
+          {fp.summary ? (
+            <p className="mb-6 text-center text-sm leading-relaxed text-zinc-300" dir={isAr ? 'rtl' : 'ltr'}>
+              {fp.summary}
+            </p>
+          ) : null}
+
+          <p className="mb-4 text-center text-xs font-semibold uppercase tracking-wider text-zinc-500">
+            {isAr ? 'عناوين المشاكل فقط — التفاصيل مقفولة' : 'Issue headlines only — details locked'}
+          </p>
+
+          <div className="mb-8 space-y-3">
+            {(fp.findings && fp.findings.length > 0
+              ? fp.findings.map((f, i) => (
+                  <div
+                    key={i}
+                    className={`wzrd-fade-in-stagger rounded-2xl border p-4 backdrop-blur-xl ${severityColor(f.severity as Finding['severity'])}`}
+                    style={{ animationDelay: `${0.06 + i * 0.06}s` }}
+                  >
+                    <div className="mb-1 flex items-center gap-2">
+                      <span className="text-xs font-mono uppercase tracking-wider opacity-60">{f.severity}</span>
+                      <h4 className="text-sm font-bold">{f.title}</h4>
+                    </div>
+                    <p className="text-xs opacity-50 blur-[3px] select-none" aria-hidden>
+                      {isAr ? 'الشرح والحلول متاحة بعد الفتح…' : 'Explanation unlocks after purchase…'}
+                    </p>
+                  </div>
+                ))
+              : (fp.problemTitles ?? []).map((title, i) => (
+                  <div
+                    key={i}
+                    className={`wzrd-fade-in-stagger rounded-2xl border p-4 backdrop-blur-xl ${severityColor('medium')}`}
+                    style={{ animationDelay: `${0.06 + i * 0.06}s` }}
+                  >
+                    <h4 className="text-sm font-bold">{title}</h4>
+                    <p className="text-xs opacity-50 blur-[3px] select-none mt-1" aria-hidden>
+                      {isAr ? 'الشرح والحلول متاحة بعد الفتح…' : 'Explanation unlocks after purchase…'}
+                    </p>
+                  </div>
+                )))}
+          </div>
+
+          <div className="relative overflow-hidden rounded-3xl border border-amber-400/25 bg-gradient-to-br from-amber-950/40 via-zinc-950/90 to-violet-950/50 p-6 shadow-[0_0_40px_-10px_rgba(245,158,11,0.35)]">
+            <div
+              className="pointer-events-none absolute inset-0 animate-pulse bg-[linear-gradient(110deg,transparent_20%,rgba(255,255,255,0.05)_45%,transparent_70%)]"
+              aria-hidden
+            />
+            <div className="relative text-center">
+              <p className="mb-2 text-lg font-bold text-amber-100" dir={isAr ? 'rtl' : 'ltr'}>
+                {isAr
+                  ? (fp.criticalCount > 0
+                      ? `عندك ${fp.criticalCount} مشكلة حرجة — اكشف الحل والخطة`
+                      : `عندك ${fp.findings?.length ?? fp.problemTitles?.length ?? 0} نقاط رئيسية — اكشف التفاصيل وخطوات العمل`)
+                  : (fp.criticalCount > 0
+                      ? `${fp.criticalCount} critical issues — unlock the fix & plan`
+                      : `${fp.findings?.length ?? fp.problemTitles?.length ?? 0} focus areas — unlock details & action plan`)}
+              </p>
+              <p className="mb-6 text-xs text-zinc-400">
+                {isAr ? 'يتضمن: شرح كل نقطة، مهام عملية، وتوصية مختصرة' : 'Includes: deep dives, action items, recommendation'}
+              </p>
+              <button
+                type="button"
+                onClick={handleUnlockFullDiagnosis}
+                disabled={unlocking}
+                className="wzrd-shimmer-btn relative w-full overflow-hidden rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 py-4 text-sm font-bold text-zinc-950 shadow-lg shadow-amber-500/30 transition hover:brightness-110 disabled:opacity-50"
+              >
+                {unlocking ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-900/30 border-t-zinc-900" />
+                    {isAr ? 'جاري الفتح…' : 'Unlocking…'}
+                  </span>
+                ) : (
+                  (isAr ? `افتح التقرير الكامل — ${fp.unlockCost} كريدت` : `Unlock full report — ${fp.unlockCost} credits`)
+                )}
+              </button>
+              <a href="/login" className="mt-3 block text-center text-xs text-indigo-400 hover:underline">
+                {isAr ? 'مسجّل؟ سجّل الدخول لفتح التقرير' : 'Have an account? Log in to unlock'}
+              </a>
+              <a href="/signup" className="mt-1 block text-center text-xs text-zinc-500 hover:text-zinc-300">
+                {isAr ? 'مش مسجّل؟ أنشئ حساباً واحصل على كريدت' : 'New here? Sign up for credits'}
+              </a>
+              {error ? <p className="mt-4 text-center text-sm text-red-400">{error}</p> : null}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setFreePreview(null);
+              setFormData({});
+              setError('');
+            }}
+            className="mt-8 w-full rounded-full border border-zinc-800 py-3 text-sm text-zinc-400 transition hover:border-indigo-500"
+          >
+            {isAr ? 'تعديل الإجابات' : 'Edit my answers'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ═══ RESULT VIEW (after unlock / legacy tools) ═══
   if (result) {
     return (
       <div className="relative min-h-screen overflow-hidden bg-zinc-950 text-white">
@@ -966,7 +1167,11 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
           <div>
             <h1 className="text-xl font-bold">{config.name}</h1>
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              {config.description} · ~{config.cost} credits
+              {config.paywallAfterFreePreview
+                ? (isAr
+                    ? `${config.descriptionAr || config.description} · معاينة مجانية، ثم ~${config.cost} كريدت للتفاصيل`
+                    : `${config.description} · Free preview, then ~${config.cost} credits for full unlock`)
+                : `${config.description} · ~${config.cost} credits`}
             </p>
           </div>
         </div>
@@ -1062,7 +1267,9 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
           disabled={loading}
           className="wzrd-shimmer-btn relative mt-6 w-full overflow-hidden rounded-full bg-gradient-to-r from-amber-500 to-amber-400 py-3.5 text-sm font-bold text-zinc-950 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-amber-500/25 disabled:opacity-50"
         >
-          تحليل — {config.cost} كريدت
+          {config.paywallAfterFreePreview
+            ? (isAr ? 'عرض النتيجة المجانية ←' : 'See free preview →')
+            : `تحليل — ${config.cost} كريدت`}
         </button>
       </div>
     </div>

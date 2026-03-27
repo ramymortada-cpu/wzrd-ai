@@ -6,6 +6,9 @@ export default function LaunchReadiness() {
   return <ToolPage config={{
     id: 'launch_readiness', name: 'Launch Readiness', nameAr: 'جاهزية الإطلاق', icon: '🚀', cost: 30,
     endpoint: 'tools.launchReadiness',
+    paywallAfterFreePreview: true,
+    freePreviewEndpoint: 'tools.freeLaunchReadinessDiagnosis',
+    unlockEndpoint: 'tools.unlockLaunchReadiness',
     description: 'How ready are you to go to market?',
     descriptionAr: 'أد إيه أنت جاهز تنزل السوق؟',
     guideUrl: '/services-info', guideTitle: 'Business Takeoff Package',
