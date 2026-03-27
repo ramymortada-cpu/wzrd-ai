@@ -206,6 +206,11 @@ async function clearToolDiagUnlockPending(token: string): Promise<void> {
 
 const TOOL_DISPLAY_NAME: Record<string, string> = {
   brand_diagnosis: 'Brand Diagnosis',
+  offer_check: 'Offer Logic Check',
+  message_check: 'Message Check',
+  presence_audit: 'Presence Audit',
+  identity_snapshot: 'Identity Snapshot',
+  launch_readiness: 'Launch Readiness',
 };
 
 async function unlockDiagnosisFromPending(
@@ -466,6 +471,116 @@ Previous branding work: ${input.previousBranding || 'Not specified'}
 Score the brand 0-100. Identify the top 3-5 issues across: positioning clarity, messaging consistency, offer logic, visual perception, and customer journey. Be specific to THIS company.`;
 }
 
+function buildOfferCheckUserPrompt(input: z.infer<typeof offerCheckInputSchema>): string {
+  return `Analyze offer logic for:
+Company: ${input.companyName}
+Industry: ${input.industry}
+Packages/services (detail): ${input.currentPackages}
+Number of packages (band): ${input.numberOfPackages || 'Not specified'}
+Pricing model: ${input.pricingModel || 'Not specified'}
+Price range: ${input.cheapestPrice || '?'} – ${input.highestPrice || '?'} (local currency)
+Target audience / ICP: ${input.targetAudience}
+Common objections: ${input.commonObjections || 'Not specified'}
+Competitor pricing context: ${input.competitorPricing || 'Not specified'}
+
+Score 0-100. Check: Is the offer clear? Does pricing logic make sense? Are there too many/few options? Is the value proposition obvious? Is there a clear path from free→paid?`;
+}
+
+function buildMessageCheckUserPrompt(input: z.infer<typeof messageCheckInputSchema>): string {
+  return `Analyze messaging consistency for:
+Company: ${input.companyName}
+Industry: ${input.industry}
+Tagline: ${input.tagline || 'None'}
+Elevator pitch (what you do): ${input.elevatorPitch}
+Website headline: ${input.websiteHeadline || 'Not provided'}
+Instagram bio: ${input.instagramBio || 'Not provided'}
+LinkedIn/Facebook about: ${input.linkedinAbout || 'Not provided'}
+Key differentiator: ${input.keyDifferentiator || 'Not provided'}
+Tone of voice (selected): ${input.toneOfVoice || 'Not specified'}
+Customer quote (social proof): ${input.customerQuote || 'Not provided'}
+
+Score 0-100. Check: Are these consistent? Is the differentiation clear? Is the tone appropriate? Is there a Clarity Gap? Would a new customer understand this brand in 5 seconds?`;
+}
+
+function buildPresenceAuditUserPrompt(input: z.infer<typeof presenceAuditInputSchema>): string {
+  return `Audit digital presence for:
+Company: ${input.companyName}
+Industry: ${input.industry}
+Website: ${input.website || 'Not provided'}
+Instagram handle: ${input.instagramHandle || 'Not provided'}
+Instagram followers (band): ${input.instagramFollowers || 'Not specified'}
+Other platforms: ${input.otherPlatforms || 'None'}
+Posting frequency: ${input.postingFrequency || 'Not specified'}
+Content types posted: ${input.contentType || 'Not specified'}
+How customers reach you: ${input.inquiryMethod}
+Typical response time: ${input.avgResponseTime || 'Not specified'}
+Google Business Profile: ${input.googleBusiness || 'Not specified'}
+
+Score 0-100. Check: Cross-channel consistency, premium perception, CTA clarity, inquiry flow friction, content-proof-CTA alignment. Why is this brand "present but not chosen"?`;
+}
+
+function buildIdentitySnapshotUserPrompt(input: z.infer<typeof identitySnapshotInputSchema>): string {
+  return `Analyze brand identity match for:
+Company: ${input.companyName}
+Industry: ${input.industry}
+Brand personality (if it were a person): ${input.brandPersonality}
+Target audience: ${input.targetAudience}
+Brand colors: ${input.brandColors || 'Not specified'}
+Logo status: ${input.hasLogo || 'Not specified'}
+Brand guidelines status: ${input.hasGuidelines || 'Not specified'}
+Competitors: ${input.competitors || 'Not specified'}
+Desired perception (what people should feel): ${input.desiredPerception}
+Gap between desired and actual: ${input.currentGap || 'Not specified'}
+
+Score 0-100. Using Kapferer's Identity Prism, check: Does the brand personality match the audience? Is the visual quality matching the positioning? Is there a "Commodity Trap" — looking like everyone else? What archetype does this brand project vs. what it should project?`;
+}
+
+function buildLaunchReadinessUserPrompt(input: z.infer<typeof launchReadinessInputSchema>): string {
+  return `Assess launch readiness for:
+Company: ${input.companyName}
+Industry: ${input.industry}
+Launch type: ${input.launchType}
+Target launch window: ${input.targetLaunchDate || 'Not set'}
+Brand guidelines status: ${input.hasGuidelines || 'Not specified'}
+Structured packages/pricing status: ${input.hasOfferStructure || 'Not specified'}
+Website status: ${input.hasWebsite || 'Not specified'}
+Content plan status: ${input.hasContentPlan || 'Not specified'}
+Monthly marketing budget (band): ${input.marketingBudget || 'Not specified'}
+Team capacity for launch: ${input.teamCapacity || 'Not specified'}
+Biggest concern: ${input.biggestConcern}
+Success metric after ~3 months: ${input.successMetric || 'Not specified'}
+
+Score 0-100 on launch readiness. Identify what's missing and what's the priority order. Be specific about what "ready to launch" means for THIS type of business.`;
+}
+
+type ParsedDiagnosisBody = ReturnType<typeof parseDiagnosisAiResponse>;
+
+function freeToolDiagnosisPreviewPayload(
+  toolId: string,
+  body: ParsedDiagnosisBody,
+  unlockToken: string,
+): {
+  score: number;
+  label: string;
+  summary: string;
+  problemTitles: string[];
+  criticalCount: number;
+  unlockToken: string;
+  unlockCost: number;
+} {
+  const unlockCost = TOOL_COSTS[toolId] ?? 0;
+  const criticalCount = body.findings.filter((f) => f.severity === 'high').length;
+  return {
+    score: body.score,
+    label: scoreLabel(body.score),
+    summary: body.recommendation,
+    problemTitles: body.findings.map((f) => f.title),
+    criticalCount,
+    unlockToken,
+    unlockCost,
+  };
+}
+
 // ════════════════════════════════════════════
 // ROUTER
 // ════════════════════════════════════════════
@@ -568,6 +683,166 @@ export const toolsRouter = router({
       }),
     ),
 
+  freeOfferCheckDiagnosis: publicProcedure
+    .input(offerCheckInputSchema)
+    .mutation(async ({ input }) => {
+      if (!isToolEnabled('offer_check')) {
+        throw new Error('هذه الأداة معطّلة مؤقتاً. يرجى المحاولة لاحقاً.');
+      }
+      pruneExpiredUnlockTokens();
+      const userPrompt = buildOfferCheckUserPrompt(input);
+      const text = await callDiagnosisModel('offer_check', TOOL_SYSTEM, userPrompt);
+      const body = parseDiagnosisAiResponse(text, 'offer_check');
+      const unlockToken = randomUUID();
+      await storeToolDiagUnlockPending(unlockToken, {
+        toolId: 'offer_check',
+        score: body.score,
+        findings: body.findings,
+        actionItems: body.actionItems,
+        recommendation: body.recommendation,
+      });
+      logger.info({ tool: 'offer_check', phase: 'free_preview', score: body.score }, 'Offer Check free preview');
+      return freeToolDiagnosisPreviewPayload('offer_check', body, unlockToken);
+    }),
+
+  unlockOfferCheck: protectedProcedure
+    .input(z.object({ unlockToken: z.string().uuid() }))
+    .mutation(({ input, ctx }) =>
+      unlockDiagnosisFromPending(ctx, input.unlockToken, 'offer_check', {
+        type: 'guide',
+        title: 'Offer Logic 101',
+        url: '/guides/offer-logic',
+      }),
+    ),
+
+  freeMessageCheckDiagnosis: publicProcedure
+    .input(messageCheckInputSchema)
+    .mutation(async ({ input }) => {
+      if (!isToolEnabled('message_check')) {
+        throw new Error('هذه الأداة معطّلة مؤقتاً. يرجى المحاولة لاحقاً.');
+      }
+      pruneExpiredUnlockTokens();
+      const userPrompt = buildMessageCheckUserPrompt(input);
+      const text = await callDiagnosisModel('message_check', TOOL_SYSTEM, userPrompt);
+      const body = parseDiagnosisAiResponse(text, 'message_check');
+      const unlockToken = randomUUID();
+      await storeToolDiagUnlockPending(unlockToken, {
+        toolId: 'message_check',
+        score: body.score,
+        findings: body.findings,
+        actionItems: body.actionItems,
+        recommendation: body.recommendation,
+      });
+      logger.info({ tool: 'message_check', phase: 'free_preview', score: body.score }, 'Message Check free preview');
+      return freeToolDiagnosisPreviewPayload('message_check', body, unlockToken);
+    }),
+
+  unlockMessageCheck: protectedProcedure
+    .input(z.object({ unlockToken: z.string().uuid() }))
+    .mutation(({ input, ctx }) =>
+      unlockDiagnosisFromPending(ctx, input.unlockToken, 'message_check', {
+        type: 'guide',
+        title: 'Brand Identity Guide',
+        url: '/guides/brand-identity',
+      }),
+    ),
+
+  freePresenceAuditDiagnosis: publicProcedure
+    .input(presenceAuditInputSchema)
+    .mutation(async ({ input }) => {
+      if (!isToolEnabled('presence_audit')) {
+        throw new Error('هذه الأداة معطّلة مؤقتاً. يرجى المحاولة لاحقاً.');
+      }
+      pruneExpiredUnlockTokens();
+      const userPrompt = buildPresenceAuditUserPrompt(input);
+      const text = await callDiagnosisModel('presence_audit', TOOL_SYSTEM, userPrompt);
+      const body = parseDiagnosisAiResponse(text, 'presence_audit');
+      const unlockToken = randomUUID();
+      await storeToolDiagUnlockPending(unlockToken, {
+        toolId: 'presence_audit',
+        score: body.score,
+        findings: body.findings,
+        actionItems: body.actionItems,
+        recommendation: body.recommendation,
+      });
+      logger.info({ tool: 'presence_audit', phase: 'free_preview', score: body.score }, 'Presence Audit free preview');
+      return freeToolDiagnosisPreviewPayload('presence_audit', body, unlockToken);
+    }),
+
+  unlockPresenceAudit: protectedProcedure
+    .input(z.object({ unlockToken: z.string().uuid() }))
+    .mutation(({ input, ctx }) =>
+      unlockDiagnosisFromPending(ctx, input.unlockToken, 'presence_audit', {
+        type: 'service',
+        title: 'Full Health Check',
+        url: '/services#audit',
+      }),
+    ),
+
+  freeIdentitySnapshotDiagnosis: publicProcedure
+    .input(identitySnapshotInputSchema)
+    .mutation(async ({ input }) => {
+      if (!isToolEnabled('identity_snapshot')) {
+        throw new Error('هذه الأداة معطّلة مؤقتاً. يرجى المحاولة لاحقاً.');
+      }
+      pruneExpiredUnlockTokens();
+      const userPrompt = buildIdentitySnapshotUserPrompt(input);
+      const text = await callDiagnosisModel('identity_snapshot', TOOL_SYSTEM, userPrompt);
+      const body = parseDiagnosisAiResponse(text, 'identity_snapshot');
+      const unlockToken = randomUUID();
+      await storeToolDiagUnlockPending(unlockToken, {
+        toolId: 'identity_snapshot',
+        score: body.score,
+        findings: body.findings,
+        actionItems: body.actionItems,
+        recommendation: body.recommendation,
+      });
+      logger.info({ tool: 'identity_snapshot', phase: 'free_preview', score: body.score }, 'Identity Snapshot free preview');
+      return freeToolDiagnosisPreviewPayload('identity_snapshot', body, unlockToken);
+    }),
+
+  unlockIdentitySnapshot: protectedProcedure
+    .input(z.object({ unlockToken: z.string().uuid() }))
+    .mutation(({ input, ctx }) =>
+      unlockDiagnosisFromPending(ctx, input.unlockToken, 'identity_snapshot', {
+        type: 'guide',
+        title: 'What Is Brand Identity',
+        url: '/guides/brand-identity',
+      }),
+    ),
+
+  freeLaunchReadinessDiagnosis: publicProcedure
+    .input(launchReadinessInputSchema)
+    .mutation(async ({ input }) => {
+      if (!isToolEnabled('launch_readiness')) {
+        throw new Error('هذه الأداة معطّلة مؤقتاً. يرجى المحاولة لاحقاً.');
+      }
+      pruneExpiredUnlockTokens();
+      const userPrompt = buildLaunchReadinessUserPrompt(input);
+      const text = await callDiagnosisModel('launch_readiness', TOOL_SYSTEM, userPrompt);
+      const body = parseDiagnosisAiResponse(text, 'launch_readiness');
+      const unlockToken = randomUUID();
+      await storeToolDiagUnlockPending(unlockToken, {
+        toolId: 'launch_readiness',
+        score: body.score,
+        findings: body.findings,
+        actionItems: body.actionItems,
+        recommendation: body.recommendation,
+      });
+      logger.info({ tool: 'launch_readiness', phase: 'free_preview', score: body.score }, 'Launch Readiness free preview');
+      return freeToolDiagnosisPreviewPayload('launch_readiness', body, unlockToken);
+    }),
+
+  unlockLaunchReadiness: protectedProcedure
+    .input(z.object({ unlockToken: z.string().uuid() }))
+    .mutation(({ input, ctx }) =>
+      unlockDiagnosisFromPending(ctx, input.unlockToken, 'launch_readiness', {
+        type: 'service',
+        title: 'Business Takeoff Package',
+        url: '/services#takeoff',
+      }),
+    ),
+
   /** Tool 1: Brand Diagnosis — legacy single-step (deducts before result); prefer free + unlock in UI */
   brandDiagnosis: protectedProcedure
     .input(brandDiagnosisInputSchema)
@@ -583,18 +858,7 @@ export const toolsRouter = router({
   offerCheck: protectedProcedure
     .input(offerCheckInputSchema)
     .mutation(async ({ input, ctx }) => {
-      const userPrompt = `Analyze offer logic for:
-Company: ${input.companyName}
-Industry: ${input.industry}
-Packages/services (detail): ${input.currentPackages}
-Number of packages (band): ${input.numberOfPackages || 'Not specified'}
-Pricing model: ${input.pricingModel || 'Not specified'}
-Price range: ${input.cheapestPrice || '?'} – ${input.highestPrice || '?'} (local currency)
-Target audience / ICP: ${input.targetAudience}
-Common objections: ${input.commonObjections || 'Not specified'}
-Competitor pricing context: ${input.competitorPricing || 'Not specified'}
-
-Score 0-100. Check: Is the offer clear? Does pricing logic make sense? Are there too many/few options? Is the value proposition obvious? Is there a clear path from free→paid?`;
+      const userPrompt = buildOfferCheckUserPrompt(input);
       const result = await runToolAI('offer_check', 'Offer Logic Check', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
       result.nextStep = { type: 'guide', title: 'Offer Logic 101', url: '/guides/offer-logic' };
       logger.info({ userId: ctx.user!.id, tool: 'offer_check', score: result.score }, 'Offer Check completed');
@@ -605,19 +869,7 @@ Score 0-100. Check: Is the offer clear? Does pricing logic make sense? Are there
   messageCheck: protectedProcedure
     .input(messageCheckInputSchema)
     .mutation(async ({ input, ctx }) => {
-      const userPrompt = `Analyze messaging consistency for:
-Company: ${input.companyName}
-Industry: ${input.industry}
-Tagline: ${input.tagline || 'None'}
-Elevator pitch (what you do): ${input.elevatorPitch}
-Website headline: ${input.websiteHeadline || 'Not provided'}
-Instagram bio: ${input.instagramBio || 'Not provided'}
-LinkedIn/Facebook about: ${input.linkedinAbout || 'Not provided'}
-Key differentiator: ${input.keyDifferentiator || 'Not provided'}
-Tone of voice (selected): ${input.toneOfVoice || 'Not specified'}
-Customer quote (social proof): ${input.customerQuote || 'Not provided'}
-
-Score 0-100. Check: Are these consistent? Is the differentiation clear? Is the tone appropriate? Is there a Clarity Gap? Would a new customer understand this brand in 5 seconds?`;
+      const userPrompt = buildMessageCheckUserPrompt(input);
       const result = await runToolAI('message_check', 'Message Check', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
       result.nextStep = { type: 'guide', title: 'Brand Identity Guide', url: '/guides/brand-identity' };
       logger.info({ userId: ctx.user!.id, tool: 'message_check', score: result.score }, 'Message Check completed');
@@ -628,20 +880,7 @@ Score 0-100. Check: Are these consistent? Is the differentiation clear? Is the t
   presenceAudit: protectedProcedure
     .input(presenceAuditInputSchema)
     .mutation(async ({ input, ctx }) => {
-      const userPrompt = `Audit digital presence for:
-Company: ${input.companyName}
-Industry: ${input.industry}
-Website: ${input.website || 'Not provided'}
-Instagram handle: ${input.instagramHandle || 'Not provided'}
-Instagram followers (band): ${input.instagramFollowers || 'Not specified'}
-Other platforms: ${input.otherPlatforms || 'None'}
-Posting frequency: ${input.postingFrequency || 'Not specified'}
-Content types posted: ${input.contentType || 'Not specified'}
-How customers reach you: ${input.inquiryMethod}
-Typical response time: ${input.avgResponseTime || 'Not specified'}
-Google Business Profile: ${input.googleBusiness || 'Not specified'}
-
-Score 0-100. Check: Cross-channel consistency, premium perception, CTA clarity, inquiry flow friction, content-proof-CTA alignment. Why is this brand "present but not chosen"?`;
+      const userPrompt = buildPresenceAuditUserPrompt(input);
       const result = await runToolAI('presence_audit', 'Presence Audit', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
       result.nextStep = { type: 'service', title: 'Full Health Check', url: '/services#audit' };
       logger.info({ userId: ctx.user!.id, tool: 'presence_audit', score: result.score }, 'Presence Audit completed');
@@ -652,19 +891,7 @@ Score 0-100. Check: Cross-channel consistency, premium perception, CTA clarity, 
   identitySnapshot: protectedProcedure
     .input(identitySnapshotInputSchema)
     .mutation(async ({ input, ctx }) => {
-      const userPrompt = `Analyze brand identity match for:
-Company: ${input.companyName}
-Industry: ${input.industry}
-Brand personality (if it were a person): ${input.brandPersonality}
-Target audience: ${input.targetAudience}
-Brand colors: ${input.brandColors || 'Not specified'}
-Logo status: ${input.hasLogo || 'Not specified'}
-Brand guidelines status: ${input.hasGuidelines || 'Not specified'}
-Competitors: ${input.competitors || 'Not specified'}
-Desired perception (what people should feel): ${input.desiredPerception}
-Gap between desired and actual: ${input.currentGap || 'Not specified'}
-
-Score 0-100. Using Kapferer's Identity Prism, check: Does the brand personality match the audience? Is the visual quality matching the positioning? Is there a "Commodity Trap" — looking like everyone else? What archetype does this brand project vs. what it should project?`;
+      const userPrompt = buildIdentitySnapshotUserPrompt(input);
       const result = await runToolAI('identity_snapshot', 'Identity Snapshot', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
       result.nextStep = { type: 'guide', title: 'What Is Brand Identity', url: '/guides/brand-identity' };
       logger.info({ userId: ctx.user!.id, tool: 'identity_snapshot', score: result.score }, 'Identity Snapshot completed');
@@ -675,21 +902,7 @@ Score 0-100. Using Kapferer's Identity Prism, check: Does the brand personality 
   launchReadiness: protectedProcedure
     .input(launchReadinessInputSchema)
     .mutation(async ({ input, ctx }) => {
-      const userPrompt = `Assess launch readiness for:
-Company: ${input.companyName}
-Industry: ${input.industry}
-Launch type: ${input.launchType}
-Target launch window: ${input.targetLaunchDate || 'Not set'}
-Brand guidelines status: ${input.hasGuidelines || 'Not specified'}
-Structured packages/pricing status: ${input.hasOfferStructure || 'Not specified'}
-Website status: ${input.hasWebsite || 'Not specified'}
-Content plan status: ${input.hasContentPlan || 'Not specified'}
-Monthly marketing budget (band): ${input.marketingBudget || 'Not specified'}
-Team capacity for launch: ${input.teamCapacity || 'Not specified'}
-Biggest concern: ${input.biggestConcern}
-Success metric after ~3 months: ${input.successMetric || 'Not specified'}
-
-Score 0-100 on launch readiness. Identify what's missing and what's the priority order. Be specific about what "ready to launch" means for THIS type of business.`;
+      const userPrompt = buildLaunchReadinessUserPrompt(input);
       const result = await runToolAI('launch_readiness', 'Launch Readiness', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
       result.nextStep = { type: 'service', title: 'Business Takeoff Package', url: '/services#takeoff' };
       logger.info({ userId: ctx.user!.id, tool: 'launch_readiness', score: result.score }, 'Launch Readiness completed');
