@@ -1,4 +1,5 @@
 import { trpc } from "@/lib/trpc";
+import type { DashboardPlaybookMap } from "@/lib/routerTypes";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +22,7 @@ const STAGE_COLORS: Record<string, string> = {
 };
 
 export default function PlaybooksPage() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const { data, isLoading } = trpc.dashboard.playbooks.useQuery();
 
   if (isLoading) {
@@ -32,8 +33,8 @@ export default function PlaybooksPage() {
     );
   }
 
-  const playbooks = data?.playbooks as Record<string, any> || {};
-  const prices = data?.prices as Record<string, number> || {};
+  const playbooks: DashboardPlaybookMap = data?.playbooks ?? {};
+  const prices = (data?.prices ?? {}) as Record<string, number>;
 
   return (
     <div className="space-y-6 sm:space-y-8 max-w-4xl mx-auto px-3 sm:px-0">
@@ -52,9 +53,10 @@ export default function PlaybooksPage() {
 
       {/* Playbook Cards */}
       <div className="space-y-4">
-        {Object.entries(playbooks).map(([key, playbook]: [string, any]) => {
+        {Object.entries(playbooks).map(([key, playbook]) => {
           const meta = SERVICE_META[key] || { icon: "📋", color: "border-l-gray-500" };
-          const totalSteps = playbook.stages?.reduce((acc: number, s: any) => acc + (s.steps?.length || 0), 0) || 0;
+          const stages = playbook.stages ?? [];
+          const totalSteps = stages.reduce((acc, s) => acc + (s.steps?.length ?? 0), 0);
 
           return (
             <Card key={key} className={`shadow-sm border-l-4 ${meta.color}`}>
@@ -72,14 +74,14 @@ export default function PlaybooksPage() {
                       {(prices[key] || 0).toLocaleString()} {t("common.egp")}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {playbook.stages?.length || 0} {t("playbooks.stages")} · {totalSteps} {t("playbooks.steps")}
+                      {stages.length} {t("playbooks.stages")} · {totalSteps} {t("playbooks.steps")}
                     </p>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
                 <Accordion type="single" collapsible className="w-full">
-                  {playbook.stages?.map((stage: any, stageIdx: number) => (
+                  {stages.map((stage, stageIdx: number) => (
                     <AccordionItem key={stageIdx} value={`stage-${stageIdx}`} className="border-b-0">
                       <AccordionTrigger className="hover:no-underline py-3">
                         <div className="flex items-center gap-2">
@@ -92,7 +94,7 @@ export default function PlaybooksPage() {
                       </AccordionTrigger>
                       <AccordionContent>
                         <div className="space-y-2 ps-2">
-                          {stage.steps?.map((step: any, stepIdx: number) => (
+                          {(stage.steps ?? []).map((step, stepIdx: number) => (
                             <div key={stepIdx} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
                               <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
                                 <span className="text-xs font-medium text-primary">{stepIdx + 1}</span>

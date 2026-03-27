@@ -4,6 +4,39 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import type {
+  EmailTemplateStats,
+  WzrdAgencyClient,
+  WzrdAgencyClientsRes,
+  WzrdAgencyProject,
+  WzrdAgencyProjectsRes,
+  WzrdCreditsPage,
+  WzrdCreditPlan,
+  WzrdCreditTx,
+  WzrdDashboardData,
+  WzrdEmailStats,
+  WzrdPaymentRow,
+  WzrdPaymentsPage,
+  WzrdPromoCode,
+  WzrdPromoFormDraft,
+  WzrdPublicUser,
+  WzrdPromptRow,
+  WzrdRequestTimelineUpdate,
+  WzrdServiceRequest,
+  WzrdSiteConfigPayload,
+  WzrdSiteService,
+  WzrdSystemConfig,
+  WzrdTeamMember,
+  WzrdTeamPage,
+  WzrdToolRunHistory,
+  WzrdToolRunRow,
+  WzrdToolStat,
+  WzrdTopToolEntry,
+  WzrdToolStatsPage,
+  WzrdUsersPage,
+  WzrdWebhookEvent,
+  WzrdWebhooksPage,
+} from '@/lib/wzrdAdminApiTypes';
 
 type Tab = 'overview' | 'users' | 'credits' | 'tools' | 'payments' | 'webhooks' | 'cms' | 'prompts' | 'pricing' | 'team' | 'agency' | 'config' | 'requests';
 
@@ -59,18 +92,6 @@ function LoadingSkeleton() {
       <div className="h-48 bg-gray-200 rounded-xl" />
     </div>
   );
-}
-
-function StatusBadge({ status, t }: { status: string; t: (ar: string, en: string) => string }) {
-  const map: Record<string, { ar: string; en: string; cls: string }> = {
-    active: { ar: 'نشط', en: 'Active', cls: 'bg-green-100 text-green-700' },
-    paused: { ar: 'متوقف', en: 'Paused', cls: 'bg-amber-100 text-amber-700' },
-    completed: { ar: 'مكتمل', en: 'Completed', cls: 'bg-blue-100 text-blue-700' },
-    cancelled: { ar: 'ملغي', en: 'Cancelled', cls: 'bg-red-100 text-red-700' },
-    lead: { ar: 'ليد', en: 'Lead', cls: 'bg-gray-100 text-gray-600' },
-  };
-  const m = map[status] || { ar: status, en: status, cls: 'bg-gray-100 text-gray-600' };
-  return <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ${m.cls}`}>{t(m.ar, m.en)}</span>;
 }
 
 function EmptyState({ icon, message }: { icon: string; message: string }) {
@@ -130,8 +151,8 @@ type T = (ar: string, en: string) => string;
 // OVERVIEW TAB
 // ═══════════════════════════════════════
 function OverviewTab({ t }: { t: T }) {
-  const [data, setData] = useState<Record<string, any> | null>(null);
-  const [recentRuns, setRecentRuns] = useState<{ runs: any[] } | null>(null);
+  const [data, setData] = useState<WzrdDashboardData | null>(null);
+  const [recentRuns, setRecentRuns] = useState<WzrdToolRunHistory | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
@@ -140,8 +161,8 @@ function OverviewTab({ t }: { t: T }) {
       api('wzrdAdmin.dashboard'),
       api('wzrdAdmin.toolRunHistory', { limit: 5 }),
     ]);
-    setData(d);
-    setRecentRuns(r);
+    setData(d as WzrdDashboardData | null);
+    setRecentRuns(r as WzrdToolRunHistory | null);
     setRefreshing(false);
   }, []);
 
@@ -178,7 +199,7 @@ function OverviewTab({ t }: { t: T }) {
         <div className="p-5 rounded-xl border border-gray-200 bg-white shadow-sm">
           <h4 className="text-sm font-bold text-gray-600 mb-3">{t('آخر النشاطات', 'Recent Activity')}</h4>
           <div className="space-y-2">
-            {recentRuns!.runs.slice(0, 5).map((r: any) => (
+            {recentRuns!.runs.slice(0, 5).map((r: WzrdToolRunRow) => (
               <div key={r.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
                 <div>
                   <span className="text-sm font-medium">User #{r.userId}</span>
@@ -192,12 +213,12 @@ function OverviewTab({ t }: { t: T }) {
         </div>
       )}
 
-      {data.tools?.topTools?.length > 0 && (
+      {(data.tools?.topTools?.length ?? 0) > 0 && (
         <div className="p-5 rounded-xl border border-gray-200 bg-white shadow-sm">
           <h4 className="text-sm font-bold text-gray-600 mb-3">{t('أكتر الأدوات استخداماً', 'Top Tools')}</h4>
           <div className="space-y-2">
-            {data.tools.topTools.map((item: any) => (
-              <div key={item.tool} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition">
+            {data.tools?.topTools?.map((item: WzrdTopToolEntry) => (
+              <div key={item.tool ?? String(item.uses)} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition">
                 <span className="text-sm font-medium">{item.tool?.replace(/_/g, ' ')}</span>
                 <div className="flex gap-4">
                   <span className="text-xs text-gray-500">{item.uses} {t('عملية', 'runs')}</span>
@@ -261,19 +282,18 @@ function OverviewTab({ t }: { t: T }) {
 const PAGE_SIZE = 20;
 
 function UsersTab({ t, onSuccess, onError }: { t: T; onSuccess?: (msg?: string) => void; onError?: (msg: string) => void }) {
-  const [data, setData] = useState<{ users: any[]; total: number } | null>(null);
+  const [data, setData] = useState<WzrdUsersPage | null>(null);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
   const [addingCredits, setAddingCredits] = useState<number | null>(null);
   const [creditsAmount, setCreditsAmount] = useState('50');
-  const [addResult, setAddResult] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkAmount, setBulkAmount] = useState('50');
   const [bulkReason, setBulkReason] = useState('Admin bulk add');
   const [bulkLoading, setBulkLoading] = useState(false);
 
   const load = useCallback(() => {
-    api('wzrdAdmin.users', { search: search || undefined, limit: PAGE_SIZE, offset: page * PAGE_SIZE }).then(setData);
+    api('wzrdAdmin.users', { search: search || undefined, limit: PAGE_SIZE, offset: page * PAGE_SIZE }).then((d) => setData(d as WzrdUsersPage | null));
   }, [search, page]);
 
   useEffect(() => { load(); }, [load]);
@@ -290,21 +310,18 @@ function UsersTab({ t, onSuccess, onError }: { t: T; onSuccess?: (msg?: string) 
   const toggleSelectAll = () => {
     const ids = data?.users ?? [];
     if (selectedIds.size >= ids.length) setSelectedIds(new Set());
-    else setSelectedIds(new Set(ids.map((u: any) => u.id)));
+    else setSelectedIds(new Set(ids.map((u: WzrdPublicUser) => u.id)));
   };
 
   const handleAddCredits = async (userId: number) => {
     const amount = parseInt(creditsAmount);
     if (!amount || amount <= 0) return;
-    setAddResult('Adding...');
     const r = await apiMutation('credits.adminAdd', { userId, amount, reason: 'Admin manual add' });
     if (r?.success) {
-      setAddResult(`✅ +${amount}`);
       setAddingCredits(null);
       onSuccess?.();
       load();
     } else {
-      setAddResult('❌');
       onError?.(t('فشل إضافة الكريدت', 'Failed to add credits'));
     }
   };
@@ -338,7 +355,15 @@ function UsersTab({ t, onSuccess, onError }: { t: T; onSuccess?: (msg?: string) 
             if (!data?.users?.length) return;
             exportCSV('wzrd-users',
               [t('الاسم', 'Name'), t('البريد', 'Email'), t('الشركة', 'Company'), t('المجال', 'Industry'), t('الكريدت', 'Credits'), t('النشرة', 'Newsletter'), t('تاريخ التسجيل', 'Signed Up')],
-              data.users.map((u: any) => [u.name, u.email, u.company, u.industry, u.credits, u.newsletterOptIn ? 'Yes' : 'No', new Date(u.createdAt).toLocaleDateString()])
+              data.users.map((u: WzrdPublicUser): string[] => [
+                String(u.name ?? ''),
+                String(u.email ?? ''),
+                String(u.company ?? ''),
+                String(u.industry ?? ''),
+                String(u.credits ?? ''),
+                u.newsletterOptIn ? 'Yes' : 'No',
+                new Date(u.createdAt).toLocaleDateString(),
+              ])
             );
           }} className="px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-600 hover:text-white transition">
             ↓ {t('تصدير CSV', 'Export CSV')}
@@ -382,7 +407,7 @@ function UsersTab({ t, onSuccess, onError }: { t: T; onSuccess?: (msg?: string) 
             </tr>
           </thead>
           <tbody>
-            {(data?.users || []).map((u: any, i: number) => (
+            {(data?.users || []).map((u: WzrdPublicUser, i: number) => (
               <tr key={u.id} className={`border-b border-gray-100 hover:bg-gray-50 transition ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} ${selectedIds.has(u.id) ? 'bg-amber-50/50' : ''}`}>
                 <td className="py-2 pr-2">
                   <input type="checkbox" checked={selectedIds.has(u.id)} onChange={() => toggleSelect(u.id)}
@@ -405,7 +430,7 @@ function UsersTab({ t, onSuccess, onError }: { t: T; onSuccess?: (msg?: string) 
                       <button onClick={() => setAddingCredits(null)} className="px-2 py-1 rounded text-gray-400 text-xs hover:text-gray-600">✕</button>
                     </div>
                   ) : (
-                    <button onClick={() => { setAddingCredits(u.id); setAddResult(''); }} 
+                    <button onClick={() => { setAddingCredits(u.id); }} 
                       className="px-2 py-1 rounded bg-amber-50 text-amber-600 text-xs hover:bg-amber-100 transition">
                       + {t('كريدت', 'Credits')}
                     </button>
@@ -436,11 +461,11 @@ function UsersTab({ t, onSuccess, onError }: { t: T; onSuccess?: (msg?: string) 
 // CREDITS TAB
 // ═══════════════════════════════════════
 function CreditsTab({ t }: { t: T }) {
-  const [data, setData] = useState<{ transactions: any[]; total: number } | null>(null);
+  const [data, setData] = useState<WzrdCreditsPage | null>(null);
   const [filter, setFilter] = useState('all');
 
   useEffect(() => {
-    api('wzrdAdmin.creditLog', { type: filter, limit: 100, offset: 0 }).then(setData);
+    api('wzrdAdmin.creditLog', { type: filter, limit: 100, offset: 0 }).then((d) => setData(d as WzrdCreditsPage | null));
   }, [filter]);
 
   const typeColor: Record<string, string> = {
@@ -469,7 +494,16 @@ function CreditsTab({ t }: { t: T }) {
             if (!data?.transactions?.length) return;
             exportCSV('wzrd-credits',
               ['ID', 'User ID', 'Amount', 'Balance', 'Type', 'Tool', 'Reason', 'Date'],
-              data.transactions.map((tr: any) => [tr.id, tr.userId, tr.amount, tr.balance, tr.type, tr.toolName, tr.reason, new Date(tr.createdAt).toLocaleDateString()])
+              data.transactions.map((tr: WzrdCreditTx): string[] => [
+                String(tr.id),
+                String(tr.userId),
+                String(tr.amount),
+                String(tr.balance),
+                String(tr.type),
+                String(tr.toolName ?? ''),
+                String(tr.reason ?? ''),
+                new Date(tr.createdAt).toLocaleDateString(),
+              ])
             );
           }} className="px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-600 hover:text-white transition">
             ↓ {t('تصدير CSV', 'Export CSV')}
@@ -485,7 +519,7 @@ function CreditsTab({ t }: { t: T }) {
         </div>
       </div>
       <div className="space-y-1">
-        {(data?.transactions || []).map((t: any) => (
+        {(data?.transactions || []).map((t: WzrdCreditTx) => (
           <div key={t.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-200/50 hover:bg-white">
             <div className="flex items-center gap-3">
               <span className={`text-xs font-mono px-2 py-0.5 rounded ${typeColor[t.type] || 'text-gray-600'}`}>{t.type}</span>
@@ -539,8 +573,8 @@ function DailyUsageChart({ data }: { data: Array<{ date: string; runs: number; c
 // TOOLS TAB
 // ═══════════════════════════════════════
 function ToolsTab({ t }: { t: T }) {
-  const [data, setData] = useState<{ tools: any[]; dailyUsage: any[] } | null>(null);
-  useEffect(() => { api('wzrdAdmin.toolStats').then(setData); }, []);
+  const [data, setData] = useState<WzrdToolStatsPage | null>(null);
+  useEffect(() => { api('wzrdAdmin.toolStats').then((d) => setData(d as WzrdToolStatsPage | null)); }, []);
 
   const toolIcons: Record<string, string> = {
     brand_diagnosis: '🔬', offer_check: '📦', message_check: '💬',
@@ -552,7 +586,7 @@ function ToolsTab({ t }: { t: T }) {
       <h3 className="text-lg font-bold mb-4">{t('تحليلات استخدام الأدوات', 'Tool Usage Analytics')}</h3>
       
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-        {(data?.tools || []).map((tool: any) => (
+        {(data?.tools || []).map((tool: WzrdToolStat) => (
           <div key={tool.name} className="p-4 rounded-xl border border-gray-200 bg-white">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-xl">{toolIcons[tool.name] || '🔧'}</span>
@@ -578,21 +612,21 @@ function ToolsTab({ t }: { t: T }) {
 // PAYMENTS TAB
 // ═══════════════════════════════════════
 function PaymentsTab({ t }: { t: T }) {
-  const [data, setData] = useState<{ payments: any[]; total: number } | null>(null);
-  useEffect(() => { api('wzrdAdmin.payments').then(setData); }, []);
+  const [data, setData] = useState<WzrdPaymentsPage | null>(null);
+  useEffect(() => { api('wzrdAdmin.payments').then((d) => setData(d as WzrdPaymentsPage | null)); }, []);
 
   return (
     <div>
       <h3 className="text-lg font-bold mb-4">{t('سجل المدفوعات', 'Payment Log')} <span className="text-gray-500 text-sm font-normal">({data?.total || 0})</span></h3>
       <div className="space-y-2">
-        {(data?.payments || []).map((p: any) => {
-          let meta: any = {};
-          try { meta = typeof p.metadata === 'string' ? JSON.parse(p.metadata) : (p.metadata || {}); } catch {}
+        {(data?.payments || []).map((p: WzrdPaymentRow) => {
+          let meta: Record<string, unknown> = {};
+          try { meta = typeof p.metadata === 'string' ? (JSON.parse(p.metadata) as Record<string, unknown>) : ((p.metadata as Record<string, unknown> | null) || {}); } catch { meta = {}; }
           return (
             <div key={p.id} className="flex items-center justify-between p-4 rounded-xl border border-gray-200 bg-white">
               <div>
                 <p className="text-sm font-medium">{p.reason}</p>
-                <p className="text-xs text-gray-400">User #{p.userId} · {meta.planId || '—'} plan</p>
+                <p className="text-xs text-gray-400">User #{p.userId} · {String(meta.planId ?? '—')} plan</p>
               </div>
               <div className="text-right">
                 <p className="text-lg font-bold font-mono text-green-600">+{p.amount}</p>
@@ -611,8 +645,8 @@ function PaymentsTab({ t }: { t: T }) {
 // WEBHOOKS TAB
 // ═══════════════════════════════════════
 function WebhooksTab({ t }: { t: T }) {
-  const [data, setData] = useState<{ events: any[] } | null>(null);
-  useEffect(() => { api('wzrdAdmin.webhookLog').then(setData); }, []);
+  const [data, setData] = useState<WzrdWebhooksPage | null>(null);
+  useEffect(() => { api('wzrdAdmin.webhookLog').then((d) => setData(d as WzrdWebhooksPage | null)); }, []);
 
   const statusColors: Record<string, string> = {
     success: 'text-green-600 bg-green-400/10',
@@ -633,7 +667,7 @@ function WebhooksTab({ t }: { t: T }) {
         </div>
       ) : (
         <div className="space-y-2">
-          {data!.events.map((e: any, i: number) => (
+          {data!.events.map((e: WzrdWebhookEvent, i: number) => (
             <div key={i} className="flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:bg-white">
               <div className="flex items-center gap-3">
                 <span className={`text-xs font-mono px-2 py-0.5 rounded ${statusColors[e.status] || 'text-gray-600'}`}>{e.status}</span>
@@ -648,7 +682,7 @@ function WebhooksTab({ t }: { t: T }) {
                 </div>
               </div>
               <div className="text-right flex-shrink-0">
-                {e.amountCents > 0 && <p className="text-xs text-gray-500">{(e.amountCents / 100).toFixed(0)} EGP</p>}
+                {(e.amountCents ?? 0) > 0 ? <p className="text-xs text-gray-500">{((e.amountCents ?? 0) / 100).toFixed(0)} EGP</p> : null}
                 <p className="text-[10px] text-gray-400">{new Date(e.timestamp).toLocaleString()}</p>
               </div>
             </div>
@@ -663,7 +697,7 @@ function WebhooksTab({ t }: { t: T }) {
 // CONFIG TAB
 // ═══════════════════════════════════════
 function ConfigTab({ t }: { t: T }) {
-  const [config, setConfig] = useState<Record<string, any> | null>(null);
+  const [config, setConfig] = useState<WzrdSystemConfig | null>(null);
   const [testEmail, setTestEmail] = useState('');
   const [testResult, setTestResult] = useState('');
   const [pingResult, setPingResult] = useState('');
@@ -672,7 +706,7 @@ function ConfigTab({ t }: { t: T }) {
   const [editCost, setEditCost] = useState('');
   const [costSaved, setCostSaved] = useState('');
 
-  useEffect(() => { api('wzrdAdmin.config').then(setConfig); }, []);
+  useEffect(() => { api('wzrdAdmin.config').then((d) => setConfig(d as WzrdSystemConfig | null)); }, []);
 
   const handleSaveCost = async (tool: string) => {
     const cost = parseInt(editCost);
@@ -805,8 +839,8 @@ function ConfigTab({ t }: { t: T }) {
 
 /** Email analytics mini-panel */
 function EmailStatsSection({ t }: { t: T }) {
-  const [stats, setStats] = useState<any>(null);
-  useEffect(() => { api('wzrdAdmin.emailStats').then(setStats); }, []);
+  const [stats, setStats] = useState<WzrdEmailStats | null>(null);
+  useEffect(() => { api('wzrdAdmin.emailStats').then((d) => setStats(d as WzrdEmailStats | null)); }, []);
 
   if (!stats) return null;
   return (
@@ -821,15 +855,18 @@ function EmailStatsSection({ t }: { t: T }) {
         <div className="mb-4">
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">By Template</p>
           <div className="space-y-1">
-            {Object.entries(stats.byTemplate).map(([tmpl, data]: [string, any]) => (
+            {Object.entries(stats.byTemplate).map(([tmpl, tmplData]) => {
+              const row = tmplData as EmailTemplateStats;
+              return (
               <div key={tmpl} className="flex items-center justify-between p-2 rounded-lg border border-gray-200/50">
                 <span className="text-xs text-gray-600 capitalize">{tmpl}</span>
                 <div className="flex gap-3">
-                  <span className="text-xs text-green-600">{data.sent} sent</span>
-                  <span className="text-xs text-red-600">{data.failed} failed</span>
+                  <span className="text-xs text-green-600">{row.sent} sent</span>
+                  <span className="text-xs text-red-600">{row.failed} failed</span>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -837,7 +874,7 @@ function EmailStatsSection({ t }: { t: T }) {
         <div>
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Recent Emails</p>
           <div className="space-y-1 max-h-48 overflow-y-auto">
-            {stats.recentEmails.slice(0, 20).map((e: any, i: number) => (
+            {stats.recentEmails.slice(0, 20).map((e: WzrdEmailStats['recentEmails'][number], i: number) => (
               <div key={i} className="flex items-center justify-between p-2 rounded-lg border border-gray-200/30 text-xs">
                 <div className="flex items-center gap-2 min-w-0">
                   <span className={e.status === 'sent' ? 'text-green-600' : e.status === 'failed' ? 'text-red-600' : 'text-gray-400'}>
@@ -859,10 +896,10 @@ function EmailStatsSection({ t }: { t: T }) {
 // CMS TAB — Homepage + Site Settings
 // ═══════════════════════════════════════
 function CmsTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; onError?: (msg: string) => void }) {
-  const [sc, setSc] = useState<any>(null);
+  const [sc, setSc] = useState<WzrdSiteConfigPayload | null>(null);
   const [saving, setSaving] = useState('');
 
-  useEffect(() => { api('wzrdAdmin.siteConfig').then(setSc); }, []);
+  useEffect(() => { api('wzrdAdmin.siteConfig').then((d) => setSc(d as WzrdSiteConfigPayload | null)); }, []);
 
   const saveHomepage = async () => {
     if (!sc) return;
@@ -931,7 +968,7 @@ function CmsTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; onErr
       <div className="mt-6 p-5 rounded-2xl border border-gray-200 bg-white">
         <h4 className="text-sm font-bold text-gray-600 mb-3">📦 {t('الخدمات', 'Services')}</h4>
         <div className="space-y-2">
-          {sc.services?.services?.map((svc: any) => (
+          {sc.services?.services?.map((svc: WzrdSiteService) => (
             <div key={svc.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-200/50">
               <div>
                 <p className="text-sm font-medium">{svc.nameEn} <span className="text-gray-500">/ {svc.nameAr}</span></p>
@@ -940,7 +977,7 @@ function CmsTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; onErr
               <button onClick={async () => {
                 const newEnabled = !svc.enabled;
                 await apiMutation('wzrdAdmin.updateService', { serviceId: svc.id, enabled: newEnabled });
-                setSc({...sc, services: {...sc.services, services: sc.services.services.map((s: any) => s.id === svc.id ? {...s, enabled: newEnabled} : s)}});
+                setSc({...sc, services: {...sc.services, services: sc.services.services.map((s: WzrdSiteService) => s.id === svc.id ? {...s, enabled: newEnabled} : s)}});
               }} className={`px-3 py-1 rounded-full text-xs font-bold ${svc.enabled ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
                 {svc.enabled ? t('نشط', 'Active') : t('معطّل', 'Disabled')}
               </button>
@@ -956,14 +993,14 @@ function CmsTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; onErr
 // PRICING TAB — Credit Plans + Promo Codes
 // ═══════════════════════════════════════
 function PricingTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; onError?: (m: string) => void }) {
-  const [plans, setPlans] = useState<any[]>([]);
-  const [promoCodes, setPromoCodes] = useState<any[]>([]);
+  const [plans, setPlans] = useState<WzrdCreditPlan[]>([]);
+  const [promoCodes, setPromoCodes] = useState<WzrdPromoCode[]>([]);
   const [editingPlan, setEditingPlan] = useState<string | null>(null);
-  const [editDraft, setEditDraft] = useState<Record<string, any>>({});
+  const [editDraft, setEditDraft] = useState<Partial<WzrdCreditPlan>>({});
   const [showAddPlan, setShowAddPlan] = useState(false);
-  const [newPlan, setNewPlan] = useState<Record<string, any>>({ id: '', credits: 500, priceEGP: 499, name: '', nameAr: '' });
+  const [newPlan, setNewPlan] = useState<{ id: string; credits: number; priceEGP: number; name: string; nameAr: string }>({ id: '', credits: 500, priceEGP: 499, name: '', nameAr: '' });
   const [showPromoForm, setShowPromoForm] = useState(false);
-  const [promoForm, setPromoForm] = useState<Record<string, any>>({});
+  const [promoForm, setPromoForm] = useState<WzrdPromoFormDraft>({});
   const [saving, setSaving] = useState('');
 
   const load = useCallback(async () => {
@@ -971,13 +1008,13 @@ function PricingTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; o
       api('wzrdAdmin.creditPlansList'),
       api('wzrdAdmin.promoCodeList'),
     ]);
-    setPlans(pRes?.plans || []);
-    setPromoCodes(pcRes?.codes || []);
+    setPlans((pRes as { plans?: WzrdCreditPlan[] } | null)?.plans || []);
+    setPromoCodes((pcRes as { codes?: WzrdPromoCode[] } | null)?.codes || []);
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
-  const savePlan = async (planId: string, updates: any) => {
+  const savePlan = async (planId: string, updates: Partial<WzrdCreditPlan>) => {
     setSaving('Saving...');
     await apiMutation('wzrdAdmin.updateCreditPlan', { planId, ...updates });
     setEditingPlan(null);
@@ -1000,9 +1037,9 @@ function PricingTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; o
     await apiMutation('wzrdAdmin.promoCodeCreate', {
       code: promoForm.code.trim(),
       discountType: promoForm.discountType || 'percent',
-      discountValue: parseInt(promoForm.discountValue) || 10,
-      minAmountEGP: parseInt(promoForm.minAmountEGP) || 0,
-      maxUses: promoForm.maxUses ? parseInt(promoForm.maxUses) : null,
+      discountValue: parseInt(promoForm.discountValue ?? '', 10) || 10,
+      minAmountEGP: parseInt(promoForm.minAmountEGP ?? '', 10) || 0,
+      maxUses: promoForm.maxUses ? parseInt(promoForm.maxUses, 10) : null,
       validUntil: promoForm.validUntil || null,
     });
     setShowPromoForm(false);
@@ -1049,7 +1086,7 @@ function PricingTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; o
           </div>
         )}
         <div className="space-y-2">
-          {plans.map((p: any) => (
+          {plans.map((p: WzrdCreditPlan) => (
             <div key={p.id} className="p-4 rounded-xl border border-gray-200 bg-white flex items-center justify-between">
               {editingPlan === p.id ? (
                 <div className="flex gap-2 items-center flex-wrap">
@@ -1104,7 +1141,7 @@ function PricingTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; o
           </div>
         )}
         <div className="space-y-2">
-          {promoCodes.map((pc: any) => (
+          {promoCodes.map((pc: WzrdPromoCode) => (
             <div key={pc.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-200 bg-white">
               <div>
                 <span className="font-mono font-bold">{pc.code}</span>
@@ -1129,7 +1166,7 @@ function PricingTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; o
 // PROMPTS TAB — AI tool system prompts
 // ═══════════════════════════════════════
 function PromptsTab({ t }: { t: T }) {
-  const [sc, setSc] = useState<any>(null);
+  const [sc, setSc] = useState<WzrdSiteConfigPayload | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [draft, setDraft] = useState('');
@@ -1137,12 +1174,13 @@ function PromptsTab({ t }: { t: T }) {
   const [testResult, setTestResult] = useState<{ loading?: boolean; error?: string; reply?: string; model?: string } | null>(null);
   const [testSampleInput, setTestSampleInput] = useState('');
 
-  useEffect(() => { api('wzrdAdmin.siteConfig').then(setSc); }, []);
+  useEffect(() => { api('wzrdAdmin.siteConfig').then((d) => setSc(d as WzrdSiteConfigPayload | null)); }, []);
 
   const savePrompt = async (toolId: string) => {
+    if (!sc?.prompts) return;
     setSaving('Saving...');
     await apiMutation('wzrdAdmin.updatePrompt', { toolId, systemPrompt: draft });
-    setSc({...sc, prompts: sc.prompts.map((p: any) => p.toolId === toolId ? {...p, systemPrompt: draft} : p)});
+    setSc({...sc, prompts: sc.prompts.map((p: WzrdPromptRow) => p.toolId === toolId ? {...p, systemPrompt: draft} : p)});
     setEditing(null);
     setSaving('✅');
     setTimeout(() => setSaving(''), 2000);
@@ -1169,7 +1207,7 @@ function PromptsTab({ t }: { t: T }) {
       <p className="text-xs text-gray-500 mb-4">{t('عدّل الأمر اللي كل أداة بتستخدمه. التعديلات بتطبق فوراً.', 'Edit the system prompt each AI tool uses. Changes take effect immediately.')}</p>
 
       <div className="space-y-3">
-        {sc.prompts?.map((p: any) => (
+        {(sc.prompts ?? []).map((p: WzrdPromptRow) => (
           <div key={p.toolId} className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
             <button onClick={() => setExpanded(prev => ({ ...prev, [p.toolId]: !prev[p.toolId] }))} className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition text-left">
               <div className="flex items-center gap-2">
@@ -1184,7 +1222,7 @@ function PromptsTab({ t }: { t: T }) {
             {expanded[p.toolId] && (
               <div className="p-4 pt-0 border-t border-gray-100">
                 <div className="flex gap-2 mb-2">
-                  <button onClick={async () => { await apiMutation('wzrdAdmin.updatePrompt', { toolId: p.toolId, enabled: !p.enabled }); setSc({...sc, prompts: sc.prompts.map((x: any) => x.toolId === p.toolId ? {...x, enabled: !x.enabled} : x)}); }} className="text-xs text-gray-500 hover:text-amber-600 transition">
+                  <button onClick={async () => { if (!sc?.prompts) return; await apiMutation('wzrdAdmin.updatePrompt', { toolId: p.toolId, enabled: !p.enabled }); setSc({...sc, prompts: sc.prompts.map((x: WzrdPromptRow) => x.toolId === p.toolId ? {...x, enabled: !x.enabled} : x)}); }} className="text-xs text-gray-500 hover:text-amber-600 transition">
                     {p.enabled ? t('تعطيل', 'Disable') : t('تفعيل', 'Enable')}
                   </button>
                   <button onClick={() => { setEditing(p.toolId); setDraft(p.systemPrompt); }} className="text-xs text-indigo-600 hover:text-indigo-600 transition">
@@ -1239,8 +1277,8 @@ function PromptsTab({ t }: { t: T }) {
 // TEAM TAB — Internal users
 // ═══════════════════════════════════════
 function TeamTab({ t }: { t: T }) {
-  const [data, setData] = useState<{ team: any[] } | null>(null);
-  useEffect(() => { api('wzrdAdmin.teamList').then(setData); }, []);
+  const [data, setData] = useState<WzrdTeamPage | null>(null);
+  useEffect(() => { api('wzrdAdmin.teamList').then((d) => setData(d as WzrdTeamPage | null)); }, []);
 
   const changeRole = async (userId: number, role: string) => {
     await apiMutation('wzrdAdmin.updateTeamRole', { userId, role });
@@ -1252,7 +1290,7 @@ function TeamTab({ t }: { t: T }) {
       <h3 className="text-lg font-bold mb-4">{t('أعضاء الفريق', 'Team Members')} <span className="text-gray-500 text-sm font-normal">({data?.team?.length || 0})</span></h3>
 
       <div className="space-y-2">
-        {(data?.team || []).map((u: any) => (
+        {(data?.team || []).map((u: WzrdTeamMember) => (
           <div key={u.id} className="flex items-center justify-between p-4 rounded-xl border border-gray-200 bg-white">
             <div>
               <p className="text-sm font-medium">{u.name || 'Unnamed'}</p>
@@ -1278,16 +1316,16 @@ function TeamTab({ t }: { t: T }) {
 // AGENCY TAB — Clients + Projects overview
 // ═══════════════════════════════════════
 function AgencyTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; onError?: (msg: string) => void }) {
-  const [clientsList, setClientsList] = useState<any>(null);
-  const [projectsList, setProjectsList] = useState<any>(null);
+  const [clientsList, setClientsList] = useState<WzrdAgencyClientsRes | null>(null);
+  const [projectsList, setProjectsList] = useState<WzrdAgencyProjectsRes | null>(null);
   const [view, setView] = useState<'clients' | 'projects'>('clients');
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<Record<string, string>>({});
   const [msg, setMsg] = useState('');
 
   const reload = () => {
-    api('wzrdAdmin.agencyClients').then(setClientsList);
-    api('wzrdAdmin.agencyProjects').then(setProjectsList);
+    api('wzrdAdmin.agencyClients').then((d) => setClientsList(d as WzrdAgencyClientsRes | null));
+    api('wzrdAdmin.agencyProjects').then((d) => setProjectsList(d as WzrdAgencyProjectsRes | null));
   };
   useEffect(() => { reload(); }, []);
 
@@ -1371,7 +1409,7 @@ function AgencyTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; on
             <input placeholder="اسم المشروع *" value={form.projectName || ''} onChange={e => setForm({...form, projectName: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
             <select value={form.clientId || ''} onChange={e => setForm({...form, clientId: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none">
               <option value="">اختر العميل *</option>
-              {(clientsList?.clients || []).map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              {(clientsList?.clients || []).map((c: WzrdAgencyClient) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             <select value={form.serviceType || 'consultation'} onChange={e => setForm({...form, serviceType: e.target.value})} className="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none">
               <option value="business_health_check">فحص صحة البراند</option>
@@ -1400,7 +1438,7 @@ function AgencyTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; on
       {/* Lists */}
       {view === 'clients' ? (
         <div className="space-y-2">
-          {(clientsList?.clients || []).map((c: any) => (
+          {(clientsList?.clients || []).map((c: WzrdAgencyClient) => (
             <div key={c.id} className="flex items-center justify-between p-4 rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition">
               <div>
                 <p className="text-sm font-medium">{c.name} {c.company && <span className="text-gray-400">· {c.company}</span>}</p>
@@ -1418,7 +1456,7 @@ function AgencyTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; on
         </div>
       ) : (
         <div className="space-y-2">
-          {(projectsList?.projects || []).map((p: any) => (
+          {(projectsList?.projects || []).map((p: WzrdAgencyProject) => (
             <div key={p.id} className="flex items-center justify-between p-4 rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition">
               <div>
                 <p className="text-sm font-medium">{p.name}</p>
@@ -1459,10 +1497,10 @@ const STATUS_OPTIONS = [
 ];
 
 function RequestsAdminTab({ t }: { t: T }) {
-  const [requests, setRequests] = useState<any[]>([]);
+  const [requests, setRequests] = useState<WzrdServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState<any>(null);
-  const [timeline, setTimeline] = useState<any[]>([]);
+  const [selected, setSelected] = useState<WzrdServiceRequest | null>(null);
+  const [timeline, setTimeline] = useState<WzrdRequestTimelineUpdate[]>([]);
   const [updateForm, setUpdateForm] = useState({
     newStatus: '', title: '', titleAr: '', detail: '', detailAr: '',
     estimatedDelivery: '', fileUrl: '', fileName: '', meetingLink: '', meetingDate: '',
@@ -1473,21 +1511,21 @@ function RequestsAdminTab({ t }: { t: T }) {
   const load = useCallback(async () => {
     setLoading(true);
     const data = await api('serviceRequest.listAll');
-    setRequests(Array.isArray(data) ? data : []);
+    setRequests(Array.isArray(data) ? (data as WzrdServiceRequest[]) : []);
     setLoading(false);
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
-  const loadTimeline = async (req: any) => {
+  const loadTimeline = async (req: WzrdServiceRequest) => {
     setSelected(req);
     setUpdateForm(f => ({ ...f, newStatus: req.status }));
-    const data = await api('serviceRequest.getTimeline', { requestId: req.id });
+    const data = await api('serviceRequest.getTimeline', { requestId: req.id }) as { updates?: WzrdRequestTimelineUpdate[] } | null;
     setTimeline(data?.updates || []);
   };
 
   const submitUpdate = async () => {
-    if (!updateForm.newStatus || !updateForm.title || !updateForm.titleAr) return;
+    if (!selected || !updateForm.newStatus || !updateForm.title || !updateForm.titleAr) return;
     setSaving(true);
     try {
       await apiMutation('serviceRequest.updateStatus', {
@@ -1497,7 +1535,7 @@ function RequestsAdminTab({ t }: { t: T }) {
       await load();
       await loadTimeline({ ...selected, status: updateForm.newStatus });
       setUpdateForm(f => ({ ...f, title: '', titleAr: '', detail: '', detailAr: '', fileUrl: '', fileName: '', meetingLink: '', meetingDate: '' }));
-    } catch {}
+    } catch { /* mutation error surfaced via load */ }
     setSaving(false);
   };
 
@@ -1525,10 +1563,10 @@ function RequestsAdminTab({ t }: { t: T }) {
                 backgroundColor: (selected.statusLabel?.color || '#6366f1') + '20',
                 color: selected.statusLabel?.color || '#6366f1'
               }}>
-                {selected.statusLabel?.icon} {t(selected.statusLabel?.ar, selected.statusLabel?.en)}
+                {selected.statusLabel?.icon} {t(selected.statusLabel?.ar ?? '', selected.statusLabel?.en ?? '')}
               </span>
             </div>
-            <h3 className="text-base font-bold text-gray-900">{t(selected.serviceTypeAr, selected.serviceType)}</h3>
+            <h3 className="text-base font-bold text-gray-900">{t(selected.serviceTypeAr ?? '', selected.serviceType ?? '')}</h3>
             <p className="text-xs text-gray-400 mt-1">User #{selected.userId} · {new Date(selected.createdAt).toLocaleDateString()}</p>
             {selected.description && <p className="text-sm text-gray-600 mt-2 p-3 bg-gray-50 rounded-lg">{selected.description}</p>}
           </div>
@@ -1636,12 +1674,12 @@ function RequestsAdminTab({ t }: { t: T }) {
             <div className="p-5 rounded-xl border border-gray-200 bg-white">
               <h4 className="text-sm font-bold text-gray-600 mb-3">{t('سجل التحديثات', 'Timeline')}</h4>
               <div className="space-y-3">
-                {timeline.map((u: any) => (
+                {timeline.map((u: WzrdRequestTimelineUpdate) => (
                   <div key={u.id} className="flex gap-3 p-3 rounded-lg bg-gray-50">
                     <div className="w-2 h-2 rounded-full bg-indigo-400 mt-2 flex-shrink-0" />
                     <div>
-                      <div className="text-sm font-medium text-gray-800">{t(u.titleAr, u.title)}</div>
-                      {(u.detail || u.detailAr) && <p className="text-xs text-gray-500 mt-0.5">{t(u.detailAr, u.detail)}</p>}
+                      <div className="text-sm font-medium text-gray-800">{t(u.titleAr ?? '', u.title)}</div>
+                      {(u.detail || u.detailAr) ? <p className="text-xs text-gray-500 mt-0.5">{t(u.detailAr ?? '', u.detail ?? '')}</p> : null}
                       {u.fileUrl && <a href={u.fileUrl} target="_blank" rel="noopener" className="text-xs text-indigo-600 mt-1 inline-block">📎 {u.fileName || 'File'}</a>}
                       {u.meetingLink && <a href={u.meetingLink} target="_blank" rel="noopener" className="text-xs text-blue-600 mt-1 inline-block ml-3">📅 Meeting</a>}
                       <span className="block text-xs text-gray-300 mt-1">{new Date(u.createdAt).toLocaleString()} · {u.isClientVisible ? '👁 visible' : '🔒 internal'}</span>
@@ -1657,7 +1695,7 @@ function RequestsAdminTab({ t }: { t: T }) {
         <div className="space-y-2">
           {requests.length === 0 ? (
             <p className="text-center text-gray-400 py-8">{t('لا يوجد طلبات', 'No requests')}</p>
-          ) : requests.map((req: any) => (
+          ) : requests.map((req: WzrdServiceRequest) => (
             <button key={req.id} onClick={() => loadTimeline(req)}
               className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition text-left">
               <div>
@@ -1667,10 +1705,10 @@ function RequestsAdminTab({ t }: { t: T }) {
                     backgroundColor: (req.statusLabel?.color || '#6366f1') + '20',
                     color: req.statusLabel?.color || '#6366f1'
                   }}>
-                    {req.statusLabel?.icon} {t(req.statusLabel?.ar, req.statusLabel?.en)}
+                    {req.statusLabel?.icon} {t(req.statusLabel?.ar ?? '', req.statusLabel?.en ?? '')}
                   </span>
                 </div>
-                <div className="text-sm font-medium text-gray-800">{t(req.serviceTypeAr, req.serviceType)}</div>
+                <div className="text-sm font-medium text-gray-800">{t(req.serviceTypeAr ?? '', req.serviceType ?? '')}</div>
                 <div className="text-xs text-gray-400">User #{req.userId} · {new Date(req.createdAt).toLocaleDateString()}</div>
               </div>
               <span className="text-gray-300">→</span>

@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useLocation } from 'wouter';
 import { useI18n } from '@/lib/i18n';
 import WzrdPublicHeader from '@/components/WzrdPublicHeader';
 
@@ -49,7 +48,6 @@ const STATUS_STEPS = [
 ];
 
 export default function MyRequests() {
-  const [, navigate] = useLocation();
   const { locale } = useI18n();
   const isAr = locale === 'ar';
 
@@ -79,7 +77,7 @@ export default function MyRequests() {
           // Clean up
           sessionStorage.removeItem('wzrd_service_context');
         }
-      } catch {}
+      } catch { /* invalid session JSON */ }
     }
   }, [isAr]);
 
@@ -91,7 +89,7 @@ export default function MyRequests() {
       const d = await res.json();
       const data = d.result?.data?.json ?? d.result?.data ?? [];
       setRequests(Array.isArray(data) ? data : []);
-    } catch {}
+    } catch { /* keep existing list on fetch error */ }
     if (showLoader) setLoading(false);
   }, []);
 

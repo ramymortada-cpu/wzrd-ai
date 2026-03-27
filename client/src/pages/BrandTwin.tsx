@@ -1,10 +1,11 @@
 import { EmptyState } from "@/components/EmptyState";
 import { PageSkeleton } from "@/components/PageSkeleton";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { brandTwinDimensionScore, type BrandTwinAlertRow, type BrandTwinDimScores } from "@/lib/routerTypes";
 import { paginatedData } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -126,7 +127,7 @@ function DimensionBar({ dim, score, isRtl }: { dim: DimensionInfo; score: number
 // ============ MAIN PAGE ============
 
 export default function BrandTwin() {
-  const { t, locale } = useI18n();
+  const { locale } = useI18n();
   const isRtl = locale === "ar";
 
   const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
@@ -281,7 +282,7 @@ export default function BrandTwin() {
                               </div>
                               <div className="grid grid-cols-7 gap-1">
                                 {DIMENSIONS.map((dim) => {
-                                  const score = (client as any)[`${dim.key}Score`] || 0;
+                                  const score = brandTwinDimensionScore(client as BrandTwinDimScores, dim.key);
                                   const bg = score >= 80 ? "bg-emerald-500" : score >= 60 ? "bg-blue-500" : score >= 40 ? "bg-amber-500" : "bg-red-500";
                                   return (
                                     <div key={dim.key} className="text-center" title={`${dim.label}: ${score}`}>
@@ -368,7 +369,7 @@ export default function BrandTwin() {
                   </CardHeader>
                   <CardContent>
                     {DIMENSIONS.map(dim => {
-                      const score = (latestSnapshot as any)[`${dim.key}Score`] || 0;
+                      const score = brandTwinDimensionScore(latestSnapshot as BrandTwinDimScores, dim.key);
                       return <DimensionBar key={dim.key} dim={dim} score={score} isRtl={isRtl} />;
                     })}
                   </CardContent>
@@ -433,7 +434,7 @@ export default function BrandTwin() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {alerts.slice(0, 10).map((alert: { id: number; severity: string; title: string; description: string; recommendation?: string; status: string }) => (
+                      {alerts.slice(0, 10).map((alert) => (
                         <div key={alert.id} className={`flex items-start gap-3 p-3 rounded-lg border ${getSeverityColor(alert.severity)} ${isRtl ? "flex-row-reverse" : ""}`}>
                           {getSeverityIcon(alert.severity)}
                           <div className="flex-1 min-w-0">
@@ -531,14 +532,16 @@ export default function BrandTwin() {
         <TabsContent value="alerts" className="space-y-4">
           {allAlerts && allAlerts.length > 0 ? (
             <div className="space-y-2">
-              {allAlerts.map((alert: any) => (
+              {allAlerts.map((alert: BrandTwinAlertRow) => (
                 <Card key={alert.id} className={`border ${getSeverityColor(alert.severity)}`}>
                   <CardContent className="pt-4 pb-3">
                     <div className={`flex items-start gap-3 ${isRtl ? "flex-row-reverse" : ""}`}>
                       {getSeverityIcon(alert.severity)}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold text-sm">{alert.clientName}</span>
+                          <span className="font-semibold text-sm">
+                            {isRtl ? `عميل #${alert.clientId}` : `Client #${alert.clientId}`}
+                          </span>
                           <Badge variant="outline" className="text-[10px]">{alert.dimension}</Badge>
                         </div>
                         <p className="text-sm font-medium">{alert.title}</p>
@@ -592,7 +595,7 @@ export default function BrandTwin() {
               </div>
               <div className="space-y-1">
                 {DIMENSIONS.map(dim => {
-                  const score = (snapshot as any)[`${dim.key}Score`] || 0;
+                  const score = brandTwinDimensionScore(snapshot as BrandTwinDimScores, dim.key);
                   return <DimensionBar key={dim.key} dim={dim} score={score} isRtl={isRtl} />;
                 })}
               </div>

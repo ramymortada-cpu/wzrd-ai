@@ -1,4 +1,11 @@
 import { trpc } from "@/lib/trpc";
+import type {
+  ClientDiagnosisRow,
+  NoteByClientItem,
+  NoteCreateCategory,
+  PaymentByClientItem,
+  ProjectByClientItem,
+} from "@/lib/routerTypes";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +21,7 @@ import { useLocation, useParams } from "wouter";
 import { useState } from "react";
 import {
   ArrowLeft, Building2, Mail, Phone, Globe, MapPin, Calendar,
-  FolderKanban, StickyNote, DollarSign, Sparkles, Plus, Loader2, ExternalLink, Stethoscope,
+  FolderKanban, DollarSign, Sparkles, Plus, Loader2, ExternalLink, Stethoscope,
 } from "lucide-react";
 import { Streamdown } from "streamdown";
 
@@ -58,7 +65,7 @@ export default function ClientDetailPage() {
   const [showNoteDialog, setShowNoteDialog] = useState(false);
   const [noteTitle, setNoteTitle] = useState("");
   const [noteContent, setNoteContent] = useState("");
-  const [noteCategory, setNoteCategory] = useState("general");
+  const [noteCategory, setNoteCategory] = useState<NoteCreateCategory>("general");
   const [showAiAnalysis, setShowAiAnalysis] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState("");
 
@@ -101,8 +108,8 @@ export default function ClientDetailPage() {
     );
   }
 
-  const totalPaid = payments?.filter((p: any) => p.status === "paid").reduce((s: number, p: any) => s + Number(p.amount), 0) || 0;
-  const totalPending = payments?.filter((p: any) => p.status === "pending").reduce((s: number, p: any) => s + Number(p.amount), 0) || 0;
+  const totalPaid = payments?.filter((p: PaymentByClientItem) => p.status === "paid").reduce((s, p) => s + Number(p.amount), 0) || 0;
+  const totalPending = payments?.filter((p: PaymentByClientItem) => p.status === "pending").reduce((s, p) => s + Number(p.amount), 0) || 0;
 
   return (
     <div className="space-y-6">
@@ -307,7 +314,7 @@ export default function ClientDetailPage() {
                 </CardContent>
               </Card>
             ) : (
-              projects.map((project: any) => (
+              projects.map((project: ProjectByClientItem) => (
                 <Card key={project.id} className="shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => setLocation(`/projects/${project.id}`)}>
                   <CardContent className="py-4">
                     <div className="flex items-center justify-between gap-4">
@@ -357,7 +364,7 @@ export default function ClientDetailPage() {
                       value={noteTitle}
                       onChange={(e) => setNoteTitle(e.target.value)}
                     />
-                    <Select value={noteCategory} onValueChange={setNoteCategory}>
+                    <Select value={noteCategory} onValueChange={(v) => setNoteCategory(v as NoteCreateCategory)}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -378,7 +385,7 @@ export default function ClientDetailPage() {
                         {t("common.cancel")}
                       </Button>
                       <Button
-                        onClick={() => createNote.mutate({ clientId, title: noteTitle, content: noteContent, category: noteCategory as any })}
+                        onClick={() => createNote.mutate({ clientId, title: noteTitle, content: noteContent, category: noteCategory })}
                         disabled={!noteTitle || !noteContent || createNote.isPending}
                       >
                         {createNote.isPending ? <Loader2 className="h-4 w-4 animate-spin me-1.5" /> : null}
@@ -396,7 +403,7 @@ export default function ClientDetailPage() {
                 </CardContent>
               </Card>
             ) : (
-              notes.map((note: any) => (
+              notes.map((note: NoteByClientItem) => (
                 <Card key={note.id} className="shadow-sm">
                   <CardContent className="py-4">
                     <div className="flex items-start justify-between gap-3 mb-2">
@@ -426,7 +433,7 @@ export default function ClientDetailPage() {
                 </CardContent>
               </Card>
             ) : (
-              payments.map((payment: any) => (
+              payments.map((payment: PaymentByClientItem) => (
                 <Card key={payment.id} className="shadow-sm">
                   <CardContent className="py-4">
                     <div className="flex items-center justify-between gap-4">
@@ -471,7 +478,7 @@ export default function ClientDetailPage() {
             </Card>
           ) : (
             <div className="space-y-3">
-              {toolDiagnoses.map((row: any) => (
+              {toolDiagnoses.map((row: ClientDiagnosisRow) => (
                 <Card key={row.id} className="shadow-sm border-primary/10">
                   <CardContent className="py-4 space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -492,12 +499,17 @@ export default function ClientDetailPage() {
                     )}
                     {Array.isArray(row.findings) && row.findings.length > 0 && (
                       <ul className="text-sm space-y-1.5 list-disc ps-4">
-                        {row.findings.slice(0, 5).map((f: any, i: number) => (
+                        {row.findings.slice(0, 5).map((raw, i: number) => {
+                          const f = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+                          const title = typeof f.title === "string" ? f.title : "";
+                          const detail = typeof f.detail === "string" ? f.detail : "";
+                          return (
                           <li key={i}>
-                            <span className="font-medium">{f.title}</span>
-                            {f.detail ? <span className="text-muted-foreground"> — {f.detail}</span> : null}
+                            <span className="font-medium">{title}</span>
+                            {detail ? <span className="text-muted-foreground"> — {detail}</span> : null}
                           </li>
-                        ))}
+                          );
+                        })}
                       </ul>
                     )}
                   </CardContent>

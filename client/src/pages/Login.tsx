@@ -6,7 +6,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp
 
 export default function Login() {
   const [, navigate] = useLocation();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [step, setStep] = useState<'email' | 'code'>('email');
@@ -70,14 +70,36 @@ export default function Login() {
     'h-12 w-10 sm:h-14 sm:w-11 rounded-xl border-[0.5px] border-zinc-200/90 bg-white/70 text-lg font-mono font-bold text-zinc-900 first:rounded-xl last:rounded-xl dark:border-zinc-600 dark:bg-zinc-900/60 dark:text-white data-[active=true]:border-primary data-[active=true]:ring-2 data-[active=true]:ring-primary/25';
 
   return (
-    <div className="wzrd-auth-mesh relative min-h-screen text-white">
-      <a href="/tools" className="absolute left-6 top-6 z-10 flex items-baseline gap-0.5 text-lg font-extrabold font-mono tracking-tight text-white/90 drop-shadow-md transition hover:text-white">
-        <span>WZRD</span>
-        <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-300 to-cyan-300">AI</span>
-      </a>
+    <div className="wzrd-auth-mesh relative grid min-h-screen text-white md:grid-cols-[minmax(0,1fr)_minmax(0,420px)] lg:grid-cols-[minmax(0,1.1fr)_minmax(0,440px)]">
+      <aside className="relative hidden flex-col justify-between overflow-hidden p-10 md:flex lg:p-12">
+        <a href="/tools" className="flex w-fit items-baseline gap-1 text-lg font-bold transition hover:text-white">
+          <span className="font-display tracking-tight">WZRD</span>
+          <span className="wzrd-badge-cyan text-[10px]">AI</span>
+        </a>
+        <div>
+          <p className="wzrd-badge-violet mb-4 w-fit text-[10px]">{t('wzrd.welcomeBack')}</p>
+          <h1
+            className={`max-w-md text-3xl font-bold leading-tight tracking-tight lg:text-4xl ${locale === 'ar' ? 'font-sans' : 'font-display'}`}
+          >
+            <span className="wzrd-gradient-text">{locale === 'ar' ? 'أهلاً بعودتك' : 'Welcome back'}</span>
+            {locale === 'ar' ? ' — تابع تشخيص براندك.' : ' — pick up where you left off.'}
+          </h1>
+          <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/60">
+            {locale === 'ar'
+              ? 'أنشئ طلبك بنقرة، وتتبع النتائج من نفس المكان.'
+              : 'Request your next scan in one click — results stay in one place.'}
+          </p>
+        </div>
+        <p className="text-xs text-white/40">WZRD AI</p>
+      </aside>
 
-      <div className="flex min-h-screen items-center justify-center px-4 pb-16 pt-24">
-        <div className="w-full max-w-md">
+      <div className="relative flex min-h-screen flex-col justify-center px-4 pb-16 pt-24 md:px-8">
+        <a href="/tools" className="absolute left-6 top-6 z-10 flex items-baseline gap-1 text-lg font-bold text-white/90 drop-shadow-md transition hover:text-white md:hidden">
+          <span className="font-display">WZRD</span>
+          <span className="wzrd-badge-cyan text-[10px]">AI</span>
+        </a>
+
+        <div className="w-full max-w-md mx-auto">
           <div className="wzrd-glass wzrd-auth-card rounded-3xl p-8 sm:p-10">
             {step === 'email' ? (
               <>

@@ -1,5 +1,6 @@
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { trpc } from "@/lib/trpc";
+import type { LeadListItem, ProposalListItem } from "@/lib/routerTypes";
 import { useI18n } from "@/lib/i18n";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,13 +36,11 @@ export default function SalesFunnelPage() {
   const converted = leadStats?.converted || 0;
   const conversionRate = totalLeads > 0 ? Math.round((converted / totalLeads) * 100) : 0;
 
-  const activeProposals = proposals.filter((p: any) => p.status === "sent" || p.status === "draft");
-  const acceptedProposals = proposals.filter((p: any) => p.status === "accepted");
-  const totalProposalValue = proposals.reduce((sum: number, p: any) => sum + Number(p.price || 0), 0);
-  const acceptedValue = acceptedProposals.reduce((sum: number, p: any) => sum + Number(p.price || 0), 0);
+  const acceptedProposals = proposals.filter((p: ProposalListItem) => p.status === "accepted");
+  const totalProposalValue = proposals.reduce((sum, p) => sum + Number(p.price || 0), 0);
+  const acceptedValue = acceptedProposals.reduce((sum, p) => sum + Number(p.price || 0), 0);
 
   const revenueCollected = Number(dashStats?.totalRevenue || 0);
-  const revenuePending = Number(dashStats?.pendingRevenue || 0);
 
   // Funnel stages
   const funnelStages = [
@@ -207,10 +206,10 @@ export default function SalesFunnelPage() {
             <CardContent>
               <div className="space-y-4">
                 {[
-                  { label: "Draft Proposals", value: proposals.filter((p: any) => p.status === "draft").length, icon: FileText, color: "text-slate-400" },
-                  { label: "Sent to Client", value: proposals.filter((p: any) => p.status === "sent").length, icon: Clock, color: "text-amber-400" },
+                  { label: "Draft Proposals", value: proposals.filter((p: ProposalListItem) => p.status === "draft").length, icon: FileText, color: "text-slate-400" },
+                  { label: "Sent to Client", value: proposals.filter((p: ProposalListItem) => p.status === "sent").length, icon: Clock, color: "text-amber-400" },
                   { label: "Accepted", value: acceptedProposals.length, icon: CheckCircle2, color: "text-green-400" },
-                  { label: "Rejected", value: proposals.filter((p: any) => p.status === "rejected").length, icon: XCircle, color: "text-red-400" },
+                  { label: "Rejected", value: proposals.filter((p: ProposalListItem) => p.status === "rejected").length, icon: XCircle, color: "text-red-400" },
                 ].map((item, i) => (
                   <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                     <div className="flex items-center gap-3">
@@ -242,16 +241,16 @@ export default function SalesFunnelPage() {
             <CardDescription>Leads that need immediate attention</CardDescription>
           </CardHeader>
           <CardContent>
-            {(paginatedData(leads) as any[]).filter((l: any) => l.scoreLabel === "hot" && l.status !== "converted").length === 0 ? (
+            {leads.filter((l: LeadListItem) => l.scoreLabel === "hot" && l.status !== "converted").length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-8">
                 No hot leads at the moment. Share your Quick-Check link to attract more leads.
               </p>
             ) : (
               <div className="space-y-2">
-                {(paginatedData(leads) as any[])
-                  .filter((l: any) => l.scoreLabel === "hot" && l.status !== "converted")
+                {leads
+                  .filter((l: LeadListItem) => l.scoreLabel === "hot" && l.status !== "converted")
                   .slice(0, 5)
-                  .map((lead: any) => (
+                  .map((lead: LeadListItem) => (
                     <div key={lead.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                       <div className="flex items-center gap-3">
                         <Flame className="h-4 w-4 text-red-400" />
@@ -262,7 +261,7 @@ export default function SalesFunnelPage() {
                       </div>
                       <div className="flex items-center gap-3">
                         <Badge variant="secondary" className="text-xs">
-                          {SERVICE_LABELS[lead.recommendedService] || lead.recommendedService}
+                          {SERVICE_LABELS[lead.recommendedService ?? ""] || lead.recommendedService}
                         </Badge>
                         <span className="text-sm font-medium text-green-400">
                           {Number(lead.estimatedValue || 0).toLocaleString()} EGP

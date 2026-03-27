@@ -2,17 +2,34 @@ import { useState } from 'react';
 import { useI18n } from '@/lib/i18n';
 import WzrdPublicHeader from '@/components/WzrdPublicHeader';
 
+type QDFormKey = 'companyName' | 'industry' | 'targetAudience' | 'biggestChallenge' | 'socialLink';
+type QDForm = Record<QDFormKey, string>;
+
+interface QDResult {
+  score: number;
+  label: string;
+  creditsUsed?: number;
+  findings?: Array<{ title: string; detail?: string; severity: string }>;
+  actionItems?: Array<{ task: string }>;
+}
+
 export default function QuickDiagnosis() {
   const { locale } = useI18n();
   const isAr = locale === 'ar';
 
   const [step, setStep] = useState(0);
-  const [form, setForm] = useState({ companyName: '', industry: '', targetAudience: '', biggestChallenge: '', socialLink: '' });
+  const [form, setForm] = useState<QDForm>({
+    companyName: '',
+    industry: '',
+    targetAudience: '',
+    biggestChallenge: '',
+    socialLink: '',
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<QDResult | null>(null);
 
-  const questions = [
+  const questions: Array<{ key: QDFormKey; label: string; placeholder: string }> = [
     { key: 'companyName', label: isAr ? 'إيه اسم الشركة/المشروع؟' : "What's your company name?", placeholder: isAr ? 'مثال: كافيه النجمة' : 'e.g. Star Cafe' },
     { key: 'industry', label: isAr ? 'في أي مجال؟' : 'What industry?', placeholder: isAr ? 'مثال: مطاعم، أزياء، خدمات' : 'e.g. restaurants, fashion' },
     { key: 'targetAudience', label: isAr ? 'مين العميل المثالي بتاعك؟' : 'Who is your ideal customer?', placeholder: isAr ? 'مثال: شباب ٢٠-٣٥ في القاهرة' : 'e.g. young professionals 25-35' },
@@ -22,7 +39,7 @@ export default function QuickDiagnosis() {
 
   const handleNext = () => {
     const q = questions[step];
-    const val = (form as any)[q.key]?.trim();
+    const val = form[q.key]?.trim();
     if (!val && step < 4) { // socialLink is optional
       setError(isAr ? 'ده سؤال مطلوب.' : 'This field is required.');
       return;
@@ -48,7 +65,7 @@ export default function QuickDiagnosis() {
       const d = await res.json();
       const data = d.result?.data?.json ?? d.result?.data;
       if (data?.score !== undefined) {
-        setResult(data);
+        setResult(data as QDResult);
       } else {
         setError(d.error?.json?.message || d.error?.message || (isAr ? 'حصل مشكلة — حاول تاني.' : 'Something went wrong.'));
       }
@@ -77,7 +94,7 @@ export default function QuickDiagnosis() {
 
           {/* Findings */}
           <div className="space-y-3 mb-6">
-            {(result.findings || []).map((f: any, i: number) => (
+            {(result.findings || []).map((f, i: number) => (
               <div key={i} className="bg-white rounded-xl border border-gray-200 p-4">
                 <div className="flex items-center gap-2 mb-1">
                   <span className={`w-2 h-2 rounded-full ${f.severity === 'high' ? 'bg-red-500' : f.severity === 'low' ? 'bg-green-500' : 'bg-yellow-500'}`} />
@@ -89,17 +106,17 @@ export default function QuickDiagnosis() {
           </div>
 
           {/* Action Items */}
-          {result.actionItems?.length > 0 && (
+          {(result.actionItems?.length ?? 0) > 0 ? (
             <div className="bg-emerald-50 rounded-2xl border border-emerald-200 p-5 mb-6">
               <h3 className="text-sm font-bold text-emerald-800 mb-3">{isAr ? 'خطواتك العملية' : 'Your Action Items'}</h3>
-              {result.actionItems.map((item: any, i: number) => (
+              {(result.actionItems ?? []).map((item, i: number) => (
                 <div key={i} className="flex items-start gap-2 mb-2">
                   <span className="text-emerald-600 text-xs font-bold mt-0.5">{i + 1}.</span>
                   <span className="text-xs text-emerald-700">{item.task}</span>
                 </div>
               ))}
             </div>
-          )}
+          ) : null}
 
           {/* CTAs */}
           <div className="space-y-3">
@@ -138,8 +155,11 @@ export default function QuickDiagnosis() {
           <input
             type="text"
             autoFocus
-            value={(form as any)[questions[step].key]}
-            onChange={e => setForm({ ...form, [questions[step].key]: e.target.value })}
+            value={form[questions[step].key]}
+            onChange={e => {
+              const k = questions[step].key;
+              setForm(prev => ({ ...prev, [k]: e.target.value }));
+            }}
             onKeyDown={e => e.key === 'Enter' && handleNext()}
             placeholder={questions[step].placeholder}
             className="w-full px-5 py-4 rounded-2xl bg-white border border-gray-200 text-gray-900 text-base placeholder-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition outline-none"

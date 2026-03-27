@@ -2,7 +2,7 @@ import { ChatSkeleton } from "@/components/PageSkeleton";
 import { trpc } from "@/lib/trpc";
 import { paginatedData } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,13 +12,15 @@ import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
-  Sparkles, Send, Loader2, Bot, User, RotateCcw, Play, ChevronRight,
+  Sparkles, Send, Loader2, User, RotateCcw, Play,
   ChevronLeft, CheckCircle2, FileText, ArrowRight, Zap, MessageSquare,
-  Save, History, Clock, Brain, Target, Lightbulb, AlertCircle
+  Save, History, Clock, Brain, Target, Lightbulb
 } from "lucide-react";
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Streamdown } from "streamdown";
+import type { RouterInputs } from "@/lib/trpc";
+import type { ClientListItem, ConversationListItem, DashboardPlaybookMap } from "@/lib/routerTypes";
 
 type Message = {
   role: "user" | "assistant";
@@ -33,6 +35,20 @@ type WorkflowStep = {
   completed: boolean;
   result?: string;
 };
+
+type DiscoveryServiceType = NonNullable<RouterInputs["proposals"]["createFromDiscovery"]["serviceType"]>;
+
+function toDiscoveryServiceType(selected: string | null): DiscoveryServiceType | undefined {
+  if (!selected || selected === "general") return undefined;
+  const allowed: DiscoveryServiceType[] = [
+    "business_health_check",
+    "starting_business_logic",
+    "brand_identity",
+    "business_takeoff",
+    "consultation",
+  ];
+  return (allowed as readonly string[]).includes(selected) ? (selected as DiscoveryServiceType) : undefined;
+}
 
 const SERVICE_OPTIONS = [
   { value: "business_health_check", labelKey: "service.business_health_check", icon: "🔍", color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" },
@@ -74,8 +90,8 @@ export default function AIEnginePage() {
   const { data: clientsRaw, isLoading: clientsLoading } = trpc.clients.list.useQuery();
   const clients = paginatedData(clientsRaw);
   const { data: playbooksData } = trpc.dashboard.playbooks.useQuery();
-  const { data: conversations, refetch: refetchConversations } = trpc.conversations.list.useQuery();
-  const utils = trpc.useUtils();
+  const { data: conversationsRaw, refetch: refetchConversations } = trpc.conversations.list.useQuery();
+  const conversations = (conversationsRaw ?? []) as ConversationListItem[];
 
   // Auto-research mutation
   const autoResearchMutation = trpc.research.conductFull.useMutation({
@@ -96,7 +112,7 @@ export default function AIEnginePage() {
   // Trigger auto-research when client is selected
   useEffect(() => {
     if (clientId && clients) {
-      const client = clients.find((c: any) => c.id === clientId);
+      const client = clients.find((c: ClientListItem) => c.id === clientId);
       if (client && (client.companyName || client.name) && !researchReportId && !isResearching) {
         setIsResearching(true);
         autoResearchMutation.mutate({
@@ -130,7 +146,7 @@ export default function AIEnginePage() {
     createProposalFromDiscovery.mutate({
       conversationMessages: conversationMsgs.map(m => ({ role: m.role, content: m.content })),
       clientId: clientId || undefined,
-      serviceType: (selectedService && selectedService !== 'general' ? selectedService : undefined) as any,
+      serviceType: toDiscoveryServiceType(selectedService),
       language: locale,
     });
   };
@@ -186,7 +202,7 @@ export default function AIEnginePage() {
   // Build workflow steps from playbook
   const startGuidedWorkflow = (serviceKey: string) => {
     if (!playbooksData?.playbooks) return;
-    const playbook = (playbooksData.playbooks as any)[serviceKey];
+    const playbook = (playbooksData.playbooks as DashboardPlaybookMap)[serviceKey];
     if (!playbook || !playbook.stages || playbook.stages.length === 0) {
       toast.error(locale === "ar" ? "لا يوجد خطوات لهذه الخدمة" : "No steps found for this service");
       return;
@@ -233,7 +249,7 @@ ${clientContext}
 
 Start by introducing this step to me. Then begin the discovery process — ask me the FIRST question you need answered to do this step properly. Remember: ONE question at a time, make it specific and purposeful.`
         }],
-        serviceContext: serviceKey as any,
+        serviceContext: serviceKey,
         clientId,
       });
     }, 100);
@@ -249,7 +265,7 @@ Start by introducing this step to me. Then begin the discovery process — ask m
 
     chatMutation.mutate({
       messages: newMessages.map((m) => ({ role: m.role, content: m.content })),
-      serviceContext: selectedService as any || "general",
+      serviceContext: selectedService || "general",
       clientId,
     });
   };
@@ -285,7 +301,7 @@ ${discoveryContext}
 
 Now generate the complete, professional deliverable. This must be CLIENT-READY quality — thorough, specific to this client's situation, and grounded in methodology. Use all the information gathered in the discovery conversation. Format with markdown.`
       }],
-      serviceContext: selectedService as any || "general",
+      serviceContext: selectedService || "general",
       clientId,
     });
   };
@@ -333,7 +349,7 @@ ${previousStepsContext || 'None yet'}
 
 Introduce this step and begin the discovery. Ask me the FIRST question you need answered. ONE question at a time.`
           }],
-          serviceContext: selectedService as any || "general",
+          serviceContext: selectedService || "general",
           clientId,
         });
       }, 100);
@@ -397,9 +413,23 @@ Introduce this step and begin the discovery. Ask me the FIRST question you need 
     });
   };
 
-  const loadConversation = (convo: any) => {
+  const loadConversation = (convo: ConversationListItem) => {
     try {
-      const msgs = typeof convo.messages === 'string' ? JSON.parse(convo.messages) : convo.messages;
+      const raw = typeof convo.messages === "string" ? JSON.parse(convo.messages) : convo.messages;
+      const msgs: Message[] = Array.isArray(raw)
+        ? raw
+            .filter(
+              (m): m is { role: string; content: string } =>
+                m != null &&
+                typeof m === "object" &&
+                typeof (m as { role?: unknown }).role === "string" &&
+                typeof (m as { content?: unknown }).content === "string"
+            )
+            .map((m) => ({
+              role: m.role === "assistant" ? ("assistant" as const) : ("user" as const),
+              content: m.content,
+            }))
+        : [];
       setMessages(msgs);
       setConversationId(convo.id);
       setServiceContext(convo.context || "general");
@@ -504,8 +534,10 @@ Introduce this step and begin the discovery. Ask me the FIRST question you need 
                       <p className="font-medium text-sm truncate">{t(service.labelKey)}</p>
                       <p className="text-xs text-muted-foreground">
                         {(() => {
-                          const pb = (playbooksData?.playbooks as any)?.[service.value];
-                          const totalSteps = pb?.stages?.reduce((sum: number, s: any) => sum + (s.steps?.length || 0), 0) || 0;
+                          const playbooks = playbooksData?.playbooks as DashboardPlaybookMap | undefined;
+                          const pb = playbooks?.[service.value];
+                          const stages = pb?.stages ?? [];
+                          const totalSteps = stages.reduce((sum, s) => sum + (s.steps?.length ?? 0), 0);
                           return `${totalSteps} ${totalSteps === 1 ? (locale === 'ar' ? 'خطوة' : 'Step') : (locale === 'ar' ? 'خطوات' : 'Steps')}`;
                         })()}
                       </p>
@@ -541,7 +573,7 @@ Introduce this step and begin the discovery. Ask me the FIRST question you need 
               {locale === "ar" ? "المحادثات السابقة" : "Previous Conversations"}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {conversations.slice(0, 6).map((convo: any) => (
+              {conversations.slice(0, 6).map((convo: ConversationListItem) => (
                 <button
                   key={convo.id}
                   onClick={() => loadConversation(convo)}
@@ -914,7 +946,7 @@ Introduce this step and begin the discovery. Ask me the FIRST question you need 
               </h3>
             </div>
             <div className="space-y-1 max-h-48 overflow-y-auto">
-              {conversations.map((convo: any) => (
+              {conversations.map((convo: ConversationListItem) => (
                 <button
                   key={convo.id}
                   onClick={() => loadConversation(convo)}

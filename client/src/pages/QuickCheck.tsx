@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, ArrowRight, ArrowLeft, Sparkles, Loader2, Target, TrendingUp, Shield, Zap } from "lucide-react";
+import type { QuickCheckSubmitResult } from "@/lib/routerTypes";
 
 const QUICK_CHECK_QUESTIONS = [
   {
@@ -35,6 +36,13 @@ const QUICK_CHECK_QUESTIONS = [
 
 type Step = "info" | "questions" | "loading" | "results";
 
+const MARKETS = ["ksa", "egypt", "uae", "other"] as const;
+type MarketOption = (typeof MARKETS)[number];
+
+function parseMarket(v: string): MarketOption {
+  return (MARKETS as readonly string[]).includes(v) ? (v as MarketOption) : "egypt";
+}
+
 export default function QuickCheckPage() {
   const [step, setStep] = useState<Step>("info");
   const [formData, setFormData] = useState({
@@ -48,7 +56,7 @@ export default function QuickCheckPage() {
   });
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<QuickCheckSubmitResult | null>(null);
 
   const submitMutation = trpc.leads.submitQuickCheck.useMutation({
     onSuccess: (data) => {
@@ -214,7 +222,7 @@ export default function QuickCheckPage() {
                     <Label className="text-white/70">Market</Label>
                     <Select
                       value={formData.market}
-                      onValueChange={(v) => setFormData({ ...formData, market: v as any })}
+                      onValueChange={(v) => setFormData({ ...formData, market: parseMarket(v) })}
                     >
                       <SelectTrigger className="bg-white/5 border-white/10 text-white">
                         <SelectValue />
@@ -357,31 +365,36 @@ export default function QuickCheckPage() {
         {step === "results" && result && (
           <div className="max-w-2xl mx-auto space-y-8 py-8">
             {/* Score Card */}
-            <Card className={`border ${scoreBg(result.scoreLabel)} text-white`}>
+            {(() => {
+              const scoreLabel = String(result.scoreLabel ?? "");
+              return (
+            <Card className={`border ${scoreBg(scoreLabel)} text-white`}>
               <CardContent className="p-8 text-center space-y-4">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-sm">
                   <CheckCircle2 className="h-4 w-4 text-green-400" />
                   Assessment Complete
                 </div>
                 <div className="space-y-2">
-                  <div className={`text-6xl font-bold ${scoreColor(result.scoreLabel)}`}>
+                  <div className={`text-6xl font-bold ${scoreColor(scoreLabel)}`}>
                     {result.score}
                     <span className="text-2xl text-white/40">/100</span>
                   </div>
                   <Badge
                     className={`text-sm px-3 py-1 ${
-                      result.scoreLabel === "hot"
+                      scoreLabel === "hot"
                         ? "bg-red-500/20 text-red-400 border-red-500/30"
-                        : result.scoreLabel === "warm"
+                        : scoreLabel === "warm"
                         ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
                         : "bg-blue-500/20 text-blue-400 border-blue-500/30"
                     }`}
                   >
-                    {result.scoreLabel === "hot" ? "High Potential" : result.scoreLabel === "warm" ? "Growth Opportunity" : "Needs Foundation"}
+                    {scoreLabel === "hot" ? "High Potential" : scoreLabel === "warm" ? "Growth Opportunity" : "Needs Foundation"}
                   </Badge>
                 </div>
               </CardContent>
             </Card>
+              );
+            })()}
 
             {/* Teaser Diagnosis */}
             <Card className="bg-white/[0.03] border-white/10 text-white">

@@ -234,7 +234,7 @@ function DashboardLayoutContent({
       <div className="relative" ref={sidebarRef}>
         <Sidebar
           collapsible="icon"
-          side={sidebarSide as any}
+          side={sidebarSide}
           className={dir === "rtl" ? "border-l-0" : "border-r-0"}
           disableTransition={isResizing}
         >

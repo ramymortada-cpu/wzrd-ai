@@ -3,7 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, TrendingUp, Target, PieChart, BarChart3, Users, FileText, CheckCircle2, Zap } from "lucide-react";
+import { TrendingUp, Target, PieChart, BarChart3, Users, FileText, CheckCircle2, Zap } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 // Simple bar chart renderer using canvas
@@ -130,7 +130,7 @@ function FunnelChart({ steps }: { steps: { label: string; value: number; color: 
 }
 
 export default function Analytics() {
-  const { t, locale } = useI18n();
+  const { locale } = useI18n();
   const isRtl = locale === "ar";
   const { data, isLoading } = trpc.dashboard.analytics.useQuery();
 

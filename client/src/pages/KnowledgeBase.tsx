@@ -1,7 +1,7 @@
 import { EmptyState } from "@/components/EmptyState";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { useDebounce } from "@/hooks/useDebounce";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
   Brain, Plus, Search, BookOpen, Lightbulb, Target, Users, FileText,
-  Trash2, Edit, Download, Upload, Sparkles, Filter, Tag, Database,
-  TrendingUp, Eye, BarChart3, ArrowRight
+  Trash2, Edit, Download, Sparkles, Filter, Database,
+  TrendingUp, Eye,
 } from "lucide-react";
+import type { KnowledgeListItem, KnowledgeCategory, ResearchListItem } from "@/lib/routerTypes";
 
 const CATEGORIES = [
   { value: "case_study", label: "Case Study", icon: BookOpen, color: "bg-blue-100 text-blue-700" },
@@ -46,7 +47,7 @@ export default function KnowledgeBasePage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
-  const [selectedEntry, setSelectedEntry] = useState<any>(null);
+  const [selectedEntry, setSelectedEntry] = useState<KnowledgeListItem | null>(null);
 
   // Form state
   const [formTitle, setFormTitle] = useState("");
@@ -116,7 +117,7 @@ export default function KnowledgeBasePage() {
     createMutation.mutate({
       title: formTitle,
       content: formContent,
-      category: formCategory as any,
+      category: formCategory as KnowledgeCategory,
       industry: formIndustry || undefined,
       market: formMarket || undefined,
       tags: formTags ? formTags.split(",").map(t => t.trim()).filter(Boolean) : undefined,
@@ -129,21 +130,21 @@ export default function KnowledgeBasePage() {
       id: selectedEntry.id,
       title: formTitle,
       content: formContent,
-      category: formCategory as any,
+      category: formCategory as KnowledgeCategory,
       industry: formIndustry || undefined,
       market: formMarket || undefined,
       tags: formTags ? formTags.split(",").map(t => t.trim()).filter(Boolean) : undefined,
     });
   };
 
-  const openEditDialog = (entry: any) => {
+  const openEditDialog = (entry: KnowledgeListItem) => {
     setSelectedEntry(entry);
     setFormTitle(entry.title);
     setFormContent(entry.content);
     setFormCategory(entry.category);
     setFormIndustry(entry.industry || "");
     setFormMarket(entry.market || "");
-    setFormTags((entry.tags || []).join(", "));
+    setFormTags(Array.isArray(entry.tags) ? entry.tags.join(", ") : "");
     setShowEditDialog(true);
   };
 
@@ -235,7 +236,7 @@ export default function KnowledgeBasePage() {
             <EmptyState type="knowledge" onAction={() => { resetForm(); setShowCreateDialog(true); }} />
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {entries.map((entry: any) => {
+              {entries.map((entry: KnowledgeListItem) => {
                 const catInfo = getCategoryInfo(entry.category);
                 const CatIcon = catInfo.icon;
                 return (
@@ -262,13 +263,13 @@ export default function KnowledgeBasePage() {
                         {entry.market && <Badge variant="outline" className="text-xs">{entry.market}</Badge>}
                         <Badge variant="outline" className="text-xs">{SOURCE_LABELS[entry.source] || entry.source}</Badge>
                       </div>
-                      {entry.tags && (entry.tags as string[]).length > 0 && (
+                        {Array.isArray(entry.tags) && entry.tags.length > 0 ? (
                         <div className="flex gap-1 mt-2 flex-wrap">
-                          {(entry.tags as string[]).slice(0, 3).map((tag: string, i: number) => (
+                          {entry.tags.slice(0, 3).map((tag: string, i: number) => (
                             <span key={i} className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">#{tag}</span>
                           ))}
                         </div>
-                      )}
+                      ) : null}
                     </CardContent>
                   </Card>
                 );
@@ -293,7 +294,7 @@ export default function KnowledgeBasePage() {
                 <p className="text-muted-foreground text-center py-8">No research reports available. Run a research first.</p>
               ) : (
                 <div className="space-y-3">
-                  {researchReports.map((report: any) => (
+                  {researchReports.map((report: ResearchListItem) => (
                     <div key={report.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
                       <div>
                         <div className="font-medium">{report.companyName || 'Unknown'}</div>
@@ -413,9 +414,11 @@ export default function KnowledgeBasePage() {
                 <div className="flex gap-2 flex-wrap">
                   {selectedEntry.industry && <Badge variant="outline">{selectedEntry.industry}</Badge>}
                   {selectedEntry.market && <Badge variant="outline">{selectedEntry.market}</Badge>}
-                  {selectedEntry.tags && (selectedEntry.tags as string[]).map((tag: string, i: number) => (
-                    <Badge key={i} variant="secondary">#{tag}</Badge>
-                  ))}
+                  {Array.isArray(selectedEntry.tags)
+                    ? selectedEntry.tags.map((tag: string, i: number) => (
+                        <Badge key={i} variant="secondary">#{tag}</Badge>
+                      ))
+                    : null}
                 </div>
                 <div className="text-xs text-muted-foreground">
                   Created: {new Date(selectedEntry.createdAt).toLocaleDateString()} • Updated: {new Date(selectedEntry.updatedAt).toLocaleDateString()}

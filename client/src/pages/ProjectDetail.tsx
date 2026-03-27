@@ -1,4 +1,5 @@
-import { trpc } from "@/lib/trpc";
+import { trpc, type RouterInputs } from "@/lib/trpc";
+import type { ClientListItem, DeliverableListItem } from "@/lib/routerTypes";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +36,11 @@ const STATUS_ICON_COLORS: Record<string, string> = {
 };
 
 const STAGES = ["diagnose", "design", "deploy", "optimize", "completed"] as const;
+
+type ProjectStage = (typeof STAGES)[number];
+type ProjectUpdateStage = NonNullable<RouterInputs["projects"]["update"]["stage"]>;
+type ProjectUpdateStatus = NonNullable<RouterInputs["projects"]["update"]["status"]>;
+type DeliverableUpdateStatus = NonNullable<RouterInputs["deliverables"]["update"]["status"]>;
 
 export default function ProjectDetailPage() {
   const { t, locale } = useI18n();
@@ -96,17 +102,18 @@ export default function ProjectDetailPage() {
   }
 
   const clientsList = paginatedData(clients);
-  const client = (clientsList as any[]).find((c: any) => c.id === project.clientId);
-  const currentStageIndex = STAGES.indexOf(project.stage as any);
-  const completedDels = deliverablesList?.filter((d: any) => d.status === "delivered" || d.status === "approved").length || 0;
+  const client = clientsList.find((c: ClientListItem) => c.id === project.clientId);
+  const currentStageIndex = STAGES.indexOf(project.stage as ProjectStage);
+  const completedDels = deliverablesList?.filter((d: DeliverableListItem) => d.status === "delivered" || d.status === "approved").length || 0;
   const totalDels = deliverablesList?.length || 0;
 
   // Group deliverables by stage
-  const delsByStage = deliverablesList?.reduce((acc: any, del: any) => {
-    if (!acc[del.stage]) acc[del.stage] = [];
-    acc[del.stage].push(del);
+  const delsByStage = (deliverablesList ?? []).reduce<Record<string, DeliverableListItem[]>>((acc, del: DeliverableListItem) => {
+    const key = del.stage;
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(del);
     return acc;
-  }, {} as Record<string, typeof deliverablesList>) || {};
+  }, {});
 
   return (
     <div className="space-y-4 sm:space-y-6 max-w-4xl mx-auto px-2 sm:px-0">
@@ -155,7 +162,7 @@ export default function ProjectDetailPage() {
           <div className="flex flex-wrap gap-2">
             <Select
               value={project.stage}
-              onValueChange={(v: any) => updateProjectMutation.mutate({ id: projectId, stage: v })}
+              onValueChange={(v) => updateProjectMutation.mutate({ id: projectId, stage: v as ProjectUpdateStage })}
             >
               <SelectTrigger className="w-44 h-9 text-sm bg-background">
                 <SelectValue />
@@ -168,7 +175,7 @@ export default function ProjectDetailPage() {
             </Select>
             <Select
               value={project.status}
-              onValueChange={(v: any) => updateProjectMutation.mutate({ id: projectId, status: v })}
+              onValueChange={(v) => updateProjectMutation.mutate({ id: projectId, status: v as ProjectUpdateStatus })}
             >
               <SelectTrigger className="w-36 h-9 text-sm bg-background">
                 <SelectValue />
@@ -227,7 +234,7 @@ export default function ProjectDetailPage() {
                       <div className="flex-1 h-px bg-border" />
                     </div>
                     <div className="space-y-2">
-                      {stageDels.map((del: any) => (
+                      {stageDels.map((del: DeliverableListItem) => (
                         <div key={del.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/30 transition-colors">
                           <div className="flex items-center gap-3 min-w-0">
                             {del.status === "delivered" || del.status === "approved" ? (
@@ -247,7 +254,7 @@ export default function ProjectDetailPage() {
                           <div className="flex items-center gap-1.5 shrink-0">
                             <Select
                               value={del.status}
-                              onValueChange={(v: any) => updateDeliverableMutation.mutate({ id: del.id, status: v })}
+                              onValueChange={(v) => updateDeliverableMutation.mutate({ id: del.id, status: v as DeliverableUpdateStatus })}
                             >
                               <SelectTrigger className="h-7 text-[11px] w-28 bg-background">
                                 <SelectValue />

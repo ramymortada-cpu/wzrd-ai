@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { useI18n } from '@/lib/i18n';
-import { useTheme } from '@/contexts/ThemeContext';
 import WzrdPublicHeader from '@/components/WzrdPublicHeader';
 import {
   Area,
@@ -66,9 +65,7 @@ function BrandHealthEmptyIllustration({ className }: { className?: string }) {
 export default function MyBrand() {
   const [, navigate] = useLocation();
   const { locale } = useI18n();
-  const { theme } = useTheme();
   const isAr = locale === 'ar';
-  const isDark = theme === 'dark';
 
   const [history, setHistory] = useState<DiagnosisEntry[]>([]);
   const [trend, setTrend] = useState<string>('new');
@@ -288,38 +285,97 @@ export default function MyBrand() {
                       <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
                         <defs>
                           <linearGradient id="wzrdScoreFill" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#6366f1" stopOpacity={isDark ? 0.5 : 0.38} />
-                            <stop offset="50%" stopColor="#22d3ee" stopOpacity={isDark ? 0.22 : 0.14} />
-                            <stop offset="100%" stopColor="#a78bfa" stopOpacity={0} />
+                            <stop offset="0%" stopColor="#00F0FF" stopOpacity={0.25} />
+                            <stop offset="60%" stopColor="#7000FF" stopOpacity={0.08} />
+                            <stop offset="100%" stopColor="#7000FF" stopOpacity={0} />
                           </linearGradient>
-                          <linearGradient id="wzrdScoreStroke" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stopColor={isDark ? '#a5b4fc' : '#6366f1'} />
-                            <stop offset="100%" stopColor={isDark ? '#22d3ee' : '#4f46e5'} />
+                          <linearGradient id="wzrdScoreStroke" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stopColor="#00F0FF" />
+                            <stop offset="100%" stopColor="#A855F7" />
                           </linearGradient>
+                          <filter id="wzrdLineGlow">
+                            <feGaussianBlur stdDeviation="2" result="blur" />
+                            <feMerge>
+                              <feMergeNode in="blur" />
+                              <feMergeNode in="SourceGraphic" />
+                            </feMerge>
+                          </filter>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#3f3f46' : '#e5e7eb'} opacity={0.6} />
-                        <XAxis dataKey="label" tick={{ fontSize: 11, fill: isDark ? '#a1a1aa' : '#71717a' }} stroke="transparent" />
-                        <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: isDark ? '#a1a1aa' : '#71717a' }} stroke="transparent" width={32} />
-                        <ReferenceLine y={70} stroke="#22c55e" strokeDasharray="4 4" label={{ value: '70', fill: '#22c55e', fontSize: 10 }} />
-                        <ReferenceLine y={40} stroke="#ef4444" strokeDasharray="4 4" label={{ value: '40', fill: '#ef4444', fontSize: 10 }} />
+
+                        <CartesianGrid
+                          strokeDasharray="0"
+                          stroke="rgba(255,255,255,0.04)"
+                          horizontal={true}
+                          vertical={false}
+                        />
+
+                        <XAxis
+                          dataKey="label"
+                          tick={{ fontSize: 11, fill: '#52525B', fontFamily: 'Inter, sans-serif' }}
+                          stroke="transparent"
+                          tickLine={false}
+                          axisLine={false}
+                        />
+
+                        <YAxis
+                          domain={[0, 100]}
+                          tick={{ fontSize: 11, fill: '#52525B', fontFamily: 'Inter, sans-serif' }}
+                          stroke="transparent"
+                          tickLine={false}
+                          axisLine={false}
+                          width={32}
+                        />
+
+                        <ReferenceLine
+                          y={70}
+                          stroke="rgba(34,197,94,0.3)"
+                          strokeDasharray="4 4"
+                          label={{ value: '70', fill: 'rgba(34,197,94,0.5)', fontSize: 10 }}
+                        />
+                        <ReferenceLine
+                          y={40}
+                          stroke="rgba(239,68,68,0.3)"
+                          strokeDasharray="4 4"
+                          label={{ value: '40', fill: 'rgba(239,68,68,0.5)', fontSize: 10 }}
+                        />
+
                         <Tooltip
                           contentStyle={{
-                            borderRadius: 12,
-                            border: isDark ? '1px solid #3f3f46' : '1px solid #e5e7eb',
-                            background: isDark ? 'rgba(24,24,27,0.92)' : 'rgba(255,255,255,0.95)',
-                            backdropFilter: 'blur(8px)',
+                            borderRadius: '12px',
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            background: 'rgba(10,10,10,0.95)',
+                            backdropFilter: 'blur(16px)',
+                            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                            color: '#E4E4E7',
+                            fontSize: '12px',
                           }}
+                          itemStyle={{ color: '#00F0FF' }}
+                          labelStyle={{ color: '#71717A', marginBottom: '4px' }}
                           formatter={(value: number) => [`${value}/100`, isAr ? 'النتيجة' : 'Score']}
                           labelFormatter={(_, payload) => (payload?.[0]?.payload?.tool as string) || ''}
+                          cursor={{ stroke: 'rgba(255,255,255,0.06)', strokeWidth: 1 }}
                         />
+
                         <Area
                           type="monotone"
                           dataKey="score"
                           stroke="url(#wzrdScoreStroke)"
-                          strokeWidth={2.5}
+                          strokeWidth={2}
                           fill="url(#wzrdScoreFill)"
-                          dot={{ r: 4, strokeWidth: 2, stroke: isDark ? '#fafafa' : '#fff', fill: '#6366f1' }}
-                          activeDot={{ r: 6 }}
+                          filter="url(#wzrdLineGlow)"
+                          dot={{
+                            r: 4,
+                            strokeWidth: 2,
+                            stroke: '#00F0FF',
+                            fill: '#050505',
+                          }}
+                          activeDot={{
+                            r: 6,
+                            stroke: '#00F0FF',
+                            strokeWidth: 2,
+                            fill: '#050505',
+                            style: { filter: 'drop-shadow(0 0 6px #00F0FF)' },
+                          }}
                         />
                       </AreaChart>
                     </ResponsiveContainer>
@@ -369,7 +425,7 @@ export default function MyBrand() {
                 <h3 className="mb-3 text-sm font-semibold text-indigo-800 dark:text-indigo-200">
                   {toolName(selectedDiagnosis.toolId)} — {formatDate(selectedDiagnosis.createdAt)}
                 </h3>
-                {(selectedDiagnosis.findings || []).map((f: any, i: number) => (
+                {(selectedDiagnosis.findings || []).map((f, i: number) => (
                   <div key={i} className="mb-2 text-sm">
                     <span className={`inline-block w-2 h-2 rounded-full mr-2 ${f.severity === 'high' ? 'bg-red-500' : f.severity === 'low' ? 'bg-green-500' : 'bg-yellow-500'}`} />
                     <span className="font-medium">{f.title}</span>
@@ -400,7 +456,7 @@ export default function MyBrand() {
                       </div>
                       {/* Items */}
                       <div className="space-y-2">
-                        {items.map((item: any, idx: number) => (
+                        {items.map((item, idx: number) => (
                           <button
                             key={idx}
                             onClick={() => toggleItem(cl.id, idx)}

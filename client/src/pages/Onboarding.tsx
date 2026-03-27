@@ -108,7 +108,7 @@ const SERVICE_INFO: Record<string, { nameEn: string; nameAr: string; descEn: str
 };
 
 export default function OnboardingPage() {
-  const { t, locale } = useI18n();
+  const { locale } = useI18n();
   const [, setLocation] = useLocation();
   const isAr = locale === "ar";
 
@@ -178,8 +178,8 @@ export default function OnboardingPage() {
       });
       setCurrentStep(1);
       toast.success(isAr ? "تم حفظ معلومات الشركة" : "Company info saved");
-    } catch (err: any) {
-      toast.error(err.message || "Error saving company info");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Error saving company info");
     }
   };
 
@@ -203,8 +203,8 @@ export default function OnboardingPage() {
       setSelectedService(result.service);
       setCurrentStep(2);
       toast.success(isAr ? "تم تحليل احتياجاتك" : "Needs analyzed successfully");
-    } catch (err: any) {
-      toast.error(err.message || "Error analyzing needs");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Error analyzing needs");
     }
   };
 
@@ -215,8 +215,8 @@ export default function OnboardingPage() {
       await confirmService.mutateAsync({ id: sessionId, serviceType: selectedService });
       setCurrentStep(3);
       toast.success(isAr ? "تم تأكيد الخدمة" : "Service confirmed");
-    } catch (err: any) {
-      toast.error(err.message || "Error confirming service");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Error confirming service");
     }
   };
 
@@ -227,8 +227,8 @@ export default function OnboardingPage() {
       const result = await generateProposal.mutateAsync({ id: sessionId, language: proposalLanguage });
       setProposalId(result.proposalId);
       toast.success(isAr ? "تم إنشاء العرض" : "Proposal generated");
-    } catch (err: any) {
-      toast.error(err.message || "Error generating proposal");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Error generating proposal");
     }
   };
 
@@ -241,8 +241,8 @@ export default function OnboardingPage() {
       setCompletedClientId(result.clientId || null);
       setCurrentStep(4);
       toast.success(isAr ? "تم إتمام التسجيل بنجاح!" : "Onboarding completed successfully!");
-    } catch (err: any) {
-      toast.error(err.message || "Error completing onboarding");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Error completing onboarding");
     }
   };
 

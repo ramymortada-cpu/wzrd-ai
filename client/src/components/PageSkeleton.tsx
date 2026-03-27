@@ -1,54 +1,42 @@
 /**
- * Page Loading Skeletons — shimmer placeholders shown while pages lazy-load.
+ * Page Loading Skeletons — premium dark shimmer placeholders.
  */
-
 function ShimmerBlock({ className = '' }: { className?: string }) {
   return (
     <div
-      className={`animate-pulse bg-muted rounded ${className}`}
+      className={`relative overflow-hidden rounded-xl bg-white/[0.04] before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/[0.06] before:to-transparent ${className}`}
     />
   );
 }
 
-/** Generic page skeleton — works for most pages */
+/** Generic page skeleton */
 export function PageSkeleton() {
   return (
-    <div className="p-6 space-y-6">
+    <div className="animate-fade-in space-y-6 p-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <ShimmerBlock className="h-8 w-48" />
-        <ShimmerBlock className="h-10 w-32 rounded-md" />
+        <ShimmerBlock className="h-10 w-32 rounded-xl" />
       </div>
-
       {/* Stats cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="p-4 border rounded-lg space-y-3">
-            <ShimmerBlock className="h-4 w-20" />
-            <ShimmerBlock className="h-8 w-16" />
-            <ShimmerBlock className="h-3 w-32" />
+          <div key={i} className="wzrd-glass space-y-3 rounded-2xl p-5">
+            <ShimmerBlock className="h-3 w-20" />
+            <ShimmerBlock className="h-7 w-16" />
+            <ShimmerBlock className="h-2.5 w-28" />
           </div>
         ))}
       </div>
-
-      {/* Table skeleton */}
-      <div className="border rounded-lg overflow-hidden">
-        {/* Table header */}
-        <div className="bg-muted/30 p-3 flex gap-4">
-          <ShimmerBlock className="h-4 w-32" />
-          <ShimmerBlock className="h-4 w-24" />
-          <ShimmerBlock className="h-4 w-20" />
-          <ShimmerBlock className="h-4 w-28" />
-          <ShimmerBlock className="h-4 w-16" />
-        </div>
-        {/* Table rows */}
+      {/* Content area */}
+      <div className="wzrd-glass space-y-4 rounded-2xl p-6">
+        <ShimmerBlock className="h-5 w-40" />
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="p-3 flex gap-4 border-t">
+          <div key={i} className="flex gap-4 border-b border-white/[0.04] py-3">
             <ShimmerBlock className="h-4 w-32" />
             <ShimmerBlock className="h-4 w-24" />
             <ShimmerBlock className="h-4 w-20" />
-            <ShimmerBlock className="h-4 w-28" />
-            <ShimmerBlock className="h-4 w-16" />
+            <ShimmerBlock className="h-4 flex-1" />
           </div>
         ))}
       </div>

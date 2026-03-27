@@ -1,7 +1,8 @@
 import { EmptyState } from "@/components/EmptyState";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { useDebounce } from "@/hooks/useDebounce";
-import { trpc } from "@/lib/trpc";
+import { trpc, type RouterOutputs } from "@/lib/trpc";
+import type { ClientListItem, NoteCreateCategory, NoteListItem, ProjectListItem } from "@/lib/routerTypes";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,15 +19,17 @@ import { useState, useMemo } from "react";
 import { Streamdown } from "streamdown";
 import { paginatedData } from "@/lib/utils";
 
-const CATEGORIES = ["finding", "decision", "insight", "action_item", "general"] as const;
+const CATEGORIES = ["diagnostic", "strategic", "meeting", "insight", "general"] as const satisfies readonly NoteCreateCategory[];
 
 const categoryColors: Record<string, string> = {
-  finding: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  decision: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
-  insight: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  action_item: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+  diagnostic: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  strategic: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+  meeting: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  insight: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
   general: "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400",
 };
+
+type NotesListData = RouterOutputs["notes"]["list"];
 
 export default function NotesPage() {
   const { t } = useI18n();
@@ -40,7 +43,7 @@ export default function NotesPage() {
     projectId: undefined as number | undefined,
     title: "",
     content: "",
-    category: "general" as "diagnostic" | "strategic" | "meeting" | "insight" | "general",
+    category: "general" as NoteCreateCategory,
   });
 
   const utils = trpc.useUtils();
@@ -53,10 +56,10 @@ export default function NotesPage() {
     onMutate: async (newNote) => {
       await utils.notes.list.cancel();
       const previous = utils.notes.list.getData();
-      utils.notes.list.setData(undefined, (old: any) => {
-        if (!old) return old;
-        const temp = { id: -Date.now(), ...newNote, createdAt: new Date(), updatedAt: new Date() };
-        return [temp, ...old];
+      utils.notes.list.setData(undefined, (old: NotesListData | undefined) => {
+        if (!old?.data) return old;
+        const temp = { id: -Date.now(), ...newNote, createdAt: new Date(), updatedAt: new Date() } as NotesListData["data"][number];
+        return { ...old, data: [temp, ...old.data] };
       });
       return { previous };
     },
@@ -86,8 +89,8 @@ export default function NotesPage() {
     if (!notesList.length) return [];
     if (!debouncedSearch) return notesList;
     const s = debouncedSearch.toLowerCase();
-    return (notesList as any[]).filter(
-      (n: any) =>
+    return notesList.filter(
+      (n: NoteListItem) =>
         n.title?.toLowerCase().includes(s) || n.content?.toLowerCase().includes(s)
     );
   }, [notesList, debouncedSearch]);
@@ -103,7 +106,7 @@ export default function NotesPage() {
           <Button
             variant="outline"
             onClick={() => {
-              const notesText = (notesList as any[]).map((n: any) => `[${n.title ?? ""}] ${n.content ?? ""}`).join("\n\n");
+              const notesText = notesList.map((n: NoteListItem) => `[${n.title ?? ""}] ${n.content ?? ""}`).join("\n\n");
               if (!notesText.trim()) {
                 toast.error("No notes to analyze");
                 return;
@@ -132,7 +135,7 @@ export default function NotesPage() {
                     <Select value={form.clientId ? String(form.clientId) : ""} onValueChange={(v) => setForm({ ...form, clientId: Number(v) })}>
                       <SelectTrigger><SelectValue placeholder={t("projects.selectClient")} /></SelectTrigger>
                       <SelectContent>
-                        {(paginatedData(clients) as any[]).map((c: any) => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
+                        {paginatedData(clients).map((c: ClientListItem) => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -142,17 +145,17 @@ export default function NotesPage() {
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">—</SelectItem>
-                        {(paginatedData(projects) as any[]).filter((p: any) => p.clientId === form.clientId).map((p: any) => <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>)}
+                        {paginatedData(projects).filter((p: ProjectListItem) => p.clientId === form.clientId).map((p: ProjectListItem) => <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label>{t("notes.category")}</Label>
-                  <Select value={form.category} onValueChange={(v: any) => setForm({ ...form, category: v })}>
+                  <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v as NoteCreateCategory })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {CATEGORIES.map(c => <SelectItem key={c} value={c}>{t(`noteCategory.${c}`)}</SelectItem>)}
+                      {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{t(`category.${c}`)}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -194,21 +197,21 @@ export default function NotesPage() {
         )
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filtered.map((note: any) => {
-            const project = (paginatedData(projects) as any[]).find((p: any) => p.id === note.projectId);
-            const client = (paginatedData(clients) as any[]).find((c: any) => c.id === note.clientId);
+          {filtered.map((note: NoteListItem) => {
+            const project = paginatedData(projects).find((p: ProjectListItem) => p.id === note.projectId);
+            const client = paginatedData(clients).find((c: ClientListItem) => c.id === note.clientId);
             return (
               <Card key={note.id} className="shadow-sm hover:shadow-md transition-all cursor-pointer" onClick={() => setViewNote({ title: note.title ?? "", content: note.content ?? "" })}>
                 <CardContent className="pt-5 pb-4 space-y-2">
                   <div className="flex items-start justify-between gap-3">
                     <p className="font-medium text-sm truncate">{note.title}</p>
                     <Badge className={`${categoryColors[note.category] || categoryColors.general} border-0 text-xs shrink-0`}>
-                      {t(`noteCategory.${(note.category ?? "general") as string}`)}
+                      {t(`category.${note.category ?? "general"}`)}
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground line-clamp-3">{note.content}</p>
                   <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-1">
-                    <span>{(client as any)?.name || "—"} {project ? `/ ${(project as any).name}` : ""}</span>
+                    <span>{client?.name || "—"} {project ? `/ ${project.name}` : ""}</span>
                     <span>{note.createdAt ? new Date(note.createdAt).toLocaleDateString() : ""}</span>
                   </div>
                 </CardContent>

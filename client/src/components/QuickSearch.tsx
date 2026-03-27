@@ -13,6 +13,36 @@ interface SearchResult {
   path: string;
 }
 
+/** Minimal row shapes from batched tRPC list JSON (fetch path). */
+type QuickSearchClientRow = {
+  id: number;
+  name?: string | null;
+  email?: string | null;
+  company?: string | null;
+  industry?: string | null;
+};
+type QuickSearchProjectRow = {
+  id: number;
+  name?: string | null;
+  description?: string | null;
+  status?: string | null;
+};
+
+/** Unwrap tRPC JSON — supports plain arrays or `{ data: T[] }` paginated payloads. */
+function parseTrpcListJson<T>(res: unknown): T[] {
+  const r = res as { result?: { data?: unknown } };
+  const raw = r?.result?.data;
+  const inner =
+    raw && typeof raw === "object" && raw !== null && "json" in raw
+      ? (raw as { json: unknown }).json
+      : raw;
+  if (inner && typeof inner === "object" && inner !== null && "data" in inner) {
+    const d = (inner as { data: unknown }).data;
+    return Array.isArray(d) ? (d as T[]) : [];
+  }
+  return Array.isArray(inner) ? (inner as T[]) : [];
+}
+
 const ICON_MAP: Record<string, string> = {
   client: '👤',
   project: '📁',
@@ -60,12 +90,12 @@ export default function QuickSearch() {
       setLoading(true);
       try {
         // Search clients
-        const clientsRes = await fetch(`/api/trpc/clients.list`).then(r => r.json());
-        const clients = (clientsRes?.result?.data?.json ?? clientsRes?.result?.data ?? []) as any[];
+        const clientsRes = await fetch(`/api/trpc/clients.list`).then((r) => r.json());
+        const clients = parseTrpcListJson<QuickSearchClientRow>(clientsRes);
 
         // Search projects
-        const projectsRes = await fetch(`/api/trpc/projects.list`).then(r => r.json());
-        const projects = (projectsRes?.result?.data?.json ?? projectsRes?.result?.data ?? []) as any[];
+        const projectsRes = await fetch(`/api/trpc/projects.list`).then((r) => r.json());
+        const projects = parseTrpcListJson<QuickSearchProjectRow>(projectsRes);
 
         const q = query.toLowerCase();
         const matched: SearchResult[] = [];
@@ -73,7 +103,13 @@ export default function QuickSearch() {
         // Filter clients
         for (const c of clients) {
           if (c.name?.toLowerCase().includes(q) || c.email?.toLowerCase().includes(q) || c.company?.toLowerCase().includes(q)) {
-            matched.push({ type: 'client', id: c.id, title: c.name || c.company, subtitle: c.email || c.industry || '', path: `/clients/${c.id}` });
+            matched.push({
+              type: 'client',
+              id: c.id,
+              title: c.name || c.company || 'Client',
+              subtitle: c.email || c.industry || '',
+              path: `/clients/${c.id}`,
+            });
           }
           if (matched.length >= 8) break;
         }
@@ -81,7 +117,13 @@ export default function QuickSearch() {
         // Filter projects
         for (const p of projects) {
           if (p.name?.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q)) {
-            matched.push({ type: 'project', id: p.id, title: p.name, subtitle: p.status || '', path: `/projects/${p.id}` });
+            matched.push({
+              type: 'project',
+              id: p.id,
+              title: p.name || 'Project',
+              subtitle: p.status || '',
+              path: `/projects/${p.id}`,
+            });
           }
           if (matched.length >= 12) break;
         }

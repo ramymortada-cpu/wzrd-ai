@@ -3,12 +3,13 @@ import { useLocation } from 'wouter';
 import { useI18n } from '@/lib/i18n';
 import WzrdPublicHeader from '@/components/WzrdPublicHeader';
 import { toArabicNumerals } from '@/lib/formatUtils';
+import type { AuthMe, CreditHistoryRow } from '@/lib/routerTypes';
 
 export default function Profile() {
   const [, navigate] = useLocation();
   const { t, locale } = useI18n();
-  const [user, setUser] = useState<any>(null);
-  const [history, setHistory] = useState<any[]>([]);
+  const [user, setUser] = useState<AuthMe>(null);
+  const [history, setHistory] = useState<CreditHistoryRow[]>([]);
 
   useEffect(() => {
     fetch('/api/trpc/auth.me')
@@ -59,7 +60,7 @@ export default function Profile() {
         <div className="p-6 rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm">
           <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">{t('wzrd.creditHistory')}</h3>
           <div className="space-y-2">
-            {history.map((h: any, i: number) => (
+            {history.map((h: CreditHistoryRow, i: number) => (
               <div key={i} className="flex items-center justify-between p-4 rounded-xl border border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition">
                 <div>
                   <span className="text-sm font-medium">{typeLabel[h.type] ? typeLabel[h.type][locale] : h.type}</span>

@@ -1,6 +1,5 @@
 import { EmptyState } from "@/components/EmptyState";
 import { PageSkeleton } from "@/components/PageSkeleton";
-import { useDebounce } from "@/hooks/useDebounce";
 import { trpc } from "@/lib/trpc";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -17,14 +16,24 @@ import { toast } from "sonner";
 import {
   Search, Globe, GraduationCap, Building2, TrendingUp, Loader2,
   FileText, ExternalLink, Brain, Lightbulb, Target, Shield,
-  BarChart3, BookOpen, Zap, Clock, Database, ChevronRight,
-  RefreshCw, Eye, Download, Sparkles, AlertTriangle, CheckCircle2
+  Zap, Clock, Database, ChevronRight,
+  Sparkles, AlertTriangle, CheckCircle2
 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Streamdown } from "streamdown";
 import { paginatedData } from "@/lib/utils";
+import type { ResearchConductFull } from "@/lib/routerTypes";
 
 type ResearchTab = "new" | "reports" | "quick";
+
+type QuickSearchHit = { title?: string; url?: string; snippet?: string };
+type QuickResearchUi = {
+  summary?: string;
+  results?: QuickSearchHit[];
+  fromCache: boolean;
+};
+type CompetitorRow = NonNullable<ResearchConductFull["competitors"]>[number];
+type AcademicRow = NonNullable<ResearchConductFull["academicResults"]>[number];
 
 // Research progress steps
 const RESEARCH_STEPS = [
@@ -37,7 +46,7 @@ const RESEARCH_STEPS = [
 ];
 
 export default function ResearchEnginePage() {
-  const { t, locale } = useI18n();
+  const { locale } = useI18n();
   const isRTL = locale === "ar";
 
   // State
@@ -51,10 +60,10 @@ export default function ResearchEnginePage() {
   const [isResearching, setIsResearching] = useState(false);
   const [researchProgress, setResearchProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
-  const [currentReport, setCurrentReport] = useState<any>(null);
+  const [currentReport, setCurrentReport] = useState<ResearchConductFull | null>(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [quickQuery, setQuickQuery] = useState("");
-  const [quickResults, setQuickResults] = useState<any>(null);
+  const [quickResults, setQuickResults] = useState<QuickResearchUi | null>(null);
   const [isQuickSearching, setIsQuickSearching] = useState(false);
 
   // Data
@@ -83,7 +92,23 @@ export default function ResearchEnginePage() {
   const quickResearch = trpc.research.quick.useMutation({
     onSuccess: (data) => {
       setIsQuickSearching(false);
-      setQuickResults(data);
+      const resultsRaw = data.results;
+      const results = Array.isArray(resultsRaw)
+        ? resultsRaw.map((r): QuickSearchHit => {
+            const o = typeof r === "object" && r !== null && !Array.isArray(r) ? (r as Record<string, unknown>) : {};
+            return {
+              title: typeof o.title === "string" ? o.title : String(o.title ?? ""),
+              url: typeof o.url === "string" ? o.url : String(o.url ?? ""),
+              snippet: typeof o.snippet === "string" ? o.snippet : String(o.snippet ?? ""),
+            };
+          })
+        : undefined;
+      const d = data as Record<string, unknown>;
+      setQuickResults({
+        fromCache: Boolean(data.fromCache),
+        summary: typeof d.summary === "string" ? d.summary : undefined,
+        results,
+      });
     },
     onError: (err) => {
       setIsQuickSearching(false);
@@ -445,7 +470,12 @@ export default function ResearchEnginePage() {
                     key={report.id}
                     className="hover:shadow-md transition-shadow cursor-pointer"
                     onClick={() => {
-                      setCurrentReport(report.reportData);
+                      const raw = report.reportData;
+                      setCurrentReport(
+                        raw != null && typeof raw === "object"
+                          ? (raw as ResearchConductFull)
+                          : null
+                      );
                       setShowReportDialog(true);
                     }}
                   >
@@ -566,12 +596,12 @@ export default function ResearchEnginePage() {
                   </div>
                 ) : quickResults ? (
                   <div className="space-y-4">
-                    {quickResults.summary && (
+                    {quickResults.summary ? (
                       <div className="p-3 rounded-lg bg-violet-50 dark:bg-violet-950/20 text-sm">
                         <Streamdown>{quickResults.summary}</Streamdown>
                       </div>
-                    )}
-                    {quickResults.results?.map((r: any, idx: number) => (
+                    ) : null}
+                    {(quickResults.results ?? []).map((r, idx: number) => (
                       <div key={idx} className="border-b last:border-0 pb-3 last:pb-0">
                         <a
                           href={r.url}
@@ -655,7 +685,7 @@ export default function ResearchEnginePage() {
                       {isRTL ? "تحليل المنافسين" : "Competitor Analysis"}
                     </h3>
                     <div className="grid gap-3">
-                      {currentReport.competitors.map((comp: any, idx: number) => (
+                      {currentReport.competitors.map((comp: CompetitorRow, idx: number) => (
                         <Card key={idx} className="p-4">
                           <div className="flex items-start justify-between mb-2">
                             <div>
@@ -745,7 +775,7 @@ export default function ResearchEnginePage() {
                       {isRTL ? "الأبحاث الأكاديمية" : "Academic Research"}
                     </h3>
                     <div className="space-y-2">
-                      {currentReport.academicResults.map((paper: any, idx: number) => (
+                      {currentReport.academicResults.map((paper: AcademicRow, idx: number) => (
                         <div key={idx} className="p-3 rounded-lg border text-sm">
                           <div className="flex items-start justify-between">
                             <div>

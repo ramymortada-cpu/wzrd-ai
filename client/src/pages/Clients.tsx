@@ -1,4 +1,6 @@
-import { trpc } from "@/lib/trpc";
+import { trpc, type RouterOutputs } from "@/lib/trpc";
+
+type ClientsListData = RouterOutputs["clients"]["list"];
 import { paginatedData } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent } from "@/components/ui/card";
@@ -43,11 +45,10 @@ export default function ClientsPage() {
     onMutate: async (newClient) => {
       await utils.clients.list.cancel();
       const previous = utils.clients.list.getData();
-      utils.clients.list.setData(undefined, (old: any) => {
-        if (!old) return old;
-        const data = Array.isArray(old) ? old : old?.data || [];
-        const temp = { id: -Date.now(), ...newClient, createdAt: new Date(), updatedAt: new Date() };
-        return Array.isArray(old) ? [temp, ...data] : { ...old, data: [temp, ...data] };
+      utils.clients.list.setData(undefined, (old: ClientsListData | undefined) => {
+        if (!old?.data) return old;
+        const temp = { id: -Date.now(), ...newClient, createdAt: new Date(), updatedAt: new Date() } as ClientsListData["data"][number];
+        return { ...old, data: [temp, ...old.data] };
       });
       return { previous };
     },
@@ -116,7 +117,7 @@ export default function ClientsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label>{t("clients.market")}</Label>
-                  <Select value={form.market} onValueChange={(v: any) => setForm({ ...form, market: v })}>
+                  <Select value={form.market} onValueChange={(v) => setForm({ ...form, market: v as typeof form.market })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {["ksa", "egypt", "uae", "other"].map(m => (

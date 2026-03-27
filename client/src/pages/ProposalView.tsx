@@ -7,13 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Streamdown } from "streamdown";
+import type { LucideIcon } from "lucide-react";
 import {
-  CheckCircle2, XCircle, FileText, Loader2, ArrowRight, Building2,
+  CheckCircle2, XCircle, FileText, Loader2, Building2,
   Calendar, DollarSign, Clock, Sparkles, Shield, MessageSquare,
 } from "lucide-react";
+import type { ProposalDetailRow } from "@/lib/routerTypes";
 
 const SECTIONS = [
   "executiveSummary",
@@ -39,6 +40,11 @@ const SECTION_LABELS: Record<string, string> = {
   terms: "Terms & Conditions",
 };
 
+function proposalSectionMarkdownView(proposal: ProposalDetailRow, key: (typeof SECTIONS)[number]): string {
+  const v = proposal[key];
+  return typeof v === "string" ? v : "";
+}
+
 const SERVICE_LABELS: Record<string, string> = {
   business_health_check: "Business Health Check",
   starting_business_logic: "Clarity Package — Business Logic",
@@ -47,7 +53,7 @@ const SERVICE_LABELS: Record<string, string> = {
   consultation: "Growth Partnership — Strategic Consultation",
 };
 
-const statusConfig: Record<string, { color: string; icon: any; label: string }> = {
+const statusConfig: Record<string, { color: string; icon: LucideIcon; label: string }> = {
   draft: { color: "bg-gray-500/10 text-gray-400 border-gray-500/20", icon: FileText, label: "Draft" },
   sent: { color: "bg-blue-500/10 text-blue-400 border-blue-500/20", icon: Clock, label: "Awaiting Response" },
   accepted: { color: "bg-green-500/10 text-green-400 border-green-500/20", icon: CheckCircle2, label: "Accepted" },
@@ -177,7 +183,7 @@ export default function ProposalViewPage() {
         {/* Proposal Sections */}
         <div className="space-y-6">
           {SECTIONS.map((sectionKey) => {
-            const content = (proposal as any)[sectionKey] || "";
+            const content = proposalSectionMarkdownView(proposal, sectionKey);
             if (!content) return null;
             return (
               <Card key={sectionKey} className="bg-white/[0.03] border-white/10 text-white">

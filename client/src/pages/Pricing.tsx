@@ -38,7 +38,7 @@ const FALLBACK_PLANS: PlanRow[] = [
 
 function mapApiPlans(raw: unknown): PlanRow[] | null {
   if (!Array.isArray(raw) || raw.length === 0) return null;
-  return raw.map((p: any) => ({
+  return raw.map((p: Record<string, unknown>) => ({
     id: String(p.id),
     credits: Number(p.credits) || 0,
     price: Number(p.priceEGP) || 0,

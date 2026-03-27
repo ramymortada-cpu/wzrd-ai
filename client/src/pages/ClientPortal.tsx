@@ -1,4 +1,5 @@
 import { trpc } from "@/lib/trpc";
+import type { PortalProjectDeliverable, PortalRevisionRow, PortalCommentRow } from "@/lib/routerTypes";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -136,7 +137,7 @@ function DiffViewer({ contentA, contentB, labelA, labelB, isAr }: {
 }
 
 // ============ APPROVAL WIDGET COMPONENT ============
-function ApprovalWidget({ deliverableId, deliverableTitle, token, clientName, isAr, status }: {
+function ApprovalWidget({ deliverableId, deliverableTitle: _deliverableTitle, token, clientName, isAr, status }: {
   deliverableId: number;
   deliverableTitle: string;
   token: string;
@@ -391,7 +392,7 @@ export default function ClientPortalPage() {
 
   const completedCount = useMemo(() => {
     if (!data?.deliverables) return 0;
-    return data.deliverables.filter((d: any) => d.status === "approved" || d.status === "delivered").length;
+    return data.deliverables.filter((d) => d.status === "approved" || d.status === "delivered").length;
   }, [data?.deliverables]);
 
   const handleToggleDeliverable = useCallback((id: number) => {
@@ -519,7 +520,7 @@ export default function ClientPortalPage() {
               <p className="text-xs text-muted-foreground">{isAr ? "إجمالي المخرجات" : "Total Deliverables"}</p>
             </div>
             <div className="text-center p-3 rounded-lg bg-muted/50">
-              <p className="text-2xl font-bold text-blue-600">{deliverables.filter((d: any) => d.status === "in_progress").length}</p>
+              <p className="text-2xl font-bold text-blue-600">{deliverables.filter((d) => d.status === "in_progress").length}</p>
               <p className="text-xs text-muted-foreground">{isAr ? "قيد التنفيذ" : "In Progress"}</p>
             </div>
             <div className="text-center p-3 rounded-lg bg-muted/50">
@@ -548,7 +549,7 @@ export default function ClientPortalPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {stageDeliverables.map((d: any) => {
+                {stageDeliverables.map((d: PortalProjectDeliverable) => {
                   const isExpanded = expandedDeliverable === d.id;
                   const isAccessible = d.status === "delivered" || d.status === "approved" || d.status === "review";
                   return (
@@ -604,26 +605,26 @@ export default function ClientPortalPage() {
                           {/* Content Tab */}
                           {activeTab === "content" && (
                             <div className="p-4 space-y-3">
-                              {(d as any).fileUrl && (
+                              {d.fileUrl ? (
                                 <Button
                                   variant="outline"
                                   size="sm"
                                   className="text-xs h-7 gap-1.5"
-                                  onClick={() => window.open((d as any).fileUrl, "_blank")}
+                                  onClick={() => window.open(d.fileUrl!, "_blank")}
                                 >
                                   <Download className="h-3 w-3" />
                                   {isAr ? "تحميل PDF" : "Download PDF"}
                                 </Button>
-                              )}
-                              {(d as any).imageUrls && Array.isArray((d as any).imageUrls) && ((d as any).imageUrls as string[]).length > 0 && (
+                              ) : null}
+                              {Array.isArray(d.imageUrls) && d.imageUrls.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                                  {((d as any).imageUrls as string[]).map((url: string, imgIdx: number) => (
+                                  {d.imageUrls.map((url: string, imgIdx: number) => (
                                     <a key={imgIdx} href={url} target="_blank" rel="noopener noreferrer">
                                       <img src={url} alt={`Asset ${imgIdx + 1}`} className="rounded border hover:ring-2 ring-primary transition-all w-full" />
                                     </a>
                                   ))}
                                 </div>
-                              )}
+                              ) : null}
                               {d.content && (
                                 <div className="p-2 sm:p-3 rounded-md bg-muted/50 text-sm whitespace-pre-wrap max-h-60 sm:max-h-80 overflow-y-auto">
                                   {d.content}
@@ -723,7 +724,7 @@ export default function ClientPortalPage() {
                                   <div className="relative">
                                     <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
                                     <div className="space-y-4">
-                                      {(detailsQuery.data?.revisions ?? []).map((rev: any, idx: number) => (
+                                      {(detailsQuery.data?.revisions ?? []).map((rev: PortalRevisionRow, idx: number) => (
                                         <div key={rev.id} className="relative flex gap-4">
                                           <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
                                             idx === 0 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
@@ -805,10 +806,10 @@ export default function ClientPortalPage() {
                                 </div>
                               ) : (
                                 <div className="space-y-3">
-                                  {(detailsQuery.data.comments.filter((c: { parentId?: number | null }) => !c.parentId) as typeof detailsQuery.data.comments).map((thread: any) => (
+                                  {(detailsQuery.data.comments.filter((c: PortalCommentRow) => !c.parentId)).map((thread: PortalCommentRow) => (
                                     <div key={thread.id} className="space-y-2">
                                       {/* Top-level comment */}
-                                      <div className={`p-3 rounded-lg border ${Boolean((thread as unknown as { isResolved?: number | boolean }).isResolved) ? "opacity-60" : ""}`}>
+                                      <div className={`p-3 rounded-lg border ${(thread as unknown as { isResolved?: number | boolean }).isResolved ? "opacity-60" : ""}`}>
                                         <div className="flex items-center gap-2 mb-1">
                                           <Badge className={`text-[10px] ${authorTypeColors[thread.authorType as string] || ""}`}>
                                             {thread.authorType === "client" ? (isAr ? "عميل" : "Client") :
@@ -824,7 +825,7 @@ export default function ClientPortalPage() {
                                           </span>
                                         </div>
                                         <p className="text-sm">{thread.comment}</p>
-                                        {Boolean((thread as unknown as { isResolved?: number | boolean }).isResolved) ? (
+                                        {(thread as unknown as { isResolved?: number | boolean }).isResolved ? (
                                           <Badge variant="secondary" className="text-[10px] mt-2">
                                             <CheckCircle2 className="h-3 w-3 mr-1" />
                                             {isAr ? "تم الحل" : "Resolved"}

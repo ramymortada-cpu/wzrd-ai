@@ -1,10 +1,11 @@
 import { EmptyState } from "@/components/EmptyState";
 import { PageSkeleton } from "@/components/PageSkeleton";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { trpc } from "@/lib/trpc";
+import type { ClientListItem, PipelineRunRow, ProjectListItem } from "@/lib/routerTypes";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,9 +15,9 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { paginatedData } from "@/lib/utils";
 import {
-  Zap, Play, Pause, RotateCcw, CheckCircle2, XCircle, Clock,
+  Zap, CheckCircle2, XCircle, Clock,
   Search, Brain, Target, FileText, Send, ArrowRight, Loader2,
-  Rocket, Eye, ChevronDown, ChevronUp, Link2, Copy, ExternalLink
+  Rocket, Eye, ChevronDown, ChevronUp, Link2, ExternalLink
 } from "lucide-react";
 
 const STEP_CONFIG = [
@@ -72,7 +73,7 @@ export default function PipelinePage() {
   });
 
   const executeStageMutation = trpc.pipeline.executeStage.useMutation({
-    onSuccess: (data: { status?: string }) => {
+    onSuccess: (_data: { status?: string }) => {
       toast.success(`Stage completed!`);
       pipelinesQuery.refetch();
     },
@@ -101,7 +102,7 @@ export default function PipelinePage() {
   const projects = paginatedData(projectsQuery.data);
   const pipelines = pipelinesQuery.data || [];
 
-  const getStepStatus = (pipeline: any, stepIndex: number) => {
+  const getStepStatus = (pipeline: PipelineRunRow, stepIndex: number) => {
     const currentStep = pipeline.currentStep || 0;
     if (stepIndex < currentStep) return "completed";
     if (stepIndex === currentStep && pipeline.status !== "completed" && pipeline.status !== "failed" && pipeline.status !== "pending") return "active";
@@ -165,11 +166,11 @@ export default function PipelinePage() {
         />
       ) : (
         <div className="space-y-4">
-          {pipelines.map((pipeline: any) => {
+          {pipelines.map((pipeline: PipelineRunRow) => {
             const isExpanded = expandedPipeline === pipeline.id;
             const isRunning = runningPipelineId === pipeline.id;
             const progress = ((pipeline.currentStep || 0) / 5) * 100;
-            const clientName = clients.find((c: any) => c.id === pipeline.clientId)?.name || `Client #${pipeline.clientId}`;
+            const clientName = clients.find((c: ClientListItem) => c.id === pipeline.clientId)?.name || `Client #${pipeline.clientId}`;
 
             return (
               <Card key={pipeline.id} className="overflow-hidden">
@@ -246,9 +247,11 @@ export default function PipelinePage() {
                             <div className="text-sm text-emerald-700 space-y-1">
                               {pipeline.diagnosisOutput && <p>✓ Diagnosis generated ({String(pipeline.diagnosisOutput).length} chars)</p>}
                               {pipeline.strategyOutput && <p>✓ Strategy generated ({String(pipeline.strategyOutput).length} chars)</p>}
-                              {pipeline.deliverablesOutput && <p>✓ {(pipeline.deliverablesOutput as any[]).length} deliverables generated</p>}
-                              {pipeline.proposalOutput && <p>✓ Proposal generated</p>}
-                              {pipeline.projectId && <p>✓ Project auto-created</p>}
+                              {Array.isArray(pipeline.deliverablesOutput) ? (
+                                <p>✓ {pipeline.deliverablesOutput.length} deliverables generated</p>
+                              ) : null}
+                              {pipeline.proposalOutput != null && pipeline.proposalOutput !== "" ? <p>✓ Proposal generated</p> : null}
+                              {pipeline.projectId ? <p>✓ Project auto-created</p> : null}
                             </div>
                           </div>
 
@@ -332,7 +335,7 @@ export default function PipelinePage() {
               <Select value={selectedProject} onValueChange={setSelectedProject}>
                 <SelectTrigger><SelectValue placeholder="Select a project" /></SelectTrigger>
                 <SelectContent>
-                  {(projects as any[]).filter((p: any) => !selectedClient || p.clientId === parseInt(selectedClient)).map((p: any) => (
+                  {projects.filter((p: ProjectListItem) => !selectedClient || p.clientId === parseInt(selectedClient, 10)).map((p: ProjectListItem) => (
                     <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
                   ))}
                 </SelectContent>

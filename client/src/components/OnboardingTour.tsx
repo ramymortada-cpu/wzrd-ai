@@ -104,7 +104,7 @@ export function OnboardingTour({ isAr = false }: { isAr?: boolean }) {
 
   const completeTour = useCallback(() => {
     setIsVisible(false);
-    try { localStorage.setItem(TOUR_STORAGE_KEY, 'true'); } catch {}
+    try { localStorage.setItem(TOUR_STORAGE_KEY, 'true'); } catch { /* storage may be unavailable */ }
   }, []);
 
   const nextStep = () => {

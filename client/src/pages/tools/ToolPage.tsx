@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 import { useLocation } from 'wouter';
 import { waMeHref } from '@/lib/waContact';
 import { toArabicNumerals } from '@/lib/formatUtils';
@@ -68,6 +68,13 @@ interface ToolResult {
   creditsRemaining: number;
 }
 
+/** JSON from premium.generateReport (nested structure varies by tool) */
+interface PremiumReportPayload {
+  creditsUsed?: number;
+  creditsRemaining?: number;
+  report?: Record<string, unknown>;
+}
+
 const severityColor = (s: string) =>
   s === 'high'
     ? 'text-rose-200/90 border-rose-400/20 bg-rose-500/[0.06] shadow-[inset_3px_0_0_0_rgba(244,63,94,0.35)]'
@@ -76,41 +83,115 @@ const severityColor = (s: string) =>
       : 'text-emerald-200/85 border-emerald-400/18 bg-emerald-500/[0.06] shadow-[inset_3px_0_0_0_rgba(52,211,153,0.35)]';
 
 function ScoreRing({ score }: { score: number }) {
-  const r = 52;
+  const { locale } = useI18n();
+  const isAr = locale === 'ar';
+  const uid = useId().replace(/:/g, '');
+  const r = 54;
   const c = 2 * Math.PI * r;
   const pct = Math.min(100, Math.max(0, score)) / 100;
   const dash = pct * c;
-  const { c1, c2 } =
+
+  const { c1, c2, glowColor } =
     score >= 70
-      ? { c1: '#4ade80', c2: '#22d3ee' }
+      ? { c1: '#00F0FF', c2: '#A855F7', glowColor: 'rgba(0,240,255,0.3)' }
       : score >= 40
-        ? { c1: '#fbbf24', c2: '#fb923c' }
-        : { c1: '#f87171', c2: '#f472b6' };
-  const gid = `wzrd-score-grad-${score}-${Math.round(pct * 1000)}`;
+        ? { c1: '#FBBF24', c2: '#FB923C', glowColor: 'rgba(251,191,36,0.3)' }
+        : { c1: '#F87171', c2: '#F472B6', glowColor: 'rgba(248,113,113,0.3)' };
+
+  const gid = `wzrd-sg-${uid}`;
+  const glowId = `${gid}-glow`;
+
+  const tierLabel = isAr
+    ? score >= 70
+      ? '✦ علامة قوية'
+      : score >= 40
+        ? '⚡ تحتاج تطوير'
+        : '⚠ يحتاج تدخل عاجل'
+    : score >= 70
+      ? '✦ Strong brand'
+      : score >= 40
+        ? '⚡ Needs work'
+        : '⚠ Urgent attention';
+
   return (
-    <div className="relative mx-auto mb-2 h-[7.75rem] w-[7.75rem]" aria-hidden>
-      <svg className="h-full w-full -rotate-90" viewBox="0 0 120 120">
-        <defs>
-          <linearGradient id={gid} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor={c1} />
-            <stop offset="100%" stopColor={c2} />
-          </linearGradient>
-        </defs>
-        <circle cx="60" cy="60" r={r} fill="none" stroke="rgba(39,39,42,0.55)" strokeWidth="10" />
-        <circle
-          cx="60"
-          cy="60"
-          r={r}
-          fill="none"
-          stroke={`url(#${gid})`}
-          strokeWidth="10"
-          strokeLinecap="round"
-          strokeDasharray={`${dash} ${c}`}
-        />
-      </svg>
-      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-4xl font-bold font-mono text-white tabular-nums">{score}</span>
-        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">/100</span>
+    <div className="relative mx-auto mb-4 flex flex-col items-center">
+      <div
+        className="pointer-events-none absolute rounded-full opacity-40 blur-2xl"
+        style={{
+          width: '140px',
+          height: '140px',
+          background: glowColor,
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+        }}
+      />
+
+      <div className="relative h-[8.5rem] w-[8.5rem]" aria-hidden>
+        <svg className="h-full w-full -rotate-90" viewBox="0 0 128 128">
+          <defs>
+            <linearGradient id={gid} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={c1} />
+              <stop offset="100%" stopColor={c2} />
+            </linearGradient>
+            <filter id={glowId}>
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          <circle cx="64" cy="64" r={r} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="8" />
+
+          <circle
+            cx="64"
+            cy="64"
+            r={r}
+            fill="none"
+            stroke={c1}
+            strokeWidth="8"
+            strokeOpacity="0.06"
+            strokeDasharray={`${c}`}
+          />
+
+          <circle
+            cx="64"
+            cy="64"
+            r={r}
+            fill="none"
+            stroke={`url(#${gid})`}
+            strokeWidth="8"
+            strokeLinecap="round"
+            strokeDasharray={`${dash} ${c}`}
+            filter={`url(#${glowId})`}
+            style={{
+              transition: 'stroke-dasharray 1.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+          />
+        </svg>
+
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-0.5">
+          <span
+            className="font-mono text-[2.6rem] font-bold tabular-nums leading-none"
+            style={{ color: c1, textShadow: `0 0 20px ${glowColor}` }}
+          >
+            {score}
+          </span>
+          <span className="text-[9px] font-semibold uppercase tracking-[0.25em] text-zinc-600">/ 100</span>
+        </div>
+      </div>
+
+      <div
+        className="mt-3 rounded-full border px-3 py-1 text-xs font-semibold"
+        style={{
+          background: `${glowColor.replace('0.3', '0.08')}`,
+          borderColor: `${glowColor.replace('0.3', '0.3')}`,
+          color: c1,
+        }}
+      >
+        {tierLabel}
       </div>
     </div>
   );
@@ -249,7 +330,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ToolResult | null>(null);
   const [error, setError] = useState('');
-  const [premiumReport, setPremiumReport] = useState<any>(null);
+  const [premiumReport, setPremiumReport] = useState<PremiumReportPayload | null>(null);
   const [premiumLoading, setPremiumLoading] = useState(false);
   const [premiumError, setPremiumError] = useState('');
   const [premiumOffer, setPremiumOffer] = useState({ credits: 100, egp: 99 });
@@ -307,7 +388,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
       const reportData = data?.result?.data?.json ?? data?.result?.data;
       
       if (reportData?.success && reportData?.report) {
-        setPremiumReport(reportData);
+        setPremiumReport(reportData as PremiumReportPayload);
       } else {
         setPremiumError(reportData?.error || 'فشل في إنشاء التقرير. حاول تاني.');
       }
@@ -371,6 +452,21 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
   // ═══ PREMIUM REPORT VIEW ═══
   if (premiumReport) {
     const r = premiumReport;
+    const rep = r.report;
+    const exec = rep?.executiveSummary as Record<string, unknown> | undefined;
+    const pillarList = Array.isArray(rep?.pillars) ? (rep.pillars as Record<string, unknown>[]) : [];
+    const priorityMatrix = rep?.priorityMatrix as {
+      urgent?: string[];
+      important?: string[];
+      improvement?: string[];
+    } | undefined;
+    const actionPlan = rep?.actionPlan as {
+      days30?: string[];
+      days60?: string[];
+      days90?: string[];
+    } | undefined;
+    const quickWins = Array.isArray(rep?.quickWins) ? (rep.quickWins as string[]) : [];
+    const recommendation = rep?.recommendation as { phase?: string; reason?: string } | undefined;
     return (
       <div className="wzrd-page-radial text-zinc-900 dark:text-white">
         <div className="mx-auto max-w-3xl px-6 py-16" dir="rtl">
@@ -388,110 +484,137 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
           </div>
 
           {/* Executive Summary */}
-          {r.report?.executiveSummary && (
+          {exec ? (
             <div className="wzrd-glass mb-8 rounded-3xl border-indigo-200/60 p-6 dark:border-indigo-800/50">
               <h2 className="text-lg font-bold mb-3">١. الملخص التنفيذي</h2>
               <div className="flex items-center gap-4 mb-4">
-                <span className="text-4xl font-bold font-mono text-indigo-600">{r.report.executiveSummary.score}<span className="text-lg text-gray-400">/١٠٠</span></span>
+                <span className="text-4xl font-bold font-mono text-indigo-600">
+                  {String(exec.score ?? '')}
+                  <span className="text-lg text-gray-400">/١٠٠</span>
+                </span>
               </div>
-              {r.report.executiveSummary.pillarScores && (
+              {exec.pillarScores != null && typeof exec.pillarScores === 'object' ? (
                 <div className="grid grid-cols-5 gap-2 mb-4">
-                  {Object.entries(r.report.executiveSummary.pillarScores).map(([k, v]) => (
+                  {Object.entries(exec.pillarScores as Record<string, unknown>).map(([k, v]) => (
                     <div key={k} className="text-center p-2 rounded-lg bg-white dark:bg-zinc-800">
                       <p className="text-lg font-bold font-mono">{String(v)}</p>
                       <p className="text-[10px] text-gray-500">{k}</p>
                     </div>
                   ))}
                 </div>
-              )}
-              {r.report.executiveSummary.verdict && (
-                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{r.report.executiveSummary.verdict}</p>
-              )}
+              ) : null}
+              {exec.verdict != null && String(exec.verdict).length > 0 ? (
+                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{String(exec.verdict)}</p>
+              ) : null}
             </div>
-          )}
+          ) : null}
 
           {/* Pillars Deep Dive */}
-          {r.report?.pillars?.map((p: any, i: number) => (
+          {pillarList.map((p, i) => (
             <div key={i} className="p-5 rounded-xl border border-gray-200 dark:border-zinc-800 mb-4">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-bold text-base">{p.name || p.nameEn}</h3>
+                <h3 className="font-bold text-base">{String(p.name ?? p.nameEn ?? "")}</h3>
                 <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${p.severity === 'critical' ? 'bg-red-100 text-red-600' : p.severity === 'major' ? 'bg-amber-100 text-amber-600' : 'bg-green-100 text-green-600'}`}>
-                  {p.score}/100 · {p.severity}
+                  {String(p.score ?? "")}/100 · {String(p.severity ?? "")}
                 </span>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-line">{p.analysis}</p>
-              {p.gap && <p className="text-xs text-amber-600 mt-2 p-2 rounded bg-amber-50 dark:bg-amber-900/10">الفجوة: {p.gap}</p>}
+              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-line">{String(p.analysis ?? "")}</p>
+              {p.gap ? <p className="text-xs text-amber-600 mt-2 p-2 rounded bg-amber-50 dark:bg-amber-900/10">الفجوة: {String(p.gap)}</p> : null}
             </div>
           ))}
 
           {/* Priority Matrix */}
-          {r.report?.priorityMatrix && (
+          {priorityMatrix ? (
             <div className="p-5 rounded-xl border border-gray-200 dark:border-zinc-800 mb-8">
               <h2 className="text-lg font-bold mb-4">٣. خريطة الأولويات</h2>
-              {r.report.priorityMatrix.urgent?.length > 0 && (
+              {(priorityMatrix.urgent?.length ?? 0) > 0 ? (
                 <div className="mb-3">
                   <h4 className="text-xs font-bold text-red-600 mb-1">🔴 عاجل ومهم</h4>
-                  {r.report.priorityMatrix.urgent.map((item: string, i: number) => <p key={i} className="text-sm text-gray-600 mr-4">• {item}</p>)}
+                  {(priorityMatrix.urgent ?? []).map((item, i) => (
+                    <p key={i} className="text-sm text-gray-600 mr-4">
+                      • {item}
+                    </p>
+                  ))}
                 </div>
-              )}
-              {r.report.priorityMatrix.important?.length > 0 && (
+              ) : null}
+              {(priorityMatrix.important?.length ?? 0) > 0 ? (
                 <div className="mb-3">
                   <h4 className="text-xs font-bold text-amber-600 mb-1">🟠 مهم مش عاجل</h4>
-                  {r.report.priorityMatrix.important.map((item: string, i: number) => <p key={i} className="text-sm text-gray-600 mr-4">• {item}</p>)}
+                  {(priorityMatrix.important ?? []).map((item, i) => (
+                    <p key={i} className="text-sm text-gray-600 mr-4">
+                      • {item}
+                    </p>
+                  ))}
                 </div>
-              )}
-              {r.report.priorityMatrix.improvement?.length > 0 && (
+              ) : null}
+              {(priorityMatrix.improvement?.length ?? 0) > 0 ? (
                 <div>
                   <h4 className="text-xs font-bold text-green-600 mb-1">🟡 تحسين</h4>
-                  {r.report.priorityMatrix.improvement.map((item: string, i: number) => <p key={i} className="text-sm text-gray-600 mr-4">• {item}</p>)}
+                  {(priorityMatrix.improvement ?? []).map((item, i) => (
+                    <p key={i} className="text-sm text-gray-600 mr-4">
+                      • {item}
+                    </p>
+                  ))}
                 </div>
-              )}
+              ) : null}
             </div>
-          )}
+          ) : null}
 
           {/* Action Plan */}
-          {r.report?.actionPlan && (
+          {actionPlan ? (
             <div className="p-5 rounded-xl border border-gray-200 dark:border-zinc-800 mb-8">
               <h2 className="text-lg font-bold mb-4">٤. خطة العمل</h2>
               <div className="grid grid-cols-3 gap-3">
                 <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/10">
                   <h4 className="text-xs font-bold text-green-700 mb-2">٣٠ يوم</h4>
-                  {(r.report.actionPlan.days30 || []).map((a: string, i: number) => <p key={i} className="text-xs text-gray-600 mb-1">• {a}</p>)}
+                  {(actionPlan.days30 ?? []).map((a, i) => (
+                    <p key={i} className="text-xs text-gray-600 mb-1">
+                      • {a}
+                    </p>
+                  ))}
                 </div>
                 <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/10">
                   <h4 className="text-xs font-bold text-amber-700 mb-2">٦٠ يوم</h4>
-                  {(r.report.actionPlan.days60 || []).map((a: string, i: number) => <p key={i} className="text-xs text-gray-600 mb-1">• {a}</p>)}
+                  {(actionPlan.days60 ?? []).map((a, i) => (
+                    <p key={i} className="text-xs text-gray-600 mb-1">
+                      • {a}
+                    </p>
+                  ))}
                 </div>
                 <div className="p-3 rounded-lg bg-indigo-50 dark:bg-indigo-900/10">
                   <h4 className="text-xs font-bold text-indigo-700 mb-2">٩٠ يوم</h4>
-                  {(r.report.actionPlan.days90 || []).map((a: string, i: number) => <p key={i} className="text-xs text-gray-600 mb-1">• {a}</p>)}
+                  {(actionPlan.days90 ?? []).map((a, i) => (
+                    <p key={i} className="text-xs text-gray-600 mb-1">
+                      • {a}
+                    </p>
+                  ))}
                 </div>
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* Quick Wins */}
-          {r.report?.quickWins && (
+          {quickWins.length > 0 ? (
             <div className="p-5 rounded-xl border-2 border-green-200 bg-green-50 dark:bg-green-900/10 dark:border-green-800 mb-8">
               <h2 className="text-lg font-bold mb-3">٥. Quick Wins — ٣ حاجات تعملها النهاردة</h2>
-              {r.report.quickWins.map((w: string, i: number) => (
+              {quickWins.map((w, i) => (
                 <div key={i} className="flex items-start gap-2 mb-2">
                   <span className="text-green-600 font-bold">{i + 1}.</span>
                   <p className="text-sm text-gray-700">{w}</p>
                 </div>
               ))}
             </div>
-          )}
+          ) : null}
 
           {/* Recommendation */}
-          {r.report?.recommendation && (
+          {recommendation ? (
             <div className="p-5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white mb-8">
               <h2 className="text-lg font-bold mb-2">٦. التوصية النهائية</h2>
-              <p className="text-xs font-bold bg-white/20 inline-block px-3 py-1 rounded-full mb-2">{r.report.recommendation.phase}</p>
-              <p className="text-sm opacity-90 leading-relaxed">{r.report.recommendation.reason}</p>
+              <p className="text-xs font-bold bg-white/20 inline-block px-3 py-1 rounded-full mb-2">{recommendation.phase ?? ''}</p>
+              <p className="text-sm opacity-90 leading-relaxed">{recommendation.reason ?? ''}</p>
               <a href="/services-info" className="inline-block mt-3 px-5 py-2 rounded-full bg-white text-indigo-600 text-sm font-bold hover:bg-gray-100 transition">تواصل مع Primo Marca ←</a>
             </div>
-          )}
+          ) : null}
 
           {/* Actions */}
           <div className="flex gap-3">
@@ -638,7 +761,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
             >📄 حمّل كـ PDF</button>
             <button
               onClick={async () => {
-                const email = (window as any).__userEmail || prompt('ادخل إيميلك:');
+                const email = (window as Window & { __userEmail?: string }).__userEmail || prompt('ادخل إيميلك:');
                 if (!email) return;
                 try {
                   await fetch('/api/trpc/reportPdf.sendToEmail', {
@@ -784,7 +907,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
                           topFindings: result.findings.slice(0, 3).map(f => f.title).join(' | '),
                           timestamp: new Date().toISOString(),
                         }));
-                      } catch {}
+                      } catch { /* sessionStorage may be unavailable */ }
                       window.location.href = '/my-requests?from=diagnosis';
                     }}
                     className="px-6 py-3 rounded-full bg-emerald-500 text-white font-bold text-sm hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/20"

@@ -1,8 +1,9 @@
 import { EmptyState } from "@/components/EmptyState";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { trpc } from "@/lib/trpc";
+import type { ClientListItem, DeliverableListItem, ProjectListItem } from "@/lib/routerTypes";
 import { useI18n } from "@/lib/i18n";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,9 +14,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import {
-  CheckCircle2, Clock, Sparkles, Eye, FileText, Filter, Loader2, ArrowRight,
-  Download, FileDown, Image, ShieldCheck, MessageSquare, AlertTriangle, Star,
-  Wand2, Zap, LayoutTemplate, Palette
+  CheckCircle2, Clock, Sparkles, Eye, Filter, Loader2,
+  Download, FileDown, Image, ShieldCheck, MessageSquare, AlertTriangle,
+  Zap, LayoutTemplate, Palette
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
@@ -39,6 +40,12 @@ const stageColors: Record<string, string> = {
 };
 
 const STATUS_KEYS = ["pending", "in_progress", "ai_generated", "review", "approved", "delivered"] as const;
+
+type EnrichedDeliverable = DeliverableListItem & {
+  projectName?: string;
+  clientId?: number;
+  proj?: ProjectListItem;
+};
 
 type QualityItem = { label: string; checked: boolean };
 function toQualityItems(raw: unknown): QualityItem[] {
@@ -72,22 +79,15 @@ export default function DeliverablesPage() {
   const projectsList = paginatedData(allProjects);
 
   // Enrich deliverables with project/client info
-  const allDels = useMemo(() => {
+  const allDels = useMemo((): EnrichedDeliverable[] => {
     if (!allDeliverables) return [];
-    return (allDeliverables as { projectId: number; status?: string; qualityScore?: number; fileUrl?: string }[]).map((d: any) => {
-      const proj = (projectsList as { id: number; name?: string; clientId?: number }[]).find((p: any) => p.id === d.projectId);
+    return allDeliverables.map((d: DeliverableListItem) => {
+      const proj = projectsList.find((p: ProjectListItem) => p.id === d.projectId);
       return { ...d, projectName: proj?.name, clientId: proj?.clientId, proj };
     });
   }, [allDeliverables, projectsList]);
 
-  const filtered = statusFilter === "all" ? allDels : allDels.filter((d: any) => d.status === statusFilter);
-
-  const updateMutation = trpc.deliverables.update.useMutation({
-    onSuccess: () => {
-      utils.deliverables.list.invalidate();
-      toast.success(t("common.success"));
-    },
-  });
+  const filtered = statusFilter === "all" ? allDels : allDels.filter((d: EnrichedDeliverable) => d.status === statusFilter);
 
   const generatePDFMutation = trpc.deliverables.generatePDF.useMutation({
     onSuccess: (data) => {
@@ -162,11 +162,11 @@ export default function DeliverablesPage() {
     onError: (err) => toast.error(err.message),
   });
 
-  const pendingCount = allDels.filter((d: any) => d.status === "pending").length;
-  const inProgressCount = allDels.filter((d: any) => d.status === "in_progress" || d.status === "ai_generated").length;
-  const completedCount = allDels.filter((d: any) => d.status === "approved" || d.status === "delivered").length;
-  const withPDF = allDels.filter((d: any) => d.fileUrl).length;
-  const avgQuality = allDels.filter((d: any) => d.qualityScore).reduce((sum: number, d: any) => sum + (d.qualityScore || 0), 0) / (allDels.filter((d: any) => d.qualityScore).length || 1);
+  const pendingCount = allDels.filter((d: EnrichedDeliverable) => d.status === "pending").length;
+  const inProgressCount = allDels.filter((d: EnrichedDeliverable) => d.status === "in_progress" || d.status === "ai_generated").length;
+  const completedCount = allDels.filter((d: EnrichedDeliverable) => d.status === "approved" || d.status === "delivered").length;
+  const withPDF = allDels.filter((d: EnrichedDeliverable) => Boolean(d.fileUrl)).length;
+  const avgQuality = allDels.filter((d: EnrichedDeliverable) => d.qualityScore).reduce((sum, d) => sum + (d.qualityScore || 0), 0) / (allDels.filter((d: EnrichedDeliverable) => d.qualityScore).length || 1);
 
   const isAnyGenerating = generateAllMutation.isPending || generateFromTemplateMutation.isPending || generateSmartImagesMutation.isPending;
 
@@ -234,8 +234,8 @@ export default function DeliverablesPage() {
         <EmptyState type="deliverables" onAction={() => setLocation('/projects')} />
       ) : (
         <div className="space-y-3">
-          {filtered.map((del: any) => {
-            const client = (clientsList as any[]).find((c: any) => c.id === del.clientId);
+          {filtered.map((del: EnrichedDeliverable) => {
+            const client = clientsList.find((c: ClientListItem) => c.id === del.clientId);
             const hasContent = !!del.content;
             const hasPDF = !!del.fileUrl;
             const hasImages = Array.isArray(del.imageUrls) && (del.imageUrls as string[]).length > 0;
@@ -288,7 +288,7 @@ export default function DeliverablesPage() {
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground mt-1 truncate">
-                          {del.projectName} {client ? `· ${(client as { companyName?: string; name?: string }).companyName || (client as { companyName?: string; name?: string }).name}` : ""}
+                          {del.projectName} {client ? `· ${client.companyName || client.name}` : ""}
                         </p>
                       </div>
                     </div>
@@ -314,7 +314,7 @@ export default function DeliverablesPage() {
                           className="h-7 text-xs"
                           disabled={isAnyGenerating}
                           onClick={() => {
-                            const proj = del.proj as { stage?: string; serviceType?: string } | undefined;
+                            const proj = del.proj;
                             generateFromTemplateMutation.mutate({
                               deliverableId: del.id,
                               projectId: del.projectId,
@@ -470,7 +470,7 @@ export default function DeliverablesPage() {
                 className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
                 disabled={generateAllMutation.isPending}
                 onClick={() => {
-                  const proj = (projectsList as any[]).find((p: any) => p.id === generateAllDialog.projectId) as { stage?: string; serviceType?: string } | undefined;
+                  const proj = projectsList.find((p: ProjectListItem) => p.id === generateAllDialog.projectId);
                   generateAllMutation.mutate({
                     deliverableId: generateAllDialog.id,
                     projectId: generateAllDialog.projectId,

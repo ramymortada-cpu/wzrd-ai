@@ -1,11 +1,11 @@
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { trpc } from "@/lib/trpc";
+import type { ClientListItem, PortalLinkRow, ProjectListItem } from "@/lib/routerTypes";
 import { useI18n } from "@/lib/i18n";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useState, useMemo } from "react";
@@ -55,10 +55,13 @@ export default function PortalManagementPage() {
   const clientsList = paginatedData(clients);
   const projectsWithClients = useMemo(() => {
     if (!projectsList.length || !clientsList.length) return [];
-    return (projectsList as any[]).map((p: any) => ({
-      ...p,
-      clientName: (clientsList as any[]).find((c: any) => c.id === p.clientId)?.name ?? (clientsList as any[]).find((c: any) => c.id === p.clientId)?.companyName ?? "Unknown",
-    }));
+    return projectsList.map((p: ProjectListItem) => {
+      const c = clientsList.find((cl: ClientListItem) => cl.id === p.clientId);
+      return {
+        ...p,
+        clientName: c?.name ?? c?.companyName ?? "Unknown",
+      };
+    });
   }, [projectsList, clientsList]);
 
   const handleCreateToken = () => {
@@ -107,12 +110,12 @@ export default function PortalManagementPage() {
                 <Select value={createProjectId} onValueChange={v => {
                   setCreateProjectId(v);
                   // Auto-select client
-                  const proj = (projectsList as any[]).find((p: any) => p.id === parseInt(v));
+                  const proj = projectsList.find((p: ProjectListItem) => p.id === parseInt(v, 10));
                   if (proj) setCreateClientId(String(proj.clientId));
                 }}>
                   <SelectTrigger><SelectValue placeholder={isAr ? "اختر مشروع" : "Select project"} /></SelectTrigger>
                   <SelectContent>
-                    {projectsWithClients.map((p: any) => (
+                    {projectsWithClients.map((p: ProjectListItem & { clientName: string }) => (
                       <SelectItem key={p.id} value={String(p.id)}>
                         {p.name} ({p.clientName})
                       </SelectItem>
@@ -125,7 +128,7 @@ export default function PortalManagementPage() {
                 <Select value={createClientId} onValueChange={setCreateClientId}>
                   <SelectTrigger><SelectValue placeholder={isAr ? "اختر عميل" : "Select client"} /></SelectTrigger>
                   <SelectContent>
-                    {clientsList.map((c: { id: number; companyName?: string | null; name?: string | null }) => (
+                    {clientsList.map((c: ClientListItem) => (
                       <SelectItem key={c.id} value={String(c.id)}>
                         {c.companyName || c.name}
                       </SelectItem>
@@ -150,7 +153,7 @@ export default function PortalManagementPage() {
             <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
               <SelectTrigger className="max-w-sm"><SelectValue placeholder={isAr ? "اختر مشروع لعرض الروابط" : "Select project to view links"} /></SelectTrigger>
               <SelectContent>
-                {projectsWithClients.map((p: any) => (
+                {projectsWithClients.map((p: ProjectListItem & { clientName: string }) => (
                   <SelectItem key={p.id} value={String(p.id)}>
                     {p.name} ({p.clientName})
                   </SelectItem>
@@ -178,7 +181,7 @@ export default function PortalManagementPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {tokens.map((t: any) => (
+                {tokens.map((t: PortalLinkRow) => (
                   <div key={t.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-lg border">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">

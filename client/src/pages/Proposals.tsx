@@ -1,7 +1,8 @@
 import { EmptyState } from "@/components/EmptyState";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { useDebounce } from "@/hooks/useDebounce";
-import { trpc } from "@/lib/trpc";
+import { trpc, type RouterOutputs } from "@/lib/trpc";
+import type { ClientListItem, ProposalListItem } from "@/lib/routerTypes";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,8 @@ import { Plus, Search, FileText, Loader2, Sparkles, Trash2 } from "lucide-react"
 import { paginatedData } from "@/lib/utils";
 
 const SERVICE_TYPES = ["business_health_check", "starting_business_logic", "brand_identity", "business_takeoff", "consultation"] as const;
+
+type ProposalsListData = RouterOutputs["proposals"]["list"];
 
 const statusColors: Record<string, string> = {
   draft: "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400",
@@ -49,10 +52,10 @@ export default function ProposalsPage() {
     onMutate: async (newProposal) => {
       await utils.proposals.list.cancel();
       const previous = utils.proposals.list.getData();
-      utils.proposals.list.setData(undefined, (old: any) => {
+      utils.proposals.list.setData(undefined, (old: ProposalsListData | undefined) => {
         if (!old) return old;
-        const temp = { id: -Date.now(), ...newProposal, status: 'draft', createdAt: new Date(), updatedAt: new Date() };
-        return [temp, ...old];
+        const temp = { id: -Date.now(), ...newProposal, status: "draft" as const, createdAt: new Date(), updatedAt: new Date() };
+        return [temp, ...old] as ProposalsListData;
       });
       return { previous };
     },
@@ -72,9 +75,9 @@ export default function ProposalsPage() {
     onMutate: async ({ id }) => {
       await utils.proposals.list.cancel();
       const previous = utils.proposals.list.getData();
-      utils.proposals.list.setData(undefined, (old: any) => {
+      utils.proposals.list.setData(undefined, (old: ProposalsListData | undefined) => {
         if (!old) return old;
-        return old.filter((p: any) => p.id !== id);
+        return old.filter((p: ProposalListItem) => p.id !== id);
       });
       return { previous };
     },
@@ -94,7 +97,7 @@ export default function ProposalsPage() {
     if (!proposals) return [];
     if (!debouncedSearch) return proposals;
     const s = debouncedSearch.toLowerCase();
-    return proposals.filter((p: any) => p.title.toLowerCase().includes(s));
+    return proposals.filter((p: ProposalListItem) => p.title.toLowerCase().includes(s));
   }, [proposals, debouncedSearch]);
 
   const handleCreate = () => {
@@ -156,9 +159,10 @@ export default function ProposalsPage() {
                 <Label>{t("proposals.selectService")} *</Label>
                 <Select
                   value={form.serviceType}
-                  onValueChange={(v: any) => {
-                    const newTitle = form.clientId ? autoTitle(form.clientId, v) : "";
-                    setForm({ ...form, serviceType: v, title: newTitle || form.title });
+                  onValueChange={(v) => {
+                    const st = v as (typeof SERVICE_TYPES)[number];
+                    const newTitle = form.clientId ? autoTitle(form.clientId, st) : "";
+                    setForm({ ...form, serviceType: st, title: newTitle || form.title });
                   }}
                 >
                   <SelectTrigger><SelectValue /></SelectTrigger>
@@ -178,7 +182,7 @@ export default function ProposalsPage() {
               </div>
               <div className="space-y-1.5">
                 <Label>{t("proposals.language")}</Label>
-                <Select value={form.language} onValueChange={(v: any) => setForm({ ...form, language: v })}>
+                <Select value={form.language} onValueChange={(v) => setForm({ ...form, language: v as "en" | "ar" })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="en">{t("proposals.english")}</SelectItem>
@@ -237,8 +241,8 @@ export default function ProposalsPage() {
         )
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4" role="list">
-          {filtered.map((proposal: any) => {
-            const client = (clients as any[])?.find((c: any) => c.id === proposal.clientId);
+          {filtered.map((proposal: ProposalListItem) => {
+            const client = clients?.find((c: ClientListItem) => c.id === proposal.clientId);
             return (
               <Card
                 key={proposal.id}

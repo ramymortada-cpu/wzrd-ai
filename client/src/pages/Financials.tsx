@@ -1,29 +1,23 @@
 import { EmptyState } from "@/components/EmptyState";
 import { PageSkeleton } from "@/components/PageSkeleton";
-import { trpc } from "@/lib/trpc";
+import { trpc, type RouterInputs } from "@/lib/trpc";
+import type { ClientListItem, PaymentListItem, ProjectListItem } from "@/lib/routerTypes";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, DollarSign, Loader2, TrendingUp, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import { Plus, Loader2, TrendingUp, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import { useState, useMemo } from "react";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { paginatedData } from "@/lib/utils";
 
-const paymentStatusColors: Record<string, string> = {
-  pending: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  partial: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  paid: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-  overdue: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-  cancelled: "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400",
-};
-
 const CHART_COLORS = ["#8F5A31", "#4C4C54", "#D4A574", "#7C9885", "#B8860B"];
+
+type PaymentUiStatus = NonNullable<RouterInputs["payments"]["update"]["status"]>;
 
 export default function FinancialsPage() {
   const { t } = useI18n();
@@ -62,15 +56,15 @@ export default function FinancialsPage() {
     },
   });
 
-  const filtered = payments?.filter((p: any) => statusFilter === "all" || p.status === statusFilter) || [];
+  const filtered = payments?.filter((p: PaymentListItem) => statusFilter === "all" || p.status === statusFilter) || [];
 
   // Financial calculations
   const stats = useMemo(() => {
     if (!payments) return { total: 0, collected: 0, pending: 0, overdue: 0 };
-    const total = payments.reduce((s: number, p: any) => s + Number(p.amount), 0);
-    const collected = payments.filter((p: any) => p.status === "paid").reduce((s: number, p: any) => s + Number(p.amount), 0);
-    const pending = payments.filter((p: any) => p.status === "pending").reduce((s: number, p: any) => s + Number(p.amount), 0);
-    const overdue = payments.filter((p: any) => p.status === "overdue").reduce((s: number, p: any) => s + Number(p.amount), 0);
+    const total = payments.reduce((s, p) => s + Number(p.amount), 0);
+    const collected = payments.filter((p) => p.status === "paid").reduce((s, p) => s + Number(p.amount), 0);
+    const pending = payments.filter((p) => p.status === "pending").reduce((s, p) => s + Number(p.amount), 0);
+    const overdue = payments.filter((p) => p.status === "overdue").reduce((s, p) => s + Number(p.amount), 0);
     return { total, collected, pending, overdue };
   }, [payments]);
 
@@ -81,8 +75,8 @@ export default function FinancialsPage() {
   const marketData = useMemo(() => {
     if (!payments || !projectsList.length || !clientsList.length) return [];
     const byMarket: Record<string, number> = {};
-    payments.forEach((p: any) => {
-      const client = (clientsList as any[]).find((c: any) => c.id === p.clientId);
+    payments.forEach((p: PaymentListItem) => {
+      const client = clientsList.find((c: ClientListItem) => c.id === p.clientId);
       const market = client?.market || "other";
       byMarket[market] = (byMarket[market] || 0) + Number(p.amount);
     });
@@ -93,8 +87,8 @@ export default function FinancialsPage() {
   const serviceData = useMemo(() => {
     if (!payments || !projectsList.length) return [];
     const byService: Record<string, number> = {};
-    payments.forEach((p: any) => {
-      const proj = (projectsList as any[]).find((pr: any) => pr.id === p.projectId);
+    payments.forEach((p: PaymentListItem) => {
+      const proj = projectsList.find((pr: ProjectListItem) => pr.id === p.projectId);
       const service = proj?.serviceType || "other";
       byService[service] = (byService[service] || 0) + Number(p.amount);
     });
@@ -121,7 +115,7 @@ export default function FinancialsPage() {
             <form onSubmit={(e) => {
               e.preventDefault();
               if (!form.projectId || !form.clientId) { toast.error("Select project and client"); return; }
-              createMutation.mutate(form as any);
+              createMutation.mutate(form);
             }} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
@@ -129,7 +123,7 @@ export default function FinancialsPage() {
                   <Select value={form.clientId ? String(form.clientId) : ""} onValueChange={(v) => setForm({ ...form, clientId: Number(v) })}>
                     <SelectTrigger><SelectValue placeholder={t("projects.selectClient")} /></SelectTrigger>
                     <SelectContent>
-                      {(clientsList as any[]).map((c: any) => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
+                      {clientsList.map((c: ClientListItem) => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -138,7 +132,7 @@ export default function FinancialsPage() {
                   <Select value={form.projectId ? String(form.projectId) : ""} onValueChange={(v) => setForm({ ...form, projectId: Number(v) })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {projectsList.filter((p: any) => !form.clientId || p.clientId === form.clientId).map((p: any) => <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>)}
+                      {projectsList.filter((p: ProjectListItem) => !form.clientId || p.clientId === form.clientId).map((p: ProjectListItem) => <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -150,7 +144,7 @@ export default function FinancialsPage() {
                 </div>
                 <div className="space-y-1.5">
                   <Label>{t("financials.status")}</Label>
-                  <Select value={form.status} onValueChange={(v: any) => setForm({ ...form, status: v })}>
+                  <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as PaymentUiStatus })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {["pending", "paid", "overdue"].map(s => (
@@ -292,9 +286,9 @@ export default function FinancialsPage() {
             <EmptyState type="payments" onAction={() => setDialogOpen(true)} />
           ) : (
             <div className="divide-y">
-              {filtered.map((payment: any) => {
-                const project = (projectsList as any[]).find((p: any) => p.id === payment.projectId);
-                const client = (clientsList as any[]).find((c: any) => c.id === payment.clientId);
+              {filtered.map((payment: PaymentListItem) => {
+                const project = projectsList.find((p: ProjectListItem) => p.id === payment.projectId);
+                const client = clientsList.find((c: ClientListItem) => c.id === payment.clientId);
                 return (
                   <div key={payment.id} className="flex items-center justify-between gap-4 p-4 hover:bg-muted/30 transition-colors">
                     <div className="min-w-0">
@@ -303,7 +297,7 @@ export default function FinancialsPage() {
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
                       <p className="text-sm font-semibold">{Number(payment.amount).toLocaleString()} {t("common.egp")}</p>
-                      <Select value={payment.status} onValueChange={(v: any) => updateMutation.mutate({ id: payment.id, status: v })}>
+                      <Select value={payment.status} onValueChange={(v) => updateMutation.mutate({ id: payment.id, status: v as PaymentUiStatus })}>
                         <SelectTrigger className="h-7 text-xs w-28"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {["pending", "paid", "overdue", "cancelled"].map(s => (

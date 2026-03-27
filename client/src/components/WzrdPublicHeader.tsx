@@ -24,13 +24,11 @@ export default function WzrdPublicHeader({ credits, showCredits = true }: WzrdPu
       <div
         className="pointer-events-auto flex w-full max-w-6xl items-center gap-2 sm:gap-3 rounded-full border-[0.5px] border-white/50 dark:border-zinc-600/50 bg-white/75 dark:bg-zinc-950/70 backdrop-blur-2xl pl-3 pr-2 py-2 sm:pl-5 sm:pr-3 sm:py-2.5 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.18),0_0_0_1px_rgba(255,255,255,0.1)_inset] dark:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.06)_inset]"
       >
-        <a href="/tools" className="flex shrink-0 items-baseline gap-0.5" onClick={(e) => { e.preventDefault(); navigate("/tools"); }}>
-          <span className="text-base sm:text-lg font-extrabold tracking-tight font-mono text-zinc-900 dark:text-white">
+        <a href="/tools" className="flex shrink-0 items-baseline gap-1" onClick={(e) => { e.preventDefault(); navigate("/tools"); }}>
+          <span className="font-display text-base font-bold tracking-tight text-zinc-900 dark:text-white sm:text-lg">
             WZRD
           </span>
-          <span className="text-base sm:text-lg font-extrabold font-mono text-transparent bg-clip-text bg-gradient-to-r from-primary to-cyan-400">
-            AI
-          </span>
+          <span className="wzrd-badge-cyan py-0.5 text-[10px] font-semibold leading-none sm:text-[11px]">AI</span>
         </a>
 
         <nav className="flex min-w-0 flex-1 items-center justify-center gap-3 sm:gap-5 overflow-x-auto scrollbar-hide px-1 py-0.5">

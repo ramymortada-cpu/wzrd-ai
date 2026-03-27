@@ -1,4 +1,5 @@
-import { trpc } from "@/lib/trpc";
+import { trpc, type RouterOutputs } from "@/lib/trpc";
+import type { ClientListItem, ProjectListItem } from "@/lib/routerTypes";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 import { useState, useMemo } from "react";
-import { Plus, Search, FolderKanban, Loader2, ArrowRight } from "lucide-react";
+import { Plus, Search, FolderKanban, Loader2 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -33,6 +34,8 @@ const statusColors: Record<string, string> = {
 
 const SERVICE_TYPES = ["business_health_check", "starting_business_logic", "brand_identity", "business_takeoff", "consultation"] as const;
 
+type ProjectsListData = RouterOutputs["projects"]["list"];
+
 export default function ProjectsPage() {
   const { t } = useI18n();
   const [, setLocation] = useLocation();
@@ -52,10 +55,10 @@ export default function ProjectsPage() {
     onMutate: async (newProject) => {
       await utils.projects.list.cancel();
       const previous = utils.projects.list.getData();
-      utils.projects.list.setData(undefined, (old: any) => {
+      utils.projects.list.setData(undefined, (old: ProjectsListData | undefined) => {
         if (!old) return old;
-        const temp = { id: -Date.now(), ...newProject, createdAt: new Date(), updatedAt: new Date(), status: 'active' };
-        return [temp, ...old];
+        const temp = { id: -Date.now(), ...newProject, createdAt: new Date(), updatedAt: new Date(), status: "active" as const };
+        return [temp, ...old] as ProjectsListData;
       });
       return { previous };
     },
@@ -77,7 +80,7 @@ export default function ProjectsPage() {
     if (!projectsList.length) return [];
     if (!debouncedSearch) return projectsList;
     const s = debouncedSearch.toLowerCase();
-    return (projectsList as any[]).filter((p: any) => p.name?.toLowerCase().includes(s));
+    return projectsList.filter((p: ProjectListItem) => p.name?.toLowerCase().includes(s));
   }, [projectsList, debouncedSearch]);
 
   return (
@@ -95,13 +98,13 @@ export default function ProjectsPage() {
             <DialogHeader>
               <DialogTitle>{t("projects.addNew")}</DialogTitle>
             </DialogHeader>
-            <form onSubmit={(e) => { e.preventDefault(); if (!form.clientId) { toast.error("Select a client"); return; } createMutation.mutate(form as any); }} className="space-y-4">
+            <form onSubmit={(e) => { e.preventDefault(); if (!form.clientId) { toast.error("Select a client"); return; } createMutation.mutate(form); }} className="space-y-4">
               <div className="space-y-1.5">
                 <Label>{t("projects.client")} *</Label>
                 <Select value={form.clientId ? String(form.clientId) : ""} onValueChange={(v) => setForm({ ...form, clientId: Number(v) })}>
                   <SelectTrigger><SelectValue placeholder={t("projects.selectClient")} /></SelectTrigger>
                   <SelectContent>
-                    {(clientsList as any[]).map((c: any) => (
+                    {clientsList.map((c: ClientListItem) => (
                       <SelectItem key={c.id} value={String(c.id)}>{c.name}{c.companyName ? ` — ${c.companyName}` : ""}</SelectItem>
                     ))}
                   </SelectContent>
@@ -113,7 +116,7 @@ export default function ProjectsPage() {
               </div>
               <div className="space-y-1.5">
                 <Label>{t("projects.service")} *</Label>
-                <Select value={form.serviceType} onValueChange={(v: any) => setForm({ ...form, serviceType: v })}>
+                <Select value={form.serviceType} onValueChange={(v) => setForm({ ...form, serviceType: v as (typeof SERVICE_TYPES)[number] })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {SERVICE_TYPES.map(s => (
@@ -155,8 +158,8 @@ export default function ProjectsPage() {
         )
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filtered.map((project: any) => {
-            const client = (clientsList as any[]).find((c: any) => c.id === project.clientId);
+          {filtered.map((project: ProjectListItem) => {
+            const client = clientsList.find((c: ClientListItem) => c.id === project.clientId);
             return (
               <Card key={project.id} className="shadow-sm hover:shadow-md transition-all cursor-pointer group" onClick={() => setLocation(`/projects/${project.id}`)} role="button" tabIndex={0} aria-label={`${project.name} — ${t(`stage.${project.stage}`)}`} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setLocation(`/projects/${project.id}`); } }}>
                 <CardContent className="pt-5 pb-4">

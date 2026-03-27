@@ -1,6 +1,7 @@
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { trpc } from "@/lib/trpc";
+import type { DashboardPipelineRecentRun, ProjectListItem } from "@/lib/routerTypes";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import {
   Users, FolderKanban, DollarSign,
-  ArrowRight, Plus, Sparkles, BookOpen, Loader2,
+  ArrowRight, Plus, Sparkles, BookOpen,
   TrendingUp, Zap, CheckCircle2, XCircle, Clock, Activity,
   Brain, Database, Target, Flame, ExternalLink
 } from "lucide-react";
@@ -46,10 +47,10 @@ export default function Home() {
 
   // Pipeline counts
   const pipeline = {
-    diagnose: projects?.filter((p: any) => p.stage === "diagnose" && p.status === "active").length || 0,
-    design: projects?.filter((p: any) => p.stage === "design" && p.status === "active").length || 0,
-    deploy: projects?.filter((p: any) => p.stage === "deploy" && p.status === "active").length || 0,
-    optimize: projects?.filter((p: any) => p.stage === "optimize" && p.status === "active").length || 0,
+    diagnose: projects?.filter((p) => p.stage === "diagnose" && p.status === "active").length || 0,
+    design: projects?.filter((p) => p.stage === "design" && p.status === "active").length || 0,
+    deploy: projects?.filter((p) => p.stage === "deploy" && p.status === "active").length || 0,
+    optimize: projects?.filter((p) => p.stage === "optimize" && p.status === "active").length || 0,
   };
 
   const formatDuration = (seconds: number) => {
@@ -204,7 +205,7 @@ export default function Home() {
                   { key: 'qualified', label: 'Qualified', count: funnelStats.qualified, color: 'bg-amber-500' },
                   { key: 'proposalSent', label: 'Proposal', count: funnelStats.proposalSent, color: 'bg-purple-500' },
                   { key: 'converted', label: 'Won', count: funnelStats.converted, color: 'bg-emerald-500' },
-                ].map((stage, i) => (
+                ].map((stage, _i) => (
                   <div key={stage.key} className="flex items-center gap-1 flex-1 min-w-0">
                     <div className={`h-2 rounded-full ${stage.color} flex-1`} style={{ opacity: Math.max(0.2, stage.count / Math.max(1, leadStats?.total || 1)) }} />
                     <span className="text-[10px] text-muted-foreground whitespace-nowrap">{stage.count}</span>
@@ -288,7 +289,7 @@ export default function Home() {
             {pipelineStats.recentRuns && pipelineStats.recentRuns.length > 0 && (
               <div className="space-y-2">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Recent Runs</p>
-                {pipelineStats.recentRuns.slice(0, 5).map((run: any) => {
+                {pipelineStats.recentRuns.slice(0, 5).map((run: DashboardPipelineRecentRun) => {
                   const statusInfo = statusIcons[run.status] || statusIcons.pending;
                   const StatusIcon = statusInfo.icon;
                   return (
@@ -300,9 +301,9 @@ export default function Home() {
                       <div className="flex items-center gap-3">
                         <StatusIcon className={`h-4 w-4 ${statusInfo.color}`} />
                         <div>
-                          <p className="text-sm font-medium">Pipeline #{run.id}</p>
+                          <p className="text-sm font-medium">{run.name || `Project #${run.id}`}</p>
                           <p className="text-xs text-muted-foreground">
-                            {t(`service.${run.serviceType}`)} — Step {run.currentStep}/5
+                            {t(`stage.${run.stage}`)} · {run.status}
                           </p>
                         </div>
                       </div>
@@ -338,7 +339,7 @@ export default function Home() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {recentProjects.map((project: any) => (
+                  {recentProjects.map((project: ProjectListItem) => (
                     <div
                       key={project.id}
                       className="flex items-center justify-between gap-4 p-3 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"

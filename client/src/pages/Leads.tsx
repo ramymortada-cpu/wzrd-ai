@@ -4,17 +4,18 @@ import { useI18n } from "@/lib/i18n";
 import { EmptyState } from "@/components/EmptyState";
 import { PageSkeleton } from "@/components/PageSkeleton";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
-  Target, TrendingUp, Users, DollarSign, Flame, ThermometerSun, Snowflake,
-  Mail, Phone, Globe, Building2, MapPin, ExternalLink, ArrowUpRight, Copy, Eye,
+  Target, TrendingUp, DollarSign, Flame, ThermometerSun, Snowflake,
+  Mail, Phone, Building2, MapPin, ExternalLink, ArrowUpRight, Copy, Eye,
+  type LucideIcon,
 } from "lucide-react";
+import type { LeadListItem } from "@/lib/routerTypes";
 import { paginatedData } from "@/lib/utils";
 
 const SERVICE_LABELS: Record<string, string> = {
@@ -34,7 +35,7 @@ const STATUS_COLORS: Record<string, string> = {
   lost: "bg-red-500/10 text-red-400 border-red-500/20",
 };
 
-const SCORE_ICONS: Record<string, any> = {
+const SCORE_ICONS: Record<string, LucideIcon> = {
   hot: Flame,
   warm: ThermometerSun,
   cold: Snowflake,
@@ -47,11 +48,11 @@ const SCORE_COLORS: Record<string, string> = {
 };
 
 export default function LeadsPage() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [scoreFilter, setScoreFilter] = useState<string>("all");
-  const [selectedLead, setSelectedLead] = useState<any>(null);
+  const [selectedLead, setSelectedLead] = useState<LeadListItem | null>(null);
   const [showDiagnosis, setShowDiagnosis] = useState(false);
 
   const { data: leadsRaw, refetch, isLoading } = trpc.leads.list.useQuery(
@@ -243,7 +244,7 @@ export default function LeadsPage() {
           />
         ) : (
           <div className="space-y-3">
-            {leads.map((lead: any) => {
+            {leads.map((lead: LeadListItem) => {
               const ScoreIcon = SCORE_ICONS[lead.scoreLabel] || Target;
               return (
                 <Card key={lead.id} className="hover:border-primary/20 transition-colors">
@@ -324,7 +325,7 @@ export default function LeadsPage() {
                           <Select
                             value={lead.status}
                             onValueChange={(v) =>
-                              updateStatusMutation.mutate({ id: lead.id, status: v as any })
+                              updateStatusMutation.mutate({ id: lead.id, status: v as LeadListItem["status"] })
                             }
                           >
                             <SelectTrigger className="w-[130px] h-8 text-xs">
@@ -363,7 +364,7 @@ export default function LeadsPage() {
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {selectedLead?.companyName} — Brand Diagnosis
+                {String(selectedLead?.companyName ?? "")} — Brand Diagnosis
               </DialogTitle>
               <DialogDescription>
                 {selectedLead?.source === "website"
@@ -375,22 +376,22 @@ export default function LeadsPage() {
               <div className="space-y-4">
                 {/* Score */}
                 <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/50">
-                  <div className={`text-4xl font-bold ${SCORE_COLORS[selectedLead.scoreLabel]}`}>
-                    {selectedLead.score}
+                  <div className={`text-4xl font-bold ${SCORE_COLORS[String(selectedLead.scoreLabel ?? "")] ?? ""}`}>
+                    {Number(selectedLead.score ?? 0)}
                   </div>
                   <div>
-                    <Badge className={STATUS_COLORS[selectedLead.status] || ""}>
-                      {selectedLead.scoreLabel?.toUpperCase()}
+                    <Badge className={STATUS_COLORS[String(selectedLead.status ?? "")] || ""}>
+                      {String(selectedLead.scoreLabel ?? "").toUpperCase()}
                     </Badge>
-                    <p className="text-sm text-muted-foreground mt-1">{selectedLead.scoringReason}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{String(selectedLead.scoringReason ?? "")}</p>
                   </div>
                 </div>
 
                 {/* Teaser */}
-                <div>
+                <div className="space-y-2">
                   <h4 className="font-medium mb-2">Teaser (shown to client)</h4>
                   <p className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg">
-                    {selectedLead.diagnosisTeaser}
+                    {String(selectedLead.diagnosisTeaser ?? "")}
                   </p>
                 </div>
 
@@ -398,24 +399,25 @@ export default function LeadsPage() {
                 <div>
                   <h4 className="font-medium mb-2">Full Diagnosis (internal)</h4>
                   <p className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg whitespace-pre-wrap">
-                    {selectedLead.fullDiagnosis}
+                    {String(selectedLead.fullDiagnosis ?? "")}
                   </p>
                 </div>
 
                 {/* Quick-Check Answers */}
-                {selectedLead.quickCheckAnswers && (
+                {Array.isArray(selectedLead.quickCheckAnswers) && selectedLead.quickCheckAnswers.length > 0 ? (
                   <div>
                     <h4 className="font-medium mb-2">Quick-Check Answers</h4>
                     <div className="space-y-2">
-                      {(selectedLead.quickCheckAnswers as any[]).map((qa: any, i: number) => (
+                      {(Array.isArray(selectedLead.quickCheckAnswers) ? selectedLead.quickCheckAnswers : []).map(
+                        (qa: Record<string, unknown>, i: number) => (
                         <div key={i} className="p-3 rounded-lg bg-muted/30">
-                          <p className="text-xs font-medium text-muted-foreground">{qa.question}</p>
-                          <p className="text-sm mt-1">{qa.answer}</p>
+                          <p className="text-xs font-medium text-muted-foreground">{String(qa.question ?? "")}</p>
+                          <p className="text-sm mt-1">{String(qa.answer ?? "")}</p>
                         </div>
                       ))}
                     </div>
                   </div>
-                )}
+                ) : null}
               </div>
             )}
           </DialogContent>

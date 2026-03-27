@@ -5,16 +5,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { paginatedData } from "@/lib/utils";
 import { useRoute, useLocation } from "wouter";
 import { useState, useRef } from "react";
 import {
   ArrowLeft, Download, Edit3, Eye, RefreshCw, Loader2, Check,
-  FileText, Send, CheckCircle, XCircle, Sparkles, Copy, Link, ExternalLink
+  FileText, Link
 } from "lucide-react";
 import { Streamdown } from "streamdown";
+import type { ProposalDetailRow } from "@/lib/routerTypes";
 
 const SECTIONS = [
   "executiveSummary",
@@ -29,6 +29,18 @@ const SECTIONS = [
 ] as const;
 
 type SectionKey = (typeof SECTIONS)[number];
+
+const PROPOSAL_STATUSES = ["draft", "sent", "accepted", "rejected"] as const;
+type ProposalStatusUi = (typeof PROPOSAL_STATUSES)[number];
+
+function proposalSectionMarkdown(proposal: ProposalDetailRow, key: SectionKey): string {
+  const v = proposal[key];
+  return typeof v === "string" ? v : "";
+}
+
+function parseProposalStatus(v: string): ProposalStatusUi | null {
+  return (PROPOSAL_STATUSES as readonly string[]).includes(v) ? (v as ProposalStatusUi) : null;
+}
 
 const statusColors: Record<string, string> = {
   draft: "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400",
@@ -133,7 +145,7 @@ export default function ProposalDetailPage() {
     const fontFamily = isArabic ? "'Segoe UI', 'Arial', sans-serif" : "'Segoe UI', 'Georgia', serif";
 
     const sections = SECTIONS.map(key => {
-      const content = (proposal as any)[key] || '';
+      const content = proposalSectionMarkdown(proposal, key);
       if (!content) return '';
       const title = t(`proposals.${key}`);
       return `<div class="section">
@@ -314,7 +326,10 @@ export default function ProposalDetailPage() {
           <div className="flex items-center gap-2">
             <Select
               value={proposal.status}
-              onValueChange={(v: any) => handleStatusChange(v)}
+              onValueChange={(v) => {
+                const s = parseProposalStatus(v);
+                if (s) handleStatusChange(s);
+              }}
             >
               <SelectTrigger className="w-[140px] h-8 text-xs">
                 <SelectValue />
@@ -373,7 +388,7 @@ export default function ProposalDetailPage() {
       {/* Proposal Sections */}
       <div ref={printRef} className="space-y-4">
         {SECTIONS.map((sectionKey) => {
-          const content = (proposal as any)[sectionKey] || "";
+          const content = proposalSectionMarkdown(proposal, sectionKey);
           const isEditing = editingSection === sectionKey;
           const isRegenerating = regeneratingSection === sectionKey;
 

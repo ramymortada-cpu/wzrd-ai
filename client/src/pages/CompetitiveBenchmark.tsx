@@ -70,7 +70,6 @@ export default function CompetitiveBenchmark() {
   };
 
   const scoreColor = (s: number) => s >= 70 ? '#22c55e' : s >= 45 ? '#f59e0b' : '#ef4444';
-  const scoreBg = (s: number) => s >= 70 ? 'bg-green-50' : s >= 45 ? 'bg-yellow-50' : 'bg-red-50';
 
   const inputClass = "w-full px-4 py-3 rounded-xl bg-white border border-gray-200 text-gray-900 placeholder-gray-400 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition outline-none";
 
