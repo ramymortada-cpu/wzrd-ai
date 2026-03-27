@@ -4,9 +4,11 @@
  * The AI has context from buildBrandContext():
  * - User profile (name, company, industry, market)
  * - Latest diagnosis per tool (6 tools) + critical finding titles
- * - Brand Twin: latest snapshot 7 dimensions, summary, active alerts (CRM client matched by email/company)
+ * - Brand Twin: latest snapshot 7 dimensions, summary, active alerts
+ *   (CRM client = optional chat `clientId` if allowed, else auto-match email/company; admins any client)
  * - Pending checklist tasks
  * - Conversation history (last 20 messages per session)
+ * - listClientsForCopilot: dropdown when user has multiple eligible CRM clients
  * 
  * Cost: 5 credits per message.
  * Rate limit: 1 message per 3 seconds per user.
@@ -19,7 +21,12 @@ import { resilientLLM } from "../_core/llmRouter";
 import { getDb, deductCredits, getUserCredits } from "../db";
 import { copilotMessages } from "../../drizzle/schema";
 import { eq, desc, sql } from "drizzle-orm";
-import { buildBrandContext, buildCopilotSuggestions } from "../copilot/brandContext";
+import {
+  buildBrandContext,
+  buildCopilotSuggestions,
+  resolveTwinClientIdForCopilot,
+  listClientsForCopilot,
+} from "../copilot/brandContext";
 
 // Rate limit: track last message time per user
 const lastMessageTime = new Map<number, number>();
@@ -62,9 +69,12 @@ export const copilotRouter = router({
     .input(z.object({
       message: z.string().min(1).max(2000),
       sessionId: z.string().min(1).max(50),
+      /** اختياري: عميل CRM للـ Brand Twin — لازم يكون مربوط بالحساب (أو admin) */
+      clientId: z.number().int().positive().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       const userId = ctx.user!.id;
+      const userRole = ctx.user!.role;
 
       // Rate limit check
       const lastTime = lastMessageTime.get(userId) || 0;
@@ -83,6 +93,13 @@ export const copilotRouter = router({
       const db = await getDb();
       if (!db) throw new Error('Database unavailable');
 
+      const twinClientId = await resolveTwinClientIdForCopilot(
+        db,
+        userId,
+        userRole,
+        input.clientId,
+      );
+
       // Deduct credits INSIDE try — refund if AI fails
       const deduction = await deductCredits(userId, 'copilot_message');
       if (!deduction.success) {
@@ -90,7 +107,7 @@ export const copilotRouter = router({
       }
 
       try {
-        const contextStr = await buildBrandContext(userId, db);
+        const contextStr = await buildBrandContext(userId, db, twinClientId);
 
         // Get conversation history (last 20 messages)
         const history = await db.select()
@@ -213,6 +230,14 @@ export const copilotRouter = router({
         return raw as SessionAggRow[];
       }
       return [];
+    }),
+
+  /** CRM clients for context switcher (multi-client users / admins). */
+  listClientsForCopilot: protectedProcedure
+    .query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+      return listClientsForCopilot(db, ctx.user!.id, ctx.user!.role);
     }),
 
   /** Suggested questions — weakest diagnosis dimension, Brand Twin alerts, generic fallbacks */

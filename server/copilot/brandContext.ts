@@ -47,14 +47,14 @@ function norm(s: string | null | undefined): string {
 }
 
 /**
- * Map logged-in user → Brand CRM client (for snapshots / alerts / metrics).
+ * CRM client IDs linked to this user (email / company name), newest Brand Twin activity first.
  */
-export async function resolveBrandTwinClientId(
+export async function getCopilotEligibleClientIdsSorted(
   db: AppDatabase,
   userId: number,
-): Promise<number | null> {
+): Promise<number[]> {
   const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-  if (!user) return null;
+  if (!user) return [];
 
   const candidateIds = new Set<number>();
 
@@ -84,7 +84,7 @@ export async function resolveBrandTwinClientId(
     for (const r of byCompany) candidateIds.add(r.id);
   }
 
-  if (candidateIds.size === 0) return null;
+  if (candidateIds.size === 0) return [];
 
   const ids = [...candidateIds];
   const latestPerClient = await db
@@ -104,17 +104,98 @@ export async function resolveBrandTwinClientId(
     if (t > prev) bestSeen.set(row.clientId, t);
   }
 
-  let chosen: number | null = null;
-  let bestT = -1;
-  for (const cid of ids) {
-    const t = bestSeen.get(cid) ?? 0;
-    if (t > bestT) {
-      bestT = t;
-      chosen = cid;
+  return ids.sort((a, b) => {
+    const ta = bestSeen.get(a) ?? 0;
+    const tb = bestSeen.get(b) ?? 0;
+    if (tb !== ta) return tb - ta;
+    return a - b;
+  });
+}
+
+/**
+ * Map logged-in user → default Brand CRM client (for snapshots / alerts / metrics).
+ */
+export async function resolveBrandTwinClientId(
+  db: AppDatabase,
+  userId: number,
+): Promise<number | null> {
+  const sorted = await getCopilotEligibleClientIdsSorted(db, userId);
+  return sorted[0] ?? null;
+}
+
+/**
+ * Resolve Brand Twin client for this chat: explicit selection (if allowed) or auto-detect.
+ */
+export async function resolveTwinClientIdForCopilot(
+  db: AppDatabase,
+  userId: number,
+  userRole: string,
+  explicitClientId?: number | null,
+): Promise<number | null> {
+  if (explicitClientId != null && explicitClientId > 0) {
+    if (userRole === "admin") {
+      const [row] = await db
+        .select({ id: clients.id })
+        .from(clients)
+        .where(and(eq(clients.id, explicitClientId), isNull(clients.deletedAt)))
+        .limit(1);
+      if (!row) {
+        throw new Error("العميل غير موجود.");
+      }
+      return explicitClientId;
     }
+    const allowed = await getCopilotEligibleClientIdsSorted(db, userId);
+    if (!allowed.includes(explicitClientId)) {
+      throw new Error("مش مسموح تستخدم سياق هذا العميل — مش مرتبط بحسابك.");
+    }
+    return explicitClientId;
+  }
+  return resolveBrandTwinClientId(db, userId);
+}
+
+export type CopilotClientRow = { id: number; name: string; companyName: string | null };
+
+/**
+ * Clients shown in Copilot context switcher. Admins: CRM clients with Brand Twin data (else recent clients).
+ * Regular users: only clients matched to their profile.
+ */
+export async function listClientsForCopilot(
+  db: AppDatabase,
+  userId: number,
+  userRole: string,
+): Promise<CopilotClientRow[]> {
+  if (userRole === "admin") {
+    const withTwin = await db
+      .selectDistinct({ clientId: brandHealthSnapshots.clientId })
+      .from(brandHealthSnapshots);
+    const twinSet = new Set(withTwin.map((r) => r.clientId));
+    const rows = await db
+      .select({ id: clients.id, name: clients.name, companyName: clients.companyName })
+      .from(clients)
+      .where(isNull(clients.deletedAt))
+      .orderBy(desc(clients.updatedAt))
+      .limit(80);
+    const prefer = rows.filter((r) => twinSet.has(r.id));
+    const list = prefer.length > 0 ? prefer : rows;
+    return list.slice(0, 30).map((r) => ({
+      id: r.id,
+      name: r.name,
+      companyName: r.companyName,
+    }));
   }
 
-  return chosen ?? ids[0] ?? null;
+  const ids = await getCopilotEligibleClientIdsSorted(db, userId);
+  if (ids.length === 0) return [];
+
+  const rows = await db
+    .select({ id: clients.id, name: clients.name, companyName: clients.companyName })
+    .from(clients)
+    .where(and(isNull(clients.deletedAt), inArray(clients.id, ids)));
+
+  const order = new Map(ids.map((id, i) => [id, i]));
+  return rows
+    .sort((a, b) => (order.get(a.id) ?? 99) - (order.get(b.id) ?? 99))
+    .map((r) => ({ id: r.id, name: r.name, companyName: r.companyName }));
 }
 
 export type DiagnosisRow = typeof diagnosisHistory.$inferSelect;
@@ -128,7 +209,11 @@ export function latestDiagnosisPerTool(rows: DiagnosisRow[]): Map<string, Diagno
   return map;
 }
 
-export async function buildBrandContext(userId: number, db: AppDatabase): Promise<string> {
+export async function buildBrandContext(
+  userId: number,
+  db: AppDatabase,
+  twinClientId: number | null,
+): Promise<string> {
   const parts: string[] = [];
 
   const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
@@ -172,8 +257,6 @@ export async function buildBrandContext(userId: number, db: AppDatabase): Promis
       parts.push(`- ${name}: ${d.score}/100`);
     }
   }
-
-  const twinClientId = await resolveBrandTwinClientId(db, userId);
 
   if (twinClientId != null) {
     parts.push(`\n## Brand Twin (عميل CRM #${twinClientId})`);
