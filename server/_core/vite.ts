@@ -155,24 +155,38 @@ export function serveStatic(app: Express) {
   app.get("/blog/:slug", async (req, res, next) => {
     try {
       const db = await getDb();
-      if (!db) return next();
 
       const { blogPosts } = await import("../../drizzle/schema");
       const { and, eq } = await import("drizzle-orm");
+      const slug = decodeURIComponent(req.params.slug || "");
 
-      const [post] = await db
-        .select({
-          seoTitleAr: blogPosts.seoTitleAr,
-          seoTitleEn: blogPosts.seoTitleEn,
-          titleAr: blogPosts.titleAr,
-          titleEn: blogPosts.titleEn,
-          seoDescAr: blogPosts.seoDescAr,
-          seoDescEn: blogPosts.seoDescEn,
-          coverImage: blogPosts.coverImage,
-        })
-        .from(blogPosts)
-        .where(and(eq(blogPosts.slug, req.params.slug), eq(blogPosts.published, 1)))
-        .limit(1);
+      let post:
+        | {
+            seoTitleAr: string | null;
+            seoTitleEn: string | null;
+            titleAr: string;
+            titleEn: string;
+            seoDescAr: string | null;
+            seoDescEn: string | null;
+            coverImage: string | null;
+          }
+        | undefined;
+
+      if (db) {
+        [post] = await db
+          .select({
+            seoTitleAr: blogPosts.seoTitleAr,
+            seoTitleEn: blogPosts.seoTitleEn,
+            titleAr: blogPosts.titleAr,
+            titleEn: blogPosts.titleEn,
+            seoDescAr: blogPosts.seoDescAr,
+            seoDescEn: blogPosts.seoDescEn,
+            coverImage: blogPosts.coverImage,
+          })
+          .from(blogPosts)
+          .where(and(eq(blogPosts.slug, slug), eq(blogPosts.published, 1)))
+          .limit(1);
+      }
 
       const htmlPath = path.resolve(distPath, "index.html");
       let html = fs.readFileSync(htmlPath, "utf-8");
@@ -180,40 +194,44 @@ export function serveStatic(app: Express) {
       // Clear any prior injected block (defensive in case of template reuse).
       html = html.replaceAll(/<!-- WZRD_BLOG_SEO_START -->[\s\S]*?<!-- WZRD_BLOG_SEO_END -->/g, "");
 
-      if (post) {
-        const wantsAr = typeof req.headers["accept-language"] === "string"
-          ? req.headers["accept-language"].toLowerCase().includes("ar")
-          : false;
+      const wantsAr = typeof req.headers["accept-language"] === "string"
+        ? req.headers["accept-language"].toLowerCase().includes("ar")
+        : false;
 
-        const seoTitleRaw =
-          (wantsAr ? (post.seoTitleAr || post.titleAr) : (post.seoTitleEn || post.titleEn)) ||
-          "WZRD AI Blog";
-        const seoDescRaw =
-          (wantsAr ? post.seoDescAr : post.seoDescEn) ||
-          "";
-        const ogImageRaw = post.coverImage || "";
+      const seoTitleRaw = post
+        ? ((wantsAr ? (post.seoTitleAr || post.titleAr) : (post.seoTitleEn || post.titleEn)) || "WZRD AI Blog")
+        : "WZRD AI Blog";
+      const seoDescRaw = post
+        ? ((wantsAr ? post.seoDescAr : post.seoDescEn) || "")
+        : "WZRD AI Blog";
+      const ogImageRaw = post?.coverImage || "";
 
-        const seoTitle = escapeHtmlAttr(seoTitleRaw);
-        const seoDesc = escapeHtmlAttr(seoDescRaw);
-        const ogImage = escapeHtmlAttr(ogImageRaw);
+      const seoTitle = escapeHtmlAttr(seoTitleRaw);
+      const seoDesc = escapeHtmlAttr(seoDescRaw);
+      const ogImage = escapeHtmlAttr(ogImageRaw);
 
-        // Replace <title>…</title> when present, otherwise insert a title.
-        if (/<title>[\s\S]*?<\/title>/i.test(html)) {
-          html = html.replace(/<title>[\s\S]*?<\/title>/i, `<title>${seoTitle}</title>`);
-        } else {
-          html = html.replace(
-            "</head>",
-            `<title>${seoTitle}</title>\n</head>`,
-          );
-        }
-
+      // Replace <title>…</title> when present, otherwise insert a title.
+      if (/<title>[\s\S]*?<\/title>/i.test(html)) {
+        html = html.replace(/<title>[\s\S]*?<\/title>/i, `<title>${seoTitle}</title>`);
+      } else {
         html = html.replace(
           "</head>",
-          `<!-- WZRD_BLOG_SEO_START -->\n<meta name="description" content="${seoDesc}">\n<meta property="og:title" content="${seoTitle}">\n<meta property="og:description" content="${seoDesc}">\n<meta property="og:image" content="${ogImage}">\n<meta property="og:type" content="article">\n<meta name="twitter:card" content="summary_large_image">\n<!-- WZRD_BLOG_SEO_END -->\n</head>`,
+          `<title>${seoTitle}</title>\n</head>`,
         );
       }
 
-      res.status(200).set({ "Content-Type": "text/html" }).end(html);
+      html = html.replace(
+        "</head>",
+        `<!-- WZRD_BLOG_SEO_START -->\n<meta name="description" content="${seoDesc}">\n<meta property="og:title" content="${seoTitle}">\n<meta property="og:description" content="${seoDesc}">\n<meta property="og:image" content="${ogImage}">\n<meta property="og:type" content="article">\n<meta name="twitter:card" content="summary_large_image">\n<!-- WZRD_BLOG_SEO_END -->\n</head>`,
+      );
+
+      res
+        .status(200)
+        .set({
+          "Content-Type": "text/html",
+          "X-WZRD-SEO": !db ? "no_db" : (post ? "injected" : "no_post"),
+        })
+        .end(html);
     } catch {
       next();
     }
