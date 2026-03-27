@@ -13,8 +13,9 @@ import WzrdAppShell from "./components/WzrdAppShell";
 import QuickSearch from "./components/QuickSearch";
 
 /** Public WZRD funnel + tools; Command Center (/) stays on default app chrome. */
-const WZRD_PREMIUM_SHELL_RE =
-  /^\\/(?:signup|login|pricing|my-brand|copilot|wzrd-admin|admin|dashboard|panel|profile|settings|my-requests|quick-check|tools|portal|proposal-view)(?:\\/|$)/;
+const WZRD_PREMIUM_SHELL_RE = new RegExp(
+  "^/(?:signup|login|pricing|my-brand|copilot|wzrd-admin|admin|dashboard|panel|profile|settings|my-requests|quick-check|tools|portal|proposal-view)(?:/|$)"
+);
 
 // ============ LAZY-LOADED PAGES ============
 // Each page is loaded only when the user navigates to it.
@@ -166,10 +167,10 @@ function App() {
                 <Route path="/tools/benchmark">{() => <SuspenseWrapper><CompetitiveBenchmarkPage /></SuspenseWrapper>}</Route>
                 <Route path="/tools/quick">{() => <SuspenseWrapper><QuickDiagnosisPage /></SuspenseWrapper>}</Route>
                 <Route path="/my-requests">{() => <SuspenseWrapper><MyRequestsPage /></SuspenseWrapper>}</Route>
-                <Route path="/wzrd-admin">{() => <SuspenseWrapper><WzrdAdminPage /></SuspenseWrapper>}</Route>
                 <Route path="/admin">{() => <SuspenseWrapper><WzrdAdminPage /></SuspenseWrapper>}</Route>
                 <Route path="/dashboard">{() => <SuspenseWrapper><WzrdAdminPage /></SuspenseWrapper>}</Route>
                 <Route path="/panel">{() => <SuspenseWrapper><WzrdAdminPage /></SuspenseWrapper>}</Route>
+                <Route path="/wzrd-admin">{() => <SuspenseWrapper><WzrdAdminPage /></SuspenseWrapper>}</Route>
                 <Route path="/profile">{() => <SuspenseWrapper><ProfilePage /></SuspenseWrapper>}</Route>
                 <Route path="/settings/team">{() => <SuspenseWrapper><SettingsPage defaultTab="team" /></SuspenseWrapper>}</Route>
                 <Route path="/settings/audit-logs">{() => <SuspenseWrapper><SettingsPage defaultTab="audit" /></SuspenseWrapper>}</Route>
