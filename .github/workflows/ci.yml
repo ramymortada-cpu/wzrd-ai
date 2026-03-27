@@ -1,14 +1,25 @@
 name: WZRD AI Quality & Security Gate
 
+# Least privilege: workflow only needs read access to the repo contents.
+# pull_request (not pull_request_target): runs on the merge preview; secrets stay
+# unavailable to untrusted fork code by default — safer for public repos.
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   audit-and-lint:
-    name: Security Audit & Code Quality
+    # Must match Branch protection / ruleset “required status check” name.
+    name: quality-gate
     runs-on: ubuntu-latest
 
     steps:
