@@ -70,7 +70,19 @@ async function startServer() {
   app.use('/api/trpc/tools.identitySnapshot', rateLimiters.toolUsage);
   app.use('/api/trpc/tools.launchReadiness', rateLimiters.toolUsage);
   app.use('/api/trpc/tools.competitiveBenchmark', rateLimiters.toolUsage);
-  app.use('/api/trpc/tools.quickDiagnosis', rateLimiters.toolUsage);
+  app.use('/api/trpc/tools.freeBrandDiagnosis', rateLimiters.ai);
+  app.use('/api/trpc/tools.unlockBrandDiagnosis', rateLimiters.toolUsage);
+  app.use('/api/trpc/tools.freeOfferCheckDiagnosis', rateLimiters.ai);
+  app.use('/api/trpc/tools.unlockOfferCheck', rateLimiters.toolUsage);
+  app.use('/api/trpc/tools.freeMessageCheckDiagnosis', rateLimiters.ai);
+  app.use('/api/trpc/tools.unlockMessageCheck', rateLimiters.toolUsage);
+  app.use('/api/trpc/tools.freePresenceAuditDiagnosis', rateLimiters.ai);
+  app.use('/api/trpc/tools.unlockPresenceAudit', rateLimiters.toolUsage);
+  app.use('/api/trpc/tools.freeIdentitySnapshotDiagnosis', rateLimiters.ai);
+  app.use('/api/trpc/tools.unlockIdentitySnapshot', rateLimiters.toolUsage);
+  app.use('/api/trpc/tools.freeLaunchReadinessDiagnosis', rateLimiters.ai);
+  app.use('/api/trpc/tools.unlockLaunchReadiness', rateLimiters.toolUsage);
+  app.use('/api/trpc/tools.freeQuickDiagnosis', rateLimiters.quickCheck);
   app.use('/api/trpc/copilot.chat', rateLimiters.ai);
   // Signup (3 per hour — prevents spam accounts)
   app.use('/api/trpc/auth.signup', rateLimiters.signup);
