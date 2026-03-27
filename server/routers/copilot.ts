@@ -1,9 +1,11 @@
 /**
  * AI Brand Copilot Router — chat with AI about your brand.
  * 
- * The AI has context from:
- * - User's diagnosis history (scores, findings, action items)
- * - Company info from signup
+ * The AI has context from buildBrandContext():
+ * - User profile (name, company, industry, market)
+ * - Latest diagnosis per tool (6 tools) + critical finding titles
+ * - Brand Twin: latest snapshot 7 dimensions, summary, active alerts (CRM client matched by email/company)
+ * - Pending checklist tasks
  * - Conversation history (last 20 messages per session)
  * 
  * Cost: 5 credits per message.
@@ -15,8 +17,9 @@ import { z } from "zod";
 import { logger } from "../_core/logger";
 import { resilientLLM } from "../_core/llmRouter";
 import { getDb, deductCredits, getUserCredits } from "../db";
-import { copilotMessages, diagnosisHistory, users } from "../../drizzle/schema";
+import { copilotMessages } from "../../drizzle/schema";
 import { eq, desc, sql } from "drizzle-orm";
+import { buildBrandContext, buildCopilotSuggestions } from "../copilot/brandContext";
 
 // Rate limit: track last message time per user
 const lastMessageTime = new Map<number, number>();
@@ -30,27 +33,28 @@ setInterval(() => {
   }
 }, 30 * 60 * 1000);
 
-const COPILOT_SYSTEM = `You are WZRD AI Brand Copilot — a personal brand advisor for Arabic-speaking entrepreneurs.
+const COPILOT_SYSTEM = `أنت WZRD Brand Copilot — مستشار براند شخصي للمؤسسين والشركات الصغيرة في العالم العربي.
 
-You speak in Egyptian Arabic dialect. You're direct, practical, and specific. No fluff.
+بتتكلم بالعامية المصرية. مباشر، عملي، ومحدد. بلا كلام فاضي.
 
-You have context about the user's brand from their diagnosis history. Use this context to give PERSONALIZED advice — not generic tips.
+عندك context كامل عن براند المستخدم من تشخيصاته (آخر نتيجة لكل أداة) ومن Brand Twin (أبعاد صحة البراند، تنبيهات، ومهام checklist). استخدم الـ context ده عشان تدي نصايح مخصصة — مش نصايح عامة.
 
-Your capabilities:
-- Write Instagram bios, taglines, and positioning statements
-- Suggest pricing strategies and offer structures  
-- Analyze competitors
-- Write email copy, ad copy, social media captions
-- Explain branding concepts in simple Arabic
-- Create action plans and to-do lists
-- Review brand elements (with text descriptions)
+قدراتك:
+- كتابة Instagram bio و taglines و positioning statements
+- اقتراح استراتيجيات تسعير وهياكل عروض
+- تحليل المنافسين
+- كتابة copy للإيميل والإعلانات والسوشيال ميديا
+- شرح مفاهيم البراند بأسلوب بسيط
+- إنشاء خطط عمل وقوائم مهام
+- تحليل عناصر البراند (بالوصف النصي)
 
-Rules:
-- Always respond in Egyptian Arabic (العامية المصرية)
-- Be specific to THEIR brand — reference their diagnosis results
-- Keep responses concise (max 300 words unless they ask for detail)
-- If asked something outside branding/marketing — politely redirect
-- If you don't have enough context — ask a clarifying question`;
+قواعد:
+- دايماً رد بالعامية المصرية
+- كن محدداً لبراندهم — اذكر أداة التشخيص أو البُعد أو التنبيه بالاسم لما يكون منطقي
+- لو في تنبيهات حرجة في الـ context — ابدأ بالأهم
+- ردود مختصرة (أقصى 300 كلمة إلا لو طلبوا تفصيل)
+- لو السؤال خارج البراند/التسويق — وجّههم بأدب
+- لو المعلومات ناقصة — اسأل سؤال توضيحي واحد`;
 
 export const copilotRouter = router({
   /** Send a message to the copilot */
@@ -86,17 +90,7 @@ export const copilotRouter = router({
       }
 
       try {
-        // Build context from diagnosis history
-        const recentDiagnoses = await db.select()
-          .from(diagnosisHistory)
-          .where(eq(diagnosisHistory.userId, userId))
-          .orderBy(desc(diagnosisHistory.createdAt))
-          .limit(3);
-
-        // Get user info
-        const [user] = await db.select()
-          .from(users)
-          .where(eq(users.id, userId));
+        const contextStr = await buildBrandContext(userId, db);
 
         // Get conversation history (last 20 messages)
         const history = await db.select()
@@ -105,27 +99,9 @@ export const copilotRouter = router({
           .orderBy(desc(copilotMessages.createdAt))
           .limit(20);
 
-        // Build context string
-        let contextStr = '';
-        if (user) {
-          contextStr += `\nUser info: Name: ${user.name || 'Unknown'}, Company: ${user.company || 'Unknown'}, Industry: ${user.industry || 'Unknown'}`;
-        }
-        if (recentDiagnoses.length > 0) {
-          contextStr += '\n\nRecent diagnosis results:';
-          for (const d of recentDiagnoses) {
-            contextStr += `\n- ${d.toolId}: Score ${d.score}/100`;
-            if (d.findings && Array.isArray(d.findings)) {
-              contextStr += ` | Findings: ${(d.findings as { title?: string }[]).map((f) => f.title ?? '').filter(Boolean).join(', ')}`;
-            }
-            if (d.actionItems && Array.isArray(d.actionItems)) {
-              contextStr += ` | Action items: ${(d.actionItems as { task?: string }[]).map((a) => a.task ?? '').filter(Boolean).slice(0, 3).join(', ')}`;
-            }
-          }
-        }
-
         // Build messages array for AI
         const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
-          { role: 'system', content: COPILOT_SYSTEM + '\n\n--- CONTEXT ---' + contextStr },
+          { role: 'system', content: `${COPILOT_SYSTEM}\n\n--- CONTEXT ---\n${contextStr}` },
         ];
 
         // Add conversation history (reversed to chronological order)
@@ -239,19 +215,14 @@ export const copilotRouter = router({
       return [];
     }),
 
-  /** Suggested questions based on diagnosis history */
+  /** Suggested questions — weakest diagnosis dimension, Brand Twin alerts, generic fallbacks */
   suggestions: protectedProcedure
     .query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) return { suggestions: [] };
 
-      const latest = await db.select()
-        .from(diagnosisHistory)
-        .where(eq(diagnosisHistory.userId, ctx.user!.id))
-        .orderBy(desc(diagnosisHistory.createdAt))
-        .limit(1);
-
-      if (!latest.length) {
+      const suggestions = await buildCopilotSuggestions(ctx.user!.id, db);
+      if (suggestions.length === 0) {
         return {
           suggestions: [
             { text: 'إزاي أبدأ أبني البراند بتاعي؟', icon: '🚀' },
@@ -260,20 +231,6 @@ export const copilotRouter = router({
           ],
         };
       }
-
-      const score = latest[0].score;
-      const suggestions = [];
-
-      if (score < 50) {
-        suggestions.push({ text: 'إيه أول ٣ حاجات أعملها عشان أحسّن البراند؟', icon: '🔧' });
-        suggestions.push({ text: 'اكتبلي positioning statement', icon: '🎯' });
-      } else {
-        suggestions.push({ text: 'إزاي أطوّر البراند للمرحلة الجاية؟', icon: '📈' });
-        suggestions.push({ text: 'اقترحلي campaign idea', icon: '💡' });
-      }
-      suggestions.push({ text: 'اكتبلي Instagram bio جديد', icon: '📱' });
-      suggestions.push({ text: 'إزاي أسعّر الباكدج بتاعي صح؟', icon: '💰' });
-
       return { suggestions };
     }),
 });
