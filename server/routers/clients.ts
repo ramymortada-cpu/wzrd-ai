@@ -8,7 +8,7 @@
  */
 
 import { protectedProcedure, router } from "../_core/trpc";
-import { checkOwner, checkEditor } from "../_core/authorization";
+import { checkOwner, checkEditor, requireWorkspaceRole } from "../_core/authorization";
 import { z } from "zod";
 import { createClientInput, updateClientInput } from "@shared/validators";
 import { paginationInput } from "../_core/pagination";
@@ -28,17 +28,17 @@ export const clientsRouter = router({
   /** List all clients with pagination */
   list: protectedProcedure
     .input(z.object({ ...paginationInput }).optional())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const page = input?.page || 1;
       const pageSize = input?.pageSize || 20;
-      return getClients({ page, pageSize });
+      return getClients({ page, pageSize, workspaceId: ctx.workspaceId });
     }),
 
   /** Get a single client by ID */
   getById: protectedProcedure
     .input(z.object({ id: z.number().int().positive() }))
-    .query(async ({ input }) => {
-      return getClientById(input.id);
+    .query(async ({ input, ctx }) => {
+      return getClientById(input.id, ctx.workspaceId);
     }),
 
   /** WZRD tool diagnosis history for users whose email matches this client (Brand Health Tracker data). */
@@ -46,7 +46,7 @@ export const clientsRouter = router({
     .input(z.object({ clientId: z.number().int().positive() }))
     .query(async ({ input, ctx }) => {
       checkEditor(ctx);
-      const client = await getClientById(input.clientId);
+      const client = await getClientById(input.clientId, ctx.workspaceId);
       const cEmail = client?.email?.trim();
       if (!cEmail) return [];
       let user = await getUserByEmail(cEmail);
@@ -72,12 +72,13 @@ export const clientsRouter = router({
     .input(createClientInput)
     .mutation(async ({ input, ctx }) => {
       checkEditor(ctx);
+      requireWorkspaceRole(ctx, "editor");
       const sanitized = sanitizeObject(input);
-      const result = await createClient(sanitized);
+      const result = await createClient({ ...sanitized, workspaceId: ctx.workspaceId });
 
       const insertId = (result as unknown as { insertId?: number }[])?.[0]?.insertId ?? (result as unknown as { insertId?: number })?.insertId;
       if (insertId) {
-        await audit('clients', insertId, 'create', ctx.user?.id, sanitized);
+        await audit('clients', insertId, 'create', ctx.user?.id, sanitized, { workspaceId: ctx.workspaceId });
         logger.info({ clientId: insertId, name: sanitized.name }, 'Client created');
 
         // AUTO-RESEARCH: Fire-and-forget background research
@@ -111,10 +112,11 @@ export const clientsRouter = router({
     .input(updateClientInput)
     .mutation(async ({ input, ctx }) => {
       checkEditor(ctx);
+      requireWorkspaceRole(ctx, "editor");
       const { id, ...data } = sanitizeObject(input);
 
       // Get current state for audit diff
-      const before = await getClientById(id);
+      const before = await getClientById(id, ctx.workspaceId);
       if (!before) throw new Error('Client not found');
 
       await updateClient(id, data);
@@ -122,7 +124,7 @@ export const clientsRouter = router({
       // Audit trail with changes
       const changes = computeChanges(before as Record<string, unknown>, data);
       if (Object.keys(changes).length > 0) {
-        await audit('clients', id, 'update', ctx.user?.id, changes);
+        await audit('clients', id, 'update', ctx.user?.id, changes, { workspaceId: ctx.workspaceId });
         logger.info({ clientId: id, changes: Object.keys(changes) }, 'Client updated');
       }
 
@@ -134,8 +136,9 @@ export const clientsRouter = router({
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ input, ctx }) => {
       checkOwner(ctx); // Only owner can delete clients
+      requireWorkspaceRole(ctx, "admin");
       await softDeleteClient(input.id);
-      await audit('clients', input.id, 'delete', ctx.user?.id);
+      await audit('clients', input.id, 'delete', ctx.user?.id, undefined, { workspaceId: ctx.workspaceId });
       logger.info({ clientId: input.id }, 'Client soft-deleted');
       return { success: true };
     }),

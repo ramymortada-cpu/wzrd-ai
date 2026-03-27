@@ -37,6 +37,9 @@ import { copilotRouter } from "./copilot";
 import { serviceRequestRouter } from "./serviceRequest";
 import { checklistRouter } from "./checklist";
 import { whatsappRouter } from "./whatsapp";
+import { workspacesRouter } from "./workspaces";
+import { contractsRouter } from "./contracts";
+import { invoicesRouter } from "./invoices";
 
 export const appRouter = router({
   system: systemRouter,
@@ -73,6 +76,9 @@ export const appRouter = router({
   serviceRequest: serviceRequestRouter,
   checklist: checklistRouter,
   whatsapp: whatsappRouter,
+  workspaces: workspacesRouter,
+  contracts: contractsRouter,
+  invoices: invoicesRouter,
 });
 
 export type AppRouter = typeof appRouter;

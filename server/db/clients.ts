@@ -21,7 +21,7 @@ export async function createClient(data: InsertClient) {
 /**
  * Get all clients with pagination (excludes soft-deleted).
  */
-export async function getClients(params?: { page?: number; pageSize?: number }): Promise<PaginatedResult<Client>> {
+export async function getClients(params?: { page?: number; pageSize?: number; workspaceId?: number }): Promise<PaginatedResult<Client>> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -29,11 +29,16 @@ export async function getClients(params?: { page?: number; pageSize?: number }):
   const pageSize = Math.min(params?.pageSize || 20, 100);
   const offset = (page - 1) * pageSize;
 
+  const workspaceId = params?.workspaceId;
+  const whereClause = workspaceId
+    ? and(isNull(clients.deletedAt), eq(clients.workspaceId, workspaceId))
+    : isNull(clients.deletedAt);
+
   // Count total (excluding soft-deleted)
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)` })
     .from(clients)
-    .where(isNull(clients.deletedAt));
+    .where(whereClause);
 
   const total = Number(count);
 
@@ -41,7 +46,7 @@ export async function getClients(params?: { page?: number; pageSize?: number }):
   const data = await db
     .select()
     .from(clients)
-    .where(isNull(clients.deletedAt))
+    .where(whereClause)
     .orderBy(desc(clients.createdAt))
     .limit(pageSize)
     .offset(offset);
@@ -64,13 +69,16 @@ export async function getClients(params?: { page?: number; pageSize?: number }):
 /**
  * Get a single client by ID (excludes soft-deleted).
  */
-export async function getClientById(id: number): Promise<Client | null> {
+export async function getClientById(id: number, workspaceId?: number): Promise<Client | null> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
+  const whereClause = workspaceId
+    ? and(eq(clients.id, id), eq(clients.workspaceId, workspaceId), isNull(clients.deletedAt))
+    : and(eq(clients.id, id), isNull(clients.deletedAt));
   const result = await db
     .select()
     .from(clients)
-    .where(and(eq(clients.id, id), isNull(clients.deletedAt)))
+    .where(whereClause)
     .limit(1);
   return result[0] || null;
 }

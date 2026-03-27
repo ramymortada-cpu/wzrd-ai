@@ -28,6 +28,8 @@ export interface AuthUser {
   name: string;
   email: string;
   role: UserRole;
+  currentWorkspaceId?: number;
+  workspaceRole?: "owner" | "admin" | "editor" | "viewer" | null;
 }
 
 // Role hierarchy: admin/owner > editor > viewer > user (DB uses admin/user)
@@ -37,6 +39,13 @@ const ROLE_HIERARCHY: Record<UserRole, number> = {
   editor: 2,
   viewer: 1,
   user: 0,
+};
+
+const WORKSPACE_ROLE_HIERARCHY: Record<"owner" | "admin" | "editor" | "viewer", number> = {
+  owner: 4,
+  admin: 3,
+  editor: 2,
+  viewer: 1,
 };
 
 // ============ AUTHORIZATION CHECKS ============
@@ -116,7 +125,7 @@ export function createRoleCheck(requiredRole: UserRole) {
 }
 
 /** Owner / super-admin: role admin, or email in ADMIN_EMAILS (comma-separated), or legacy default. */
-export function isOwnerAdmin(user: { email?: string; role?: string }): boolean {
+export function isOwnerAdmin(user: { email?: string | null; role?: string | null }): boolean {
   if (user.role === 'admin') return true;
   const email = (user.email || '').trim().toLowerCase();
   if (!email) return false;
@@ -143,6 +152,19 @@ export function checkOwner(ctx: TrpcContext) {
 }
 export const checkEditor = createRoleCheck('editor');
 export const checkViewer = createRoleCheck('viewer');
+
+export function requireWorkspaceRole(
+  ctx: TrpcContext,
+  requiredRole: "owner" | "admin" | "editor" | "viewer",
+) {
+  if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Not authenticated" });
+  if (isOwnerAdmin(ctx.user)) return;
+  const current = ctx.workspaceRole;
+  if (!current) throw new TRPCError({ code: "FORBIDDEN", message: "Workspace access required" });
+  if (WORKSPACE_ROLE_HIERARCHY[current] < WORKSPACE_ROLE_HIERARCHY[requiredRole]) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Workspace role not sufficient" });
+  }
+}
 
 // ============ PERMISSION MAP ============
 

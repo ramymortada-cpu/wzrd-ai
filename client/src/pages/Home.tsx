@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
+import { paginatedData } from "@/lib/utils";
 import {
   Users, FolderKanban, DollarSign,
   ArrowRight, Plus, Sparkles, BookOpen,
@@ -35,6 +36,7 @@ export default function Home() {
   const [, setLocation] = useLocation();
   const { data: stats, isLoading } = trpc.dashboard.stats.useQuery();
   const { data: projects } = trpc.projects.list.useQuery();
+  const { data: clients } = trpc.clients.list.useQuery();
   const { data: pipelineStats } = trpc.dashboard.pipelineAnalytics.useQuery();
   const { data: leadStats } = trpc.leads.stats.useQuery();
   const { data: funnelStats } = trpc.leads.funnel.useQuery();
@@ -44,6 +46,7 @@ export default function Home() {
   }
 
   const recentProjects = projects?.slice(0, 5) || [];
+  const clientsList = paginatedData(clients);
 
   // Pipeline counts
   const pipeline = {
@@ -216,6 +219,27 @@ export default function Home() {
           </CardContent>
         </Card>
       )}
+
+      {/* 4D Pipeline */}
+      <Card className="shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-medium">Client Health Overview</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {clientsList.slice(0, 8).map((c) => {
+            const activeForClient = (projects ?? []).filter((p) => p.clientId === c.id && p.status === "active").length;
+            return (
+              <div key={c.id} className="flex items-center justify-between rounded-md border p-2">
+                <div className="text-sm font-medium">{c.companyName || c.name}</div>
+                <Badge variant={activeForClient > 0 ? "default" : "secondary"}>
+                  {activeForClient > 0 ? `${activeForClient} Active` : "No Active Projects"}
+                </Badge>
+              </div>
+            );
+          })}
+          {clientsList.length === 0 && <p className="text-sm text-muted-foreground">No clients in this workspace.</p>}
+        </CardContent>
+      </Card>
 
       {/* 4D Pipeline */}
       <Card className="shadow-sm">

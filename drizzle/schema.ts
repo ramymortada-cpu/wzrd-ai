@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, json } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, json, primaryKey } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -27,10 +27,38 @@ export const users = mysqlTable("users", {
   whatsappPhone: varchar("whatsappPhone", { length: 20 }).unique(),
   whatsappVerified: int("whatsappVerified").notNull().default(0),
   whatsappLinkedAt: timestamp("whatsappLinkedAt"),
+  // Enterprise SSO hooks (Phase 4)
+  ssoProvider: varchar("ssoProvider", { length: 50 }),
+  ssoId: varchar("ssoId", { length: 255 }),
 });
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
+
+/** Workspaces — multi-tenant isolation root (workspace = tenant). */
+export const workspaces = mysqlTable("workspaces", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  plan: mysqlEnum("plan", ["free", "pro", "enterprise"]).notNull().default("free"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Workspace = typeof workspaces.$inferSelect;
+export type InsertWorkspace = typeof workspaces.$inferInsert;
+
+/** Workspace members (composite PK on workspaceId + userId). */
+export const workspaceMembers = mysqlTable("workspace_members", {
+  workspaceId: int("workspaceId").notNull(),
+  userId: int("userId").notNull(),
+  role: mysqlEnum("role", ["owner", "admin", "editor", "viewer"]).notNull().default("viewer"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.workspaceId, table.userId] }),
+}));
+
+export type WorkspaceMember = typeof workspaceMembers.$inferSelect;
+export type InsertWorkspaceMember = typeof workspaceMembers.$inferInsert;
 
 /**
  * Credit transactions — tracks every credit add/deduct
@@ -80,6 +108,7 @@ export type InsertPaymobProcessedTransaction = typeof paymobProcessedTransaction
  */
 export const clients = mysqlTable("clients", {
   id: int("id").autoincrement().primaryKey(),
+  workspaceId: int("workspaceId").notNull().default(1),
   name: varchar("name", { length: 255 }).notNull(),
   companyName: varchar("companyName", { length: 255 }),
   email: varchar("email", { length: 320 }),
@@ -102,6 +131,7 @@ export type InsertClient = typeof clients.$inferInsert;
  */
 export const projects = mysqlTable("projects", {
   id: int("id").autoincrement().primaryKey(),
+  workspaceId: int("workspaceId").notNull().default(1),
   clientId: int("clientId").notNull(),
   name: varchar("name", { length: 255 }).notNull(),
   serviceType: mysqlEnum("serviceType", [
@@ -131,6 +161,7 @@ export type InsertProject = typeof projects.$inferInsert;
  */
 export const deliverables = mysqlTable("deliverables", {
   id: int("id").autoincrement().primaryKey(),
+  workspaceId: int("workspaceId").notNull().default(1),
   projectId: int("projectId").notNull(),
   title: varchar("title", { length: 500 }).notNull(),
   description: text("description"),
@@ -177,6 +208,7 @@ export type InsertClientNote = typeof clientNotes.$inferInsert;
  */
 export const payments = mysqlTable("payments", {
   id: int("id").autoincrement().primaryKey(),
+  workspaceId: int("workspaceId").notNull().default(1),
   projectId: int("projectId").notNull(),
   clientId: int("clientId").notNull(),
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
@@ -221,6 +253,7 @@ export type InsertAiConversation = typeof aiConversations.$inferInsert;
  */
 export const proposals = mysqlTable("proposals", {
   id: int("id").autoincrement().primaryKey(),
+  workspaceId: int("workspaceId").notNull().default(1),
   clientId: int("clientId").notNull(),
   serviceType: mysqlEnum("serviceType", [
     "business_health_check",
@@ -690,6 +723,7 @@ export type InsertDeliverableApproval = typeof deliverableApprovals.$inferInsert
  */
 export const auditLog = mysqlTable("audit_log", {
   id: int("id").autoincrement().primaryKey(),
+  workspaceId: int("workspaceId").notNull().default(1),
   entity: varchar("entity", { length: 100 }).notNull(),
   entityId: int("entityId").notNull(),
   action: mysqlEnum("action", ["create", "update", "delete", "restore"]).notNull(),
@@ -702,6 +736,42 @@ export const auditLog = mysqlTable("audit_log", {
 
 export type AuditLog = typeof auditLog.$inferSelect;
 export type InsertAuditLog = typeof auditLog.$inferInsert;
+
+/** Contracts — enterprise B2B documentation. */
+export const contracts = mysqlTable("contracts", {
+  id: int("id").autoincrement().primaryKey(),
+  workspaceId: int("workspaceId").notNull().default(1),
+  clientId: int("clientId").notNull(),
+  projectId: int("projectId"),
+  title: varchar("title", { length: 500 }).notNull(),
+  status: mysqlEnum("status", ["draft", "sent", "signed", "expired"]).notNull().default("draft"),
+  content: text("content"),
+  signatureData: json("signatureData"),
+  pdfUrl: text("pdfUrl"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Contract = typeof contracts.$inferSelect;
+export type InsertContract = typeof contracts.$inferInsert;
+
+/** Invoices — enterprise B2B billing docs. */
+export const invoices = mysqlTable("invoices", {
+  id: int("id").autoincrement().primaryKey(),
+  workspaceId: int("workspaceId").notNull().default(1),
+  clientId: int("clientId").notNull(),
+  projectId: int("projectId"),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 10 }).default("EGP"),
+  status: mysqlEnum("status", ["draft", "open", "paid", "void"]).notNull().default("draft"),
+  dueDate: timestamp("dueDate"),
+  pdfUrl: text("pdfUrl"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Invoice = typeof invoices.$inferSelect;
+export type InsertInvoice = typeof invoices.$inferInsert;
 
 /**
  * Notifications — in-app notification system.

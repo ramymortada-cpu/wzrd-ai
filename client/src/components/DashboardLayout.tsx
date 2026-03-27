@@ -54,6 +54,7 @@ import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from "./DashboardLayoutSkeleton";
 import { Button } from "./ui/button";
+import WorkspaceSwitcher from "./WorkspaceSwitcher";
 
 const menuItems = [
   { icon: LayoutDashboard, labelKey: "nav.dashboard", path: "/" },
@@ -63,6 +64,8 @@ const menuItems = [
   { icon: StickyNote, labelKey: "nav.notes", path: "/notes" },
   { icon: DollarSign, labelKey: "nav.financials", path: "/financials" },
   { icon: FileText, labelKey: "nav.proposals", path: "/proposals" },
+  { icon: FileText, labelKey: "Contracts", path: "/contracts" },
+  { icon: DollarSign, labelKey: "Invoices", path: "/invoices" },
   { icon: Sparkles, labelKey: "nav.ai", path: "/ai" },
   { icon: BarChart3, labelKey: "nav.analytics", path: "/analytics" },
   { icon: BookOpen, labelKey: "nav.playbooks", path: "/playbooks" },
@@ -266,6 +269,7 @@ function DashboardLayoutContent({
           </SidebarHeader>
 
           <SidebarContent className="gap-0">
+            {!isCollapsed && <WorkspaceSwitcher />}
             <SidebarMenu className="px-2 py-1">
               {coreNavItems.map((item) => {
                 const isActive = location === item.path || (item.path !== "/" && location.startsWith(item.path));

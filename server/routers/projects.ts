@@ -4,7 +4,7 @@
  */
 
 import { protectedProcedure, router } from "../_core/trpc";
-import { checkOwner, checkEditor } from "../_core/authorization";
+import { checkOwner, checkEditor, requireWorkspaceRole } from "../_core/authorization";
 import { z } from "zod";
 import { createProjectInput, updateProjectInput } from "@shared/validators";
 import { paginationInput } from "../_core/pagination";
@@ -21,29 +21,30 @@ import { SERVICE_PLAYBOOKS } from "../knowledgeBase";
 export const projectsRouter = router({
   list: protectedProcedure
     .input(z.object({ ...paginationInput }).optional())
-    .query(async () => {
-      return getProjects();
+    .query(async ({ ctx }) => {
+      return getProjects(ctx.workspaceId);
     }),
 
   getByClient: protectedProcedure
     .input(z.object({ clientId: z.number().int().positive() }))
-    .query(async ({ input }) => {
-      return getProjectsByClient(input.clientId);
+    .query(async ({ input, ctx }) => {
+      return getProjectsByClient(input.clientId, ctx.workspaceId);
     }),
 
   getById: protectedProcedure
     .input(z.object({ id: z.number().int().positive() }))
-    .query(async ({ input }) => {
-      return getProjectById(input.id);
+    .query(async ({ input, ctx }) => {
+      return getProjectById(input.id, ctx.workspaceId);
     }),
 
   create: protectedProcedure
     .input(createProjectInput)
     .mutation(async ({ input, ctx }) => {
       checkEditor(ctx);
+      requireWorkspaceRole(ctx, "editor");
       const sanitized = sanitizeObject(input);
       const price = sanitized.price || String(SERVICE_PRICES[input.serviceType] || 0);
-      const result = await createProject({ ...sanitized, price });
+      const result = await createProject({ ...sanitized, price, workspaceId: ctx.workspaceId });
       const projectId = (result as { id: number }).id;
 
       const playbook = SERVICE_PLAYBOOKS[input.serviceType];
@@ -52,6 +53,7 @@ export const projectsRouter = router({
         for (const stageData of playbook.stages) {
           for (const step of stageData.steps) {
             await createDeliverable({
+              workspaceId: ctx.workspaceId,
               projectId,
               title: step.deliverable || step.title,
               description: step.description,
@@ -65,7 +67,7 @@ export const projectsRouter = router({
       }
 
       if (projectId) {
-        await audit('projects', projectId, 'create', ctx.user?.id, { ...sanitized, price });
+        await audit('projects', projectId, 'create', ctx.user?.id, { ...sanitized, price }, { workspaceId: ctx.workspaceId });
       }
       return result;
     }),
@@ -74,13 +76,14 @@ export const projectsRouter = router({
     .input(updateProjectInput)
     .mutation(async ({ input, ctx }) => {
       checkEditor(ctx);
+      requireWorkspaceRole(ctx, "editor");
       const { id, ...data } = sanitizeObject(input);
-      const before = await getProjectById(id);
+      const before = await getProjectById(id, ctx.workspaceId);
       if (!before) throw new Error('Project not found');
       await updateProject(id, data);
       const changes = computeChanges(before as Record<string, unknown>, data);
       if (Object.keys(changes).length > 0) {
-        await audit('projects', id, 'update', ctx.user?.id, changes);
+        await audit('projects', id, 'update', ctx.user?.id, changes, { workspaceId: ctx.workspaceId });
       }
       return { success: true };
     }),
@@ -89,8 +92,9 @@ export const projectsRouter = router({
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ input, ctx }) => {
       checkOwner(ctx); // Only owner can delete projects
+      requireWorkspaceRole(ctx, "admin");
       await deleteProject(input.id);
-      await audit('projects', input.id, 'delete', ctx.user?.id);
+      await audit('projects', input.id, 'delete', ctx.user?.id, undefined, { workspaceId: ctx.workspaceId });
       return { success: true };
     }),
 });
