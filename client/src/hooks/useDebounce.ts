@@ -33,7 +33,7 @@ export function useDebounce<T>(value: T, delay: number = 300): T {
  *     api.search(query);
  *   }, 300);
  */
-export function useDebouncedCallback<T extends (...args: any[]) => any>(
+export function useDebouncedCallback<T extends (...args: never[]) => unknown>(
   callback: T,
   delay: number = 300,
 ): (...args: Parameters<T>) => void {

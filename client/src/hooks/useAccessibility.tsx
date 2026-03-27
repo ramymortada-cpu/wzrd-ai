@@ -44,7 +44,7 @@ export function ariaProps(options: {
   disabled?: boolean;
   live?: 'polite' | 'assertive' | 'off';
 }) {
-  const props: Record<string, any> = {};
+  const props: Record<string, string | boolean> = {};
 
   if (options.label) props['aria-label'] = options.label;
   if (options.describedBy) props['aria-describedby'] = options.describedBy;
