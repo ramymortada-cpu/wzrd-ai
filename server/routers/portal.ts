@@ -16,6 +16,9 @@ import {
 } from "../db";
 import { notifyOwner } from "../_core/notification";
 import type { Deliverable } from "../../drizzle/schema";
+import { getDb } from "../db/index";
+import { serviceRequests, requestUpdates, users } from "../../drizzle/schema";
+import { eq, and, desc, sql } from "drizzle-orm";
 
 export const portalRouter = router({
   // Generate portal link — stores HASHED token, returns raw to client
@@ -54,9 +57,11 @@ export const portalRouter = router({
       client: client ? { id: client.id, name: client.name, companyName: client.companyName } : null,
       deliverables: projectDeliverables.map((d: Deliverable) => ({
         id: d.id, title: d.title, description: d.description, stage: d.stage, status: d.status,
-        content: d.status === 'delivered' || d.status === 'approved' ? d.content : null,
-        fileUrl: d.status === 'delivered' || d.status === 'approved' ? d.fileUrl : null,
-        imageUrls: d.status === 'delivered' || d.status === 'approved' ? d.imageUrls : null,
+        aiGenerated: d.aiGenerated ?? 0,
+        createdAt: d.createdAt,
+        content: d.aiGenerated === 1 || d.status === 'delivered' || d.status === 'approved' ? d.content : null,
+        fileUrl: d.aiGenerated === 1 || d.status === 'delivered' || d.status === 'approved' ? d.fileUrl : null,
+        imageUrls: d.aiGenerated === 1 || d.status === 'delivered' || d.status === 'approved' ? d.imageUrls : null,
       })),
       serviceLabel: SERVICE_LABELS[project.serviceType as keyof typeof SERVICE_LABELS] || project.serviceType,
       stageLabels: STAGE_LABELS,
@@ -110,5 +115,88 @@ export const portalRouter = router({
       if (!portalToken) throw new Error('Invalid token');
       const result = await createDeliverableFeedback({ deliverableId: input.deliverableId, clientId: portalToken.clientId, comment: input.comment, rating: input.rating });
       return result;
+    }),
+
+  /**
+   * PUBLIC: Submit a new service request from the Portal (no auth).
+   * Uses portal token to resolve the client → user, then inserts into service_requests.
+   */
+  submitServiceRequest: publicProcedure
+    .input(
+      z.object({
+        token: z.string().max(255),
+        serviceType: z.string().min(1).max(100),
+        serviceTypeAr: z.string().min(1).max(100),
+        description: z.string().max(2000).optional(),
+        descriptionAr: z.string().max(2000).optional(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const portalToken = await getPortalTokenByToken(hashToken(input.token));
+      if (!portalToken) throw new Error("Invalid token");
+
+      const client = await getClientById(portalToken.clientId);
+      const clientEmail = client?.email?.trim().toLowerCase() || null;
+      if (!clientEmail) throw new Error("Client email missing — cannot create request");
+
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+
+      const [u] = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(sql`LOWER(${users.email}) = ${clientEmail}`)
+        .limit(1);
+      if (!u?.id) throw new Error("No user account found for this client email");
+
+      const requestNumber = (() => {
+        const prefix = "PM";
+        const date = new Date();
+        const yr = date.getFullYear().toString().slice(-2);
+        const mo = (date.getMonth() + 1).toString().padStart(2, "0");
+        const rand = Math.floor(Math.random() * 9000 + 1000);
+        return `${prefix}-${yr}${mo}-${rand}`;
+      })();
+
+      await db.insert(serviceRequests).values({
+        userId: u.id,
+        requestNumber,
+        serviceType: input.serviceType,
+        serviceTypeAr: input.serviceTypeAr,
+        status: "received",
+        description: input.description || null,
+        descriptionAr: input.descriptionAr || null,
+      });
+
+      const [inserted] = await db
+        .select()
+        .from(serviceRequests)
+        .where(and(eq(serviceRequests.userId, u.id), eq(serviceRequests.requestNumber, requestNumber)))
+        .orderBy(desc(serviceRequests.createdAt))
+        .limit(1);
+
+      if (inserted) {
+        await db.insert(requestUpdates).values({
+          requestId: inserted.id,
+          status: "received",
+          title: "Request Received",
+          titleAr: "تم استلام طلبك",
+          detail: `Your service request #${requestNumber} has been received. Our team will review it within 24 hours.`,
+          detailAr: `تم استلام طلبك رقم #${requestNumber}. فريقنا هيراجعه خلال ٢٤ ساعة.`,
+          updateType: "status_change",
+          createdBy: "portal",
+        });
+      }
+
+      try {
+        await notifyOwner({
+          title: `Portal Service Request — ${client?.companyName || client?.name || "Client"}`,
+          content: `Request #${requestNumber}\nService: ${input.serviceType}\n${input.description || ""}`.slice(0, 500),
+        });
+      } catch {
+        /* non-blocking */
+      }
+
+      return { success: true, requestNumber };
     }),
 });

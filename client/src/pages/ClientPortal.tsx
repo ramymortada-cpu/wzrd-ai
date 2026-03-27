@@ -8,6 +8,8 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   Loader2, CheckCircle2, Clock, AlertCircle, FolderKanban, FileText, Shield, Sparkles,
@@ -17,6 +19,7 @@ import {
 import { useRoute } from "wouter";
 import { useMemo, useState, useCallback } from "react";
 import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
 
 const stageOrder = ["diagnose", "design", "deploy", "optimize"];
 
@@ -335,6 +338,10 @@ export default function ClientPortalPage() {
   const [replyText, setReplyText] = useState("");
   // Diff viewer state
   const [diffVersions, setDiffVersions] = useState<{ a: number; b: number } | null>(null);
+  const [portalTab, setPortalTab] = useState<"deliverables" | "reports" | "copilot" | "requests">("deliverables");
+  const [selectedReportId, setSelectedReportId] = useState<number | null>(null);
+  const [serviceType, setServiceType] = useState<string>("social_media");
+  const [serviceDesc, setServiceDesc] = useState<string>("");
 
   const { data, isLoading, error } = trpc.portal.viewProject.useQuery(
     { token },
@@ -373,27 +380,53 @@ export default function ClientPortalPage() {
     onError: (err: unknown) => toast.error(err instanceof Error ? err.message : String(err)),
   });
 
+  const submitServiceRequestMutation = trpc.portal.submitServiceRequest.useMutation({
+    onSuccess: (data) => {
+      toast.success(
+        isAr
+          ? `تم إرسال الطلب بنجاح! رقم الطلب: ${data.requestNumber}`
+          : `Request submitted! Number: ${data.requestNumber}`,
+      );
+      setServiceDesc("");
+    },
+    onError: (err: unknown) =>
+      toast.error(err instanceof Error ? err.message : String(err)),
+  });
+
   const stageProgress = useMemo(() => {
     if (!data?.project?.stage) return 0;
     const idx = stageOrder.indexOf(data.project.stage);
     return idx >= 0 ? ((idx + 1) / stageOrder.length) * 100 : 25;
   }, [data?.project?.stage]);
 
+  const reportDeliverables = useMemo(() => {
+    const rows = data?.deliverables ?? [];
+    return rows.filter(
+      (d) => d.aiGenerated === 1 && String(d.title || "").toLowerCase().includes("report"),
+    );
+  }, [data?.deliverables]);
+
+  const nonReportDeliverables = useMemo(() => {
+    const rows = data?.deliverables ?? [];
+    return rows.filter((d) => d.aiGenerated !== 1);
+  }, [data?.deliverables]);
+
   const deliverablesByStage = useMemo(() => {
-    if (!data?.deliverables) return {};
-    const grouped: Record<string, typeof data.deliverables> = {};
-    for (const d of data.deliverables) {
+    const rows = nonReportDeliverables;
+    if (!rows) return {};
+    const grouped: Record<string, typeof nonReportDeliverables> = {};
+    for (const d of rows) {
       const stage = d.stage || "other";
       if (!grouped[stage]) grouped[stage] = [];
       grouped[stage].push(d);
     }
     return grouped;
-  }, [data?.deliverables]);
+  }, [nonReportDeliverables]);
 
   const completedCount = useMemo(() => {
-    if (!data?.deliverables) return 0;
-    return data.deliverables.filter((d) => d.status === "approved" || d.status === "delivered").length;
-  }, [data?.deliverables]);
+    const rows = nonReportDeliverables;
+    return rows.filter((d) => d.status === "approved" || d.status === "delivered").length;
+  }, [nonReportDeliverables]);
 
   const handleToggleDeliverable = useCallback((id: number) => {
     if (expandedDeliverable === id) {
@@ -448,12 +481,21 @@ export default function ClientPortalPage() {
     );
   }
 
-  const { project, client, deliverables } = data;
+  const { project, client } = data;
+  const selectedReport = reportDeliverables.find((r) => r.id === selectedReportId) || reportDeliverables[0] || null;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 px-4 sm:px-6 py-4 sm:py-6">
+      <style>{`
+@media print {
+  .no-print { display: none !important; }
+  .print-area { max-width: none !important; padding: 0 !important; }
+  body { background: #fff !important; }
+}
+      `}</style>
+
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <div className="no-print flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <img
             src="https://d2xsxph8kpxj0f.cloudfront.net/310519663371561184/TgSL8MhgJ4oMR4dsotVnRS/wzrd-ai-logo_a6bceffd.png"
@@ -473,7 +515,7 @@ export default function ClientPortalPage() {
       </div>
 
       {/* Project Overview */}
-      <Card>
+      <Card className="no-print">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
@@ -516,11 +558,11 @@ export default function ClientPortalPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 pt-2">
             <div className="text-center p-3 rounded-lg bg-muted/50">
-              <p className="text-2xl font-bold">{deliverables.length}</p>
+              <p className="text-2xl font-bold">{nonReportDeliverables.length}</p>
               <p className="text-xs text-muted-foreground">{isAr ? "إجمالي المخرجات" : "Total Deliverables"}</p>
             </div>
             <div className="text-center p-3 rounded-lg bg-muted/50">
-              <p className="text-2xl font-bold text-blue-600">{deliverables.filter((d) => d.status === "in_progress").length}</p>
+              <p className="text-2xl font-bold text-blue-600">{nonReportDeliverables.filter((d) => d.status === "in_progress").length}</p>
               <p className="text-xs text-muted-foreground">{isAr ? "قيد التنفيذ" : "In Progress"}</p>
             </div>
             <div className="text-center p-3 rounded-lg bg-muted/50">
@@ -531,29 +573,52 @@ export default function ClientPortalPage() {
         </CardContent>
       </Card>
 
-      {/* Deliverables by Stage */}
-      {stageOrder.map((stage) => {
-        const stageDeliverables = deliverablesByStage[stage];
-        if (!stageDeliverables || stageDeliverables.length === 0) return null;
-        return (
-          <Card key={stage}>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Badge className={stageColors[stage]}>
-                  {isAr ? stageLabelsAr[stage] : stageLabelsEn[stage]}
-                </Badge>
-                <span className="text-muted-foreground text-sm font-normal">
-                  ({stageDeliverables.length} {isAr ? "مخرجات" : "deliverables"})
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {stageDeliverables.map((d: PortalProjectDeliverable) => {
-                  const isExpanded = expandedDeliverable === d.id;
-                  const isAccessible = d.status === "delivered" || d.status === "approved" || d.status === "review";
-                  return (
-                    <div key={d.id} className="rounded-lg border hover:bg-muted/30 transition-colors">
+      {/* Premium Portal Tabs */}
+      <div className="no-print flex flex-wrap gap-2">
+        {[
+          { key: "deliverables" as const, labelAr: "المخرجات", labelEn: "Deliverables" },
+          { key: "reports" as const, labelAr: "التقارير", labelEn: "Reports" },
+          { key: "copilot" as const, labelAr: "Brand Copilot", labelEn: "Brand Copilot" },
+          { key: "requests" as const, labelAr: "طلب خدمة", labelEn: "Request Service" },
+        ].map((t) => (
+          <Button
+            key={t.key}
+            variant={portalTab === t.key ? "default" : "outline"}
+            className={portalTab === t.key ? "" : "border-zinc-800/60"}
+            onClick={() => setPortalTab(t.key)}
+            size="sm"
+          >
+            {isAr ? t.labelAr : t.labelEn}
+          </Button>
+        ))}
+      </div>
+
+      {/* Deliverables Tab */}
+      {portalTab === "deliverables" ? (
+        <>
+          {/* Deliverables by Stage */}
+          {stageOrder.map((stage) => {
+            const stageDeliverables = deliverablesByStage[stage];
+            if (!stageDeliverables || stageDeliverables.length === 0) return null;
+            return (
+              <Card key={stage} className="no-print">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Badge className={stageColors[stage]}>
+                      {isAr ? stageLabelsAr[stage] : stageLabelsEn[stage]}
+                    </Badge>
+                    <span className="text-muted-foreground text-sm font-normal">
+                      ({stageDeliverables.length} {isAr ? "مخرجات" : "deliverables"})
+                    </span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {stageDeliverables.map((d: PortalProjectDeliverable) => {
+                      const isExpanded = expandedDeliverable === d.id;
+                      const isAccessible = d.status === "delivered" || d.status === "approved" || d.status === "review";
+                      return (
+                        <div key={d.id} className="rounded-lg border hover:bg-muted/30 transition-colors">
                       {/* Deliverable Header */}
                       <div
                         className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 cursor-pointer"
@@ -967,14 +1032,179 @@ export default function ClientPortalPage() {
                           )}
                         </div>
                       )}
-                    </div>
-                  );
-                })}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </>
+      ) : null}
+
+      {/* Reports Tab */}
+      {portalTab === "reports" ? (
+        <div className="print-area space-y-4">
+          <Card className="no-print">
+            <CardHeader>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <CardTitle className="text-base">{isAr ? "التقارير" : "Reports"}</CardTitle>
+                  <CardDescription>
+                    {isAr
+                      ? "تقارير الأداء الشهرية تُعرض بصيغة Markdown."
+                      : "Monthly performance reports rendered in Markdown."}
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  className="border-zinc-800/60 gap-2"
+                  onClick={() => window.print()}
+                  disabled={!selectedReport?.content}
+                >
+                  <Download className="h-4 w-4" />
+                  {isAr ? "Download as PDF" : "Download as PDF"}
+                </Button>
               </div>
+            </CardHeader>
+            <CardContent>
+              {reportDeliverables.length === 0 ? (
+                <div className="text-sm text-muted-foreground">
+                  {isAr ? "لا توجد تقارير بعد." : "No reports yet."}
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {reportDeliverables.map((r) => (
+                    <Button
+                      key={r.id}
+                      size="sm"
+                      variant={selectedReportId === r.id ? "default" : "outline"}
+                      className={selectedReportId === r.id ? "" : "border-zinc-800/60"}
+                      onClick={() => setSelectedReportId(r.id)}
+                    >
+                      {r.title}
+                    </Button>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
-        );
-      })}
+
+          {selectedReport ? (
+            <Card className="rounded-2xl border-zinc-800/60 bg-zinc-950/40 backdrop-blur-sm">
+              <CardHeader className="no-print">
+                <CardTitle className="text-zinc-100">{selectedReport.title}</CardTitle>
+                <CardDescription className="text-zinc-400">
+                  {selectedReport.createdAt ? new Date(selectedReport.createdAt).toLocaleDateString("ar-EG") : ""}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <article className="prose prose-invert max-w-none">
+                  <ReactMarkdown>{selectedReport.content || ""}</ReactMarkdown>
+                </article>
+              </CardContent>
+            </Card>
+          ) : null}
+        </div>
+      ) : null}
+
+      {/* Copilot Tab (placeholder) */}
+      {portalTab === "copilot" ? (
+        <Card className="no-print rounded-2xl border-zinc-800/60 bg-zinc-950/40 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-zinc-100">Brand Copilot</CardTitle>
+            <CardDescription className="text-zinc-400">
+              {isAr ? "قريبًا: محادثة مبسطة داخل البوابة." : "Coming soon: simplified chat in the portal."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-sm text-zinc-300">
+            {isAr ? "سيتم تفعيلها في خطوة لاحقة." : "Will be enabled in a later step."}
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {/* Request Service Tab (placeholder UI; backend hook in Step 4) */}
+      {portalTab === "requests" ? (
+        <Card className="no-print rounded-2xl border-zinc-800/60 bg-zinc-950/40 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-zinc-100">{isAr ? "طلب خدمة إضافية" : "Request a Service"}</CardTitle>
+            <CardDescription className="text-zinc-400">
+              {isAr ? "اطلب خدمة جديدة بسهولة." : "Request additional services easily."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>{isAr ? "نوع الخدمة" : "Service type"}</Label>
+                <Select value={serviceType} onValueChange={setServiceType} disabled={submitServiceRequestMutation.isPending}>
+                  <SelectTrigger className="w-full bg-zinc-950/30 border-zinc-800/60">
+                    <SelectValue placeholder={isAr ? "اختر الخدمة" : "Select service"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="social_media">{isAr ? "إدارة سوشيال ميديا" : "Social Media Management"}</SelectItem>
+                    <SelectItem value="rebranding">{isAr ? "إعادة بناء البراند" : "Rebranding"}</SelectItem>
+                    <SelectItem value="brand_strategy">{isAr ? "استراتيجية براند" : "Brand Strategy"}</SelectItem>
+                    <SelectItem value="visual_identity">{isAr ? "هوية بصرية" : "Visual Identity"}</SelectItem>
+                    <SelectItem value="content_strategy">{isAr ? "استراتيجية محتوى" : "Content Strategy"}</SelectItem>
+                    <SelectItem value="other">{isAr ? "خدمة أخرى" : "Other"}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>{isAr ? "اسم الشركة" : "Company"}</Label>
+                <Input
+                  value={client?.companyName || client?.name || ""}
+                  disabled
+                  className="bg-zinc-950/30 border-zinc-800/60"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>{isAr ? "الوصف" : "Description"}</Label>
+              <Textarea
+                value={serviceDesc}
+                onChange={(e) => setServiceDesc(e.target.value)}
+                placeholder={isAr ? "اكتب وصف مختصر للي محتاجه..." : "Write a short description of what you need..."}
+                className="min-h-28 bg-zinc-950/30 border-zinc-800/60"
+                disabled={submitServiceRequestMutation.isPending}
+              />
+            </div>
+
+            <Button
+              onClick={() => {
+                const arLabels: Record<string, string> = {
+                  social_media: "إدارة سوشيال ميديا",
+                  rebranding: "إعادة بناء البراند",
+                  brand_strategy: "استراتيجية براند",
+                  visual_identity: "هوية بصرية",
+                  content_strategy: "استراتيجية محتوى",
+                  other: "خدمة أخرى",
+                };
+                submitServiceRequestMutation.mutate({
+                  token,
+                  serviceType,
+                  serviceTypeAr: arLabels[serviceType] || serviceType,
+                  description: isAr ? undefined : (serviceDesc.trim() || undefined),
+                  descriptionAr: isAr ? (serviceDesc.trim() || undefined) : undefined,
+                });
+              }}
+              disabled={!serviceType || submitServiceRequestMutation.isPending}
+              className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white"
+            >
+              {submitServiceRequestMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {isAr ? "جاري الإرسال..." : "Submitting..."}
+                </>
+              ) : (
+                <>{isAr ? "إرسال الطلب" : "Submit request"}</>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
 
       {/* Feedback Dialog */}
       <Dialog open={!!feedbackDialog} onOpenChange={(open) => { if (!open) setFeedbackDialog(null); }}>
