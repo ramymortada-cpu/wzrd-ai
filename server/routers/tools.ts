@@ -17,6 +17,7 @@
  * 5. Links to educational content + services
  */
 
+import { randomUUID } from "node:crypto";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import {
@@ -36,6 +37,7 @@ import { getToolSystemPrompt, isToolEnabled } from "../siteConfig";
 import { diagnosisHistory, userChecklists } from "../../drizzle/schema";
 import { eq, desc } from "drizzle-orm";
 import { fireEmailTrigger } from "../emailTrigger";
+import { getRedis } from "../_core/redis";
 
 /**
  * Save diagnosis result to history (non-blocking).
@@ -116,6 +118,218 @@ function scoreLabel(score: number): string {
  * Smart service recommendation based on tool + score.
  * Low score → strong recommendation. High score → subtle suggestion.
  */
+/** Fallback in-memory pending unlock when REDIS_URL is unset (free preview → paid unlock). */
+const BRAND_UNLOCK_TTL_MS = 45 * 60 * 1000;
+const BRAND_DIAG_UNLOCK_REDIS_TTL_SEC = 2700;
+
+type ToolDiagUnlockPayload = {
+  toolId: string;
+  score: number;
+  findings: ToolResult['findings'];
+  actionItems: ToolResult['actionItems'];
+  recommendation: string;
+};
+
+const toolDiagUnlockPending = new Map<string, ToolDiagUnlockPayload & { expiresAt: number }>();
+
+function toolDiagUnlockRedisKey(token: string): string {
+  return `diag:token:${token}`;
+}
+
+function pruneExpiredUnlockTokens(): void {
+  const now = Date.now();
+  for (const [k, v] of toolDiagUnlockPending) {
+    if (v.expiresAt < now) toolDiagUnlockPending.delete(k);
+  }
+}
+
+function storedPayloadMatchesTool(parsed: Partial<ToolDiagUnlockPayload>, expectedToolId: string): boolean {
+  const tid = parsed.toolId;
+  if (tid === expectedToolId) return true;
+  if ((tid === undefined || tid === null) && expectedToolId === 'brand_diagnosis') return true;
+  return false;
+}
+
+async function storeToolDiagUnlockPending(token: string, payload: ToolDiagUnlockPayload): Promise<void> {
+  const redis = getRedis();
+  if (redis) {
+    await redis.set(toolDiagUnlockRedisKey(token), JSON.stringify(payload), 'EX', BRAND_DIAG_UNLOCK_REDIS_TTL_SEC);
+    return;
+  }
+  pruneExpiredUnlockTokens();
+  toolDiagUnlockPending.set(token, {
+    ...payload,
+    expiresAt: Date.now() + BRAND_UNLOCK_TTL_MS,
+  });
+}
+
+async function loadToolDiagUnlockPending(
+  token: string,
+  expectedToolId: string,
+): Promise<Omit<ToolDiagUnlockPayload, 'toolId'> | null> {
+  const redis = getRedis();
+  if (redis) {
+    const raw = await redis.get(toolDiagUnlockRedisKey(token));
+    if (raw == null || raw === '') return null;
+    try {
+      const parsed = JSON.parse(raw) as Partial<ToolDiagUnlockPayload>;
+      if (!storedPayloadMatchesTool(parsed, expectedToolId)) return null;
+      const { score, findings, actionItems, recommendation } = parsed;
+      if (typeof score !== 'number' || !Array.isArray(findings) || !Array.isArray(actionItems) || typeof recommendation !== 'string') {
+        return null;
+      }
+      return { score, findings, actionItems, recommendation };
+    } catch {
+      return null;
+    }
+  }
+  pruneExpiredUnlockTokens();
+  const fromMap = toolDiagUnlockPending.get(token);
+  if (!fromMap) return null;
+  if (fromMap.expiresAt < Date.now()) {
+    toolDiagUnlockPending.delete(token);
+    return null;
+  }
+  if (!storedPayloadMatchesTool(fromMap, expectedToolId)) return null;
+  const { score, findings, actionItems, recommendation } = fromMap;
+  return { score, findings, actionItems, recommendation };
+}
+
+async function clearToolDiagUnlockPending(token: string): Promise<void> {
+  const redis = getRedis();
+  if (redis) {
+    await redis.del(toolDiagUnlockRedisKey(token));
+    return;
+  }
+  toolDiagUnlockPending.delete(token);
+}
+
+const TOOL_DISPLAY_NAME: Record<string, string> = {
+  brand_diagnosis: 'Brand Diagnosis',
+};
+
+async function unlockDiagnosisFromPending(
+  ctx: { user: { id: number; email?: string | null } },
+  unlockToken: string,
+  toolId: string,
+  nextStep: ToolResult['nextStep'],
+): Promise<ToolResult> {
+  const pending = await loadToolDiagUnlockPending(unlockToken, toolId);
+  if (!pending) {
+    throw new Error('انتهت صلاحية المعاينة، أعد التشخيص المجاني');
+  }
+  const deduction = await deductCredits(ctx.user!.id, toolId);
+  if (!deduction.success) {
+    throw new Error('رصيدك غير كافٍ');
+  }
+  await clearToolDiagUnlockPending(unlockToken);
+
+  const result: ToolResult = {
+    score: pending.score,
+    label: scoreLabel(pending.score),
+    findings: pending.findings,
+    actionItems: pending.actionItems,
+    recommendation: pending.recommendation,
+    nextStep,
+    serviceRecommendation: getServiceRecommendation(toolId, pending.score),
+    creditsUsed: deduction.cost,
+    creditsRemaining: deduction.newBalance ?? 0,
+  };
+
+  const display = TOOL_DISPLAY_NAME[toolId] ?? toolId;
+  saveDiagnosisHistory(ctx.user!.id, toolId, result).catch((err) => {
+    logger.error({ err, userId: ctx.user!.id, tool: toolId }, 'Failed to save diagnosis history after unlock');
+  });
+  fireEmailTrigger('first_tool_run', ctx.user!.id, { score: pending.score, toolName: display }).catch(() => {});
+  if (pending.score < 40) {
+    fireEmailTrigger('low_score', ctx.user!.id, { score: pending.score, toolName: display }).catch(() => {});
+  }
+  if (ctx.user!.email) {
+    sendToolResultEmail(
+      ctx.user!.email,
+      '',
+      display,
+      result.score,
+      result.findings.map((f) => ({ title: f.title, detail: f.detail })),
+      result.recommendation,
+      result.nextStep.url,
+    ).catch(() => {});
+  }
+  logger.info({ userId: ctx.user!.id, tool: toolId, score: result.score, phase: 'unlock' }, 'Tool diagnosis unlocked');
+  return result;
+}
+
+function parseDiagnosisAiResponse(
+  text: string,
+  toolId: string,
+): {
+  score: number;
+  findings: ToolResult['findings'];
+  actionItems: ToolResult['actionItems'];
+  recommendation: string;
+} {
+  let parsed: { score?: number; findings?: Array<{ title: string; detail: string; severity: string }>; actionItems?: Array<{ task: string; difficulty: string }>; recommendation?: string };
+  try {
+    const clean = text.replace(/```json|```/g, '').trim();
+    parsed = JSON.parse(clean);
+  } catch {
+    const scoreMatch = text.match(/(?:score|نتيجة)[:\s]*(\d{1,3})/i);
+    const extractedScore = scoreMatch ? Math.min(100, parseInt(scoreMatch[1], 10)) : null;
+    const bulletPoints = text.match(/[•\-*⚠✓→]\s*(.+)/g) || [];
+    const findings = bulletPoints.slice(0, 3).map(b => ({
+      title: b.replace(/^[•\-*⚠✓→]\s*/, '').substring(0, 80),
+      detail: '',
+      severity: 'medium',
+    }));
+    parsed = {
+      score: extractedScore ?? 50,
+      findings: findings.length > 0 ? findings : [
+        { title: 'Analysis Complete', detail: text.substring(0, 300), severity: 'medium' },
+      ],
+      recommendation: 'Run a full Health Check for detailed insights.',
+    };
+    logger.warn({ toolId, textLength: text.length, extractedScore }, 'AI response was not valid JSON — used smart fallback');
+  }
+
+  const score = Math.max(0, Math.min(100, parsed.score || 50));
+  let actionItems: Array<{ task: string; difficulty: 'easy' | 'medium' | 'hard' }> = [];
+  try {
+    actionItems = (parsed.actionItems || []).slice(0, 15).map(item => ({
+      task: item.task || '',
+      difficulty: (['easy', 'medium', 'hard'].includes(item.difficulty) ? item.difficulty : 'medium') as 'easy' | 'medium' | 'hard',
+    })).filter(item => item.task.length > 0);
+  } catch {
+    logger.warn({ toolId }, 'actionItems parse failed — using empty array');
+  }
+
+  return {
+    score,
+    findings: (parsed.findings || []).slice(0, 5).map(f => ({
+      title: f.title || 'Finding',
+      detail: f.detail || '',
+      severity: (['high', 'medium', 'low'].includes(f.severity) ? f.severity : 'medium') as 'high' | 'medium' | 'low',
+    })),
+    actionItems,
+    recommendation: parsed.recommendation || 'Consider a full audit for detailed insights.',
+  };
+}
+
+async function callDiagnosisModel(
+  toolId: string,
+  defaultSystemPrompt: string,
+  userPrompt: string,
+): Promise<string> {
+  const adminPrompt = getToolSystemPrompt(toolId);
+  const systemPrompt = adminPrompt || defaultSystemPrompt;
+  const response = await resilientLLM({
+    messages: [
+      { role: 'system', content: systemPrompt + '\n\nRespond ONLY with valid JSON. No markdown, no backticks.' },
+      { role: 'user', content: userPrompt },
+    ],
+  }, { context: 'diagnosis' });
+  return response.choices[0]?.message?.content as string;
+}
+
 function getServiceRecommendation(toolName: string, score: number): ToolResult['serviceRecommendation'] {
   // Only show service recommendation for scores below 70
   if (score >= 70) return null;
@@ -168,81 +382,23 @@ async function runToolAI(
     throw new Error('هذه الأداة معطّلة مؤقتاً. يرجى المحاولة لاحقاً.');
   }
 
-  // 1. Get system prompt from admin (or use default)
-  const adminPrompt = getToolSystemPrompt(toolId);
-  const systemPrompt = adminPrompt || defaultSystemPrompt;
-
-  // 2. Deduct credits
+  // 1. Deduct credits
   const deduction = await deductCredits(userId, toolId);
   if (!deduction.success) {
     throw new Error(deduction.error || 'Insufficient credits');
   }
 
-  // 2. Call AI
-  const response = await resilientLLM({
-    messages: [
-      { role: 'system', content: systemPrompt + '\n\nRespond ONLY with valid JSON. No markdown, no backticks.' },
-      { role: 'user', content: userPrompt },
-    ],
-  }, { context: 'diagnosis' });
-
-  const text = response.choices[0]?.message?.content as string;
-
-  // 3. Parse response
-  let parsed: { score?: number; findings?: Array<{ title: string; detail: string; severity: string }>; actionItems?: Array<{ task: string; difficulty: string }>; recommendation?: string };
-  try {
-    const clean = text.replace(/```json|```/g, '').trim();
-    // Try parsing the full response
-    parsed = JSON.parse(clean);
-  } catch {
-    // Smart fallback: try to extract score from text
-    const scoreMatch = text.match(/(?:score|نتيجة)[:\s]*(\d{1,3})/i);
-    const extractedScore = scoreMatch ? Math.min(100, parseInt(scoreMatch[1])) : null;
-
-    // Try to extract bullet points as findings
-    const bulletPoints = text.match(/[•\-*⚠✓→]\s*(.+)/g) || [];
-    const findings = bulletPoints.slice(0, 3).map(b => ({
-      title: b.replace(/^[•\-*⚠✓→]\s*/, '').substring(0, 80),
-      detail: '',
-      severity: 'medium',
-    }));
-
-    parsed = {
-      score: extractedScore ?? 50,
-      findings: findings.length > 0 ? findings : [
-        { title: 'Analysis Complete', detail: text.substring(0, 300), severity: 'medium' }
-      ],
-      recommendation: 'Run a full Health Check for detailed insights.',
-    };
-
-    logger.warn({ toolId, textLength: text.length, extractedScore }, 'AI response was not valid JSON — used smart fallback');
-  }
-
-  const score = Math.max(0, Math.min(100, parsed.score || 50));
-
-  // Extract actionItems with defensive parsing
-  let actionItems: Array<{ task: string; difficulty: 'easy' | 'medium' | 'hard' }> = [];
-  try {
-    actionItems = (parsed.actionItems || []).slice(0, 15).map(item => ({
-      task: item.task || '',
-      difficulty: (['easy', 'medium', 'hard'].includes(item.difficulty) ? item.difficulty : 'medium') as 'easy' | 'medium' | 'hard',
-    })).filter(item => item.task.length > 0);
-  } catch {
-    logger.warn({ toolId }, 'actionItems parse failed — using empty array');
-  }
+  const text = await callDiagnosisModel(toolId, defaultSystemPrompt, userPrompt);
+  const parsedBody = parseDiagnosisAiResponse(text, toolId);
 
   const result: ToolResult = {
-    score,
-    label: scoreLabel(score),
-    findings: (parsed.findings || []).slice(0, 5).map(f => ({
-      title: f.title || 'Finding',
-      detail: f.detail || '',
-      severity: (['high', 'medium', 'low'].includes(f.severity) ? f.severity : 'medium') as 'high' | 'medium' | 'low',
-    })),
-    actionItems,
-    recommendation: parsed.recommendation || 'Consider a full audit for detailed insights.',
+    score: parsedBody.score,
+    label: scoreLabel(parsedBody.score),
+    findings: parsedBody.findings,
+    actionItems: parsedBody.actionItems,
+    recommendation: parsedBody.recommendation,
     nextStep: { type: 'guide', title: 'Learn more', url: '/guides/brand-health' },
-    serviceRecommendation: getServiceRecommendation(toolId, score),
+    serviceRecommendation: getServiceRecommendation(toolId, parsedBody.score),
     creditsUsed: deduction.cost,
     creditsRemaining: deduction.newBalance ?? 0,
   };
@@ -253,9 +409,9 @@ async function runToolAI(
   });
 
   // 4b. Fire email automation triggers (non-blocking)
-  fireEmailTrigger('first_tool_run', userId, { score, toolName: toolDisplayName }).catch(() => {});
-  if (score < 40) {
-    fireEmailTrigger('low_score', userId, { score, toolName: toolDisplayName }).catch(() => {});
+  fireEmailTrigger('first_tool_run', userId, { score: parsedBody.score, toolName: toolDisplayName }).catch(() => {});
+  if (parsedBody.score < 40) {
+    fireEmailTrigger('low_score', userId, { score: parsedBody.score, toolName: toolDisplayName }).catch(() => {});
   }
 
   // 5. Send result email (non-blocking)
@@ -291,6 +447,24 @@ Respond in JSON format:
 }
 
 CRITICAL: You MUST include actionItems array. For each finding, include 2-3 specific, actionable tasks the business owner can do TODAY. Tasks must be in Egyptian Arabic and be practical (not generic). Max 15 actionItems total.`;
+
+function buildBrandDiagnosisUserPrompt(input: z.infer<typeof brandDiagnosisInputSchema>): string {
+  return `Analyze brand health for:
+Company: ${input.companyName}
+Industry: ${input.industry}
+Market: ${input.market}
+Years in business: ${input.yearsInBusiness || 'Not specified'}
+Team size: ${input.teamSize || 'Not specified'}
+Website: ${input.website || 'Not provided'}
+Social accounts: ${input.socialMedia || 'Not provided'}
+Differentiation vs competitors: ${input.currentPositioning || 'Not specified'}
+Target audience: ${input.targetAudience}
+Monthly revenue (band): ${input.monthlyRevenue || 'Not specified'}
+Main brand challenge: ${input.biggestChallenge}
+Previous branding work: ${input.previousBranding || 'Not specified'}
+
+Score the brand 0-100. Identify the top 3-5 issues across: positioning clarity, messaging consistency, offer logic, visual perception, and customer journey. Be specific to THIS company.`;
+}
 
 // ════════════════════════════════════════════
 // ROUTER
@@ -348,26 +522,57 @@ export const toolsRouter = router({
       return { canUse: balance >= cost, balance, cost };
     }),
 
-  /** Tool 1: Brand Diagnosis */
+  /**
+   * Brand Diagnosis — Step 1 (free): score + finding titles/severity only.
+   * Full AI run is cached server-side; unlock with credits via unlockBrandDiagnosis.
+   */
+  freeBrandDiagnosis: publicProcedure
+    .input(brandDiagnosisInputSchema)
+    .mutation(async ({ input }) => {
+      if (!isToolEnabled('brand_diagnosis')) {
+        throw new Error('هذه الأداة معطّلة مؤقتاً. يرجى المحاولة لاحقاً.');
+      }
+      pruneExpiredUnlockTokens();
+      const userPrompt = buildBrandDiagnosisUserPrompt(input);
+      const text = await callDiagnosisModel('brand_diagnosis', TOOL_SYSTEM, userPrompt);
+      const body = parseDiagnosisAiResponse(text, 'brand_diagnosis');
+      const unlockToken = randomUUID();
+      await storeToolDiagUnlockPending(unlockToken, {
+        toolId: 'brand_diagnosis',
+        score: body.score,
+        findings: body.findings,
+        actionItems: body.actionItems,
+        recommendation: body.recommendation,
+      });
+      const criticalCount = body.findings.filter((f) => f.severity === 'high').length;
+      const unlockCost = TOOL_COSTS.brand_diagnosis ?? 20;
+      logger.info({ tool: 'brand_diagnosis', phase: 'free_preview', score: body.score, criticalCount }, 'Brand Diagnosis free preview generated');
+      return {
+        score: body.score,
+        label: scoreLabel(body.score),
+        findings: body.findings.map((f) => ({ title: f.title, severity: f.severity })),
+        criticalCount,
+        unlockToken,
+        unlockCost,
+      };
+    }),
+
+  /** Brand Diagnosis — Step 2 (paid): deduct credits + return full prescription from cached AI result */
+  unlockBrandDiagnosis: protectedProcedure
+    .input(z.object({ unlockToken: z.string().uuid() }))
+    .mutation(({ input, ctx }) =>
+      unlockDiagnosisFromPending(ctx, input.unlockToken, 'brand_diagnosis', {
+        type: 'guide',
+        title: 'How to Audit Your Brand Health',
+        url: '/guides/brand-health',
+      }),
+    ),
+
+  /** Tool 1: Brand Diagnosis — legacy single-step (deducts before result); prefer free + unlock in UI */
   brandDiagnosis: protectedProcedure
     .input(brandDiagnosisInputSchema)
     .mutation(async ({ input, ctx }) => {
-      const userPrompt = `Analyze brand health for:
-Company: ${input.companyName}
-Industry: ${input.industry}
-Market: ${input.market}
-Years in business: ${input.yearsInBusiness || 'Not specified'}
-Team size: ${input.teamSize || 'Not specified'}
-Website: ${input.website || 'Not provided'}
-Social accounts: ${input.socialMedia || 'Not provided'}
-Differentiation vs competitors: ${input.currentPositioning || 'Not specified'}
-Target audience: ${input.targetAudience}
-Monthly revenue (band): ${input.monthlyRevenue || 'Not specified'}
-Main brand challenge: ${input.biggestChallenge}
-Previous branding work: ${input.previousBranding || 'Not specified'}
-
-Score the brand 0-100. Identify the top 3-5 issues across: positioning clarity, messaging consistency, offer logic, visual perception, and customer journey. Be specific to THIS company.`;
-
+      const userPrompt = buildBrandDiagnosisUserPrompt(input);
       const result = await runToolAI('brand_diagnosis', 'Brand Diagnosis', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
       result.nextStep = { type: 'guide', title: 'How to Audit Your Brand Health', url: '/guides/brand-health' };
       logger.info({ userId: ctx.user!.id, tool: 'brand_diagnosis', score: result.score }, 'Brand Diagnosis completed');
@@ -390,7 +595,6 @@ Common objections: ${input.commonObjections || 'Not specified'}
 Competitor pricing context: ${input.competitorPricing || 'Not specified'}
 
 Score 0-100. Check: Is the offer clear? Does pricing logic make sense? Are there too many/few options? Is the value proposition obvious? Is there a clear path from free→paid?`;
-
       const result = await runToolAI('offer_check', 'Offer Logic Check', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
       result.nextStep = { type: 'guide', title: 'Offer Logic 101', url: '/guides/offer-logic' };
       logger.info({ userId: ctx.user!.id, tool: 'offer_check', score: result.score }, 'Offer Check completed');
@@ -414,7 +618,6 @@ Tone of voice (selected): ${input.toneOfVoice || 'Not specified'}
 Customer quote (social proof): ${input.customerQuote || 'Not provided'}
 
 Score 0-100. Check: Are these consistent? Is the differentiation clear? Is the tone appropriate? Is there a Clarity Gap? Would a new customer understand this brand in 5 seconds?`;
-
       const result = await runToolAI('message_check', 'Message Check', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
       result.nextStep = { type: 'guide', title: 'Brand Identity Guide', url: '/guides/brand-identity' };
       logger.info({ userId: ctx.user!.id, tool: 'message_check', score: result.score }, 'Message Check completed');
@@ -439,7 +642,6 @@ Typical response time: ${input.avgResponseTime || 'Not specified'}
 Google Business Profile: ${input.googleBusiness || 'Not specified'}
 
 Score 0-100. Check: Cross-channel consistency, premium perception, CTA clarity, inquiry flow friction, content-proof-CTA alignment. Why is this brand "present but not chosen"?`;
-
       const result = await runToolAI('presence_audit', 'Presence Audit', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
       result.nextStep = { type: 'service', title: 'Full Health Check', url: '/services#audit' };
       logger.info({ userId: ctx.user!.id, tool: 'presence_audit', score: result.score }, 'Presence Audit completed');
@@ -463,7 +665,6 @@ Desired perception (what people should feel): ${input.desiredPerception}
 Gap between desired and actual: ${input.currentGap || 'Not specified'}
 
 Score 0-100. Using Kapferer's Identity Prism, check: Does the brand personality match the audience? Is the visual quality matching the positioning? Is there a "Commodity Trap" — looking like everyone else? What archetype does this brand project vs. what it should project?`;
-
       const result = await runToolAI('identity_snapshot', 'Identity Snapshot', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
       result.nextStep = { type: 'guide', title: 'What Is Brand Identity', url: '/guides/brand-identity' };
       logger.info({ userId: ctx.user!.id, tool: 'identity_snapshot', score: result.score }, 'Identity Snapshot completed');
@@ -489,7 +690,6 @@ Biggest concern: ${input.biggestConcern}
 Success metric after ~3 months: ${input.successMetric || 'Not specified'}
 
 Score 0-100 on launch readiness. Identify what's missing and what's the priority order. Be specific about what "ready to launch" means for THIS type of business.`;
-
       const result = await runToolAI('launch_readiness', 'Launch Readiness', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
       result.nextStep = { type: 'service', title: 'Business Takeoff Package', url: '/services#takeoff' };
       logger.info({ userId: ctx.user!.id, tool: 'launch_readiness', score: result.score }, 'Launch Readiness completed');
@@ -755,8 +955,11 @@ Respond ONLY in this JSON format:
   // QUICK MODE — 5 questions instead of 12
   // ════════════════════════════════════════════
 
-  /** Quick Brand Diagnosis — 5 questions, faster but less detailed */
-  quickDiagnosis: protectedProcedure
+  /**
+   * Quick Brand Diagnosis — lead magnet: no login, no credits.
+   * Returns score + finding titles/severity only (no detail, no action items in response).
+   */
+  freeQuickDiagnosis: publicProcedure
     .input(z.object({
       companyName: z.string().min(1).max(255),
       industry: z.string().min(1).max(100),
@@ -764,7 +967,10 @@ Respond ONLY in this JSON format:
       biggestChallenge: z.string().min(1).max(500),
       socialLink: z.string().max(500).optional(),
     }))
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async ({ input }) => {
+      if (!isToolEnabled('brand_diagnosis')) {
+        throw new Error('هذه الأداة معطّلة مؤقتاً.');
+      }
       const userPrompt = `Quick brand diagnosis for:
 Company: ${input.companyName}
 Industry: ${input.industry}
@@ -775,10 +981,14 @@ Social link: ${input.socialLink || 'Not provided'}
 This is a QUICK diagnosis — be concise but specific. Score 0-100 and give top 3 findings + 5 action items.
 Respond in Egyptian Arabic.`;
 
-      const result = await runToolAI('brand_diagnosis', 'Quick Brand Diagnosis', TOOL_SYSTEM, userPrompt, ctx.user!.id, ctx.user!.email);
-      // Quick mode uses same credits as brand_diagnosis (20)
-      result.nextStep = { type: 'tool', title: 'Full Diagnosis', url: '/tools/brand-diagnosis' };
-      logger.info({ userId: ctx.user!.id, tool: 'quick_diagnosis', score: result.score }, 'Quick Diagnosis completed');
-      return result;
+      const text = await callDiagnosisModel('brand_diagnosis', TOOL_SYSTEM, userPrompt);
+      const body = parseDiagnosisAiResponse(text, 'brand_diagnosis');
+      logger.info({ tool: 'free_quick_diagnosis', score: body.score }, 'Free quick diagnosis completed');
+      return {
+        score: body.score,
+        label: scoreLabel(body.score),
+        findings: body.findings.map((f) => ({ title: f.title, severity: f.severity })),
+        criticalCount: body.findings.filter((f) => f.severity === 'high').length,
+      };
     }),
 });
