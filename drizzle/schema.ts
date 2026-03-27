@@ -23,6 +23,10 @@ export const users = mysqlTable("users", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
+  /** E.164 digits only (no +). Unique when set — WhatsApp account linking (Phase 3). */
+  whatsappPhone: varchar("whatsappPhone", { length: 20 }).unique(),
+  whatsappVerified: int("whatsappVerified").notNull().default(0),
+  whatsappLinkedAt: timestamp("whatsappLinkedAt"),
 });
 
 export type User = typeof users.$inferSelect;
