@@ -96,18 +96,6 @@ export default function QuickCheckPage() {
     });
   };
 
-  const scoreColor = (label: string) => {
-    if (label === "hot") return "text-red-500";
-    if (label === "warm") return "text-amber-500";
-    return "text-blue-500";
-  };
-
-  const scoreBg = (label: string) => {
-    if (label === "hot") return "bg-red-500/10 border-red-500/20";
-    if (label === "warm") return "bg-amber-500/10 border-amber-500/20";
-    return "bg-blue-500/10 border-blue-500/20";
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
       {/* Header */}
@@ -369,112 +357,80 @@ export default function QuickCheckPage() {
 
         {/* Step: Results */}
         {step === "results" && result && (
-          <div className="max-w-2xl mx-auto space-y-8 py-8">
-            {/* Score Card */}
-            {(() => {
-              const scoreLabel = String(result.scoreLabel ?? "");
-              return (
-            <Card className={`border ${scoreBg(scoreLabel)} text-white`}>
-              <CardContent className="p-8 text-center space-y-4">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-sm">
-                  <CheckCircle2 className="h-4 w-4 text-green-400" />
-                  Assessment Complete
-                </div>
-                <div className="space-y-2">
-                  <div className={`text-6xl font-bold ${scoreColor(scoreLabel)}`}>
-                    {result.score}
-                    <span className="text-2xl text-white/40">/100</span>
-                  </div>
-                  <Badge
-                    className={`text-sm px-3 py-1 ${
-                      scoreLabel === "hot"
-                        ? "bg-red-500/20 text-red-400 border-red-500/30"
-                        : scoreLabel === "warm"
-                        ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
-                        : "bg-blue-500/20 text-blue-400 border-blue-500/30"
-                    }`}
-                  >
-                    {scoreLabel === "hot" ? "High Potential" : scoreLabel === "warm" ? "Growth Opportunity" : "Needs Foundation"}
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-              );
-            })()}
-
-            {/* Teaser Diagnosis */}
-            <Card className="bg-white/[0.03] border-white/10 text-white">
-              <CardHeader>
-                <CardTitle className="text-lg">Your Brand Health Snapshot</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-white/80 leading-relaxed">{result.diagnosisTeaser}</p>
-                <div className="p-4 rounded-lg bg-amber-500/5 border border-amber-500/10">
-                  <p className="text-sm text-amber-400/80">
-                    <Sparkles className="inline h-4 w-4 mr-1" />
-                    Want the full detailed analysis with actionable recommendations?
-                    Our brand engineering team will reach out within 24 hours.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Recommended Service */}
-            <Card className="bg-white/[0.03] border-white/10 text-white">
-              <CardHeader>
-                <CardTitle className="text-lg">Recommended Next Step</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-3 p-4 rounded-lg bg-white/[0.03] border border-white/5">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
-                    <Zap className="h-5 w-5 text-amber-400" />
-                  </div>
-                  <div>
-                    <p className="font-medium">
-                      {result.recommendedService === "business_health_check" && "Business Health Check"}
-                      {result.recommendedService === "starting_business_logic" && "Clarity Package — Business Logic"}
-                      {result.recommendedService === "brand_identity" && "Brand Foundation — Full Brand Identity"}
-                      {result.recommendedService === "business_takeoff" && "Business Takeoff — Complete Launch"}
-                      {result.recommendedService === "consultation" && "Growth Partnership — Strategic Consultation"}
-                    </p>
-                    <p className="text-sm text-white/50">
-                      Based on your answers, this service best addresses your current needs.
-                    </p>
-                  </div>
-                </div>
-                <p className="text-xs text-white/30 text-center">
-                  A Primo Marca brand engineer will contact you with a personalized proposal.
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* CTA */}
-            <div className="text-center space-y-4 py-4">
-              <p className="text-sm text-white/40">
-                Thank you for taking the Brand Health Quick-Check!
-              </p>
-              <p className="text-xs text-white/25">
-                Powered by Wzrd AI — Primo Marca's Brand Engineering Intelligence
-              </p>
+          <div className="min-h-screen bg-zinc-950 text-zinc-50 -mx-3 sm:-mx-4">
+            <div className="border-b border-zinc-800/50 bg-zinc-900/30 backdrop-blur-xl px-6 py-4 sticky top-0 z-10">
+              <div className="mx-auto max-w-3xl flex items-center justify-between">
+                <span className="font-mono text-xs text-zinc-500 tracking-widest uppercase">
+                  WZZRD AI · Quick Check Report
+                </span>
+                <span className="font-mono text-xs text-zinc-600">
+                  {new Date().toLocaleDateString("ar-EG")}
+                </span>
+              </div>
             </div>
 
-        {/* WhatsApp hand-off CTA */}
-        <div className="flex justify-center">
-          <a
-            href={waMeQualifiedLeadHref({
-              leadName: formData.contactName || null,
-              brandName: formData.companyName || null,
-              diagnosisLabel: "تشخيص البراند",
-              score: result.score,
-              topIssue: topIssueForWhatsApp || null,
-            })}
-            target="_blank"
-            rel="noopener"
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-sm font-semibold hover:bg-emerald-500/25 transition"
-          >
-            📱 احجز Clarity Call على WhatsApp
-          </a>
-        </div>
+            <div className="mx-auto max-w-3xl px-6 py-12 space-y-10">
+              <div className="text-center space-y-3">
+                <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-zinc-800/60 bg-zinc-900/30 px-3 py-1 text-xs text-zinc-400">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                  Assessment Complete
+                </div>
+                <div className="text-6xl font-bold text-zinc-50">
+                  {result.score}
+                  <span className="text-2xl text-zinc-500">/100</span>
+                </div>
+                <p className="text-sm text-zinc-500">Brand Health Quick Check</p>
+              </div>
+
+              <div className="space-y-3">
+                <h2 className="font-mono text-xs text-zinc-600 uppercase tracking-[0.2em]">
+                  // SNAPSHOT
+                </h2>
+                <div className="rounded-xl border border-zinc-800/50 bg-zinc-900/30 backdrop-blur-sm p-5">
+                  <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-line">{result.diagnosisTeaser}</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h2 className="font-mono text-xs text-zinc-600 uppercase tracking-[0.2em]">
+                  // NEXT STEP
+                </h2>
+                <div className="rounded-xl border border-zinc-800/50 bg-zinc-900/30 backdrop-blur-sm p-5">
+                  <p className="text-sm font-semibold text-zinc-100 mb-1">
+                    {result.recommendedService === "business_health_check" && "Business Health Check"}
+                    {result.recommendedService === "starting_business_logic" && "Clarity Package — Business Logic"}
+                    {result.recommendedService === "brand_identity" && "Brand Foundation — Full Brand Identity"}
+                    {result.recommendedService === "business_takeoff" && "Business Takeoff — Complete Launch"}
+                    {result.recommendedService === "consultation" && "Growth Partnership — Strategic Consultation"}
+                  </p>
+                  <p className="text-sm text-zinc-400 leading-relaxed">
+                    Based on your answers, this service best addresses your current needs.
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-purple-500/20 bg-purple-500/5 p-6 text-center space-y-3">
+                <p className="text-sm text-zinc-400">جاهز تاخد الخطوة الجاية؟</p>
+                <a
+                  href={waMeQualifiedLeadHref({
+                    leadName: formData.contactName || null,
+                    brandName: formData.companyName || null,
+                    diagnosisLabel: "تشخيص البراند",
+                    score: result.score,
+                    topIssue: topIssueForWhatsApp || null,
+                  })}
+                  className="inline-flex items-center gap-2 rounded-full border border-purple-500/40 px-6 py-3 text-sm font-semibold text-purple-300 transition hover:bg-purple-500/10 hover:border-purple-400/60"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  تواصل مع خبير ←
+                </a>
+              </div>
+
+              <div className="text-center space-y-2">
+                <p className="text-xs text-zinc-500">Powered by Wzrd AI — Primo Marca</p>
+              </div>
+            </div>
           </div>
         )}
       </main>

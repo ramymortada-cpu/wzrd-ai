@@ -14,14 +14,34 @@
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-20GXRBPFGR');</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--accent:#4f46e5;--accent2:#6366f1;--accentL:#eef2ff;--text:#0f172a;--text2:#475569;--text3:#94a3b8;--bg:#ffffff;--bg2:#f8fafc;--bg3:#f1f5f9;--border:#e2e8f0;--green:#10b981;--amber:#f59e0b;--red:#ef4444;--card:#fff;--R:16px;--S:0 1px 3px rgba(0,0,0,.04),0 6px 24px rgba(0,0,0,.06);--SL:0 8px 40px rgba(0,0,0,.08);--f:'IBM Plex Sans Arabic',sans-serif;--fe:'Space Grotesk',sans-serif}
+:root {
+  --bg: #000000;
+  --bg2: #0a0a0a;
+  --bg3: #111111;
+  --text: #f4f4f5;
+  --text2: #a1a1aa;
+  --text3: #52525b;
+  --card: #18181b;
+  --border: rgba(39,39,42,0.6);
+  --accent: #8b5cf6;
+  --accent2: #06b6d4;
+  --accentL: rgba(139,92,246,0.1);
+  --green:#10b981;
+  --amber:#f59e0b;
+  --red:#ef4444;
+  --R:16px;
+  --S:0 1px 3px rgba(0,0,0,.04),0 6px 24px rgba(0,0,0,.06);
+  --SL:0 8px 40px rgba(0,0,0,.08);
+  --f:'IBM Plex Sans Arabic',sans-serif;
+  --fe:'Space Grotesk',sans-serif
+}
 html{scroll-behavior:smooth}
 body{font-family:var(--f);background:var(--bg);color:var(--text);line-height:1.75;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 .en-mode{direction:ltr;font-family:var(--fe)}
 a{color:inherit;text-decoration:none}
 
 /* ═══ NAV ═══ */
-.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,.72);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-bottom:1px solid rgba(0,0,0,.04);transition:all .4s}
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(0,0,0,.55);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-bottom:1px solid rgba(39,39,42,0.6);transition:all .4s}
 .nav.scrolled{box-shadow:0 2px 20px rgba(0,0,0,.06)}
 .nav-in{max-width:1120px;margin:0 auto;padding:12px 28px;display:flex;align-items:center;justify-content:space-between}
 .logo{font-family:var(--fe);font-weight:700;font-size:20px;letter-spacing:-.5px;display:flex;align-items:center;gap:4px}.logo b{color:var(--accent)}
@@ -30,44 +50,36 @@ a{color:inherit;text-decoration:none}
 .nav-r a:hover{color:var(--text);border-bottom-color:var(--accent)}
 .btn-s{padding:9px 22px;border-radius:100px;font-size:13px;font-weight:600;transition:all .25s;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:6px}
 .btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(79,70,229,.28)}
-.btn-o{background:transparent;border:1.5px solid var(--border);color:var(--text2)}.btn-o:hover{border-color:var(--accent);color:var(--accent)}
+.btn-o{background:transparent;border:1.5px solid var(--border);color:var(--text2)}.btn-o:hover{border-color:rgba(255,255,255,0.2);color:var(--text)}
 .lang{font-size:12px;padding:5px 14px;border-radius:100px;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;font-weight:600;font-family:var(--fe);transition:.2s}.lang:hover{border-color:var(--accent);color:var(--accent)}
 .mob-tog{display:none;background:none;border:none;font-size:24px;cursor:pointer;color:var(--text)}
 @media(max-width:860px){.nav-r{display:none}.mob-tog{display:block}.nav-r.open{display:flex;flex-direction:column;position:absolute;top:100%;right:0;left:0;background:var(--bg);padding:24px;gap:16px;border-bottom:1px solid var(--border);box-shadow:var(--S)}}
 
 /* ═══ HERO ═══ */
-.hero{padding:160px 28px 100px;position:relative;overflow:hidden;background:linear-gradient(180deg,#f8fafc 0%,#fff 50%,#f0f1ff 100%)}
-.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;max-width:1120px;margin:0 auto;align-items:center}
-.hero-text{position:relative;z-index:2}
-.hero-chip{display:inline-flex;align-items:center;gap:8px;padding:7px 16px;border-radius:100px;background:var(--accentL);color:var(--accent);font-size:13px;font-weight:600;margin-bottom:20px;border:1px solid rgba(79,70,229,.12)}
+.hero{padding:170px 28px 110px;position:relative;overflow:hidden;background:var(--bg)}
+.hero-chip{display:inline-flex;align-items:center;gap:8px;padding:7px 16px;border-radius:100px;background:var(--accentL);color:var(--text);font-size:13px;font-weight:600;margin:0 auto 22px;border:1px solid var(--border)}
 .hero-chip svg{width:14px;height:14px}
-.hero h1{font-size:clamp(30px,4.5vw,50px);font-weight:700;line-height:1.25;margin-bottom:20px;letter-spacing:-.3px}
-.hero h1 em{font-style:normal;background:linear-gradient(135deg,var(--accent),#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.hero-p{font-size:17px;color:var(--text2);line-height:1.75;margin-bottom:32px;max-width:500px}
-.hero-btns{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px}
+.hero-p{font-size:17px;color:var(--text2);line-height:1.75;margin:0 auto 34px;max-width:560px}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;margin:0 auto 28px;justify-content:center}
 .hero-btns .btn-s{padding:14px 32px;font-size:15px}
-.hero-trust{display:flex;gap:24px;flex-wrap:wrap}
-.hero-trust span{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--text3);font-weight:500}
-.hero-trust svg{width:15px;height:15px;color:var(--green)}
-/* Hero visual */
-.hero-vis{position:relative;display:flex;align-items:center;justify-content:center}
-.hero-card{width:340px;background:var(--card);border-radius:20px;box-shadow:var(--SL);padding:28px;border:1px solid var(--border);position:relative;z-index:2;transform:rotate(-2deg);animation:float 6s ease-in-out infinite}
-@keyframes float{0%,100%{transform:rotate(-2deg) translateY(0)}50%{transform:rotate(-2deg) translateY(-12px)}}
-.hc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.hc-score{font-size:42px;font-weight:700;font-family:var(--fe);color:var(--accent)}
-.hc-badge{padding:5px 12px;border-radius:100px;font-size:11px;font-weight:700;background:#fef3c7;color:#92400e}
-.hc-bar{height:6px;border-radius:6px;background:linear-gradient(to left,var(--green),var(--amber),var(--red));margin-bottom:16px;position:relative}
-.hc-bar::after{content:'';position:absolute;top:-3px;right:42%;width:12px;height:12px;border-radius:50%;background:#fff;border:2.5px solid var(--text);box-shadow:0 2px 6px rgba(0,0,0,.15)}
-.hc-items{display:flex;flex-direction:column;gap:6px}
-.hc-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:var(--bg2);font-size:12px;font-weight:500}
-.hc-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-/* Floating shapes */
-.hero-shape{position:absolute;border-radius:50%;opacity:.07;z-index:0}
-.hs1{width:500px;height:500px;background:var(--accent);top:-150px;right:-150px}
-.hs2{width:350px;height:350px;background:var(--amber);bottom:-100px;left:-100px}
-.hs3{width:120px;height:120px;background:var(--accent2);top:30%;left:10%;animation:pulse 4s ease-in-out infinite}
-@keyframes pulse{0%,100%{transform:scale(1);opacity:.07}50%{transform:scale(1.2);opacity:.12}}
-@media(max-width:860px){.hero-grid{grid-template-columns:1fr;text-align:center}.hero-p{margin-left:auto;margin-right:auto}.hero-btns{justify-content:center}.hero-trust{justify-content:center}.hero-vis{margin-top:40px}.hero-card{transform:rotate(0);width:100%;max-width:360px}}
+.hero-trust{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
+.hero-trust span{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text3);font-weight:600}
+
+/* Hero ambient glow */
+.hero-ambient{position:absolute;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(139,92,246,0.15), transparent),radial-gradient(ellipse 40% 30% at 80% 80%, rgba(6,182,212,0.08), transparent);pointer-events:none}
+.hero-inner{text-align:center;max-width:720px;margin:0 auto;position:relative;z-index:1}
+
+/* Headline */
+.hero h1{font-size:clamp(36px, 6vw, 72px);font-weight:800;line-height:1.15;letter-spacing:-1px;margin-bottom:24px}
+.hero h1 em{font-style:normal;background:linear-gradient(135deg, #8b5cf6, #06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* Primary CTA with glow */
+.btn-primary-glow{background:#000;color:#fff;border:1px solid rgba(139,92,246,0.5);box-shadow:0 0 20px rgba(139,92,246,0.25), inset 0 0 20px rgba(139,92,246,0.05);transition:all 0.3s ease}
+.btn-primary-glow:hover{border-color:rgba(6,182,212,0.6);box-shadow:0 0 30px rgba(6,182,212,0.3), inset 0 0 20px rgba(6,182,212,0.08);transform:translateY(-2px)}
+
+/* Ghost dark button */
+.btn-ghost-dark{background:transparent;color:var(--text2);border:1px solid var(--border)}
+.btn-ghost-dark:hover{color:var(--text);border-color:rgba(255,255,255,0.2)}
 
 /* ═══ SECTIONS ═══ */
 section{padding:90px 28px}
@@ -81,8 +93,8 @@ section{padding:90px 28px}
 .how{background:var(--bg2)}
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:50px;position:relative}
 .steps::before{content:'';position:absolute;top:48px;left:15%;right:15%;height:2px;background:linear-gradient(to left,var(--accent),var(--accent2),var(--accent));opacity:.15;z-index:0}
-.step{text-align:center;padding:36px 24px 28px;border-radius:var(--R);background:var(--card);box-shadow:var(--S);transition:.35s;position:relative;z-index:1}
-.step:hover{transform:translateY(-6px);box-shadow:var(--SL)}
+.step{text-align:center;padding:36px 24px 28px;border-radius:var(--R);background:rgba(24,24,27,0.5);border:1px solid rgba(39,39,42,0.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transition:.35s;position:relative;z-index:1}
+.step:hover{transform:translateY(-6px);border-color:rgba(139,92,246,0.3);box-shadow:0 0 20px rgba(139,92,246,0.1)}
 .step-n{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin:0 auto 18px;font-family:var(--fe);box-shadow:0 4px 16px rgba(79,70,229,.25)}
 .step h3{font-size:17px;font-weight:700;margin-bottom:8px}
 .step p{font-size:13.5px;color:var(--text2);line-height:1.65}
@@ -91,9 +103,9 @@ section{padding:90px 28px}
 /* ═══ TOOLS ═══ */
 .tg{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:48px}
 .tc2{display:grid;grid-template-columns:1fr;gap:0}
-.tool{padding:26px;border-radius:var(--R);background:var(--card);border:1.5px solid var(--border);transition:.35s;position:relative;overflow:hidden;display:block}
-.tool:hover{border-color:var(--accent);box-shadow:var(--SL);transform:translateY(-4px)}
-.tool.feat{border-color:var(--accent);grid-column:span 3;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:24px;padding:32px;background:linear-gradient(135deg,var(--accentL),#fff,#faf5ff)}
+.tool{padding:26px;border-radius:var(--R);background:rgba(24,24,27,0.5);border:1px solid rgba(39,39,42,0.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transition:.35s;position:relative;overflow:hidden;display:block}
+.tool:hover{border-color:rgba(139,92,246,0.3);box-shadow:0 0 20px rgba(139,92,246,0.1);transform:translateY(-4px)}
+.tool.feat{border-color:rgba(139,92,246,0.35);grid-column:span 3;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:24px;padding:32px;background:rgba(24,24,27,0.55)}
 .tool.feat .ti{width:56px;height:56px;font-size:28px}
 .tool.feat h3{font-size:20px}
 .tool.feat p{font-size:14px}
@@ -200,38 +212,42 @@ footer{padding:48px 28px 32px;text-align:center;border-top:1px solid var(--borde
 </nav>
 
 <section class="hero">
- <div class="hero-shape hs1"></div><div class="hero-shape hs2"></div><div class="hero-shape hs3"></div>
- <div class="hero-grid">
-  <div class="hero-text fi">
-   <div class="hero-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg><span data-ar="من بريمو ماركا" data-en="by Primo Marca">من بريمو ماركا</span></div>
-   <h1 data-ar="شخّص البراند بتاعك<br><em>بالذكاء الاصطناعي</em>" data-en="Diagnose your brand<br><em>with AI</em>">شخّص البراند بتاعك<br><em>بالذكاء الاصطناعي</em></h1>
-   <p class="hero-p" data-ar="أدوات تشخيص احترافية مبنية على أطر أكاديمية عالمية. اعرف نقاط القوة والضعف في البراند — واللي محتاج يتصلح فوراً." data-en="Professional diagnostic tools built on global academic frameworks. Discover your brand's strengths, weaknesses, and what needs fixing now.">أدوات تشخيص احترافية مبنية على أطر أكاديمية عالمية. اعرف نقاط القوة والضعف في البراند — واللي محتاج يتصلح فوراً.</p>
-   <div class="hero-btns">
-    <a href="/signup" class="btn-s btn-p" data-ar="سجّل مجاناً — ١٠٠ كريدت" data-en="Sign Up Free — 100 Credits">سجّل مجاناً — ١٠٠ كريدت</a>
-    <a href="#tools" class="btn-s btn-o" data-ar="شوف الأدوات" data-en="See Tools">شوف الأدوات</a>
-   </div>
-   <div class="hero-trust">
-    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-ar="مجاني تماماً" data-en="Free">مجاني تماماً</span></span>
-    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-ar="بدون بطاقة ائتمان" data-en="No credit card">بدون بطاقة ائتمان</span></span>
-    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-ar="نتايج فورية" data-en="Instant">نتايج فورية</span></span>
-   </div>
-   <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
-    <a href="/tools/quick" class="btn-s btn-o" style="font-size:13px;padding:10px 20px" data-ar="⚡ تشخيص سريع (٥ أسئلة)" data-en="⚡ Quick Diagnosis (5 questions)">⚡ تشخيص سريع (٥ أسئلة)</a>
-   </div>
-  </div>
-  <div class="hero-vis fi">
-   <div class="hero-card">
-    <div class="hc-head"><span class="hc-score">42</span><span class="hc-badge" data-ar="محتاج شغل" data-en="Needs Work">محتاج شغل</span></div>
-    <div class="hc-bar"></div>
-    <div class="hc-items">
-     <div class="hc-item"><span class="hc-dot" style="background:var(--red)"></span><span data-ar="التموضع مش واضح" data-en="Unclear Positioning">التموضع مش واضح</span></div>
-     <div class="hc-item"><span class="hc-dot" style="background:var(--red)"></span><span data-ar="رحلة العميل فيها احتكاك" data-en="Customer Journey Friction">رحلة العميل فيها احتكاك</span></div>
-     <div class="hc-item"><span class="hc-dot" style="background:var(--amber)"></span><span data-ar="الرسائل مش متسقة" data-en="Inconsistent Messaging">الرسائل مش متسقة</span></div>
-     <div class="hc-item"><span class="hc-dot" style="background:var(--green)"></span><span data-ar="الهوية البصرية متسقة ✓" data-en="Visual Identity OK ✓">الهوية البصرية متسقة ✓</span></div>
+  <!-- Ambient glow background -->
+  <div class="hero-ambient" aria-hidden="true"></div>
+
+  <div class="hero-inner">
+    <!-- Badge -->
+    <div class="hero-chip">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+      </svg>
+      أول منصة ذكاء اصطناعي لبناء البراند في العالم العربي
     </div>
-   </div>
+
+    <!-- Headline — MASSIVE & CENTERED -->
+    <h1>
+      اكتشف <em>ضعف براندك</em><br>
+      قبل أن يكتشفه منافسك
+    </h1>
+
+    <!-- Subheadline -->
+    <p class="hero-p">
+      WZZRD AI يحلّل هويتك التجارية في دقائق ويعطيك تقرير دقيق بأكبر 3 مشاكل تعيق نموك.
+    </p>
+
+    <!-- CTAs -->
+    <div class="hero-btns">
+      <a href="/tools" class="btn-s btn-primary-glow">ابدأ التشخيص مجاناً ←</a>
+      <a href="/services-info" class="btn-s btn-ghost-dark">شوف كيف يعمل</a>
+    </div>
+
+    <!-- Trust signals -->
+    <div class="hero-trust">
+      <span>✓ مجاني تماماً</span>
+      <span>✓ بدون تسجيل</span>
+      <span>✓ نتيجة فورية</span>
+    </div>
   </div>
- </div>
 </section>
 
 <section class="how" id="how">
