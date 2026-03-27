@@ -140,7 +140,7 @@ function App() {
   return (
     <ErrorBoundary>
       <I18nProvider>
-        <ThemeProvider defaultTheme="light" switchable>
+        <ThemeProvider defaultTheme="dark" switchable>
           <TooltipProvider>
             <PremiumShellLayout>
               <Toaster />
