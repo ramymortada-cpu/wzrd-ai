@@ -53,11 +53,11 @@ export default function BlogIndexPage() {
                   {p.publishedAt ? new Date(p.publishedAt).toLocaleDateString("ar-EG") : "—"}
                 </p>
                 <h2 className="text-lg font-bold text-zinc-100 group-hover:text-white transition">
-                  {p.title}
+                  {locale === "ar" ? p.titleAr : p.titleEn}
                 </h2>
-                {p.excerpt ? (
+                {((locale === "ar" ? p.excerptAr : p.excerptEn) || null) ? (
                   <p className="mt-2 text-sm text-zinc-400 leading-relaxed line-clamp-3">
-                    {p.excerpt}
+                    {locale === "ar" ? p.excerptAr : p.excerptEn}
                   </p>
                 ) : null}
                 <p className="mt-4 text-sm text-cyan-300/80 group-hover:text-cyan-200 transition">

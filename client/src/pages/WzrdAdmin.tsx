@@ -38,7 +38,7 @@ import type {
   WzrdWebhooksPage,
 } from '@/lib/wzrdAdminApiTypes';
 
-type Tab = 'overview' | 'users' | 'credits' | 'tools' | 'payments' | 'webhooks' | 'cms' | 'prompts' | 'pricing' | 'team' | 'agency' | 'config' | 'requests';
+type Tab = 'overview' | 'users' | 'credits' | 'tools' | 'payments' | 'webhooks' | 'cms' | 'prompts' | 'pricing' | 'team' | 'agency' | 'config' | 'requests' | 'blog';
 
 const FETCH_OPTS: RequestInit = { credentials: 'include' };
 
@@ -1720,8 +1720,417 @@ function RequestsAdminTab({ t }: { t: T }) {
   );
 }
 
+// ═══════════════════════════════════════
+// BLOG ADMIN TAB
+// ═══════════════════════════════════════
+interface BlogPost {
+  id: number;
+  slug: string;
+  titleAr: string;
+  titleEn: string;
+  excerptAr?: string;
+  excerptEn?: string;
+  contentAr: string;
+  contentEn: string;
+  coverImage?: string;
+  category?: string;
+  tags?: string;
+  published: boolean;
+  publishedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  seoTitleAr?: string;
+  seoTitleEn?: string;
+  seoDescAr?: string;
+  seoDescEn?: string;
+  readingTimeMin?: number;
+}
+
+const EMPTY_POST: Omit<BlogPost, 'id' | 'createdAt' | 'updatedAt'> = {
+  slug: '',
+  titleAr: '',
+  titleEn: '',
+  excerptAr: '',
+  excerptEn: '',
+  contentAr: '',
+  contentEn: '',
+  coverImage: '',
+  category: '',
+  tags: '',
+  published: false,
+  seoTitleAr: '',
+  seoTitleEn: '',
+  seoDescAr: '',
+  seoDescEn: '',
+  readingTimeMin: 5,
+};
+
+function slugify(text: string) {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function BlogAdminTab({ t }: { t: T }) {
+  const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState<BlogPost | null>(null);
+  const [isNew, setIsNew] = useState(false);
+  const [form, setForm] = useState<Omit<BlogPost, 'id' | 'createdAt' | 'updatedAt'>>(EMPTY_POST);
+  const [activeTab, setActiveTab] = useState<'ar' | 'en'>('ar');
+  const [previewMode, setPreviewMode] = useState(false);
+  const [search, setSearch] = useState('');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'published' | 'draft'>('all');
+
+  const loadPosts = useCallback(async () => {
+    setLoading(true);
+    const data = await api('wzrdAdmin.blogList', { limit: 100, offset: 0 });
+    setPosts((data?.posts as BlogPost[]) || []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { loadPosts(); }, [loadPosts]);
+
+  const openNew = () => {
+    setForm({ ...EMPTY_POST });
+    setEditing(null);
+    setIsNew(true);
+    setPreviewMode(false);
+    setActiveTab('ar');
+  };
+
+  const openEdit = (post: BlogPost) => {
+    setForm({
+      slug: post.slug,
+      titleAr: post.titleAr,
+      titleEn: post.titleEn,
+      excerptAr: post.excerptAr || '',
+      excerptEn: post.excerptEn || '',
+      contentAr: post.contentAr,
+      contentEn: post.contentEn,
+      coverImage: post.coverImage || '',
+      category: post.category || '',
+      tags: post.tags || '',
+      published: post.published,
+      seoTitleAr: post.seoTitleAr || '',
+      seoTitleEn: post.seoTitleEn || '',
+      seoDescAr: post.seoDescAr || '',
+      seoDescEn: post.seoDescEn || '',
+      readingTimeMin: post.readingTimeMin || 5,
+    });
+    setEditing(post);
+    setIsNew(false);
+    setPreviewMode(false);
+    setActiveTab('ar');
+  };
+
+  const closeEditor = () => {
+    setEditing(null);
+    setIsNew(false);
+  };
+
+  const handleSave = async (publish: boolean) => {
+    if (!form.slug || !form.titleAr || !form.titleEn) {
+      alert(t('السلوج والعنوان مطلوبين', 'Slug and title are required'));
+      return;
+    }
+    setSaving(true);
+    const payload = { ...form, published: publish };
+    let result;
+    if (isNew) {
+      result = await apiMutation('wzrdAdmin.blogCreate', payload as unknown as Record<string, unknown>);
+    } else {
+      result = await apiMutation('wzrdAdmin.blogUpdate', { id: editing!.id, ...payload } as unknown as Record<string, unknown>);
+    }
+    setSaving(false);
+    if (result) {
+      await loadPosts();
+      closeEditor();
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm(t('هتحذف المقال؟', 'Delete this post?'))) return;
+    await apiMutation('wzrdAdmin.blogDelete', { id });
+    await loadPosts();
+    if (editing?.id === id) closeEditor();
+  };
+
+  const handleTogglePublish = async (post: BlogPost) => {
+    await apiMutation('wzrdAdmin.blogUpdate', { id: post.id, published: !post.published } as unknown as Record<string, unknown>);
+    await loadPosts();
+  };
+
+  const filteredPosts = posts.filter(p => {
+    const matchSearch = !search || p.titleAr.includes(search) || p.titleEn.toLowerCase().includes(search.toLowerCase()) || p.slug.includes(search);
+    const matchStatus = filterStatus === 'all' || (filterStatus === 'published' && p.published) || (filterStatus === 'draft' && !p.published);
+    return matchSearch && matchStatus;
+  });
+
+  const isEditorOpen = isNew || !!editing;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">{t('إدارة المدونة', 'Blog Management')}</h2>
+          <p className="text-xs text-gray-400 mt-0.5">{t('أنشئ وعدّل مقالات المدونة مع دعم SEO كامل', 'Create and edit blog posts with full SEO support')}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-400">{posts.filter(p => p.published).length} {t('منشور', 'published')} / {posts.filter(p => !p.published).length} {t('مسودة', 'draft')}</span>
+          <button onClick={openNew}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-500 transition">
+            + {t('مقال جديد', 'New Post')}
+          </button>
+        </div>
+      </div>
+
+      {isEditorOpen ? (
+        /* ===== EDITOR ===== */
+        <div className="space-y-5">
+          <div className="flex items-center justify-between">
+            <button onClick={closeEditor} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800">
+              ← {t('رجوع', 'Back to list')}
+            </button>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setPreviewMode(!previewMode)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                  previewMode ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}>
+                {previewMode ? t('تحرير', 'Edit') : t('معاينة', 'Preview')}
+              </button>
+              <button onClick={() => handleSave(false)} disabled={saving}
+                className="px-4 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200 transition disabled:opacity-50">
+                {saving ? t('جاري...', 'Saving...') : t('حفظ كمسودة', 'Save Draft')}
+              </button>
+              <button onClick={() => handleSave(true)} disabled={saving}
+                className="px-4 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-500 transition disabled:opacity-50">
+                {saving ? t('جاري...', 'Publishing...') : t('نشر', 'Publish')}
+              </button>
+            </div>
+          </div>
+
+          {/* Basic Info */}
+          <div className="p-5 rounded-xl border border-gray-200 bg-white space-y-4">
+            <h3 className="text-sm font-bold text-gray-700">{t('معلومات أساسية', 'Basic Info')}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('العنوان (عربي)', 'Title (Arabic)')}</label>
+                <input value={form.titleAr} onChange={e => setForm({ ...form, titleAr: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm" dir="rtl"
+                  placeholder="عنوان المقال بالعربي" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('العنوان (إنجليزي)', 'Title (English)')}</label>
+                <input value={form.titleEn} onChange={e => {
+                  const newTitle = e.target.value;
+                  setForm(prev => ({ ...prev, titleEn: newTitle, slug: prev.slug || slugify(newTitle) }));
+                }}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm"
+                  placeholder="Post title in English" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-xs font-medium text-gray-600 mb-1">Slug (URL)</label>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400">/blog/</span>
+                  <input value={form.slug} onChange={e => setForm({ ...form, slug: slugify(e.target.value) })}
+                    className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm font-mono"
+                    placeholder="my-post-slug" />
+                  <button onClick={() => setForm({ ...form, slug: slugify(form.titleEn) })}
+                    className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-xs hover:bg-gray-200">
+                    {t('تلقائي', 'Auto')}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('وقت القراءة (دقيقة)', 'Reading Time (min)')}</label>
+                <input type="number" min={1} max={60} value={form.readingTimeMin || 5}
+                  onChange={e => setForm({ ...form, readingTimeMin: parseInt(e.target.value) || 5 })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('ملخص (عربي)', 'Excerpt (Arabic)')}</label>
+                <textarea rows={2} value={form.excerptAr} onChange={e => setForm({ ...form, excerptAr: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm resize-none" dir="rtl"
+                  placeholder="ملخص قصير للمقال" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('ملخص (إنجليزي)', 'Excerpt (English)')}</label>
+                <textarea rows={2} value={form.excerptEn} onChange={e => setForm({ ...form, excerptEn: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm resize-none"
+                  placeholder="Short excerpt for the post" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('صورة الغلاف', 'Cover Image URL')}</label>
+                <input value={form.coverImage} onChange={e => setForm({ ...form, coverImage: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm"
+                  placeholder="https://..." />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('التصنيف', 'Category')}</label>
+                <input value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm"
+                  placeholder="branding, marketing..." />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('الوسوم', 'Tags (comma-separated)')}</label>
+                <input value={form.tags} onChange={e => setForm({ ...form, tags: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm"
+                  placeholder="brand, identity, logo" />
+              </div>
+            </div>
+          </div>
+
+          {/* Content Editor */}
+          <div className="p-5 rounded-xl border border-gray-200 bg-white">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-bold text-gray-700">{t('محتوى المقال', 'Post Content')}</h3>
+              <div className="flex gap-1">
+                <button onClick={() => setActiveTab('ar')}
+                  className={`px-3 py-1 rounded text-xs font-medium ${
+                    activeTab === 'ar' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}>عربي</button>
+                <button onClick={() => setActiveTab('en')}
+                  className={`px-3 py-1 rounded text-xs font-medium ${
+                    activeTab === 'en' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}>English</button>
+              </div>
+            </div>
+            {previewMode ? (
+              <div className="prose prose-sm max-w-none p-4 bg-gray-50 rounded-lg min-h-[300px]" dir={activeTab === 'ar' ? 'rtl' : 'ltr'}>
+                <pre className="whitespace-pre-wrap text-sm font-sans">{activeTab === 'ar' ? form.contentAr : form.contentEn}</pre>
+              </div>
+            ) : (
+              <textarea
+                rows={16}
+                value={activeTab === 'ar' ? form.contentAr : form.contentEn}
+                onChange={e => activeTab === 'ar'
+                  ? setForm({ ...form, contentAr: e.target.value })
+                  : setForm({ ...form, contentEn: e.target.value })}
+                dir={activeTab === 'ar' ? 'rtl' : 'ltr'}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm font-mono resize-y"
+                placeholder={activeTab === 'ar' ? 'اكتب محتوى المقال بالعربي (Markdown مدعوم)' : 'Write post content in English (Markdown supported)'}
+              />
+            )}
+            <p className="text-xs text-gray-400 mt-2">{t('يدعم Markdown: **غامق** _مائل_ ## عنوان - قائمة', 'Supports Markdown: **bold** _italic_ ## heading - list')}</p>
+          </div>
+
+          {/* SEO Section */}
+          <details className="p-5 rounded-xl border border-gray-200 bg-white">
+            <summary className="text-sm font-bold text-gray-700 cursor-pointer">🔍 {t('إعدادات SEO', 'SEO Settings')}</summary>
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('عنوان SEO (عربي)', 'SEO Title (Arabic)')}</label>
+                <input value={form.seoTitleAr} onChange={e => setForm({ ...form, seoTitleAr: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm" dir="rtl"
+                  placeholder={form.titleAr || 'عنوان لمحركات البحث'} />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('عنوان SEO (إنجليزي)', 'SEO Title (English)')}</label>
+                <input value={form.seoTitleEn} onChange={e => setForm({ ...form, seoTitleEn: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm"
+                  placeholder={form.titleEn || 'SEO title for search engines'} />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('وصف SEO (عربي)', 'SEO Description (Arabic)')}</label>
+                <textarea rows={2} value={form.seoDescAr} onChange={e => setForm({ ...form, seoDescAr: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm resize-none" dir="rtl"
+                  placeholder="وصف مختصر 150-160 حرف" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('وصف SEO (إنجليزي)', 'SEO Description (English)')}</label>
+                <textarea rows={2} value={form.seoDescEn} onChange={e => setForm({ ...form, seoDescEn: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm resize-none"
+                  placeholder="150-160 char description for search engines" />
+              </div>
+            </div>
+          </details>
+        </div>
+      ) : (
+        /* ===== LIST VIEW ===== */
+        <div className="space-y-4">
+          {/* Filters */}
+          <div className="flex items-center gap-3">
+            <input value={search} onChange={e => setSearch(e.target.value)}
+              className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm"
+              placeholder={t('بحث بالعنوان أو السلوج...', 'Search by title or slug...')} />
+            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value as 'all' | 'published' | 'draft')}
+              className="px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white">
+              <option value="all">{t('الكل', 'All')}</option>
+              <option value="published">{t('منشور', 'Published')}</option>
+              <option value="draft">{t('مسودة', 'Draft')}</option>
+            </select>
+          </div>
+
+          {loading ? <LoadingSkeleton /> : filteredPosts.length === 0 ? (
+            <EmptyState icon="✍️" message={t('لا يوجد مقالات بعد. اضغط “+ مقال جديد” للبدء.', 'No posts yet. Click "+ New Post" to get started.')} />
+          ) : (
+            <div className="space-y-2">
+              {filteredPosts.map(post => (
+                <div key={post.id} className="flex items-center justify-between p-4 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        post.published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                      }`}>
+                        {post.published ? t('منشور', 'Published') : t('مسودة', 'Draft')}
+                      </span>
+                      {post.category && <span className="text-[10px] text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{post.category}</span>}
+                    </div>
+                    <div className="text-sm font-semibold text-gray-800 truncate">{post.titleAr}</div>
+                    <div className="text-xs text-gray-400 truncate">{post.titleEn}</div>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="text-[10px] font-mono text-gray-400">/blog/{post.slug}</span>
+                      {post.readingTimeMin && <span className="text-[10px] text-gray-400">⏱ {post.readingTimeMin} min</span>}
+                      <span className="text-[10px] text-gray-300">{new Date(post.updatedAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 ml-4">
+                    {post.published && (
+                      <a href={`/blog/${post.slug}`} target="_blank" rel="noopener"
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 text-xs" title="View">
+                        🔗
+                      </a>
+                    )}
+                    <button onClick={() => handleTogglePublish(post)}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-medium transition ${
+                        post.published
+                          ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          : 'bg-green-50 text-green-700 hover:bg-green-100'
+                      }`}>
+                      {post.published ? t('إلغاء النشر', 'Unpublish') : t('نشر', 'Publish')}
+                    </button>
+                    <button onClick={() => openEdit(post)}
+                      className="px-2 py-1 rounded-lg text-[10px] font-medium bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition">
+                      {t('تعديل', 'Edit')}
+                    </button>
+                    <button onClick={() => handleDelete(post.id)}
+                      className="px-2 py-1 rounded-lg text-[10px] font-medium bg-red-50 text-red-600 hover:bg-red-100 transition">
+                      {t('حذف', 'Delete')}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const TABS: Array<{ id: Tab; labelAr: string; labelEn: string; icon: string }> = [
   { id: 'overview', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: '📊' },
+  { id: 'blog', labelAr: 'المدونة', labelEn: 'Blog', icon: '✍️' },
   { id: 'cms', labelAr: 'المحتوى', labelEn: 'CMS', icon: '📝' },
   { id: 'agency', labelAr: 'الوكالة', labelEn: 'Agency', icon: '🏢' },
   { id: 'requests', labelAr: 'طلبات العملاء', labelEn: 'Client Requests', icon: '📋' },
@@ -1857,6 +2266,7 @@ export default function WzrdAdmin() {
             {tab === 'webhooks' && <WebhooksTab t={t} />}
             {tab === 'config' && <ConfigTab t={t} />}
             {tab === 'requests' && <RequestsAdminTab t={t} />}
+            {tab === 'blog' && <BlogAdminTab t={t} />}
           </div>
         </main>
       </div>

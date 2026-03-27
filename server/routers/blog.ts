@@ -1,7 +1,9 @@
 /**
- * Blog Router — Sprint A (Acquisition Engine)
+ * Blog Router
  * Public endpoints serve ONLY published posts.
  * Admin endpoints are owner-only (checkOwner) and can manage drafts.
+ *
+ * NOTE: blog_posts is bilingual (AR/EN) with `published: int`.
  */
 
 import { z } from "zod";
@@ -12,7 +14,7 @@ import { getDb } from "../db";
 import { blogPosts } from "../../drizzle/schema";
 import { TRPCError } from "@trpc/server";
 
-const blogStatus = z.enum(["draft", "published"]);
+const blogPublished = z.boolean();
 
 export const blogRouter = router({
   /** Public: list published posts (SEO index). */
@@ -36,13 +38,15 @@ export const blogRouter = router({
         .select({
           id: blogPosts.id,
           slug: blogPosts.slug,
-          title: blogPosts.title,
-          excerpt: blogPosts.excerpt,
+          titleAr: blogPosts.titleAr,
+          titleEn: blogPosts.titleEn,
+          excerptAr: blogPosts.excerptAr,
+          excerptEn: blogPosts.excerptEn,
           coverImage: blogPosts.coverImage,
           publishedAt: blogPosts.publishedAt,
         })
         .from(blogPosts)
-        .where(eq(blogPosts.status, "published"))
+        .where(eq(blogPosts.published, 1))
         .orderBy(desc(blogPosts.publishedAt), desc(blogPosts.updatedAt))
         .limit(limit)
         .offset(offset);
@@ -59,7 +63,7 @@ export const blogRouter = router({
         .select()
         .from(blogPosts)
         // IMPORTANT: do NOT leak drafts.
-        .where(and(eq(blogPosts.slug, input.slug), eq(blogPosts.status, "published")))
+        .where(and(eq(blogPosts.slug, input.slug), eq(blogPosts.published, 1)))
         .limit(1);
 
       return rows[0] ?? null;
@@ -70,7 +74,7 @@ export const blogRouter = router({
     .input(
       z
         .object({
-          status: blogStatus.optional(),
+          published: blogPublished.optional(),
           limit: z.number().int().min(1).max(200).default(50),
           offset: z.number().int().min(0).default(0),
         })
@@ -83,12 +87,12 @@ export const blogRouter = router({
 
       const limit = input?.limit ?? 50;
       const offset = input?.offset ?? 0;
-      const status = input?.status;
+      const published = input?.published;
 
       return db
         .select()
         .from(blogPosts)
-        .where(status ? eq(blogPosts.status, status) : undefined)
+        .where(published == null ? undefined : eq(blogPosts.published, published ? 1 : 0))
         .orderBy(desc(blogPosts.updatedAt))
         .limit(limit)
         .offset(offset);
@@ -99,14 +103,21 @@ export const blogRouter = router({
     .input(
       z.object({
         slug: z.string().min(3).max(255),
-        title: z.string().min(1).max(500),
-        excerpt: z.string().max(5000).optional().nullable(),
-        content: z.string().min(1).max(200_000),
-        coverImage: z.string().max(5000).optional().nullable(),
-        status: blogStatus.default("draft"),
-        seoTitle: z.string().max(500).optional().nullable(),
-        seoDescription: z.string().max(1000).optional().nullable(),
-        seoKeywords: z.string().max(1000).optional().nullable(),
+        titleAr: z.string().min(1).max(500),
+        titleEn: z.string().min(1).max(500),
+        excerptAr: z.string().max(5000).optional().nullable(),
+        excerptEn: z.string().max(5000).optional().nullable(),
+        contentAr: z.string().min(1).max(200_000),
+        contentEn: z.string().min(1).max(200_000),
+        coverImage: z.string().max(1000).optional().nullable(),
+        category: z.string().max(100).optional().nullable(),
+        tags: z.string().max(500).optional().nullable(),
+        published: z.boolean().default(false),
+        seoTitleAr: z.string().max(500).optional().nullable(),
+        seoTitleEn: z.string().max(500).optional().nullable(),
+        seoDescAr: z.string().max(5000).optional().nullable(),
+        seoDescEn: z.string().max(5000).optional().nullable(),
+        readingTimeMin: z.number().int().min(1).max(120).optional().nullable(),
         publishedAt: z.coerce.date().optional().nullable(),
       })
     )
@@ -119,18 +130,22 @@ export const blogRouter = router({
         .insert(blogPosts)
         .values({
           slug: input.slug,
-          title: input.title,
-          excerpt: input.excerpt ?? null,
-          content: input.content,
+          titleAr: input.titleAr,
+          titleEn: input.titleEn,
+          excerptAr: input.excerptAr ?? null,
+          excerptEn: input.excerptEn ?? null,
+          contentAr: input.contentAr,
+          contentEn: input.contentEn,
           coverImage: input.coverImage ?? null,
-          status: input.status,
-          seoTitle: input.seoTitle ?? null,
-          seoDescription: input.seoDescription ?? null,
-          seoKeywords: input.seoKeywords ?? null,
-          publishedAt:
-            input.status === "published"
-              ? (input.publishedAt ?? new Date())
-              : (input.publishedAt ?? null),
+          category: input.category ?? null,
+          tags: input.tags ?? null,
+          published: input.published ? 1 : 0,
+          publishedAt: input.published ? (input.publishedAt ?? new Date()) : (input.publishedAt ?? null),
+          seoTitleAr: input.seoTitleAr ?? null,
+          seoTitleEn: input.seoTitleEn ?? null,
+          seoDescAr: input.seoDescAr ?? null,
+          seoDescEn: input.seoDescEn ?? null,
+          readingTimeMin: input.readingTimeMin ?? null,
         })
         .$returningId();
 
@@ -143,14 +158,21 @@ export const blogRouter = router({
       z.object({
         id: z.number().int().positive(),
         slug: z.string().min(3).max(255).optional(),
-        title: z.string().min(1).max(500).optional(),
-        excerpt: z.string().max(5000).optional().nullable(),
-        content: z.string().min(1).max(200_000).optional(),
-        coverImage: z.string().max(5000).optional().nullable(),
-        status: blogStatus.optional(),
-        seoTitle: z.string().max(500).optional().nullable(),
-        seoDescription: z.string().max(1000).optional().nullable(),
-        seoKeywords: z.string().max(1000).optional().nullable(),
+        titleAr: z.string().min(1).max(500).optional(),
+        titleEn: z.string().min(1).max(500).optional(),
+        excerptAr: z.string().max(5000).optional().nullable(),
+        excerptEn: z.string().max(5000).optional().nullable(),
+        contentAr: z.string().min(1).max(200_000).optional(),
+        contentEn: z.string().min(1).max(200_000).optional(),
+        coverImage: z.string().max(1000).optional().nullable(),
+        category: z.string().max(100).optional().nullable(),
+        tags: z.string().max(500).optional().nullable(),
+        published: z.boolean().optional(),
+        seoTitleAr: z.string().max(500).optional().nullable(),
+        seoTitleEn: z.string().max(500).optional().nullable(),
+        seoDescAr: z.string().max(5000).optional().nullable(),
+        seoDescEn: z.string().max(5000).optional().nullable(),
+        readingTimeMin: z.number().int().min(1).max(120).optional().nullable(),
         publishedAt: z.coerce.date().optional().nullable(),
       })
     )
@@ -159,11 +181,12 @@ export const blogRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB not connected" });
 
-      const { id, ...patch } = input;
+      const { id, published, ...patch } = input;
       await db
         .update(blogPosts)
         .set({
           ...patch,
+          ...(published == null ? {} : { published: published ? 1 : 0 }),
         })
         .where(eq(blogPosts.id, id));
 

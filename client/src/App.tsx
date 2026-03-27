@@ -59,7 +59,6 @@ const IdentitySnapshotPage = lazy(() => import("./pages/tools/IdentitySnapshot")
 const LaunchReadinessPage = lazy(() => import("./pages/tools/LaunchReadiness"));
 const PricingPage = lazy(() => import("./pages/Pricing"));
 const WzrdAdminPage = lazy(() => import("./pages/WzrdAdmin"));
-const BlogAdminPage = lazy(() => import("./pages/admin/BlogAdmin"));
 const ProfilePage = lazy(() => import("./pages/Profile"));
 const MyBrandPage = lazy(() => import("./pages/MyBrand"));
 const CopilotPage = lazy(() => import("./pages/Copilot"));
@@ -167,7 +166,6 @@ function App() {
                 <Route path="/tools/benchmark">{() => <SuspenseWrapper><CompetitiveBenchmarkPage /></SuspenseWrapper>}</Route>
                 <Route path="/tools/quick">{() => <SuspenseWrapper><QuickDiagnosisPage /></SuspenseWrapper>}</Route>
                 <Route path="/my-requests">{() => <SuspenseWrapper><MyRequestsPage /></SuspenseWrapper>}</Route>
-                <Route path="/wzrd-admin/blog">{() => <SuspenseWrapper><BlogAdminPage /></SuspenseWrapper>}</Route>
                 <Route path="/wzrd-admin">{() => <SuspenseWrapper><WzrdAdminPage /></SuspenseWrapper>}</Route>
                 <Route path="/profile">{() => <SuspenseWrapper><ProfilePage /></SuspenseWrapper>}</Route>
                 <Route path="/settings/team">{() => <SuspenseWrapper><SettingsPage defaultTab="team" /></SuspenseWrapper>}</Route>

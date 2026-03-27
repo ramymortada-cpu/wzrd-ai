@@ -2,7 +2,6 @@ import { trpc } from "@/lib/trpc";
 import { useI18n } from "@/lib/i18n";
 import WzrdPublicHeader from "@/components/WzrdPublicHeader";
 import ReactMarkdown from "react-markdown";
-import LeadMagnetCard from "@/components/LeadMagnetCard";
 import { useRoute } from "wouter";
 
 export default function BlogPostPage() {
@@ -16,6 +15,8 @@ export default function BlogPostPage() {
   );
 
   const post = postQuery.data;
+  const title = post ? (locale === "ar" ? post.titleAr : post.titleEn) : "";
+  const content = post ? (locale === "ar" ? post.contentAr : post.contentEn) : "";
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50">
@@ -51,7 +52,7 @@ export default function BlogPostPage() {
                 // BLOG POST
               </p>
               <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-                {post.title}
+                {title}
               </h1>
               <p className="text-sm text-zinc-500">
                 {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString("ar-EG") : ""}
@@ -60,28 +61,7 @@ export default function BlogPostPage() {
 
             <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/30 backdrop-blur-sm p-6">
               <article className="prose prose-invert max-w-none">
-                {(() => {
-                  let paragraphCount = 0;
-                  return (
-                    <ReactMarkdown
-                      components={{
-                        p: ({ children }) => {
-                          paragraphCount += 1;
-                          return (
-                            <>
-                              <p>{children}</p>
-                              {paragraphCount === 3 ? (
-                                <LeadMagnetCard />
-                              ) : null}
-                            </>
-                          );
-                        },
-                      }}
-                    >
-                      {post.content}
-                    </ReactMarkdown>
-                  );
-                })()}
+                <ReactMarkdown>{content}</ReactMarkdown>
               </article>
             </div>
           </article>
