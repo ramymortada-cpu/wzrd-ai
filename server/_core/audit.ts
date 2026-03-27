@@ -20,6 +20,7 @@ export function initAudit(getDb: () => Promise<AppDatabase | null>, auditLogTabl
 }
 
 export interface AuditEntry {
+  workspaceId?: number;
   entity: string;
   entityId: number;
   action: 'create' | 'update' | 'delete' | 'restore';
@@ -45,7 +46,7 @@ export async function audit(
   action: AuditEntry['action'],
   userId?: number,
   changes?: AuditEntry['changes'],
-  extra?: { ipAddress?: string; userName?: string }
+  extra?: { ipAddress?: string; userName?: string; workspaceId?: number }
 ): Promise<void> {
   try {
     if (!_getDb || !_auditLogTable) {
@@ -60,6 +61,7 @@ export async function audit(
     }
 
     await db.insert(_auditLogTable).values({
+      workspaceId: extra?.workspaceId ?? 1,
       entity,
       entityId,
       action,

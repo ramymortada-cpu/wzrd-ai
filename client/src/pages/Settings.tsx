@@ -5,8 +5,10 @@ import { useState, useEffect } from "react";
 import WzrdPublicHeader from "@/components/WzrdPublicHeader";
 import type { AuthMe } from "@/lib/routerTypes";
 import WhatsAppSettings from "./settings/WhatsAppSettings";
+import TeamSettings from "./settings/TeamSettings";
+import AuditLogsSettings from "./settings/AuditLogs";
 
-export type SettingsTab = "whatsapp";
+export type SettingsTab = "whatsapp" | "team" | "audit";
 
 export default function SettingsPage({ defaultTab }: { defaultTab?: SettingsTab }) {
   const [activeTab, setActiveTab] = useState<SettingsTab>(defaultTab || "whatsapp");
@@ -24,6 +26,8 @@ export default function SettingsPage({ defaultTab }: { defaultTab?: SettingsTab 
   }, []);
 
   const tabs: Array<{ id: SettingsTab; label: string; icon: string }> = [
+    { id: "team", label: "Team", icon: "👥" },
+    { id: "audit", label: "Audit", icon: "🧾" },
     { id: "whatsapp", label: "واتساب", icon: "💬" },
   ];
 
@@ -53,6 +57,8 @@ export default function SettingsPage({ defaultTab }: { defaultTab?: SettingsTab 
         </div>
 
         {activeTab === "whatsapp" && <WhatsAppSettings />}
+        {activeTab === "team" && <TeamSettings />}
+        {activeTab === "audit" && <AuditLogsSettings />}
       </div>
     </div>
   );

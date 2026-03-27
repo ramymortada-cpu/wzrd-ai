@@ -72,3 +72,6 @@ export * from './feedback';
 export * from './quality';
 export * from './credits';
 export * from './checklist';
+export * from './workspaces';
+export * from './contracts';
+export * from './invoices';

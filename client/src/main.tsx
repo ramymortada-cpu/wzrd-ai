@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client";
 import superjson from "superjson";
 import App from "./App";
 import { getLoginUrl } from "./const";
+import { WorkspaceProvider } from "./contexts/WorkspaceContext";
 import "./index.css";
 
 const queryClient = new QueryClient();
@@ -43,8 +44,12 @@ const trpcClient = trpc.createClient({
       url: "/api/trpc",
       transformer: superjson,
       fetch(input, init) {
+        const workspaceId = localStorage.getItem("active-workspace-id") || "1";
+        const headers = new Headers(init?.headers);
+        headers.set("x-workspace-id", workspaceId);
         return globalThis.fetch(input, {
           ...(init ?? {}),
+          headers,
           credentials: "include",
         });
       },
@@ -55,7 +60,9 @@ const trpcClient = trpc.createClient({
 createRoot(document.getElementById("root")!).render(
   <trpc.Provider client={trpcClient} queryClient={queryClient}>
     <QueryClientProvider client={queryClient}>
-      <App />
+      <WorkspaceProvider>
+        <App />
+      </WorkspaceProvider>
     </QueryClientProvider>
   </trpc.Provider>
 );

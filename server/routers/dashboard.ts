@@ -19,15 +19,15 @@ type DashboardProjectBrief = Pick<Project, "id" | "name" | "status" | "stage" | 
 
 export const dashboardRouter = router({
   /** Aggregated stats for the dashboard home */
-  stats: protectedProcedure.query(async () => {
+  stats: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return { totalClients: 0, activeProjects: 0, totalRevenue: 0, pendingDeliverables: 0 };
 
-    const [clientCount] = await db.select({ count: sql<number>`count(*)` }).from(clients);
-    const [activeCount] = await db.select({ count: sql<number>`count(*)` }).from(projects).where(eq(projects.status, 'active'));
-    const [revenueSum] = await db.select({ total: sql<number>`COALESCE(SUM(amount), 0)` }).from(payments).where(eq(payments.status, 'paid'));
-    const [pendingRevenueRow] = await db.select({ total: sql<number>`COALESCE(SUM(amount), 0)` }).from(payments).where(eq(payments.status, 'pending'));
-    const [pendingDel] = await db.select({ count: sql<number>`count(*)` }).from(deliverables).where(eq(deliverables.status, 'pending'));
+    const [clientCount] = await db.select({ count: sql<number>`count(*)` }).from(clients).where(eq(clients.workspaceId, ctx.workspaceId));
+    const [activeCount] = await db.select({ count: sql<number>`count(*)` }).from(projects).where(sql`${projects.workspaceId} = ${ctx.workspaceId} and ${projects.status} = 'active'`);
+    const [revenueSum] = await db.select({ total: sql<number>`COALESCE(SUM(amount), 0)` }).from(payments).where(sql`${payments.workspaceId} = ${ctx.workspaceId} and ${payments.status} = 'paid'`);
+    const [pendingRevenueRow] = await db.select({ total: sql<number>`COALESCE(SUM(amount), 0)` }).from(payments).where(sql`${payments.workspaceId} = ${ctx.workspaceId} and ${payments.status} = 'pending'`);
+    const [pendingDel] = await db.select({ count: sql<number>`count(*)` }).from(deliverables).where(sql`${deliverables.workspaceId} = ${ctx.workspaceId} and ${deliverables.status} = 'pending'`);
 
     return {
       totalClients: clientCount?.count || 0,
@@ -39,7 +39,7 @@ export const dashboardRouter = router({
   }),
 
   /** Pipeline analytics — aggregated from pipeline/execution data */
-  pipelineAnalytics: protectedProcedure.query(async () => {
+  pipelineAnalytics: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return { total: 0, completed: 0, running: 0, failed: 0, successRate: 0, avgDuration: 0, recentRuns: [] };
 
@@ -51,7 +51,7 @@ export const dashboardRouter = router({
       stage: projects.stage,
       createdAt: projects.createdAt,
       updatedAt: projects.updatedAt,
-    }).from(projects).limit(200);
+    }).from(projects).where(eq(projects.workspaceId, ctx.workspaceId)).limit(200);
 
     const total = allProjects.length;
     const completed = allProjects.filter((p: DashboardProjectBrief) => p.status === 'completed').length;

@@ -64,6 +64,8 @@ const CompetitiveBenchmarkPage = lazy(() => import("./pages/CompetitiveBenchmark
 const QuickDiagnosisPage = lazy(() => import("./pages/QuickDiagnosis"));
 const MyRequestsPage = lazy(() => import("./pages/MyRequests"));
 const SettingsPage = lazy(() => import("./pages/Settings"));
+const ContractsPage = lazy(() => import("./pages/Contracts"));
+const InvoicesPage = lazy(() => import("./pages/Invoices"));
 
 function SuspenseWrapper({ children, fallback }: { children: React.ReactNode; fallback?: React.ReactNode }) {
   return (
@@ -91,6 +93,8 @@ function DashboardRouter() {
           </CommandCenterGuard>
         )}</Route>
         <Route path="/proposals">{() => <SuspenseWrapper><ProposalsPage /></SuspenseWrapper>}</Route>
+        <Route path="/contracts">{() => <SuspenseWrapper><ContractsPage /></SuspenseWrapper>}</Route>
+        <Route path="/invoices">{() => <SuspenseWrapper><InvoicesPage /></SuspenseWrapper>}</Route>
         <Route path="/proposals/:id">{() => <SuspenseWrapper fallback={<DetailPageSkeleton />}><ProposalDetailPage /></SuspenseWrapper>}</Route>
         <Route path="/analytics">{() => <SuspenseWrapper><AnalyticsPage /></SuspenseWrapper>}</Route>
         <Route path="/playbooks">{() => <SuspenseWrapper><PlaybooksPage /></SuspenseWrapper>}</Route>
@@ -160,6 +164,8 @@ function App() {
                 <Route path="/my-requests">{() => <SuspenseWrapper><MyRequestsPage /></SuspenseWrapper>}</Route>
                 <Route path="/wzrd-admin">{() => <SuspenseWrapper><WzrdAdminPage /></SuspenseWrapper>}</Route>
                 <Route path="/profile">{() => <SuspenseWrapper><ProfilePage /></SuspenseWrapper>}</Route>
+                <Route path="/settings/team">{() => <SuspenseWrapper><SettingsPage defaultTab="team" /></SuspenseWrapper>}</Route>
+                <Route path="/settings/audit-logs">{() => <SuspenseWrapper><SettingsPage defaultTab="audit" /></SuspenseWrapper>}</Route>
                 <Route path="/settings/whatsapp">{() => <SuspenseWrapper><SettingsPage defaultTab="whatsapp" /></SuspenseWrapper>}</Route>
                 <Route path="/settings">{() => <SuspenseWrapper><SettingsPage /></SuspenseWrapper>}</Route>
                 {/* Existing public routes */}
