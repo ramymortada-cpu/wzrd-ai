@@ -14,6 +14,12 @@ interface Suggestion {
   icon: string;
 }
 
+interface CopilotClientOption {
+  id: number;
+  name: string;
+  companyName: string | null;
+}
+
 export default function Copilot() {
   const { locale } = useI18n();
   const isAr = locale === 'ar';
@@ -25,6 +31,8 @@ export default function Copilot() {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [error, setError] = useState('');
   const [sessionId] = useState(() => 'sess_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
+  const [clientList, setClientList] = useState<CopilotClientOption[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState<number | undefined>(undefined);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -41,6 +49,14 @@ export default function Copilot() {
       .then(d => {
         const data = d.result?.data?.json ?? d.result?.data ?? {};
         setSuggestions(data.suggestions || []);
+      })
+      .catch(() => {});
+
+    fetch('/api/trpc/copilot.listClientsForCopilot')
+      .then(r => r.json())
+      .then(d => {
+        const data = d.result?.data?.json ?? d.result?.data;
+        if (Array.isArray(data)) setClientList(data as CopilotClientOption[]);
       })
       .catch(() => {});
   }, []);
@@ -63,11 +79,14 @@ export default function Copilot() {
     setMessages(prev => [...prev, userMsg]);
 
     try {
+      const payload: { message: string; sessionId: string; clientId?: number } = { message: msg, sessionId };
+      if (selectedClientId != null) payload.clientId = selectedClientId;
+
       const res = await fetch('/api/trpc/copilot.chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ json: { message: msg, sessionId } }),
+        body: JSON.stringify({ json: payload }),
       });
 
       const d = await res.json();
@@ -87,7 +106,7 @@ export default function Copilot() {
       setLoading(false);
       inputRef.current?.focus();
     }
-  }, [input, loading, sessionId, credits, isAr]);
+  }, [input, loading, sessionId, credits, isAr, selectedClientId]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -213,6 +232,28 @@ export default function Copilot() {
 
       <div className="pointer-events-none fixed bottom-0 left-0 right-0 z-40 px-3 pb-4 pt-2 sm:px-6 sm:pb-6">
         <div className="pointer-events-auto mx-auto max-w-3xl rounded-3xl p-3 sm:p-4 wzrd-floating-composer">
+          {clientList.length > 1 && (
+            <div className="mb-2 flex flex-wrap items-center gap-2 rounded-2xl border-[0.5px] border-zinc-200/50 bg-white/40 px-3 py-2 text-xs dark:border-zinc-600/50 dark:bg-zinc-900/40">
+              <span className="shrink-0 font-semibold text-zinc-500 dark:text-zinc-400">
+                {isAr ? 'سياق البراند (CRM):' : 'Brand context (CRM):'}
+              </span>
+              <select
+                value={selectedClientId ?? ''}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setSelectedClientId(v === '' ? undefined : Number(v));
+                }}
+                className="min-w-0 flex-1 rounded-xl border border-zinc-200/80 bg-white/80 py-1.5 pl-2 pr-8 text-zinc-800 outline-none focus:border-primary/40 dark:border-zinc-600 dark:bg-zinc-900/80 dark:text-zinc-100 sm:max-w-xs"
+              >
+                <option value="">{isAr ? 'تلقائي (حسب حسابك)' : 'Auto (from your profile)'}</option>
+                {clientList.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.companyName || c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           {messages.length > 0 && messages.length < 6 && (
             <div className="mb-2 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
               {[
