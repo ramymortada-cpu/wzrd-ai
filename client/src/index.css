@@ -118,6 +118,68 @@
   --font-serif: "Playfair Display", serif;
   --wzrd-accent: oklch(0.78 0.14 195);
   --wzrd-glow: oklch(0.62 0.2 290 / 0.45);
+  /* Premium AI-native funnel (WZRD guide) — Tailwind v4 tokens */
+  --font-display: "Space Grotesk", "Inter", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --color-brand-cyan: #00f0ff;
+  --color-brand-violet: #7000ff;
+  --color-brand-cyan-dim: #00c8d4;
+  --color-brand-violet-dim: #5500cc;
+  --color-surface: #111;
+  --color-surface-elevated: #1a1a1a;
+  --shadow-glow-cyan: 0 0 20px rgba(0, 240, 255, 0.3);
+  --shadow-glow-violet: 0 0 20px rgba(112, 0, 255, 0.3);
+  --shadow-glow-sm: 0 0 10px rgba(0, 240, 255, 0.15);
+  --shadow-premium: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --animate-wzrd-shimmer: wzrd-premium-shimmer 2s linear infinite;
+  --animate-wzrd-float: wzrd-premium-float 6s ease-in-out infinite;
+  --animate-wzrd-fade-in: wzrd-premium-fade-in 0.5s ease-out forwards;
+  --animate-wzrd-slide-up: wzrd-premium-slide-up 0.4s ease-out forwards;
+  --animate-fade-in: fadeIn 0.5s ease-out forwards;
+  --background-image-gradient-brand: linear-gradient(135deg, #00f0ff 0%, #7000ff 100%);
+  --background-image-gradient-brand-subtle: linear-gradient(
+    135deg,
+    rgba(0, 240, 255, 0.12) 0%,
+    rgba(112, 0, 255, 0.12) 100%
+  );
+}
+
+@keyframes wzrd-premium-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes wzrd-premium-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes wzrd-premium-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes wzrd-premium-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @layer base {
@@ -240,6 +302,21 @@
     z-index: 1;
   }
 
+  /* Let ambient shell (#050505 + orbs) show through on WZRD funnel routes */
+  [data-wzrd-premium-shell="true"] .wzrd-page-radial {
+    background: radial-gradient(ellipse 120% 90% at 50% -15%, oklch(0.94 0.05 290 / 0.42), transparent 52%),
+      radial-gradient(ellipse 70% 55% at 100% 20%, oklch(0.92 0.04 220 / 0.3), transparent 48%),
+      radial-gradient(ellipse 60% 45% at 0% 80%, oklch(0.93 0.03 200 / 0.28), transparent 50%),
+      transparent;
+  }
+  [data-wzrd-premium-shell="true"] .dark .wzrd-page-radial,
+  .dark [data-wzrd-premium-shell="true"] .wzrd-page-radial {
+    background: radial-gradient(ellipse 120% 90% at 50% -10%, oklch(0.38 0.1 290 / 0.38), transparent 52%),
+      radial-gradient(ellipse 70% 50% at 100% 30%, oklch(0.32 0.08 240 / 0.26), transparent 45%),
+      radial-gradient(ellipse 55% 40% at 0% 90%, oklch(0.28 0.06 200 / 0.18), transparent 45%),
+      transparent;
+  }
+
   @keyframes wzrd-radial-drift {
     0% {
       transform: translate(0%, 0%) scale(1);
@@ -260,6 +337,90 @@
     background: oklch(0.17 0.02 280 / 0.55);
     border-color: oklch(0.4 0.02 280 / 0.45);
     box-shadow: 0 24px 48px -18px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  }
+
+  .wzrd-glass-elevated {
+    @apply rounded-2xl backdrop-blur-2xl;
+    background: oklch(1 0 0 / 0.78);
+    border: 0.5px solid oklch(1 0 0 / 0.42);
+    box-shadow: 0 16px 48px -16px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.14) inset;
+  }
+  .dark .wzrd-glass-elevated {
+    background: oklch(0.15 0.02 280 / 0.62);
+    border-color: oklch(0.45 0.02 280 / 0.5);
+    box-shadow: 0 20px 56px -18px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.07) inset;
+  }
+
+  .wzrd-gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #00f0ff 0%, #7000ff 100%);
+  }
+
+  .wzrd-btn-primary {
+    @apply relative overflow-hidden rounded-xl px-6 py-3 text-sm font-medium transition-all duration-300;
+    background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(112, 0, 255, 0.15));
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    color: #00f0ff;
+  }
+  .wzrd-btn-primary::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s ease;
+  }
+  .wzrd-btn-primary:hover::before {
+    left: 100%;
+  }
+  .wzrd-btn-primary:hover {
+    border-color: rgba(0, 240, 255, 0.55);
+    box-shadow: var(--shadow-glow-cyan);
+    transform: scale(1.02);
+  }
+
+  .wzrd-btn-secondary {
+    @apply relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.06] px-6 py-3 text-sm font-medium text-zinc-200 transition-all duration-300;
+  }
+  .wzrd-btn-secondary:hover {
+    @apply border-white/15 text-white;
+    background: oklch(1 0 0 / 0.1);
+    transform: scale(1.02);
+  }
+
+  .wzrd-badge-cyan {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium;
+    background: rgba(0, 240, 255, 0.1);
+    border: 1px solid rgba(0, 240, 255, 0.22);
+    color: #00f0ff;
+  }
+
+  .wzrd-badge-violet {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium;
+    background: rgba(112, 0, 255, 0.12);
+    border: 1px solid rgba(112, 0, 255, 0.28);
+    color: #c4b5fd;
+  }
+
+  .wzrd-glow-orb {
+    @apply pointer-events-none absolute rounded-full;
+    filter: blur(120px);
+  }
+
+  .wzrd-divider {
+    @apply h-px w-full;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  }
+
+  .wzrd-input {
+    @apply w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-zinc-100 outline-none transition duration-200 placeholder:text-zinc-500;
+  }
+  .wzrd-input:focus {
+    border-color: rgba(0, 240, 255, 0.45);
+    background: oklch(1 0 0 / 0.07);
+    box-shadow: 0 0 0 3px rgba(0, 240, 255, 0.12);
   }
 
   .wzrd-auth-mesh {
@@ -441,6 +602,33 @@
 
   .wzrd-courier-pulse {
     animation: wzrd-pulse-ring 2s ease-out infinite;
+  }
+}
+
+/* Phases 9 — arbitrary animate-[shimmer_…], animate-[slideUp_…] */
+@keyframes shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 

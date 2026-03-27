@@ -1,14 +1,20 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useMemo } from 'react';
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { I18nProvider } from "./lib/i18n";
 import DashboardLayout from "./components/DashboardLayout";
 import CommandCenterGuard from "./components/CommandCenterGuard";
 import { PageSkeleton, ChatSkeleton, DetailPageSkeleton } from "./components/PageSkeleton";
+import WzrdAppShell from "./components/WzrdAppShell";
+import QuickSearch from "./components/QuickSearch";
+
+/** Public WZRD funnel + tools; Command Center (/) stays on default app chrome. */
+const WZRD_PREMIUM_SHELL_RE =
+  /^\/(?:signup|login|pricing|my-brand|copilot|wzrd-admin|profile|my-requests|quick-check|tools|portal|proposal-view)(?:\/|$)/;
 
 // ============ LAZY-LOADED PAGES ============
 // Each page is loaded only when the user navigates to it.
@@ -118,7 +124,12 @@ function DashboardRouter() {
   );
 }
 
-import QuickSearch from "./components/QuickSearch";
+function PremiumShellLayout({ children }: { children: React.ReactNode }) {
+  const [loc] = useLocation();
+  const useShell = useMemo(() => WZRD_PREMIUM_SHELL_RE.test(loc), [loc]);
+  if (useShell) return <WzrdAppShell>{children}</WzrdAppShell>;
+  return <>{children}</>;
+}
 
 function App() {
   return (
@@ -126,34 +137,36 @@ function App() {
       <I18nProvider>
         <ThemeProvider defaultTheme="light" switchable>
           <TooltipProvider>
-            <Toaster />
-            <QuickSearch />
-            <Switch>
-              {/* WZRD AI — Public funnel pages (no auth) */}
-              <Route path="/signup">{() => <SuspenseWrapper><SignupPage /></SuspenseWrapper>}</Route>
-              <Route path="/login">{() => <SuspenseWrapper><LoginPage /></SuspenseWrapper>}</Route>
-              <Route path="/tools">{() => <SuspenseWrapper><ToolsPage /></SuspenseWrapper>}</Route>
-              <Route path="/tools/brand-diagnosis">{() => <SuspenseWrapper><BrandDiagnosisPage /></SuspenseWrapper>}</Route>
-              <Route path="/tools/offer-check">{() => <SuspenseWrapper><OfferCheckPage /></SuspenseWrapper>}</Route>
-              <Route path="/tools/message-check">{() => <SuspenseWrapper><MessageCheckPage /></SuspenseWrapper>}</Route>
-              <Route path="/tools/presence-audit">{() => <SuspenseWrapper><PresenceAuditPage /></SuspenseWrapper>}</Route>
-              <Route path="/tools/identity-snapshot">{() => <SuspenseWrapper><IdentitySnapshotPage /></SuspenseWrapper>}</Route>
-              <Route path="/tools/launch-readiness">{() => <SuspenseWrapper><LaunchReadinessPage /></SuspenseWrapper>}</Route>
-              <Route path="/pricing">{() => <SuspenseWrapper><PricingPage /></SuspenseWrapper>}</Route>
-              <Route path="/my-brand">{() => <SuspenseWrapper><MyBrandPage /></SuspenseWrapper>}</Route>
-              <Route path="/copilot">{() => <SuspenseWrapper><CopilotPage /></SuspenseWrapper>}</Route>
-              <Route path="/tools/benchmark">{() => <SuspenseWrapper><CompetitiveBenchmarkPage /></SuspenseWrapper>}</Route>
-              <Route path="/tools/quick">{() => <SuspenseWrapper><QuickDiagnosisPage /></SuspenseWrapper>}</Route>
-              <Route path="/my-requests">{() => <SuspenseWrapper><MyRequestsPage /></SuspenseWrapper>}</Route>
-              <Route path="/wzrd-admin">{() => <SuspenseWrapper><WzrdAdminPage /></SuspenseWrapper>}</Route>
-              <Route path="/profile">{() => <SuspenseWrapper><ProfilePage /></SuspenseWrapper>}</Route>
-              {/* Existing public routes */}
-              <Route path="/quick-check">{() => <SuspenseWrapper><QuickCheckPage /></SuspenseWrapper>}</Route>
-              <Route path="/portal/:token">{() => <SuspenseWrapper><ClientPortalPage /></SuspenseWrapper>}</Route>
-              <Route path="/proposal-view/:id">{() => <SuspenseWrapper><ProposalViewPage /></SuspenseWrapper>}</Route>
-              {/* Dashboard routes (auth required) */}
-              <Route component={DashboardRouter} />
-            </Switch>
+            <PremiumShellLayout>
+              <Toaster />
+              <QuickSearch />
+              <Switch>
+                {/* WZRD AI — Public funnel pages (no auth) */}
+                <Route path="/signup">{() => <SuspenseWrapper><SignupPage /></SuspenseWrapper>}</Route>
+                <Route path="/login">{() => <SuspenseWrapper><LoginPage /></SuspenseWrapper>}</Route>
+                <Route path="/tools">{() => <SuspenseWrapper><ToolsPage /></SuspenseWrapper>}</Route>
+                <Route path="/tools/brand-diagnosis">{() => <SuspenseWrapper><BrandDiagnosisPage /></SuspenseWrapper>}</Route>
+                <Route path="/tools/offer-check">{() => <SuspenseWrapper><OfferCheckPage /></SuspenseWrapper>}</Route>
+                <Route path="/tools/message-check">{() => <SuspenseWrapper><MessageCheckPage /></SuspenseWrapper>}</Route>
+                <Route path="/tools/presence-audit">{() => <SuspenseWrapper><PresenceAuditPage /></SuspenseWrapper>}</Route>
+                <Route path="/tools/identity-snapshot">{() => <SuspenseWrapper><IdentitySnapshotPage /></SuspenseWrapper>}</Route>
+                <Route path="/tools/launch-readiness">{() => <SuspenseWrapper><LaunchReadinessPage /></SuspenseWrapper>}</Route>
+                <Route path="/pricing">{() => <SuspenseWrapper><PricingPage /></SuspenseWrapper>}</Route>
+                <Route path="/my-brand">{() => <SuspenseWrapper><MyBrandPage /></SuspenseWrapper>}</Route>
+                <Route path="/copilot">{() => <SuspenseWrapper><CopilotPage /></SuspenseWrapper>}</Route>
+                <Route path="/tools/benchmark">{() => <SuspenseWrapper><CompetitiveBenchmarkPage /></SuspenseWrapper>}</Route>
+                <Route path="/tools/quick">{() => <SuspenseWrapper><QuickDiagnosisPage /></SuspenseWrapper>}</Route>
+                <Route path="/my-requests">{() => <SuspenseWrapper><MyRequestsPage /></SuspenseWrapper>}</Route>
+                <Route path="/wzrd-admin">{() => <SuspenseWrapper><WzrdAdminPage /></SuspenseWrapper>}</Route>
+                <Route path="/profile">{() => <SuspenseWrapper><ProfilePage /></SuspenseWrapper>}</Route>
+                {/* Existing public routes */}
+                <Route path="/quick-check">{() => <SuspenseWrapper><QuickCheckPage /></SuspenseWrapper>}</Route>
+                <Route path="/portal/:token">{() => <SuspenseWrapper><ClientPortalPage /></SuspenseWrapper>}</Route>
+                <Route path="/proposal-view/:id">{() => <SuspenseWrapper><ProposalViewPage /></SuspenseWrapper>}</Route>
+                {/* Dashboard routes (auth required) */}
+                <Route component={DashboardRouter} />
+              </Switch>
+            </PremiumShellLayout>
           </TooltipProvider>
         </ThemeProvider>
       </I18nProvider>
