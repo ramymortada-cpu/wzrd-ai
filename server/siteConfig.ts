@@ -129,7 +129,6 @@ const DEFAULT_CONFIG: SiteConfig = {
 // ════════════════════════════════════════════
 
 let config: SiteConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
-let dbReady = false;
 
 const PLACEHOLDER_WHATSAPP = '201XXXXXXXXX';
 
@@ -197,9 +196,8 @@ export async function loadConfigFromDb(): Promise<void> {
         mergeMissingCreditPlansFromDefaults();
       }
       normalizeSiteWhatsApp();
-      logger.info('[SiteConfig] Loaded from DB (%d keys)', rows.length);
+      logger.info({ keysLoaded: rows.length }, '[SiteConfig] Loaded from DB');
     }
-    dbReady = true;
   } catch (err) {
     logger.warn({ err }, '[SiteConfig] DB load failed — using defaults');
   }
@@ -212,7 +210,6 @@ async function saveConfigToDb(): Promise<void> {
     if (!db) return;
 
     const { siteConfigTable } = await import('../drizzle/schema');
-    const { sql } = await import('drizzle-orm');
 
     const sections: Array<{ key: string; value: string }> = [
       { key: 'homepage', value: JSON.stringify(config.homepage) },

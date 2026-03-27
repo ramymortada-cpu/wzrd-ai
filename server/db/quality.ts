@@ -1,16 +1,15 @@
 /**
  * DB helpers for Quality & Feedback tables (Sprint 1 migration 0013).
  */
-import { eq, desc, sql, and } from "drizzle-orm";
-import { qualityScores, clientFeedbackTable } from "../../drizzle/schema";
+import { eq, desc } from "drizzle-orm";
+import { qualityScores, clientFeedbackTable, type QualityScore } from "../../drizzle/schema";
+import type { AppDatabase } from "./types";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let _db: any = null;
+let _db: AppDatabase | null = null;
 async function getDb() {
   if (!_db) {
-    const mod = await import("./index") as { getDb?: () => Promise<unknown> };
-    const db = mod.getDb ? await mod.getDb() : null;
-    _db = db;
+    const mod = await import("./index");
+    _db = await mod.getDb();
   }
   return _db;
 }
@@ -79,9 +78,9 @@ export async function getQualityTrendsFromDB() {
   const all = await db.select().from(qualityScores).orderBy(desc(qualityScores.createdAt)).limit(100);
   if (all.length === 0) return { avgScore: 0, passRate: '0%', total: 0, avgOwnerScore: 0 };
 
-  const avgScore = Math.round(all.reduce((s: number, r: any) => s + (r.finalScore ?? 0), 0) / all.length);
-  const passCount = all.filter((r: any) => !!r.passed).length;
-  const ownerScores = all.filter((r: any) => r.ownerScore != null).map((r: any) => Number(r.ownerScore));
+  const avgScore = Math.round(all.reduce((s: number, r: QualityScore) => s + (r.finalScore ?? 0), 0) / all.length);
+  const passCount = all.filter((r: QualityScore) => !!r.passed).length;
+  const ownerScores = all.filter((r: QualityScore) => r.ownerScore != null).map((r) => Number(r.ownerScore));
   const avgOwnerScore = ownerScores.length > 0
     ? Math.round((ownerScores.reduce((a: number, b: number) => a + b, 0) / ownerScores.length) * 10) / 10
     : 0;

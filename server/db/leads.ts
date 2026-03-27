@@ -1,12 +1,24 @@
-import { eq, desc, and, sql, isNull } from "drizzle-orm";
-import { leads, InsertLead } from "../../drizzle/schema";
+import { eq, desc, and, sql } from "drizzle-orm";
+import { leads, InsertLead, type Lead } from "../../drizzle/schema";
 import { getDb } from "./index";
 import { logger } from "../_core/logger";
 import { getUserById } from "./users";
 import { getClientByEmail } from "./clients";
 
-export async function createLead(data: InsertLead) { const db = await getDb(); if (!db) return null; const result = await db.insert(leads).values(data); const id = result[0].insertId; return db.select().from(leads).where(eq(leads.id, id)).then((r: any) => r[0] || null); }
-export async function getLeadById(id: number) { const db = await getDb(); if (!db) return null; return db.select().from(leads).where(eq(leads.id, id)).then((r: any) => r[0] || null); }
+export async function createLead(data: InsertLead): Promise<Lead | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(leads).values(data);
+  const id = result[0].insertId;
+  const rows = await db.select().from(leads).where(eq(leads.id, id));
+  return rows[0] ?? null;
+}
+export async function getLeadById(id: number): Promise<Lead | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(leads).where(eq(leads.id, id));
+  return rows[0] ?? null;
+}
 
 export async function listLeads(filters?: { status?: string; scoreLabel?: string; page?: number; pageSize?: number }) {
   const db = await getDb();
@@ -25,9 +37,40 @@ export async function listLeads(filters?: { status?: string; scoreLabel?: string
   return { data, pagination: { page, pageSize, total, totalPages, hasNext: page < totalPages, hasPrev: page > 1 } };
 }
 
-export async function updateLead(id: number, data: Partial<InsertLead>) { const db = await getDb(); if (!db) return null; await db.update(leads).set(data).where(eq(leads.id, id)); return db.select().from(leads).where(eq(leads.id, id)).then((r: any) => r[0] || null); }
-export async function getLeadStats() { const db = await getDb(); if (!db) return { total: 0, new: 0, hot: 0, warm: 0, cold: 0, converted: 0, totalValue: 0 }; const all = await db.select().from(leads).limit(1000); return { total: all.length, new: all.filter((l: any) => l.status === 'new').length, hot: all.filter((l: any) => l.scoreLabel === 'hot').length, warm: all.filter((l: any) => l.scoreLabel === 'warm').length, cold: all.filter((l: any) => l.scoreLabel === 'cold').length, converted: all.filter((l: any) => l.status === 'converted').length, totalValue: all.reduce((sum: number, l: any) => sum + Number(l.estimatedValue || 0), 0) }; }
-export async function getLeadFunnelStats() { const db = await getDb(); if (!db) return { new: 0, contacted: 0, qualified: 0, proposalSent: 0, converted: 0, lost: 0 }; const all = await db.select().from(leads).limit(1000); return { new: all.filter((l: any) => l.status === 'new').length, contacted: all.filter((l: any) => l.status === 'contacted').length, qualified: all.filter((l: any) => l.status === 'qualified').length, proposalSent: all.filter((l: any) => l.status === 'proposal_sent').length, converted: all.filter((l: any) => l.status === 'converted').length, lost: all.filter((l: any) => l.status === 'lost').length }; }
+export async function updateLead(id: number, data: Partial<InsertLead>): Promise<Lead | null> {
+  const db = await getDb();
+  if (!db) return null;
+  await db.update(leads).set(data).where(eq(leads.id, id));
+  const rows = await db.select().from(leads).where(eq(leads.id, id));
+  return rows[0] ?? null;
+}
+export async function getLeadStats() {
+  const db = await getDb();
+  if (!db) return { total: 0, new: 0, hot: 0, warm: 0, cold: 0, converted: 0, totalValue: 0 };
+  const all = await db.select().from(leads).limit(1000);
+  return {
+    total: all.length,
+    new: all.filter((l) => l.status === 'new').length,
+    hot: all.filter((l) => l.scoreLabel === 'hot').length,
+    warm: all.filter((l) => l.scoreLabel === 'warm').length,
+    cold: all.filter((l) => l.scoreLabel === 'cold').length,
+    converted: all.filter((l) => l.status === 'converted').length,
+    totalValue: all.reduce((sum, l) => sum + Number(l.estimatedValue || 0), 0),
+  };
+}
+export async function getLeadFunnelStats() {
+  const db = await getDb();
+  if (!db) return { new: 0, contacted: 0, qualified: 0, proposalSent: 0, converted: 0, lost: 0 };
+  const all = await db.select().from(leads).limit(1000);
+  return {
+    new: all.filter((l) => l.status === 'new').length,
+    contacted: all.filter((l) => l.status === 'contacted').length,
+    qualified: all.filter((l) => l.status === 'qualified').length,
+    proposalSent: all.filter((l) => l.status === 'proposal_sent').length,
+    converted: all.filter((l) => l.status === 'converted').length,
+    lost: all.filter((l) => l.status === 'lost').length,
+  };
+}
 
 const TOOL_LABEL: Record<string, string> = {
   brand_diagnosis: "Brand Diagnosis",

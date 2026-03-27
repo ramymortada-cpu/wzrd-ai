@@ -18,6 +18,7 @@ import {
   createKnowledgeEntry, getKnowledgeEntries, getKnowledgeEntryById,
   updateKnowledgeEntry, deleteKnowledgeEntry, getKnowledgeStats,
 } from "../db";
+import type { InsertKnowledgeEntry } from "../../drizzle/schema";
 import { getResearchReportById } from "../db/research";
 import {
   KNOWLEDGE_TEMPLATES, amplifyKnowledgeEntry, extractKnowledgeFromConversation,
@@ -318,10 +319,10 @@ export const knowledgeRouter = router({
     checkEditor(ctx);
     const { migrateStaticKnowledge } = await import('../knowledgeMigration');
     const result = await migrateStaticKnowledge(
-      (data: unknown) => createKnowledgeEntry(data as any),
+      (data: unknown) => createKnowledgeEntry(data as InsertKnowledgeEntry),
       async () => {
         const entries = await getKnowledgeEntries();
-        return (entries || []).map((e: any) => e.title);
+        return (entries || []).map((e) => e.title);
       }
     );
     return result;

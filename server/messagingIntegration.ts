@@ -29,7 +29,7 @@ import { Router, Request, Response, type Express } from 'express';
 import { logger } from './_core/logger';
 import { ENV } from './_core/env';
 import { orchestrate } from './agentOrchestrator';
-import { createAiConversation, getAiConversationById, updateAiConversation } from './db';
+import { createAiConversation, updateAiConversation } from './db';
 
 // ════════════════════════════════════════════
 // TYPES

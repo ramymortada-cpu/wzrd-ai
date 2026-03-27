@@ -16,9 +16,8 @@
  */
 
 import { type InvokeParams, type InvokeResult } from './llm';
-import { invokeWithProvider, routeToProvider, type LLMProvider } from './llmProviders';
+import { invokeWithProvider, routeToProvider } from './llmProviders';
 import { getCachedResponse, setCachedResponse, getCacheStats } from './llmCache';
-import { llmCircuitBreaker } from './retry';
 import { logger } from './logger';
 
 // ============ TYPES ============
@@ -292,7 +291,6 @@ export async function resilientLLM(
  * Get comprehensive LLM usage statistics.
  */
 export function getLLMStats() {
-  const last24h = usageLog.filter(e => Date.now() - new Date(e.context || '').getTime() < 24 * 60 * 60 * 1000);
   const totalCalls = usageLog.length;
   const cachedCalls = usageLog.filter(e => e.cached).length;
   const failedCalls = usageLog.filter(e => e.error).length;

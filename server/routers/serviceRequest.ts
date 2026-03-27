@@ -63,7 +63,6 @@ async function sendStatusEmail(opts: {
 
     const label = STATUS_LABELS[opts.newStatus] || STATUS_LABELS.received;
     const appUrl = process.env.APP_URL || 'https://wzzrdai.com';
-    const name = user.name || 'عميلنا العزيز';
 
     // Build email body
     let extraHtml = '';
@@ -131,8 +130,9 @@ async function sendStatusEmail(opts: {
       const errText = await res.text().catch(() => 'unknown');
       logger.warn({ status: res.status, body: errText }, 'Status email failed');
     }
-  } catch (err: any) {
-    logger.error({ err: err.message }, 'sendStatusEmail failed silently');
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error({ err: msg }, 'sendStatusEmail failed silently');
   }
 }
 
@@ -278,7 +278,7 @@ export const serviceRequestRouter = router({
       // Update request status
       await db.update(serviceRequests)
         .set({
-          status: input.newStatus as any,
+          status: input.newStatus as (typeof serviceRequests.$inferSelect)['status'],
           ...(input.estimatedDelivery ? { estimatedDelivery: new Date(input.estimatedDelivery) } : {}),
           ...(input.newStatus === 'delivered' ? { actualDelivery: new Date() } : {}),
         })
@@ -305,7 +305,7 @@ export const serviceRequestRouter = router({
         meetingLink: input.meetingLink || null,
         meetingDate: input.meetingDate ? new Date(input.meetingDate) : null,
         isClientVisible: input.isClientVisible ? 1 : 0,
-        createdBy: (ctx.user as any)?.name || 'admin',
+        createdBy: ctx.user?.name || 'admin',
       });
 
       // If file uploaded, also add to request_files
@@ -338,7 +338,7 @@ export const serviceRequestRouter = router({
             meetingDate: input.meetingDate,
             fileUrl: input.fileUrl,
             fileName: input.fileName,
-          }).catch(() => {}); // Fire-and-forget
+          }).catch(() => { /* intentional: fire-and-forget email */ }); // Fire-and-forget
         }
       }
 
@@ -347,7 +347,7 @@ export const serviceRequestRouter = router({
 
   /** Admin: list all requests */
   listAll: protectedProcedure
-    .query(async ({ ctx }) => {
+    .query(async ({ ctx: _ctx }) => {
       const db = await getDb();
       if (!db) return [];
 

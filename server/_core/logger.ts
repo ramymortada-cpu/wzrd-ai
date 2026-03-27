@@ -50,7 +50,8 @@ function formatEntry(level: LogLevel, context: Record<string, unknown> | string,
         name: context.err.name,
         stack: context.err.stack,
       };
-      const { err, ...rest } = context;
+      const rest = { ...context };
+      delete rest.err;
       Object.assign(entry, rest);
     } else {
       Object.assign(entry, context);

@@ -193,12 +193,18 @@ function verifyHmac(data: Record<string, unknown>, receivedHmac: string): boolea
     obj.is_refunded,
     obj.is_standalone_payment,
     obj.is_voided,
-    (obj.order as any)?.id || '',
+    (typeof obj.order === "object" && obj.order !== null ? String((obj.order as Record<string, unknown>).id ?? "") : ""),
     obj.owner,
     obj.pending,
-    (obj.source_data as any)?.pan || '',
-    (obj.source_data as any)?.sub_type || '',
-    (obj.source_data as any)?.type || '',
+    (typeof obj.source_data === "object" && obj.source_data !== null
+      ? String((obj.source_data as Record<string, unknown>).pan ?? "")
+      : ""),
+    (typeof obj.source_data === "object" && obj.source_data !== null
+      ? String((obj.source_data as Record<string, unknown>).sub_type ?? "")
+      : ""),
+    (typeof obj.source_data === "object" && obj.source_data !== null
+      ? String((obj.source_data as Record<string, unknown>).type ?? "")
+      : ""),
     obj.success,
   ].join('');
 

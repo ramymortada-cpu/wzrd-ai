@@ -119,8 +119,11 @@ async function deductPremiumCredits(userId: number, amount: number, tool: string
   const result = await db.execute(
     sql`UPDATE users SET credits = credits - ${amount} WHERE id = ${userId} AND credits >= ${amount}`
   );
-  
-  const affected = (result as any)[0]?.affectedRows ?? (result as any).affectedRows ?? 0;
+
+  const affected =
+    (result as unknown as { affectedRows?: number })?.affectedRows
+    ?? (result as unknown as [{ affectedRows?: number }])?.[0]?.affectedRows
+    ?? 0;
   if (affected === 0) return { success: false, error: 'رصيد الكريدت مش كافي. محتاج ' + amount + ' كريدت.' };
 
   // Log transaction
@@ -171,7 +174,6 @@ export const premiumRouter = router({
     }))
     .mutation(async ({ input, ctx }) => {
       const userId = ctx.user!.id;
-      const userEmail = (ctx.user as any)?.email;
 
       // 1. Deduct credits
       const premiumCredits = getPremiumReportCreditCost();
@@ -201,20 +203,19 @@ export const premiumRouter = router({
           ],
         });
 
-        const text = (response.choices?.[0]?.message?.content as string) 
-          || (response as any).content?.[0]?.text 
-          || '';
+        const msgContent = response.choices?.[0]?.message?.content;
+        const text = typeof msgContent === 'string' ? msgContent : '';
 
         // Parse JSON
-        let report: any;
+        let report: Record<string, unknown>;
         try {
           const jsonStr = text.replace(/```json?\s*/g, '').replace(/```/g, '').trim();
-          report = JSON.parse(jsonStr);
+          report = JSON.parse(jsonStr) as Record<string, unknown>;
         } catch {
           // Try to extract JSON from response
           const match = text.match(/\{[\s\S]*\}/);
           if (match) {
-            report = JSON.parse(match[0]);
+            report = JSON.parse(match[0]) as Record<string, unknown>;
           } else {
             logger.error({ textLength: text.length }, '[Premium] Failed to parse Claude response');
             return { success: false, error: 'فشل في إنشاء التقرير. يرجى المحاولة مرة أخرى.' };
@@ -229,7 +230,8 @@ export const premiumRouter = router({
           remaining = row?.credits || 0;
         }
 
-        logger.info({ userId, toolId: input.toolId, score: report.executiveSummary?.score }, '[Premium] Report generated');
+        const execSummary = report.executiveSummary as { score?: number } | undefined;
+        logger.info({ userId, toolId: input.toolId, score: execSummary?.score }, '[Premium] Report generated');
 
         return {
           success: true,
@@ -239,8 +241,9 @@ export const premiumRouter = router({
           model: 'Claude',
         };
 
-      } catch (err: any) {
-        logger.error({ err: err.message, userId }, '[Premium] Claude call failed');
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        logger.error({ err: msg, userId }, '[Premium] Claude call failed');
         return { success: false, error: 'خطأ في الـ AI. تأكد إن الـ Claude API key مفعّل.' };
       }
     }),

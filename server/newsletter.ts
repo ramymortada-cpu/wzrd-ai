@@ -136,7 +136,7 @@ export async function getNewsletterSubscribers(): Promise<Array<{ id: number; em
     .from(users)
     .where(and(eq(users.newsletterOptIn, 1)))
     .limit(5000);
-  return rows.filter((r: any) => r.email) as Array<{ id: number; email: string; name: string | null }>;
+  return rows.filter((r): r is { id: number; email: string; name: string | null } => Boolean(r.email));
 }
 
 export async function unsubscribeUser(email: string): Promise<boolean> {

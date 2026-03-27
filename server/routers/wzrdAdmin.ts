@@ -15,7 +15,7 @@ import { protectedProcedure, router } from "../_core/trpc";
 import { checkOwner, isSuperAdmin } from "../_core/authorization";
 import { z } from "zod";
 import { logger } from "../_core/logger";
-import { eq, desc, sql, and, like } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
 import { users, creditTransactions, clients, projects } from "../../drizzle/schema";
 import { getDb } from "../db/index";
 import { TOOL_COSTS, SIGNUP_BONUS, getCreditStats, updateToolCost } from "../db/credits";
@@ -116,7 +116,7 @@ export const wzrdAdminRouter = router({
       try {
         const meta = typeof t.metadata === 'string' ? JSON.parse(t.metadata) : t.metadata;
         if (meta?.score) { avgScore += meta.score; scoreCount++; }
-      } catch {}
+      } catch { /* skip invalid tool metadata JSON */ }
     }
 
     return {
@@ -252,7 +252,10 @@ export const wzrdAdminRouter = router({
     if (!db) return { tools: [], dailyUsage: [] };
 
     // Per-tool stats
-    const toolRows = await db.select({
+    type ToolUsageAggRow = { toolName: string | null; runs: number; creditsSpent: number };
+    type DailyToolUsageRow = { date: string; runs: number; credits: number };
+
+    const toolRows: ToolUsageAggRow[] = await db.select({
       toolName: creditTransactions.toolName,
       runs: sql<number>`count(*)`,
       creditsSpent: sql<number>`SUM(ABS(amount))`,
@@ -263,7 +266,7 @@ export const wzrdAdminRouter = router({
 
     // Daily usage last 30 days
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const dailyRows = await db.select({
+    const dailyRows: DailyToolUsageRow[] = await db.select({
       date: sql<string>`DATE(createdAt)`,
       runs: sql<number>`count(*)`,
       credits: sql<number>`SUM(ABS(amount))`,
@@ -277,12 +280,12 @@ export const wzrdAdminRouter = router({
       .orderBy(sql`DATE(createdAt)`);
 
     return {
-      tools: toolRows.map((r: any) => ({
+      tools: toolRows.map((r) => ({
         name: r.toolName || 'unknown',
         runs: r.runs,
         creditsSpent: r.creditsSpent,
       })),
-      dailyUsage: dailyRows.map((r: any) => ({
+      dailyUsage: dailyRows.map((r) => ({
         date: r.date,
         runs: r.runs,
         credits: r.credits,
@@ -367,7 +370,7 @@ export const wzrdAdminRouter = router({
       const { sendWeeklyNewsletter } = await import('../newsletter');
       const result = await sendWeeklyNewsletter();
       return { success: true, ...result };
-    } catch (err) {
+    } catch {
       return { success: false, sent: 0, failed: 0 };
     }
   }),

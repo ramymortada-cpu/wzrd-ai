@@ -69,7 +69,11 @@ export const researchRouter = router({
             keyInsights: data.keyInsights, recommendations: data.recommendations, webResults: data.webResults,
           }, { amplify: true });
         }
-        return { id: reportId, summary: data?.summary || 'Research completed' };
+        return {
+          ...(data ?? {}),
+          id: reportId,
+          summary: data?.summary || "Research completed",
+        };
       } catch (e) {
         await updateResearchReport(reportId, { status: 'failed' });
         throw e;

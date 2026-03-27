@@ -8,6 +8,8 @@
 import { logger } from "./_core/logger";
 import { getDb } from "./db/index";
 import { automationRules, emailTemplates, emailSendLog, users } from "../drizzle/schema";
+
+type EmailRuleTrigger = (typeof automationRules.$inferSelect)["trigger"];
 import { eq, and } from "drizzle-orm";
 
 interface TriggerMetadata {
@@ -36,7 +38,7 @@ export async function fireEmailTrigger(
 
     // Find matching active rules
     const rules = await db.select().from(automationRules)
-      .where(and(eq(automationRules.trigger, trigger as any), eq(automationRules.isActive, 1)));
+      .where(and(eq(automationRules.trigger, trigger as EmailRuleTrigger), eq(automationRules.isActive, 1)));
 
     if (rules.length === 0) return;
 
@@ -65,7 +67,7 @@ export async function fireEmailTrigger(
         });
       } else {
         // Send immediately
-        let html = template.html
+        const html = template.html
           .replace(/\{\{NAME\}\}/g, user.name || '')
           .replace(/\{\{SCORE\}\}/g, String(metadata?.score || ''))
           .replace(/\{\{CREDITS\}\}/g, String(metadata?.credits || ''))
@@ -94,7 +96,8 @@ export async function fireEmailTrigger(
           });
 
           logger.info({ trigger, userId, template: template.name }, 'Email automation sent');
-        } catch (sendErr: any) {
+        } catch (sendErr: unknown) {
+          const msg = sendErr instanceof Error ? sendErr.message : String(sendErr);
           await db.insert(emailSendLog).values({
             userId,
             email: user.email,
@@ -103,14 +106,15 @@ export async function fireEmailTrigger(
             subject: template.subjectAr || template.subject,
             status: 'failed',
             trigger,
-            errorMessage: sendErr.message?.substring(0, 500),
+            errorMessage: msg.substring(0, 500),
           });
-          logger.warn({ trigger, userId, err: sendErr.message }, 'Email automation send failed');
+          logger.warn({ trigger, userId, err: msg }, 'Email automation send failed');
         }
       }
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     // Never throw — this is a non-blocking helper
-    logger.error({ err: err.message, trigger, userId }, 'fireEmailTrigger failed silently');
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error({ err: msg, trigger, userId }, 'fireEmailTrigger failed silently');
   }
 }

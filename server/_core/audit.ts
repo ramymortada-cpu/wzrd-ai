@@ -6,13 +6,15 @@
  */
 
 import { logger } from './logger';
+import { auditLog } from '../../drizzle/schema';
+import type { AppDatabase } from '../db/types';
 
-// Late import to avoid circular deps — db module imports audit
-let _getDb: (() => Promise<any>) | null = null;
-let _auditLogTable: unknown = null;
+// Late binding — optional init at app startup
+let _getDb: (() => Promise<AppDatabase | null>) | null = null;
+let _auditLogTable: typeof auditLog | null = null;
 
 /** Initialize audit with database references. Call once at app startup. */
-export function initAudit(getDb: () => Promise<any>, auditLogTable: unknown) {
+export function initAudit(getDb: () => Promise<AppDatabase | null>, auditLogTable: typeof auditLog) {
   _getDb = getDb;
   _auditLogTable = auditLogTable;
 }

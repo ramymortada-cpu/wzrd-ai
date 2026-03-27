@@ -56,10 +56,10 @@ function getEmailConfig(): EmailConfig {
 
 // ============ DATABASE HELPER (lazy-loaded) ============
 
-let _createNotification: ((data: unknown) => Promise<any>) | null = null;
+let _createNotification: ((data: unknown) => Promise<unknown>) | null = null;
 
 /** Initialize notification system with database access */
-export function initNotifications(createNotificationFn: (data: unknown) => Promise<any>) {
+export function initNotifications(createNotificationFn: (data: unknown) => Promise<unknown>) {
   _createNotification = createNotificationFn;
 }
 

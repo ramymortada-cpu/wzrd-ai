@@ -23,6 +23,22 @@ import { searchGoogle } from "../researchEngine";
 import { buildSystemPrompt } from "../knowledgeBase";
 import { SERVICE_LABELS, SERVICE_PRICES } from "@shared/const";
 
+const ONBOARDING_SERVICE_TYPES = [
+  "business_health_check",
+  "starting_business_logic",
+  "brand_identity",
+  "business_takeoff",
+  "consultation",
+] as const;
+type OnboardingServiceType = (typeof ONBOARDING_SERVICE_TYPES)[number];
+
+function toOnboardingServiceType(s: string | null | undefined): OnboardingServiceType {
+  const v = (s || "consultation").trim();
+  return (ONBOARDING_SERVICE_TYPES as readonly string[]).includes(v)
+    ? (v as OnboardingServiceType)
+    : "consultation";
+}
+
 export const onboardingRouter = router({
   create: protectedProcedure.input(z.object({
     companyName: z.string().max(255).optional(), contactName: z.string().max(255).optional(),
@@ -126,10 +142,10 @@ Extract this JSON:
     const { seedDemoData } = await import('../demoData');
     const db = await import('../db');
     const seeded = await seedDemoData(
-      (data: unknown) => db.createClient(data as any),
-      (data: unknown) => db.createProject(data as any),
-      (data: unknown) => db.createNote(data as any),
-      (data: unknown) => db.createKnowledgeEntry(data as any),
+      (data: unknown) => db.createClient(data as import('../../drizzle/schema').InsertClient),
+      (data: unknown) => db.createProject(data as import('../../drizzle/schema').InsertProject),
+      (data: unknown) => db.createNote(data as import('../../drizzle/schema').InsertClientNote),
+      (data: unknown) => db.createKnowledgeEntry(data as import('../../drizzle/schema').InsertKnowledgeEntry),
       async () => { const r = await db.getClients(); return Array.isArray(r) ? r : (r as { data?: unknown[] }).data ?? []; },
     );
     return { seeded };
@@ -196,11 +212,7 @@ Extract this JSON:
       checkEditor(ctx);
       const session = await getOnboardingSessionById(input.id);
       if (!session) throw new Error("Session not found");
-      const serviceType = (
-        ["business_health_check", "starting_business_logic", "brand_identity", "business_takeoff", "consultation"] as const
-      ).includes(input.serviceType as any)
-        ? (input.serviceType as "business_health_check" | "starting_business_logic" | "brand_identity" | "business_takeoff" | "consultation")
-        : "consultation";
+      const serviceType = toOnboardingServiceType(input.serviceType);
       const clientData = {
         name: session.contactName || session.companyName || "Unknown",
         companyName: session.companyName || undefined,
@@ -229,11 +241,7 @@ Extract this JSON:
       if (!session) throw new Error("Session not found");
       const clientId = session.clientId;
       if (!clientId) throw new Error("Confirm service first to create client");
-      const serviceType = (
-        ["business_health_check", "starting_business_logic", "brand_identity", "business_takeoff", "consultation"] as const
-      ).includes((session.recommendedService || "consultation") as any)
-        ? (session.recommendedService as "business_health_check" | "starting_business_logic" | "brand_identity" | "business_takeoff" | "consultation")
-        : "consultation";
+      const serviceType = toOnboardingServiceType(session.recommendedService);
       const client = await getClientById(clientId);
       const systemPrompt = buildSystemPrompt({ mode: "proposal", serviceType, clientContext: session.recommendationReason || undefined });
       const price = SERVICE_PRICES[serviceType];

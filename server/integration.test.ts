@@ -5,7 +5,7 @@
  * unlike unit tests which test individual functions in isolation.
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 // Note: In a real setup, these would use a test database.
 // For now, we test the logic layer with mocked DB.
@@ -52,7 +52,7 @@ describe('Client → Project → Deliverables Flow', () => {
       };
 
       // Each service type must have at least 2 deliverables
-      for (const [service, deliverables] of Object.entries(serviceDeliverables)) {
+      for (const deliverables of Object.values(serviceDeliverables)) {
         expect(deliverables.length).toBeGreaterThanOrEqual(2);
         deliverables.forEach(d => {
           expect(d).toBeTruthy();
@@ -165,7 +165,7 @@ describe('Security Validation', () => {
     };
 
     // All max lengths must be positive
-    for (const [field, maxLen] of Object.entries(maxLengths)) {
+    for (const maxLen of Object.values(maxLengths)) {
       expect(maxLen).toBeGreaterThan(0);
       expect(maxLen).toBeLessThanOrEqual(50000);
     }

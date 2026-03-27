@@ -9,6 +9,7 @@ import { checkEditor } from "../_core/authorization";
 import { z } from "zod";
 import { logger } from "../_core/logger";
 import { createPipelineRun, getPipelineRunById, getPipelineRunsByClient, getAllPipelineRuns, updatePipelineRun, getPipelineAnalytics } from "../db";
+import type { InsertPipelineRun } from "../../drizzle/schema";
 import { executeStage } from "../autoExecution";
 
 export const pipelineRouter = router({
@@ -61,6 +62,6 @@ export const pipelineRouter = router({
   getById: protectedProcedure.input(z.object({ id: z.number().int().positive() })).query(async ({ input }) => getPipelineRunById(input.id)),
   getByClient: protectedProcedure.input(z.object({ clientId: z.number().int().positive() })).query(async ({ input }) => getPipelineRunsByClient(input.clientId)),
   list: protectedProcedure.query(async () => getAllPipelineRuns()),
-  update: protectedProcedure.input(z.object({ id: z.number(), status: z.enum(['pending', 'completed', 'failed', 'paused', 'researching', 'diagnosing', 'strategizing', 'generating', 'reviewing']).optional(), currentStep: z.number().optional(), errorMessage: z.string().max(5000).optional() })).mutation(async ({ input, ctx }) => { checkEditor(ctx); const { id, ...data } = input; await updatePipelineRun(id, data as any); return { success: true }; }),
+  update: protectedProcedure.input(z.object({ id: z.number(), status: z.enum(['pending', 'completed', 'failed', 'paused', 'researching', 'diagnosing', 'strategizing', 'generating', 'reviewing']).optional(), currentStep: z.number().optional(), errorMessage: z.string().max(5000).optional() })).mutation(async ({ input, ctx }) => { checkEditor(ctx); const { id, ...data } = input; await updatePipelineRun(id, data as Partial<InsertPipelineRun>); return { success: true }; }),
   analytics: protectedProcedure.query(async () => getPipelineAnalytics()),
 });

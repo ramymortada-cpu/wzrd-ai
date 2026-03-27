@@ -1,4 +1,4 @@
-import { eq, desc, and, like } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { researchCache, InsertResearchCache, ResearchCache, researchReports, InsertResearchReport, ResearchReport as ResearchReportRow } from "../../drizzle/schema";
 import { getDb } from "./index";
 
@@ -10,4 +10,13 @@ export async function getResearchReportById(id: number): Promise<ResearchReportR
 export async function getResearchReportsByClient(clientId: number): Promise<ResearchReportRow[]> { const db = await getDb(); if (!db) return []; return db.select().from(researchReports).where(eq(researchReports.clientId, clientId)).orderBy(desc(researchReports.createdAt)); }
 export async function getAllResearchReports(): Promise<ResearchReportRow[]> { const db = await getDb(); if (!db) return []; return db.select().from(researchReports).orderBy(desc(researchReports.createdAt)).limit(200); }
 export async function updateResearchReport(id: number, data: Partial<InsertResearchReport>): Promise<void> { const db = await getDb(); if (!db) return; await db.update(researchReports).set(data).where(eq(researchReports.id, id)); }
-export async function getResearchStats() { const db = await getDb(); if (!db) return { totalReports: 0, totalSources: 0, industries: [] as string[] }; const reports = await db.select().from(researchReports).limit(500); return { totalReports: reports.length, totalSources: reports.reduce((sum: number, r: any) => sum + (r.totalSources || 0), 0), industries: Array.from(new Set(reports.map((r: any) => r.industry).filter(Boolean))) }; }
+export async function getResearchStats() {
+  const db = await getDb();
+  if (!db) return { totalReports: 0, totalSources: 0, industries: [] as string[] };
+  const reports = await db.select().from(researchReports).limit(500);
+  return {
+    totalReports: reports.length,
+    totalSources: reports.reduce((sum, r: ResearchReportRow) => sum + (r.totalSources || 0), 0),
+    industries: Array.from(new Set(reports.map((r: ResearchReportRow) => r.industry).filter((x): x is string => !!x))),
+  };
+}

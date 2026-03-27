@@ -23,8 +23,7 @@ import { logger } from './_core/logger';
 import { knowledgeCache } from './_core/cache';
 import { resilientLLM } from './_core/llmRouter';
 import {
-  createKnowledgeEntry, getKnowledgeEntries, getKnowledgeForContext,
-  getKnowledgeEntryById, updateKnowledgeEntry,
+  getKnowledgeEntries, getKnowledgeForContext,
 } from './db';
 
 // ============ KNOWLEDGE TEMPLATES ============
@@ -47,7 +46,12 @@ export interface KnowledgeTemplate {
     options?: string[];
   }>;
   /** How to format this template's data into knowledge the AI can use */
-  formatForAI: (data: Record<string, any>) => string;
+  formatForAI: (data: Record<string, unknown>) => string;
+}
+
+function tplField(data: Record<string, unknown>, key: string): string {
+  const v = data[key];
+  return v == null ? "" : String(v);
 }
 
 export const KNOWLEDGE_TEMPLATES: KnowledgeTemplate[] = [
@@ -72,19 +76,19 @@ export const KNOWLEDGE_TEMPLATES: KnowledgeTemplate[] = [
       { key: 'patternToRecognize', label: 'When to Apply This', labelAr: 'متى تطبّق هذا', type: 'textarea', placeholder: 'What signals should the AI look for to recommend this pattern?' },
     ],
     formatForAI: (data) => `
-## CASE STUDY: ${data.brandName} (${data.industry}, ${data.market})
+## CASE STUDY: ${tplField(data, "brandName")} (${tplField(data, "industry")}, ${tplField(data, "market")})
 
-**SITUATION:** ${data.situation}
+**SITUATION:** ${tplField(data, "situation")}
 
-**CHALLENGE:** ${data.challenge}
+**CHALLENGE:** ${tplField(data, "challenge")}
 
-**STRATEGY:** ${data.strategy}
+**STRATEGY:** ${tplField(data, "strategy")}
 
-**RESULTS:** ${data.results}
+**RESULTS:** ${tplField(data, "results")}
 
-${data.lessonsLearned ? `**LESSONS:** ${data.lessonsLearned}` : ''}
-${data.frameworksUsed ? `**FRAMEWORKS:** ${data.frameworksUsed}` : ''}
-${data.patternToRecognize ? `**PATTERN TO RECOGNIZE:** ${data.patternToRecognize}` : ''}
+${tplField(data, "lessonsLearned") ? `**LESSONS:** ${tplField(data, "lessonsLearned")}` : ""}
+${tplField(data, "frameworksUsed") ? `**FRAMEWORKS:** ${tplField(data, "frameworksUsed")}` : ""}
+${tplField(data, "patternToRecognize") ? `**PATTERN TO RECOGNIZE:** ${tplField(data, "patternToRecognize")}` : ""}
 `.trim(),
   },
 
@@ -107,13 +111,13 @@ ${data.patternToRecognize ? `**PATTERN TO RECOGNIZE:** ${data.patternToRecognize
       { key: 'tags', label: 'Tags', labelAr: 'علامات', type: 'tags' },
     ],
     formatForAI: (data) => `
-## MARKET INSIGHT: ${data.title}
-**Market:** ${data.market} | **Industry:** ${data.industry || 'General'}
-**Source:** ${data.source || 'Internal research'} (${data.sourceDate || 'Recent'})
+## MARKET INSIGHT: ${tplField(data, "title")}
+**Market:** ${tplField(data, "market")} | **Industry:** ${tplField(data, "industry") || "General"}
+**Source:** ${tplField(data, "source") || "Internal research"} (${tplField(data, "sourceDate") || "Recent"})
 
-**DATA:** ${data.dataPoint}
+**DATA:** ${tplField(data, "dataPoint")}
 
-${data.implication ? `**BRANDING IMPLICATION:** ${data.implication}` : ''}
+${tplField(data, "implication") ? `**BRANDING IMPLICATION:** ${tplField(data, "implication")}` : ""}
 `.trim(),
   },
 
@@ -136,12 +140,12 @@ ${data.implication ? `**BRANDING IMPLICATION:** ${data.implication}` : ''}
       { key: 'howWeWin', label: 'How Primo Marca Wins Against Them', labelAr: 'كيف نتفوّق عليهم', type: 'textarea' },
     ],
     formatForAI: (data) => `
-## COMPETITOR: ${data.competitorName} (${data.market}, ${data.pricingTier})
-**Strengths:** ${data.strengths || 'Unknown'}
-**Weaknesses:** ${data.weaknesses || 'Unknown'}
-**Pricing:** ${data.pricingDetails || 'Unknown'}
-**Differentiator:** ${data.differentiator || 'Unknown'}
-**HOW WE WIN:** ${data.howWeWin || 'Through framework-backed strategy and premium deliverables'}
+## COMPETITOR: ${tplField(data, "competitorName")} (${tplField(data, "market")}, ${tplField(data, "pricingTier")})
+**Strengths:** ${tplField(data, "strengths") || "Unknown"}
+**Weaknesses:** ${tplField(data, "weaknesses") || "Unknown"}
+**Pricing:** ${tplField(data, "pricingDetails") || "Unknown"}
+**Differentiator:** ${tplField(data, "differentiator") || "Unknown"}
+**HOW WE WIN:** ${tplField(data, "howWeWin") || "Through framework-backed strategy and premium deliverables"}
 `.trim(),
   },
 
@@ -164,12 +168,12 @@ ${data.implication ? `**BRANDING IMPLICATION:** ${data.implication}` : ''}
       { key: 'tags', label: 'Tags', labelAr: 'علامات', type: 'tags' },
     ],
     formatForAI: (data) => `
-## LESSON: ${data.title}
-**Context:** ${data.context}
-${data.whatWorked ? `**What Worked:** ${data.whatWorked}` : ''}
-${data.whatFailed ? `**What Failed:** ${data.whatFailed}` : ''}
-${data.rootCause ? `**Root Cause:** ${data.rootCause}` : ''}
-**RECOMMENDATION:** ${data.recommendation}
+## LESSON: ${tplField(data, "title")}
+**Context:** ${tplField(data, "context")}
+${tplField(data, "whatWorked") ? `**What Worked:** ${tplField(data, "whatWorked")}` : ""}
+${tplField(data, "whatFailed") ? `**What Failed:** ${tplField(data, "whatFailed")}` : ""}
+${tplField(data, "rootCause") ? `**Root Cause:** ${tplField(data, "rootCause")}` : ""}
+**RECOMMENDATION:** ${tplField(data, "recommendation")}
 `.trim(),
   },
 
@@ -192,13 +196,13 @@ ${data.rootCause ? `**Root Cause:** ${data.rootCause}` : ''}
       { key: 'successMetric', label: 'How to Measure Success', labelAr: 'كيف تقيس النجاح', type: 'textarea' },
     ],
     formatForAI: (data) => `
-## CLIENT PATTERN: "${data.patternName}"
-**SIGNALS:** ${data.signals}
-**Industry:** ${data.typicalIndustry || 'Various'} | **Budget:** ${data.typicalBudget || 'Varies'}
-**BEST APPROACH:** ${data.bestApproach}
-**Recommended Service:** ${data.recommendedService || 'Depends on assessment'}
-${data.pitfalls ? `**PITFALLS TO AVOID:** ${data.pitfalls}` : ''}
-${data.successMetric ? `**SUCCESS METRIC:** ${data.successMetric}` : ''}
+## CLIENT PATTERN: "${tplField(data, "patternName")}"
+**SIGNALS:** ${tplField(data, "signals")}
+**Industry:** ${tplField(data, "typicalIndustry") || "Various"} | **Budget:** ${tplField(data, "typicalBudget") || "Varies"}
+**BEST APPROACH:** ${tplField(data, "bestApproach")}
+**Recommended Service:** ${tplField(data, "recommendedService") || "Depends on assessment"}
+${tplField(data, "pitfalls") ? `**PITFALLS TO AVOID:** ${tplField(data, "pitfalls")}` : ""}
+${tplField(data, "successMetric") ? `**SUCCESS METRIC:** ${tplField(data, "successMetric")}` : ""}
 `.trim(),
   },
 
@@ -220,12 +224,12 @@ ${data.successMetric ? `**SUCCESS METRIC:** ${data.successMetric}` : ''}
       { key: 'tags', label: 'Tags', labelAr: 'علامات', type: 'tags' },
     ],
     formatForAI: (data) => `
-## METHODOLOGY: ${data.title}
-**PURPOSE:** ${data.purpose}
-**PROCESS:** ${data.steps}
-${data.tools ? `**TOOLS:** ${data.tools}` : ''}
-${data.timeEstimate ? `**TIME:** ${data.timeEstimate}` : ''}
-${data.qualityChecklist ? `**QUALITY CHECK:** ${data.qualityChecklist}` : ''}
+## METHODOLOGY: ${tplField(data, "title")}
+**PURPOSE:** ${tplField(data, "purpose")}
+**PROCESS:** ${tplField(data, "steps")}
+${tplField(data, "tools") ? `**TOOLS:** ${tplField(data, "tools")}` : ""}
+${tplField(data, "timeEstimate") ? `**TIME:** ${tplField(data, "timeEstimate")}` : ""}
+${tplField(data, "qualityChecklist") ? `**QUALITY CHECK:** ${tplField(data, "qualityChecklist")}` : ""}
 `.trim(),
   },
 ];

@@ -16,7 +16,7 @@ import { logger } from "../_core/logger";
 import { resilientLLM } from "../_core/llmRouter";
 import { getDb, deductCredits, getUserCredits } from "../db";
 import { copilotMessages, diagnosisHistory, users } from "../../drizzle/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 
 // Rate limit: track last message time per user
 const lastMessageTime = new Map<number, number>();
@@ -108,17 +108,17 @@ export const copilotRouter = router({
         // Build context string
         let contextStr = '';
         if (user) {
-          contextStr += `\nUser info: Name: ${user.name || 'Unknown'}, Company: ${(user as any).company || 'Unknown'}, Industry: ${(user as any).industry || 'Unknown'}`;
+          contextStr += `\nUser info: Name: ${user.name || 'Unknown'}, Company: ${user.company || 'Unknown'}, Industry: ${user.industry || 'Unknown'}`;
         }
         if (recentDiagnoses.length > 0) {
           contextStr += '\n\nRecent diagnosis results:';
           for (const d of recentDiagnoses) {
             contextStr += `\n- ${d.toolId}: Score ${d.score}/100`;
             if (d.findings && Array.isArray(d.findings)) {
-              contextStr += ` | Findings: ${(d.findings as any[]).map((f: any) => f.title).join(', ')}`;
+              contextStr += ` | Findings: ${(d.findings as { title?: string }[]).map((f) => f.title ?? '').filter(Boolean).join(', ')}`;
             }
             if (d.actionItems && Array.isArray(d.actionItems)) {
-              contextStr += ` | Action items: ${(d.actionItems as any[]).map((a: any) => a.task).slice(0, 3).join(', ')}`;
+              contextStr += ` | Action items: ${(d.actionItems as { task?: string }[]).map((a) => a.task ?? '').filter(Boolean).slice(0, 3).join(', ')}`;
             }
           }
         }
@@ -172,14 +172,15 @@ export const copilotRouter = router({
           creditsRemaining: deduction.newBalance ?? 0,
           tokensUsed,
         };
-      } catch (err: any) {
+      } catch (err: unknown) {
         // If AI failed — try to refund credits
         try {
           const { addCredits } = await import('../db');
           await addCredits(userId, 5, 'copilot_refund', 'Refund — copilot message failed');
         } catch { /* best effort refund */ }
 
-        if (err.message?.includes('كريدت') || err.message?.includes('استنى')) throw err;
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.includes('كريدت') || msg.includes('استنى')) throw err;
         logger.error({ err, userId }, 'Copilot chat failed');
         throw new Error('حصل مشكلة — حاول تاني. الكريدت اترجعت.');
       }
@@ -190,7 +191,7 @@ export const copilotRouter = router({
     .input(z.object({
       sessionId: z.string().min(1).max(50),
     }))
-    .query(async ({ input, ctx }) => {
+    .query(async ({ input, ctx: _ctx }) => {
       const db = await getDb();
       if (!db) return [];
 
@@ -216,14 +217,26 @@ export const copilotRouter = router({
 
       // Get distinct sessions with last message
       const sessions = await db.execute(
-        `SELECT session_id, MAX(created_at) as last_msg, COUNT(*) as msg_count, 
+        sql`SELECT session_id, MAX(created_at) as last_msg, COUNT(*) as msg_count, 
          SUBSTRING(MIN(CASE WHEN role='user' THEN content END), 1, 100) as first_message
-         FROM copilot_messages WHERE user_id = ? 
-         GROUP BY session_id ORDER BY last_msg DESC LIMIT 20`,
-        [ctx.user!.id]
+         FROM copilot_messages WHERE user_id = ${ctx.user!.id} 
+         GROUP BY session_id ORDER BY last_msg DESC LIMIT 20`
       );
 
-      return (sessions as any)?.[0] || [];
+      type SessionAggRow = {
+        session_id: string;
+        last_msg: Date;
+        msg_count: number;
+        first_message: string | null;
+      };
+      const raw = sessions as unknown;
+      if (Array.isArray(raw) && raw.length > 0 && Array.isArray(raw[0])) {
+        return raw[0] as SessionAggRow[];
+      }
+      if (Array.isArray(raw)) {
+        return raw as SessionAggRow[];
+      }
+      return [];
     }),
 
   /** Suggested questions based on diagnosis history */

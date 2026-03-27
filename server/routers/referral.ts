@@ -14,7 +14,7 @@ import { z } from "zod";
 import { logger } from "../_core/logger";
 import { getDb, addCredits } from "../db";
 import { referrals, users } from "../../drizzle/schema";
-import { eq, sql, and, count } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 const REFERRAL_BONUS = 50; // credits for both referrer and referred
 
@@ -146,7 +146,7 @@ export const referralRouter = router({
         logger.info({ referrerId: referrer.id, referredId: input.newUserId, code: input.code }, 'Referral applied — credits awarded to both');
 
         return { success: true, creditsAwarded: REFERRAL_BONUS };
-      } catch (err: any) {
+      } catch (err: unknown) {
         logger.error({ err }, 'Referral apply failed');
         return { success: false, message: 'Failed to apply referral' };
       }

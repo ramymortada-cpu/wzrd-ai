@@ -14,14 +14,11 @@
  */
 
 import { logger } from './_core/logger';
-import { resilientLLM } from './_core/llmRouter';
 import { searchGoogle } from './researchEngine';
 import {
-  getClients, getProjectsByClient, getClientById,
-  createBrandAlert, createBrandMetrics, getLatestSnapshot,
-  createBrandHealthSnapshot,
+  getClients, getClientById,
+  createBrandAlert, getLatestSnapshot,
 } from './db';
-import { liveResearch } from './liveIntelligence';
 import { createKnowledgeEntry } from './db';
 
 // ════════════════════════════════════════════
@@ -61,7 +58,7 @@ interface BrandAlertData {
  * Search for brand mentions and sentiment.
  */
 async function detectSocialSignals(
-  companyName: string, market: string
+  companyName: string, _market: string
 ): Promise<BrandSignal[]> {
   const signals: BrandSignal[] = [];
   try {
@@ -171,9 +168,6 @@ async function generateAlerts(
   signals: BrandSignal[], companyName: string, industry: string
 ): Promise<BrandAlertData[]> {
   if (signals.length === 0) return [];
-
-  const criticalSignals = signals.filter(s => s.severity === 'critical');
-  const warningSignals = signals.filter(s => s.severity === 'warning');
 
   const alerts: BrandAlertData[] = [];
 

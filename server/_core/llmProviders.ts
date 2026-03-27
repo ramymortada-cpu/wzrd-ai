@@ -22,7 +22,7 @@
 
 import { ENV } from './env';
 import { logger } from './logger';
-import type { InvokeParams, InvokeResult, Message, Role } from './llm';
+import type { InvokeParams, InvokeResult, Role } from './llm';
 
 // Re-export types
 export type { InvokeParams, InvokeResult };

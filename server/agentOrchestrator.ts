@@ -24,21 +24,19 @@ import { logger } from './_core/logger';
 import { resilientLLM } from './_core/llmRouter';
 import { getActivePrompt } from './promptLab';
 import {
-  AGENT_IDENTITY, DIAGNOSTIC_ENGINE, DISCOVERY_QUESTIONS_BANK,
+  DIAGNOSTIC_ENGINE, DISCOVERY_QUESTIONS_BANK,
   CONVERSATION_LOGIC, QUALITY_STANDARDS, DELIVERABLE_TEMPLATES,
-  CONSULTANT_BOX_MODEL, CASE_STUDY_INTELLIGENCE, ACADEMIC_FOUNDATION,
-  buildSystemPrompt, SERVICE_DEEP_KNOWLEDGE,
+  CONSULTANT_BOX_MODEL, ACADEMIC_FOUNDATION,
+  buildSystemPrompt,
   matchCaseStudies, formatCaseStudiesForPrompt,
 } from './knowledgeBase';
-import { getAllFrameworksForKnowledgeBase, matchFrameworks, formatFrameworksForPrompt } from './academicFrameworks';
-import { getRelevantMarketIntelligence, getAllMarketIntelligenceForKnowledgeBase } from './marketIntelligence';
-import { getFullCompetitiveIntelligence } from './competitiveIntelligence';
+import { matchFrameworks, formatFrameworksForPrompt } from './academicFrameworks';
+import { getRelevantMarketIntelligence } from './marketIntelligence';
 import { getRelevantKnowledge } from './knowledgeAmplifier';
 import { getSemanticKnowledge } from './vectorSearch';
 import { liveResearch } from './liveIntelligence';
 import { getIndustryPack, formatIndustryPackForAI } from './industryPacks';
 import { formatMENACaseStudiesForAI } from './menaCaseStudies';
-import { retry, llmCircuitBreaker, withTimeout } from './_core/retry';
 
 // ════════════════════════════════════════════
 // AGENT TYPES

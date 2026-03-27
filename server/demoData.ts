@@ -109,11 +109,11 @@ export const DEMO_DATA: DemoData = {
  * Returns true if data was seeded, false if skipped.
  */
 export async function seedDemoData(
-  createClient: (data: unknown) => Promise<any>,
-  createProject: (data: unknown) => Promise<any>,
-  createNote: (data: unknown) => Promise<any>,
-  createKnowledge: (data: unknown) => Promise<any>,
-  getClients: () => Promise<any[]>,
+  createClient: (data: unknown) => Promise<unknown>,
+  createProject: (data: unknown) => Promise<unknown>,
+  createNote: (data: unknown) => Promise<unknown>,
+  createKnowledge: (data: unknown) => Promise<unknown>,
+  getClients: () => Promise<unknown[] | { data?: unknown[] }>,
 ): Promise<boolean> {
   try {
     // Check if data already exists

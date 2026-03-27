@@ -7,10 +7,11 @@
 
 import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2/promise";
+import * as schema from "../../drizzle/schema";
 import { logger } from "../_core/logger";
+import type { AppDatabase } from "./types";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let _db: any = null;
+let _db: AppDatabase | null = null;
 let _pool: mysql.Pool | null = null;
 
 /**
@@ -29,7 +30,7 @@ export async function getDb() {
         enableKeepAlive: true,
         keepAliveInitialDelay: 10000,
       });
-      _db = drizzle(_pool);
+      _db = drizzle(_pool, { schema, mode: "default" });
       logger.info({ poolSize: 10 }, 'Database connection pool established');
     } catch (error) {
       logger.error({ err: error }, 'Failed to create database pool');
@@ -52,6 +53,7 @@ export async function closeDb() {
 }
 
 // Re-export all domain helpers
+export type { AppDatabase } from "./types";
 export * from './users';
 export * from './clients';
 export * from './projects';

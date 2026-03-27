@@ -1,5 +1,13 @@
 import { eq, desc, and, sql } from "drizzle-orm";
-import { brandHealthSnapshots, InsertBrandHealthSnapshot, brandAlerts, InsertBrandAlert, brandMetrics, InsertBrandMetric } from "../../drizzle/schema";
+import {
+  brandHealthSnapshots,
+  InsertBrandHealthSnapshot,
+  brandAlerts,
+  InsertBrandAlert,
+  brandMetrics,
+  InsertBrandMetric,
+  type BrandMetric,
+} from "../../drizzle/schema";
 import { getDb } from "./index";
 
 export async function createBrandHealthSnapshot(data: Record<string, unknown>) {
@@ -13,9 +21,41 @@ export async function getSnapshotById(id: number) { const db = await getDb(); if
 export async function createBrandAlert(data: Record<string, unknown>) { const db = await getDb(); if (!db) throw new Error("Database not available"); const result = await db.insert(brandAlerts).values({ clientId: data.clientId, snapshotId: data.snapshotId || null, severity: data.severity, dimension: (data.dimension as string) as "identity" | "positioning" | "messaging" | "visual" | "digital_presence" | "reputation" | "market_fit" | "overall", title: data.title, description: data.description, recommendation: data.recommendation || null } as InsertBrandAlert); return result[0].insertId; }
 export async function getAlertsByClient(clientId: number, status?: string) { const db = await getDb(); if (!db) return []; const conditions: ReturnType<typeof eq>[] = [eq(brandAlerts.clientId, clientId)]; if (status) conditions.push(eq(brandAlerts.status, status as "active" | "resolved" | "acknowledged" | "dismissed")); return db.select().from(brandAlerts).where(and(...conditions)).orderBy(desc(brandAlerts.createdAt)); }
 export async function updateAlertStatus(id: number, status: "active" | "acknowledged" | "resolved" | "dismissed") { const db = await getDb(); if (!db) return; const updates: Record<string, unknown> = { status }; if (status === "resolved") updates.resolvedAt = new Date(); await db.update(brandAlerts).set(updates).where(eq(brandAlerts.id, id)); }
-const DIMENSIONS = ["identity", "positioning", "messaging", "visual", "digital_presence", "reputation", "market_fit"] as const;
-export async function createBrandMetrics(metrics: Array<Record<string, unknown>>) { if (metrics.length === 0) return; const db = await getDb(); if (!db) return; const mapped = metrics.map(m => ({ clientId: m.clientId, snapshotId: m.snapshotId || null, dimension: (DIMENSIONS.includes((m.dimension as string) as any) ? m.dimension : "identity") as typeof DIMENSIONS[number], metricName: m.metricName, score: m.score, maxScore: m.maxScore || 100, details: m.details || null, dataSource: m.dataSource || null })); await db.insert(brandMetrics).values(mapped as InsertBrandMetric[]); }
-export async function getMetricsByClient(clientId: number, dimension?: string) { const db = await getDb(); if (!db) return []; const conditions: ReturnType<typeof eq>[] = [eq(brandMetrics.clientId, clientId)]; if (dimension && DIMENSIONS.includes(dimension as any)) conditions.push(eq(brandMetrics.dimension, dimension as typeof DIMENSIONS[number])); return db.select().from(brandMetrics).where(and(...conditions)).orderBy(desc(brandMetrics.createdAt)); }
+const DIMENSIONS = ["identity", "positioning", "messaging", "visual", "digital_presence", "reputation", "market_fit"] as const satisfies readonly BrandMetric["dimension"][];
+const DIMENSION_SET = new Set<string>(DIMENSIONS);
+
+function normalizeMetricDimension(value: unknown): BrandMetric["dimension"] {
+  return typeof value === "string" && DIMENSION_SET.has(value)
+    ? (value as BrandMetric["dimension"])
+    : "identity";
+}
+
+export async function createBrandMetrics(metrics: Array<Record<string, unknown>>) {
+  if (metrics.length === 0) return;
+  const db = await getDb();
+  if (!db) return;
+  const mapped: InsertBrandMetric[] = metrics.map((m) => ({
+    clientId: m.clientId as number,
+    snapshotId: (m.snapshotId as number | null | undefined) || null,
+    dimension: normalizeMetricDimension(m.dimension),
+    metricName: m.metricName as string,
+    score: m.score as number,
+    maxScore: (m.maxScore as number | undefined) || 100,
+    details: (m.details as string | null | undefined) ?? null,
+    dataSource: (m.dataSource as string | null | undefined) ?? null,
+  }));
+  await db.insert(brandMetrics).values(mapped);
+}
+
+export async function getMetricsByClient(clientId: number, dimension?: string) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions: ReturnType<typeof eq>[] = [eq(brandMetrics.clientId, clientId)];
+  if (dimension && DIMENSION_SET.has(dimension)) {
+    conditions.push(eq(brandMetrics.dimension, dimension as BrandMetric["dimension"]));
+  }
+  return db.select().from(brandMetrics).where(and(...conditions)).orderBy(desc(brandMetrics.createdAt));
+}
 export async function getBrandTwinDashboard() {
   const db = await getDb();
   if (!db) return { totalClients: 0, avgScore: 0, healthy: 0, atRisk: 0, critical: 0, activeAlerts: 0, clients: [] };

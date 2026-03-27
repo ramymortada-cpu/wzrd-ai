@@ -21,7 +21,8 @@ import {
   getClientById, getProjectById, getNotesByClient,
 } from "../db";
 import { getRelevantKnowledge, extractKnowledgeFromConversation } from "../knowledgeAmplifier";
-import { orchestrate, getAgentInfo, AGENT_LABELS, type AgentId } from "../agentOrchestrator";
+import { orchestrate, getAgentInfo, type AgentId } from "../agentOrchestrator";
+import type { ClientNote } from "../../drizzle/schema";
 
 export const aiRouter = router({
   /** Main chat — uses Multi-Agent orchestration */
@@ -77,7 +78,7 @@ export const aiRouter = router({
       if (input.clientId) {
         const notes = await getNotesByClient(input.clientId);
         if (notes?.length > 0) {
-          clientContext += '\n\nRecent Notes:\n' + notes.slice(0, 5).map((n: any) =>
+          clientContext += '\n\nRecent Notes:\n' + notes.slice(0, 5).map((n: ClientNote) =>
             `[${n.category}] ${n.title}: ${(n.content ?? '').substring(0, 200)}`
           ).join('\n');
         }

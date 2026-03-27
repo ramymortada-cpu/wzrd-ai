@@ -10,7 +10,7 @@
  */
 
 import { eq, desc, sql, and } from "drizzle-orm";
-import { users, creditTransactions } from "../../drizzle/schema";
+import { users, creditTransactions, type CreditTransaction } from "../../drizzle/schema";
 import { getDb } from "./index";
 import { WZRD_DIAGNOSIS_TOOL_COSTS } from "@shared/wzrdDiagnosisToolCosts";
 
@@ -55,7 +55,7 @@ export async function getCreditHistory(userId: number, limit = 50): Promise<Cred
     .where(eq(creditTransactions.userId, userId))
     .orderBy(desc(creditTransactions.createdAt))
     .limit(limit);
-  return rows.map((r: any) => ({
+  return rows.map((r: CreditTransaction): CreditHistoryItem => ({
     id: r.id,
     amount: r.amount,
     balance: r.balance,
@@ -193,7 +193,7 @@ export async function deductCredits(
     });
 
     return { success: true, newBalance, cost };
-  } catch (err) {
+  } catch {
     const currentBalance = await getUserCredits(userId);
     return { success: false, newBalance: currentBalance, cost, error: 'Transaction failed' };
   }
@@ -214,8 +214,8 @@ export async function getCreditStats(): Promise<{
 
   const allTransactions = await db.select().from(creditTransactions).limit(5000);
 
-  const issued = allTransactions.filter((t: any) => t.amount > 0).reduce((s: number, t: any) => s + t.amount, 0);
-  const used = allTransactions.filter((t: any) => t.amount < 0).reduce((s: number, t: any) => s + Math.abs(t.amount), 0);
+  const issued = allTransactions.filter((t) => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+  const used = allTransactions.filter((t) => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
 
   // Top tools
   const toolMap = new Map<string, { uses: number; spent: number }>();

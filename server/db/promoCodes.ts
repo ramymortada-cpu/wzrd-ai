@@ -2,9 +2,11 @@
  * Promo Codes — validate and apply discounts on credit purchases.
  */
 
-import { eq } from 'drizzle-orm';
+import { eq, type InferSelectModel } from 'drizzle-orm';
 import { promoCodes } from '../../drizzle/schema';
 import { getDb } from './index';
+
+export type PromoCodeRow = InferSelectModel<typeof promoCodes>;
 
 export interface PromoValidation {
   valid: boolean;
@@ -86,7 +88,7 @@ export async function incrementPromoUsage(code: string): Promise<boolean> {
 }
 
 /** List all promo codes (admin) */
-export async function listPromoCodes(): Promise<any[]> {
+export async function listPromoCodes(): Promise<PromoCodeRow[]> {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(promoCodes).orderBy(promoCodes.createdAt);

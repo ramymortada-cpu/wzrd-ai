@@ -390,7 +390,9 @@ export async function seedIndustryPacks(): Promise<number> {
   for (const pack of INDUSTRY_PACKS) {
     // Check if already seeded
     const existing = await getKnowledgeEntries({ category: 'market_insight', industry: pack.name });
-    const hasExisting = existing.some((e: any) => (e as { title?: string }).title?.includes(`Industry Pack: ${pack.name}`));
+    const hasExisting = existing.some(
+      (e) => typeof e.title === "string" && e.title.includes(`Industry Pack: ${pack.name}`)
+    );
     if (hasExisting) continue;
 
     for (const [marketKey, marketData] of Object.entries(pack.markets)) {

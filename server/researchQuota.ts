@@ -82,10 +82,10 @@ async function searchKnowledgeFirst(query: string, minConfidence: number = 0.6):
       currentQuota.knowledgeHits++;
       logger.debug({ query, results: results.length }, 'Knowledge-first search: hit');
 
-      return results.map((r: any) => ({
+      return results.map((r) => ({
         title: r.title || 'Knowledge Entry',
         url: `knowledge://${r.id}`,
-        snippet: r.contentPreview || (typeof r.content === 'string' ? r.content.substring(0, 200) : ''),
+        snippet: r.contentPreview || '',
         source: 'knowledge' as const,
         confidence: r.similarity || 0.7,
       }));

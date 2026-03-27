@@ -258,7 +258,7 @@ export function getPromptLabDashboard() {
 
   for (const [name, versions] of Array.from(promptVersions.entries())) {
     allPrompts[name] = {
-      versions: versions.map((v: any) => ({
+      versions: versions.map((v: PromptVersion) => ({
         version: v.version,
         isActive: v.isActive,
         conversations: v.metrics.conversations,

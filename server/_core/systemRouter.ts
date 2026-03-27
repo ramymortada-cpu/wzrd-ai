@@ -78,7 +78,9 @@ export const systemRouter = router({
     try {
       const { getDb } = await import("../db/index");
       dbConnected = !!(await getDb());
-    } catch {}
+    } catch {
+      /* DB probe failed */
+    }
 
     return {
       uptime: Math.floor(process.uptime()),

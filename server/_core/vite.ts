@@ -9,10 +9,14 @@ import { fileURLToPath } from "url";
 const __dir = (() => {
   try {
     if (typeof import.meta.dirname === 'string') return import.meta.dirname;
-  } catch {}
+  } catch {
+    /* import.meta.dirname not available */
+  }
   try {
     return path.dirname(fileURLToPath(import.meta.url));
-  } catch {}
+  } catch {
+    /* fileURLToPath fallback */
+  }
   return process.cwd();
 })();
 

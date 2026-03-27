@@ -6,7 +6,7 @@ import { logger } from "../_core/logger";
 import { runBrandAudit, compareSnapshots } from "../brandTwin";
 import { eq, and, desc } from "drizzle-orm";
 import { brandAlerts } from "../../drizzle/schema";
-import { createBrandHealthSnapshot, getLatestSnapshot, getSnapshotHistory, getSnapshotById, createBrandAlert, getAlertsByClient, updateAlertStatus, createBrandMetrics, getMetricsByClient, getBrandTwinDashboard, getClientById } from "../db";
+import { createBrandHealthSnapshot, getLatestSnapshot, getSnapshotHistory, getSnapshotById, getAlertsByClient, updateAlertStatus, getMetricsByClient, getBrandTwinDashboard, getClientById } from "../db";
 import { getDb } from "../db/index";
 import { observeClient, observeAllClients } from "../brandObservatory";
 

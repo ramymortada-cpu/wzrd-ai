@@ -14,17 +14,14 @@
  */
 
 import { logger } from './_core/logger';
-import { resilientLLM } from './_core/llmRouter';
 import {
   getProjectById, getClientById, getDeliverablesByProject, updateDeliverable,
   getNotesByClient, updatePipelineRun, createDeliverable,
 } from './db';
 import { orchestrate, type AgentId } from './agentOrchestrator';
-import { liveResearch, deepResearch, researchToKnowledge } from './liveIntelligence';
+import { liveResearch, deepResearch } from './liveIntelligence';
 import { reviewDeliverable } from './qualityAssurance';
-import { getIndustryPack, formatIndustryPackForAI } from './industryPacks';
 import { SERVICE_PLAYBOOKS } from './knowledgeBase';
-import { SERVICE_LABELS, SERVICE_PRICES } from '@shared/const';
 
 // ════════════════════════════════════════════
 // TYPES
@@ -56,12 +53,6 @@ function getInsertId(result: unknown): number | undefined {
   if (!result) return undefined;
   if (Array.isArray(result) && result[0]) return (result[0] as InsertResult).insertId;
   return (result as InsertResult).id ?? (result as InsertResult).insertId;
-}
-
-/** Safely get error message */
-function getErrorMessage(err: unknown): string {
-  if (err instanceof Error) return err.message;
-  return String(err);
 }
 
 // ════════════════════════════════════════════

@@ -86,7 +86,6 @@ const INDUSTRY_KEYWORDS: Record<string, string[]> = {
 function scoreRelevance(chunk: KnowledgeChunk, request: ContextRequest): number {
   let score = 0;
   const contentLower = chunk.content.toLowerCase();
-  const tags = chunk.tags.map(t => t.toLowerCase());
 
   // Service type matching (0-30 points)
   if (request.serviceType) {

@@ -16,7 +16,6 @@
  * Cost: $0 — uses free APIs and built-in scraping
  */
 
-import { ENV } from './_core/env';
 import { resilientLLM } from './_core/llmRouter';
 import { logger } from './_core/logger';
 
@@ -162,11 +161,17 @@ async function searchViaLLM(query: string, numResults: number): Promise<SearchRe
 
     const content = typeof response.choices[0]?.message?.content === 'string'
       ? response.choices[0].message.content : '{"results":[]}';
-    const parsed = JSON.parse(content);
-    return (parsed.results || []).map((r: any) => ({
-      ...(typeof r === 'object' && r !== null ? r : {}),
-      source: 'llm_research',
-    }));
+    const parsed = JSON.parse(content) as { results?: unknown[] };
+    const rawList = Array.isArray(parsed.results) ? parsed.results : [];
+    return rawList.map((r: unknown): SearchResult => {
+      const o = typeof r === "object" && r !== null && !Array.isArray(r) ? (r as Record<string, unknown>) : {};
+      return {
+        title: String(o.title ?? ""),
+        url: String(o.url ?? ""),
+        snippet: String(o.snippet ?? ""),
+        source: "llm_research",
+      };
+    });
   } catch {
     return [];
   }
@@ -225,12 +230,14 @@ export async function scrapeWebsite(url: string): Promise<ScrapedPage | null> {
 
       // Other error — don't retry
       break;
-    } catch (err: any) {
-      if (err?.name === 'AbortError') {
+    } catch (err: unknown) {
+      const name = err instanceof Error ? err.name : "";
+      const message = err instanceof Error ? err.message : String(err);
+      if (name === "AbortError") {
         logger.debug({ url, attempt }, 'Scrape timeout — retrying');
         continue;
       }
-      logger.debug({ url, err: err?.message, attempt }, 'Scrape failed');
+      logger.debug({ url, err: message, attempt }, 'Scrape failed');
       if (attempt === 0) continue; // Retry once on network errors
       break;
     }

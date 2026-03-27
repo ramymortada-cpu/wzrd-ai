@@ -22,6 +22,7 @@ import { matchMENACaseStudies } from "../menaCaseStudies";
 import {
   createLead, getLeadById, listLeads, updateLead, getLeadStats, getLeadFunnelStats,
   createClient,
+  getClientById,
 } from "../db";
 
 /**
@@ -41,9 +42,9 @@ export const leadsRouter = router({
    */
   submitQuickCheck: publicProcedure
     .input(quickCheckInput)
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async ({ input, ctx: _ctx }) => {
       const sanitized = sanitizeObject(input);
-      const answersText = sanitized.answers.map((a: any) => `Q: ${a.question}\nA: ${a.answer}`).join('\n\n');
+      const answersText = sanitized.answers.map((a) => `Q: ${a.question}\nA: ${a.answer}`).join('\n\n');
 
       const diagnosisPrompt = `You are Wzrd AI, the brand engineering intelligence of Primo Marca agency.
 
@@ -249,7 +250,7 @@ Respond in JSON format:
       const lead = await getLeadById(input.id);
       if (!lead) throw new Error('Lead not found');
 
-      const client = await createClient({
+      const insertResult = await createClient({
         name: lead.contactName || lead.companyName,
         companyName: lead.companyName,
         email: lead.email,
@@ -260,13 +261,16 @@ Respond in JSON format:
         status: 'active',
       });
 
-      if (client) {
-        await updateLead(input.id, { status: 'converted', clientId: (client as { id: number }).id });
-        await audit('leads', input.id, 'update', ctx.user?.id, { status: ['qualified', 'converted'] });
-        logger.info({ leadId: input.id, clientId: (client as { id: number }).id }, 'Lead converted to client');
+      const clientId = Number(insertResult[0].insertId);
+      if (!Number.isFinite(clientId) || clientId <= 0) {
+        throw new Error('Failed to create client');
       }
 
-      return client;
+      await updateLead(input.id, { status: 'converted', clientId });
+      await audit('leads', input.id, 'update', ctx.user?.id, { status: ['qualified', 'converted'] });
+      logger.info({ leadId: input.id, clientId }, 'Lead converted to client');
+
+      return getClientById(clientId);
     }),
 
   /** Lead statistics */

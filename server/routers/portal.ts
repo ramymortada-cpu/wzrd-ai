@@ -5,17 +5,17 @@ import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { logger } from "../_core/logger";
 import { SERVICE_LABELS, STAGE_LABELS } from "@shared/const";
-import { generateSecureToken, hashToken, verifyToken } from "../_core/tokenSecurity";
+import { generateSecureToken, hashToken } from "../_core/tokenSecurity";
 import { getIndustryPack, formatIndustryPackForAI } from "../industryPacks";
-import { getRelevantKnowledge } from "../knowledgeAmplifier";
 import {
   createPortalToken, getPortalTokenByToken, getPortalTokensByProject, updatePortalToken,
   getProjectById, getClientById, getDeliverablesByProject,
   getDeliverableRevisions, getDeliverableComments, getDeliverableApprovals, getLatestApproval,
-  createDeliverableComment, createDeliverableApproval, createDeliverableRevision, getLatestRevisionVersion,
+  createDeliverableComment, createDeliverableApproval,
   createDeliverableFeedback,
 } from "../db";
 import { notifyOwner } from "../_core/notification";
+import type { Deliverable } from "../../drizzle/schema";
 
 export const portalRouter = router({
   // Generate portal link — stores HASHED token, returns raw to client
@@ -52,7 +52,7 @@ export const portalRouter = router({
     return {
       project: { name: project.name, serviceType: project.serviceType, stage: project.stage, status: project.status, startDate: project.startDate, description: project.description },
       client: client ? { id: client.id, name: client.name, companyName: client.companyName } : null,
-      deliverables: projectDeliverables.map((d: any) => ({
+      deliverables: projectDeliverables.map((d: Deliverable) => ({
         id: d.id, title: d.title, description: d.description, stage: d.stage, status: d.status,
         content: d.status === 'delivered' || d.status === 'approved' ? d.content : null,
         fileUrl: d.status === 'delivered' || d.status === 'approved' ? d.fileUrl : null,
@@ -82,7 +82,7 @@ export const portalRouter = router({
       const portalToken = await getPortalTokenByToken(hashToken(input.token));
       if (!portalToken) throw new Error('Invalid token');
       const result = await createDeliverableComment({ deliverableId: input.deliverableId, authorType: 'client', authorName: input.authorName, comment: input.comment, parentId: input.parentId, version: input.version });
-      try { await notifyOwner({ title: `New Comment: ${input.authorName}`, content: input.comment.substring(0, 200) }); } catch (e) {}
+      try { await notifyOwner({ title: `New Comment: ${input.authorName}`, content: input.comment.substring(0, 200) }); } catch { /* non-blocking notify */ }
       return result;
     }),
 
@@ -97,7 +97,7 @@ export const portalRouter = router({
         const { updateDeliverable } = await import("../db");
         await updateDeliverable(input.deliverableId, { status: 'approved' });
       }
-      try { await notifyOwner({ title: `Deliverable ${input.decision}: ${input.clientName}`, content: input.reason || 'No reason provided' }); } catch (e) {}
+      try { await notifyOwner({ title: `Deliverable ${input.decision}: ${input.clientName}`, content: input.reason || 'No reason provided' }); } catch { /* non-blocking notify */ }
       logger.info({ deliverableId: input.deliverableId, decision: input.decision }, 'Portal approval submitted');
       return result;
     }),

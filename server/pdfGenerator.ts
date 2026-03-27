@@ -231,7 +231,7 @@ export interface GeneratePDFOptions {
 
 /** Generate a branded PDF from deliverable content */
 export async function generateDeliverablePDF(options: GeneratePDFOptions): Promise<{ buffer: Buffer; pageCount: number }> {
-  const { title, content, clientName, projectName, serviceType, stage, date } = options;
+  const { title, content, clientName, projectName, serviceType, date } = options;
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageWidth = 210;
   const pageHeight = 297;

@@ -28,13 +28,6 @@ interface CachedResponse {
   hits: number;
 }
 
-interface CacheConfig {
-  /** TTL in milliseconds */
-  ttl: number;
-  /** Context label for logging */
-  context: string;
-}
-
 // ============ CACHE TTLs ============
 
 const CACHE_TTLs: Record<string, number> = {

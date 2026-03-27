@@ -12,8 +12,9 @@
  */
 
 import { z } from 'zod';
-import { sql, desc, gt, lt, and, SQL } from 'drizzle-orm';
-import type { MySqlTable, MySqlColumn } from 'drizzle-orm/mysql-core';
+import { sql, SQL } from 'drizzle-orm';
+import type { MySqlTable } from 'drizzle-orm/mysql-core';
+import type { AppDatabase } from '../db/types';
 
 /** Default and maximum page sizes */
 export const DEFAULT_PAGE_SIZE = 20;
@@ -63,8 +64,7 @@ export interface CursorResult<T> {
  * @param where - Optional WHERE condition
  */
 export async function paginate<T>(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  db: any,
+  db: AppDatabase,
   table: MySqlTable,
   params: { page: number; pageSize: number },
   orderBy: SQL,
@@ -80,10 +80,10 @@ export async function paginate<T>(
   
   const [{ count: total }] = await countQuery;
 
-  // Get paginated data
-  let dataQuery = db.select().from(table);
-  if (where) dataQuery = dataQuery.where(where);
-  const data = await dataQuery.orderBy(orderBy).limit(pageSize).offset(offset);
+  const data = await (where ? db.select().from(table).where(where) : db.select().from(table))
+    .orderBy(orderBy)
+    .limit(pageSize)
+    .offset(offset);
 
   const totalPages = Math.ceil(total / pageSize);
 

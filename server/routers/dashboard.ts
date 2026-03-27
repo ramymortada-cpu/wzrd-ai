@@ -13,6 +13,9 @@ import { getDb } from "../db/index";
 import { getAnalyticsData } from "../db/portal";
 import { SERVICE_PLAYBOOKS } from "../knowledgeBase";
 import { SERVICE_LABELS, SERVICE_PRICES } from "@shared/const";
+import type { Project } from "../../drizzle/schema";
+
+type DashboardProjectBrief = Pick<Project, "id" | "name" | "status" | "stage" | "createdAt" | "updatedAt">;
 
 export const dashboardRouter = router({
   /** Aggregated stats for the dashboard home */
@@ -41,7 +44,7 @@ export const dashboardRouter = router({
     if (!db) return { total: 0, completed: 0, running: 0, failed: 0, successRate: 0, avgDuration: 0, recentRuns: [] };
 
     // Use projects as proxy for pipeline stages
-    const allProjects = await db.select({
+    const allProjects: DashboardProjectBrief[] = await db.select({
       id: projects.id,
       name: projects.name,
       status: projects.status,
@@ -51,20 +54,20 @@ export const dashboardRouter = router({
     }).from(projects).limit(200);
 
     const total = allProjects.length;
-    const completed = allProjects.filter((p: any) => p.status === 'completed').length;
-    const running = allProjects.filter((p: any) => p.status === 'active').length;
-    const failed = allProjects.filter((p: any) => p.status === 'cancelled').length;
+    const completed = allProjects.filter((p: DashboardProjectBrief) => p.status === 'completed').length;
+    const running = allProjects.filter((p: DashboardProjectBrief) => p.status === 'active').length;
+    const failed = allProjects.filter((p: DashboardProjectBrief) => p.status === 'cancelled').length;
     const successRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
     // Average duration (completed projects)
-    const completedProjects = allProjects.filter((p: any) => p.status === 'completed' && p.createdAt && p.updatedAt);
-    const totalDuration = completedProjects.reduce((sum: number, p: any) => {
+    const completedProjects = allProjects.filter((p: DashboardProjectBrief) => p.status === 'completed' && p.createdAt && p.updatedAt);
+    const totalDuration = completedProjects.reduce((sum: number, p: DashboardProjectBrief) => {
       return sum + (new Date(p.updatedAt).getTime() - new Date(p.createdAt).getTime());
     }, 0);
     const avgDuration = completedProjects.length > 0 ? Math.round(totalDuration / completedProjects.length / (1000 * 60 * 60 * 24)) : 0; // days
 
     // Recent runs (last 10 projects)
-    const recentRuns = allProjects.slice(0, 10).map((p: any) => ({
+    const recentRuns = allProjects.slice(0, 10).map((p: DashboardProjectBrief) => ({
       id: p.id,
       name: p.name,
       status: p.status,

@@ -1,7 +1,7 @@
 import { getAllCaseStudiesForKnowledgeBase, matchCaseStudies, formatCaseStudiesForPrompt, CASE_STUDIES } from './caseStudyLibrary';
 import { getAllMarketIntelligenceForKnowledgeBase, getRelevantMarketIntelligence } from './marketIntelligence';
-import { matchFrameworks, formatFrameworksForPrompt, getAllFrameworksForKnowledgeBase, ACADEMIC_FRAMEWORKS } from './academicFrameworks';
-import { getRelevantDeepContent, getFullAcademicDeepDive } from './academicDeepDive';
+import { matchFrameworks, formatFrameworksForPrompt } from './academicFrameworks';
+import { getRelevantDeepContent } from './academicDeepDive';
 import { getRelevantCompetitiveIntelligence, getFullCompetitiveIntelligence } from './competitiveIntelligence';
 
 /**

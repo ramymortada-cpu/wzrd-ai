@@ -121,24 +121,12 @@ function extractTags(text: string): string[] {
 // ============ MAIN MIGRATION ============
 
 /**
- * Module definitions for migration.
- * Each module maps to a file → category → extraction strategy.
- */
-interface ModuleConfig {
-  name: string;
-  getContent: () => string;
-  category: string;
-  tags: string[];
-  minSectionLength?: number;
-}
-
-/**
  * Run the full migration.
  * Returns the entries that would be created (for preview or actual insertion).
  */
 export function prepareStaticMigration(): MigrationEntry[] {
   // Lazy-import the knowledge modules to avoid circular dependencies
-  let allEntries: MigrationEntry[] = [];
+  const allEntries: MigrationEntry[] = [];
   
   try {
     // We can't import at top level due to circular deps, so we import dynamically
@@ -217,7 +205,7 @@ export function prepareStaticMigration(): MigrationEntry[] {
  * Checks for duplicates by title.
  */
 export async function migrateStaticKnowledge(
-  createEntry: (data: unknown) => Promise<any>,
+  createEntry: (data: unknown) => Promise<unknown>,
   getExistingTitles: () => Promise<string[]>
 ): Promise<{ created: number; skipped: number; errors: number }> {
   const entries = prepareStaticMigration();

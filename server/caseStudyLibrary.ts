@@ -455,7 +455,7 @@ export function matchCaseStudies(params: {
 }): CaseStudy[] {
   const { clientSituation, industry, challenge, tags, category, limit = 5 } = params;
   
-  let scored = CASE_STUDIES.map(cs => {
+  const scored = CASE_STUDIES.map(cs => {
     let score = 0;
     const searchText = (clientSituation || '') + ' ' + (industry || '') + ' ' + (challenge || '');
     const searchLower = searchText.toLowerCase();

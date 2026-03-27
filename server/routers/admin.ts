@@ -11,7 +11,6 @@
 
 import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
-import { logger } from "../_core/logger";
 import { checkOwner, getPermissionsForRole, type UserRole } from "../_core/authorization";
 import {
   createPromptVersion, activateVersion, getActivePrompt,
@@ -187,13 +186,6 @@ export const adminRouter = router({
     }))
     .query(async ({ input, ctx }) => {
       checkOwner(ctx);
-      // Generate sample HTML for each template type
-      const { sendWelcomeEmail, sendToolResultEmail, sendGuideEmail } = await import('../wzrdEmails');
-      
-      // We can't easily get the HTML without sending — so we create a mock send
-      // that captures the HTML. For preview, we reconstruct it:
-      const appUrl = process.env.APP_URL || 'http://localhost:3000';
-      
       if (input.template === 'welcome') {
         return { html: `<p>Use admin.testEmail to send a real welcome email and check your inbox.</p><p>Template: Welcome email with 100 credits CTA, tool list, WZRD AI branding.</p>` };
       }
@@ -206,7 +198,7 @@ export const adminRouter = router({
   /** Admin: Ping LLM provider to verify connectivity */
   pingLLM: protectedProcedure
     .input(z.object({ provider: z.enum(['groq', 'claude']).optional() }))
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async ({ input: _input, ctx }) => {
       checkOwner(ctx);
       const start = Date.now();
       try {

@@ -14,7 +14,7 @@ import { buildSystemPrompt } from "../knowledgeBase";
 import { notifyOwner } from "../_core/notification";
 import {
   createProposal, getProposals, getProposalById, getProposalsByClient, updateProposal, deleteProposal,
-  getClientById, createProposalAcceptance, getProposalAcceptances,
+  getClientById, getProposalAcceptances,
 } from "../db";
 
 export const proposalsRouter = router({

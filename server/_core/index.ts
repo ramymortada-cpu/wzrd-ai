@@ -134,7 +134,9 @@ async function startServer() {
   try {
     const { mountPaymobWebhook } = await import('../paymobIntegration');
     mountPaymobWebhook(app);
-  } catch {}
+  } catch {
+    /* Paymob integration optional */
+  }
 
   // === GLOBAL ERROR HANDLER (must be LAST middleware) ===
   app.use(expressErrorHandler);
@@ -167,10 +169,16 @@ async function startServer() {
         // Schedule auto-refresh of stale knowledge (every 6 hours)
         const { refreshStaleKnowledge } = await import('../liveIntelligence');
         setInterval(async () => {
-          try { await refreshStaleKnowledge(); } catch {}
+          try {
+            await refreshStaleKnowledge();
+          } catch {
+            /* refresh non-fatal */
+          }
         }, 6 * 60 * 60 * 1000);
         logger.info('Knowledge auto-refresh scheduled (every 6h)');
-      } catch {}
+      } catch {
+        /* scheduler optional */
+      }
 
       try {
         // Schedule auto monthly reports (check daily at 00:00)
@@ -179,17 +187,25 @@ async function startServer() {
           const now = new Date();
           // Only generate on the 1st of each month
           if (now.getDate() === 1 && now.getHours() === 0) {
-            try { await generateAllMonthlyReports(); } catch {}
+            try {
+              await generateAllMonthlyReports();
+            } catch {
+              /* report run non-fatal */
+            }
           }
         }, 60 * 60 * 1000); // Check every hour
         logger.info('Auto monthly reports scheduled (1st of each month)');
-      } catch {}
+      } catch {
+        /* monthly schedule optional */
+      }
 
       // Start newsletter scheduler
       try {
         const { startNewsletterScheduler } = await import('../newsletter');
         startNewsletterScheduler();
-      } catch {}
+      } catch {
+        /* newsletter optional */
+      }
 
       try {
         const { startAbandonedCartWorker } = await import('../abandonedCartWorker');

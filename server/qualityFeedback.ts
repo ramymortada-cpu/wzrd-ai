@@ -23,7 +23,7 @@
  */
 
 import { logger } from './_core/logger';
-import { runRuleBasedQA, runAIReview, type QAResult } from './qualityAssurance';
+import { runRuleBasedQA, runAIReview } from './qualityAssurance';
 
 // ============ TYPES ============
 
@@ -102,7 +102,7 @@ export async function assessDeliverableQuality(
     : 50;
 
   // Step 2: AI review (if score is borderline or if explicitly requested)
-  let aiScore: number | null = null;
+  const aiScore: number | null = null;
   let aiReview: QualityScore['aiReview'] = null;
 
   if (!options?.skipAI && ruleScore < THRESHOLDS.AI_REVIEW_THRESHOLD) {

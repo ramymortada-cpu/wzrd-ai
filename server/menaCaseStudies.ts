@@ -294,7 +294,7 @@ export function matchMENACaseStudies(context: {
   clientSituation?: string;
   limit?: number;
 }): MENACaseStudy[] {
-  let scored = MENA_CASE_STUDIES.map(c => {
+  const scored = MENA_CASE_STUDIES.map(c => {
     let score = 0;
     if (context.industry && c.industry.toLowerCase().includes(context.industry.toLowerCase())) score += 30;
     if (context.market && (c.market === context.market || c.market === 'mena')) score += 20;

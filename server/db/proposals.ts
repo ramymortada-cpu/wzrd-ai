@@ -1,5 +1,5 @@
 import { eq, desc } from "drizzle-orm";
-import { proposals, InsertProposal, proposalAcceptances, InsertProposalAcceptance, onboardingSessions, InsertOnboardingSession } from "../../drizzle/schema";
+import { proposals, InsertProposal, proposalAcceptances, InsertProposalAcceptance, onboardingSessions, InsertOnboardingSession, type ProposalAcceptance } from "../../drizzle/schema";
 import { getDb } from "./index";
 
 export async function createProposal(data: InsertProposal) {
@@ -34,12 +34,13 @@ export async function deleteProposal(id: number) {
   if (!db) throw new Error("Database not available");
   await db.delete(proposals).where(eq(proposals.id, id));
 }
-export async function createProposalAcceptance(data: InsertProposalAcceptance) {
+export async function createProposalAcceptance(data: InsertProposalAcceptance): Promise<ProposalAcceptance | null> {
   const db = await getDb();
   if (!db) return null;
   const result = await db.insert(proposalAcceptances).values(data);
   const id = result[0].insertId;
-  return db.select().from(proposalAcceptances).where(eq(proposalAcceptances.id, id)).then((r: any) => r[0] || null);
+  const rows = await db.select().from(proposalAcceptances).where(eq(proposalAcceptances.id, id));
+  return rows[0] ?? null;
 }
 export async function getProposalAcceptances(proposalId: number) {
   const db = await getDb();

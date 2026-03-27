@@ -28,7 +28,6 @@ import {
   createDeliverable, getNotesByClient,
 } from './db';
 import { liveResearch } from './liveIntelligence';
-import { getIndustryPack, formatIndustryPackForAI } from './industryPacks';
 import { SERVICE_LABELS } from '@shared/const';
 
 export interface MonthlyReport {

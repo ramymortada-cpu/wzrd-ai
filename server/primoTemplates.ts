@@ -202,9 +202,14 @@ export const PRIMO_TEMPLATES: PrimoTemplate[] = [
 /**
  * Process a filled template → create knowledge entry + extract patterns.
  */
+function fieldStr(data: Record<string, unknown>, key: string): string {
+  const v = data[key];
+  return v == null ? "" : String(v);
+}
+
 export async function processFilledTemplate(
   templateId: string,
-  data: Record<string, any>,
+  data: Record<string, unknown>,
   options?: { amplify?: boolean }
 ): Promise<{
   entryId: number | null;
@@ -218,12 +223,17 @@ export async function processFilledTemplate(
   const contentParts: string[] = [];
   for (const field of template.fields) {
     const value = data[field.key];
-    if (value) {
-      contentParts.push(`**${field.label}:** ${value}`);
+    if (value != null && String(value).trim() !== "") {
+      contentParts.push(`**${field.label}:** ${String(value)}`);
     }
   }
   const content = contentParts.join('\n\n');
-  const title = data.clientName || data.context?.substring(0, 100) || data.observation?.substring(0, 100) || 'Untitled';
+  const ctx = fieldStr(data, "context");
+  const title =
+    fieldStr(data, "clientName") ||
+    (ctx ? ctx.substring(0, 100) : "") ||
+    fieldStr(data, "observation").substring(0, 100) ||
+    "Untitled";
 
   // Extract patterns using AI
   let patterns: string[] = [];
@@ -249,19 +259,19 @@ export async function processFilledTemplate(
   // Create knowledge entry
   const tags: string[] = [
     templateId,
-    data.industry?.toLowerCase(),
-    data.market,
-    data.diagnosticPattern,
-    data.serviceType,
-    'primo_experience',
-  ].filter(Boolean) as string[];
+    fieldStr(data, "industry").toLowerCase(),
+    fieldStr(data, "market"),
+    fieldStr(data, "diagnosticPattern"),
+    fieldStr(data, "serviceType"),
+    "primo_experience",
+  ].filter(Boolean);
 
   const entryId = await createKnowledgeEntry({
     title: `[${template.name}] ${title}`,
     content: enrichedContent,
     category: template.category as 'case_study' | 'framework' | 'lesson_learned' | 'market_insight' | 'competitor_intel' | 'client_pattern' | 'methodology' | 'template' | 'general',
-    industry: data.industry,
-    market: data.market,
+    industry: fieldStr(data, "industry") || undefined,
+    market: fieldStr(data, "market") || undefined,
     source: 'manual',
     tags: [...new Set(tags)].slice(0, 20),
   });
@@ -272,7 +282,8 @@ export async function processFilledTemplate(
       await amplifyKnowledgeEntry({
         title, content: enrichedContent,
         category: template.category,
-        industry: data.industry, market: data.market,
+        industry: fieldStr(data, "industry") || undefined,
+        market: fieldStr(data, "market") || undefined,
       });
     } catch { /* Non-blocking */ }
   }

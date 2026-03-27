@@ -142,7 +142,7 @@ async function sendAndLog(params: {
 
   // Replace variables in HTML
   const appUrl = process.env.APP_URL || 'https://wzzrdai.com';
-  let finalHtml = params.html
+  const finalHtml = params.html
     .replace(/\{\{APP_URL\}\}/g, appUrl);
 
   const sent = await sendEmail({ to: params.email, subject: params.subject, html: finalHtml });
@@ -413,7 +413,10 @@ export const emailAutomationRouter = router({
 
       // Find matching active rules
       const rules = await db.select().from(automationRules)
-        .where(and(eq(automationRules.trigger, input.trigger as any), eq(automationRules.isActive, 1)));
+        .where(and(
+          eq(automationRules.trigger, input.trigger as (typeof automationRules.$inferSelect)['trigger']),
+          eq(automationRules.isActive, 1),
+        ));
 
       if (rules.length === 0) return { success: true, triggered: 0 };
 
@@ -442,7 +445,7 @@ export const emailAutomationRouter = router({
           triggered++;
         } else {
           // Send immediately
-          let html = template.html
+          const html = template.html
             .replace(/\{\{NAME\}\}/g, user.name || '')
             .replace(/\{\{SCORE\}\}/g, String(input.metadata?.score || ''))
             .replace(/\{\{CREDITS\}\}/g, String(input.metadata?.credits || ''));

@@ -34,7 +34,7 @@ import { upsertLeadFromToolDiagnosis } from "../db/leads";
 import { sendToolResultEmail } from "../wzrdEmails";
 import { getToolSystemPrompt, isToolEnabled } from "../siteConfig";
 import { diagnosisHistory, userChecklists } from "../../drizzle/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { fireEmailTrigger } from "../emailTrigger";
 
 /**
@@ -58,7 +58,8 @@ async function saveDiagnosisHistory(userId: number, toolId: string, result: Tool
 
   // Auto-create checklist if actionItems exist
   if (result.actionItems.length > 0) {
-    const diagId = (insertResult as any)?.[0]?.insertId ?? 0;
+    const insertRows = insertResult as unknown as { insertId?: number }[];
+    const diagId = Number(insertRows[0]?.insertId ?? 0);
     if (diagId > 0) {
       const checklistItems = result.actionItems.map((item, i) => ({
         id: i,
@@ -73,7 +74,7 @@ async function saveDiagnosisHistory(userId: number, toolId: string, result: Tool
         items: checklistItems,
         completedCount: 0,
         totalCount: checklistItems.length,
-      }).catch((err: any) => logger.warn({ err }, 'Failed to create checklist'));
+      }).catch((err: unknown) => logger.warn({ err }, 'Failed to create checklist'));
     }
   }
 
@@ -199,9 +200,9 @@ async function runToolAI(
     const extractedScore = scoreMatch ? Math.min(100, parseInt(scoreMatch[1])) : null;
 
     // Try to extract bullet points as findings
-    const bulletPoints = text.match(/[•\-\*⚠✓→]\s*(.+)/g) || [];
+    const bulletPoints = text.match(/[•\-*⚠✓→]\s*(.+)/g) || [];
     const findings = bulletPoints.slice(0, 3).map(b => ({
-      title: b.replace(/^[•\-\*⚠✓→]\s*/, '').substring(0, 80),
+      title: b.replace(/^[•\-*⚠✓→]\s*/, '').substring(0, 80),
       detail: '',
       severity: 'medium',
     }));
@@ -669,13 +670,32 @@ Respond ONLY in this JSON format:
         }, { context: 'benchmark' });
 
         const text = response.choices[0]?.message?.content as string;
-        let parsed: any;
+
+        type BenchmarkCompanyRow = {
+          name?: string;
+          totalScore?: number;
+          pillars?: Record<string, unknown>;
+          strengths?: string[];
+          weaknesses?: string[];
+        };
+        type BenchmarkGapRow = {
+          pillar: string;
+          gap: number;
+          recommendation?: string;
+        };
+        type BenchmarkParsed = {
+          companies?: BenchmarkCompanyRow[];
+          gaps?: BenchmarkGapRow[];
+          overallInsight?: string;
+        };
+
+        let parsed: BenchmarkParsed;
         try {
-          parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
+          parsed = JSON.parse(text.replace(/```json|```/g, '').trim()) as BenchmarkParsed;
         } catch {
           // Fallback
           parsed = {
-            companies: allCompanies.map((c, i) => ({
+            companies: allCompanies.map((c) => ({
               name: c,
               totalScore: 50 + Math.floor(Math.random() * 30),
               pillars: { positioning: 50, messaging: 50, offer: 50, identity: 50, journey: 50 },
@@ -690,11 +710,11 @@ Respond ONLY in this JSON format:
 
         // Clamp all scores
         if (parsed.companies) {
-          parsed.companies = parsed.companies.map((c: any) => ({
+          parsed.companies = parsed.companies.map((c) => ({
             ...c,
             totalScore: Math.max(0, Math.min(100, c.totalScore || 50)),
             pillars: Object.fromEntries(
-              Object.entries(c.pillars || {}).map(([k, v]) => [k, Math.max(0, Math.min(100, (v as number) || 50))])
+              Object.entries(c.pillars || {}).map(([k, v]) => [k, Math.max(0, Math.min(100, (typeof v === 'number' ? v : Number(v)) || 50))])
             ),
           }));
         }
@@ -702,10 +722,11 @@ Respond ONLY in this JSON format:
         // Save to history
         const yourCompany = parsed.companies?.[0];
         if (yourCompany) {
+          const score = yourCompany.totalScore ?? 50;
           saveDiagnosisHistory(ctx.user!.id, 'competitive_benchmark', {
-            score: yourCompany.totalScore,
-            label: scoreLabel(yourCompany.totalScore),
-            findings: (parsed.gaps || []).slice(0, 5).map((g: any) => ({
+            score,
+            label: scoreLabel(score),
+            findings: (parsed.gaps || []).slice(0, 5).map((g) => ({
               title: `فجوة في ${g.pillar}: ${g.gap} نقطة`,
               detail: g.recommendation || '',
               severity: g.gap > 20 ? 'high' : g.gap > 10 ? 'medium' : 'low',
@@ -724,7 +745,7 @@ Respond ONLY in this JSON format:
           creditsUsed: deduction.cost,
           creditsRemaining: deduction.newBalance ?? 0,
         };
-      } catch (err: any) {
+      } catch (err: unknown) {
         logger.error({ err }, 'Competitive benchmark failed');
         throw new Error('حصل مشكلة في التحليل — حاول تاني.');
       }

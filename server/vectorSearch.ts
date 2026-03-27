@@ -21,7 +21,6 @@
  */
 
 import { logger } from './_core/logger';
-import { resilientLLM } from './_core/llmRouter';
 import { getKnowledgeEntries } from './db';
 
 // ════════════════════════════════════════════
@@ -462,7 +461,7 @@ export async function semanticSearch(
     .filter(c => c.similarity >= minSimilarity)
     .sort((a, b) => b.similarity - a.similarity)
     .slice(0, limit)
-    .map(({ industry, market, ...rest }) => rest);
+    .map(({ industry: _industry, market: _market, ...rest }) => rest);
 }
 
 /**
@@ -487,7 +486,7 @@ export async function getSemanticKnowledge(
   const parts: string[] = [];
 
   for (const result of results) {
-    const fullEntry = entries.find((e: any) => e.id === result.id);
+    const fullEntry = entries.find((e) => e.id === result.id);
     if (!fullEntry) continue;
 
     const content = fullEntry.content || '';

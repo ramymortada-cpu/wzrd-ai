@@ -1,5 +1,11 @@
 import { eq, desc, and, sql } from "drizzle-orm";
-import { deliverables, InsertDeliverable, deliverableRevisions, InsertDeliverableRevision, deliverableComments, InsertDeliverableComment, deliverableApprovals, InsertDeliverableApproval } from "../../drizzle/schema";
+import {
+  deliverables,
+  InsertDeliverable,
+  deliverableRevisions,
+  InsertDeliverableRevision,
+  type DeliverableRevision,
+} from "../../drizzle/schema";
 import { getDb } from "./index";
 
 export async function createDeliverable(data: InsertDeliverable) {
@@ -28,12 +34,13 @@ export async function listAllDeliverables() {
   if (!db) return [];
   return db.select().from(deliverables).orderBy(desc(deliverables.createdAt)).limit(200);
 }
-export async function createDeliverableRevision(data: InsertDeliverableRevision) {
+export async function createDeliverableRevision(data: InsertDeliverableRevision): Promise<DeliverableRevision | null> {
   const db = await getDb();
   if (!db) return null;
   const result = await db.insert(deliverableRevisions).values(data);
   const id = result[0].insertId;
-  return db.select().from(deliverableRevisions).where(eq(deliverableRevisions.id, id)).then((r: any) => r[0] || null);
+  const rows = await db.select().from(deliverableRevisions).where(eq(deliverableRevisions.id, id));
+  return rows[0] ?? null;
 }
 export async function getDeliverableRevisions(deliverableId: number) {
   const db = await getDb();
@@ -49,7 +56,15 @@ export async function getLatestRevisionVersion(deliverableId: number): Promise<n
 export async function getRevisionPair(deliverableId: number, versionA: number, versionB: number) {
   const db = await getDb();
   if (!db) return { revA: null, revB: null };
-  const revA = await db.select().from(deliverableRevisions).where(and(eq(deliverableRevisions.deliverableId, deliverableId), eq(deliverableRevisions.version, versionA))).then((r: any) => r[0] || null);
-  const revB = await db.select().from(deliverableRevisions).where(and(eq(deliverableRevisions.deliverableId, deliverableId), eq(deliverableRevisions.version, versionB))).then((r: any) => r[0] || null);
+  const rowsA = await db
+    .select()
+    .from(deliverableRevisions)
+    .where(and(eq(deliverableRevisions.deliverableId, deliverableId), eq(deliverableRevisions.version, versionA)));
+  const rowsB = await db
+    .select()
+    .from(deliverableRevisions)
+    .where(and(eq(deliverableRevisions.deliverableId, deliverableId), eq(deliverableRevisions.version, versionB)));
+  const revA = rowsA[0] ?? null;
+  const revB = rowsB[0] ?? null;
   return { revA, revB };
 }

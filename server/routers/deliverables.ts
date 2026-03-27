@@ -11,15 +11,16 @@ import { logger } from "../_core/logger";
 import { resilientLLM } from "../_core/llmRouter";
 import { generateAndUploadPDF, getQualityChecklist } from "../pdfGenerator";
 import { generateImage } from "../_core/imageGeneration";
-import { matchTemplate, buildTemplatePrompt, generateSmartImagePrompts, getAvailableTemplates, getTemplateById } from "../templateEngine";
-import { buildSystemPrompt, SERVICE_LABELS, QUALITY_STANDARDS, matchCaseStudies, formatCaseStudiesForPrompt } from "../knowledgeBase";
+import { matchTemplate, getAvailableTemplates } from "../templateEngine";
+import { buildSystemPrompt } from "../knowledgeBase";
 import { reviewDeliverable, quickQualityCheck } from "../qualityAssurance";
 import { assessDeliverableQuality, getQualityLabel } from "../qualityFeedback";
 import { validateFile, generateFileKey, getPresignedUploadUrl } from "../_core/fileUpload";
 import {
   getDeliverablesByProject, updateDeliverable, deleteDeliverable, listAllDeliverables,
-  createDeliverable, createDeliverableRevision, getLatestRevisionVersion,
+  createDeliverableRevision, getLatestRevisionVersion,
 } from "../db";
+import type { Deliverable } from "../../drizzle/schema";
 
 export const deliverablesRouter = router({
   list: protectedProcedure.query(async () => listAllDeliverables()),
@@ -75,7 +76,7 @@ export const deliverablesRouter = router({
     .mutation(async ({ input, ctx }) => {
       checkEditor(ctx);
       const deliverables = await listAllDeliverables();
-      const deliverable = deliverables.find((d: any) => d.id === input.id);
+      const deliverable = deliverables.find((d: Deliverable) => d.id === input.id);
       if (!deliverable?.content) throw new Error('Deliverable has no content to review');
 
       const result = await reviewDeliverable(deliverable.content, {

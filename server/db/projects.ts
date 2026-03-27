@@ -1,5 +1,5 @@
-import { eq, desc, isNull, sql, and } from "drizzle-orm";
-import { projects, InsertProject, Project } from "../../drizzle/schema";
+import { eq, desc, isNull, and } from "drizzle-orm";
+import { projects, InsertProject } from "../../drizzle/schema";
 import { getDb } from "./index";
 
 export async function createProject(data: InsertProject) {

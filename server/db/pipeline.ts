@@ -1,4 +1,4 @@
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { pipelineRuns, InsertPipelineRun, PipelineRun } from "../../drizzle/schema";
 import { getDb } from "./index";
 
@@ -11,13 +11,40 @@ export async function getPipelineAnalytics() {
   const db = await getDb();
   if (!db) return { total: 0, completed: 0, failed: 0, running: 0, avgDuration: 0, byService: [], byStatus: [], recentRuns: [] };
   const allRuns = await db.select().from(pipelineRuns).orderBy(desc(pipelineRuns.createdAt)).limit(200);
-  const total = allRuns.length; const completed = allRuns.filter((r: any) => r.status === 'completed').length; const failed = allRuns.filter((r: any) => r.status === 'failed').length;
-  const running = allRuns.filter((r: any) => !['completed', 'failed', 'paused', 'pending'].includes(r.status)).length;
-  const completedRuns = allRuns.filter((r: any) => r.status === 'completed' && r.completedAt && r.startedAt);
-  const avgDuration = completedRuns.length > 0 ? Math.round(completedRuns.reduce((sum: number, r: any) => sum + (new Date(r.completedAt!).getTime() - new Date(r.startedAt!).getTime()), 0) / completedRuns.length / 1000) : 0;
+  const total = allRuns.length;
+  const completed = allRuns.filter((r: PipelineRun) => r.status === 'completed').length;
+  const failed = allRuns.filter((r: PipelineRun) => r.status === 'failed').length;
+  const running = allRuns.filter((r: PipelineRun) => !['completed', 'failed', 'paused', 'pending'].includes(r.status)).length;
+  const completedRuns = allRuns.filter((r: PipelineRun) => r.status === 'completed' && r.completedAt && r.startedAt);
+  const avgDuration =
+    completedRuns.length > 0
+      ? Math.round(
+          completedRuns.reduce(
+            (sum, r) => sum + (new Date(r.completedAt!).getTime() - new Date(r.startedAt!).getTime()),
+            0
+          ) /
+            completedRuns.length /
+            1000
+        )
+      : 0;
   const successRate = total > 0 ? Math.round((completed / total) * 100) : 0;
   const serviceTypes = ['business_health_check', 'starting_business_logic', 'brand_identity', 'business_takeoff', 'consultation'] as const;
-  const byService = serviceTypes.map(st => ({ serviceType: st, total: allRuns.filter((r: any) => r.serviceType === st).length, completed: allRuns.filter((r: any) => r.serviceType === st && r.status === 'completed').length, failed: allRuns.filter((r: any) => r.serviceType === st && r.status === 'failed').length })).filter((s: any) => s.total > 0);
-  const recentRuns = allRuns.slice(0, 10).map((r: any) => ({ id: r.id, clientId: r.clientId, serviceType: r.serviceType, status: r.status, currentStep: r.currentStep, startedAt: r.startedAt, completedAt: r.completedAt }));
+  const byService = serviceTypes
+    .map((st) => ({
+      serviceType: st,
+      total: allRuns.filter((r: PipelineRun) => r.serviceType === st).length,
+      completed: allRuns.filter((r: PipelineRun) => r.serviceType === st && r.status === 'completed').length,
+      failed: allRuns.filter((r: PipelineRun) => r.serviceType === st && r.status === 'failed').length,
+    }))
+    .filter((s) => s.total > 0);
+  const recentRuns = allRuns.slice(0, 10).map((r: PipelineRun) => ({
+    id: r.id,
+    clientId: r.clientId,
+    serviceType: r.serviceType,
+    status: r.status,
+    currentStep: r.currentStep,
+    startedAt: r.startedAt,
+    completedAt: r.completedAt,
+  }));
   return { total, completed, failed, running, avgDuration, successRate, byService, byStatus: [], recentRuns };
 }

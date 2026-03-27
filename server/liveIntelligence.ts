@@ -27,14 +27,13 @@
 
 import { logger } from './_core/logger';
 import {
-  searchGoogle, searchAcademic, scrapeWebsite, conductResearch,
-  quickResearch, formatResearchForContext,
+  searchAcademic, scrapeWebsite,
 } from './researchEngine';
 import { smartSearch } from './researchQuota';
 import {
   createKnowledgeEntry, getKnowledgeEntries, updateKnowledgeEntry,
   setCachedResearch, getCachedResearch,
-  createResearchReport, updateResearchReport,
+  createResearchReport,
 } from './db';
 import { amplifyKnowledgeEntry } from './knowledgeAmplifier';
 import { resilientLLM } from './_core/llmRouter';

@@ -64,13 +64,6 @@ export interface MetricData {
 
 // ============ SCORING ENGINE ============
 
-function getScoreLabel(score: number): string {
-  if (score >= 80) return "Strong";
-  if (score >= 60) return "Good";
-  if (score >= 40) return "Needs Work";
-  return "Critical";
-}
-
 /**
  * Run a full AI-powered brand health audit for a client.
  * Uses client data, research data, knowledge base, and notes to evaluate.
@@ -346,7 +339,7 @@ Evaluate all 7 dimensions and generate the full audit report.`;
       alerts,
       metrics,
     };
-  } catch (error) {
+  } catch {
     // Return a conservative fallback if AI fails
     const fallbackDimension: DimensionScore = {
       score: 50,
@@ -383,13 +376,23 @@ Evaluate all 7 dimensions and generate the full audit report.`;
   }
 }
 
+/** Snapshot row shape from DB — dimension scores may be null until backfilled. */
+export type SnapshotCompareInput = {
+  overallScore: number;
+  identityScore: number | null;
+  positioningScore: number | null;
+  messagingScore: number | null;
+  visualScore: number | null;
+  digitalPresenceScore: number | null;
+  reputationScore: number | null;
+  marketFitScore: number | null;
+  createdAt: Date;
+};
+
 /**
  * Compare two brand health snapshots and generate a comparison report.
  */
-export function compareSnapshots(
-  current: { overallScore: number; identityScore: number; positioningScore: number; messagingScore: number; visualScore: number; digitalPresenceScore: number; reputationScore: number; marketFitScore: number; createdAt: Date },
-  previous: { overallScore: number; identityScore: number; positioningScore: number; messagingScore: number; visualScore: number; digitalPresenceScore: number; reputationScore: number; marketFitScore: number; createdAt: Date }
-) {
+export function compareSnapshots(current: SnapshotCompareInput, previous: SnapshotCompareInput) {
   const dimensions = [
     { key: "identity", label: "Identity", current: current.identityScore || 0, previous: previous.identityScore || 0 },
     { key: "positioning", label: "Positioning", current: current.positioningScore || 0, previous: previous.positioningScore || 0 },

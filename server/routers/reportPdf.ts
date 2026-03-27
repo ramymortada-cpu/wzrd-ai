@@ -231,7 +231,7 @@ export const reportPdfRouter = router({
       recommendation: z.string(),
     }))
     .mutation(({ input, ctx }) => {
-      const userName = (ctx.user as any)?.name || '';
+      const userName = ctx.user?.name || '';
       const date = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
 
       const html = generateReportHtml({
@@ -265,7 +265,7 @@ export const reportPdfRouter = router({
       email: z.string().email().max(320),
     }))
     .mutation(async ({ input, ctx }) => {
-      const userName = (ctx.user as any)?.name || '';
+      const userName = ctx.user?.name || '';
       const date = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
 
       const html = generateReportHtml({
@@ -291,8 +291,9 @@ export const reportPdfRouter = router({
 
         logger.info({ userId: ctx.user?.id, email: input.email, score: input.score }, '[ReportPDF] Sent to email');
         return { success: sent };
-      } catch (err: any) {
-        logger.error({ err: err.message }, '[ReportPDF] Email send failed');
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        logger.error({ err: msg }, '[ReportPDF] Email send failed');
         return { success: false, error: 'فشل في إرسال الإيميل' };
       }
     }),

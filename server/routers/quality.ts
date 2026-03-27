@@ -30,6 +30,7 @@ import {
 import { getLLMStats, isLLMHealthy } from "../_core/llmRouter";
 import { getCacheStats } from "../_core/llmCache";
 import { logger } from "../_core/logger";
+import type { ClientFeedbackRow } from "../../drizzle/schema";
 
 export const qualityRouter = router({
   /**
@@ -155,7 +156,7 @@ export const qualityRouter = router({
         ownerNotes: dbScore?.ownerNotes ?? memoryData.ownerNotes,
         clientFeedbackCount: dbFeedback.length || memoryData.clientFeedbackCount,
         clientRating: dbFeedback.length > 0
-          ? Math.round((dbFeedback.reduce((s: number, f: any) => s + f.rating, 0) / dbFeedback.length) * 10) / 10
+          ? Math.round((dbFeedback.reduce((s: number, f: ClientFeedbackRow) => s + f.rating, 0) / dbFeedback.length) * 10) / 10
           : memoryData.clientRating,
         issues: memoryData.issues,
         aiReview: memoryData.aiReview,

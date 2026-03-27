@@ -13,6 +13,10 @@
  */
 
 import { logger } from './logger';
+import type { getDashboardStats, getAnalyticsData } from '../db/portal';
+
+type DashboardStats = Awaited<ReturnType<typeof getDashboardStats>>;
+type AnalyticsPayload = Awaited<ReturnType<typeof getAnalyticsData>>;
 
 interface CacheEntry<T> {
   value: T;
@@ -125,13 +129,13 @@ export function createCache<T>(config: CacheConfig) {
 // ============ PRE-CONFIGURED CACHES ============
 
 /** Dashboard stats cache — 5 minute TTL */
-export const dashboardCache = createCache<any>({
+export const dashboardCache = createCache<DashboardStats>({
   ttl: 5 * 60 * 1000,
   name: 'dashboard',
 });
 
 /** Analytics data cache — 10 minute TTL */
-export const analyticsCache = createCache<any>({
+export const analyticsCache = createCache<AnalyticsPayload>({
   ttl: 10 * 60 * 1000,
   name: 'analytics',
 });
@@ -144,7 +148,7 @@ export const knowledgeCache = createCache<string>({
 });
 
 /** Research cache — 1 hour TTL */
-export const researchResultCache = createCache<any>({
+export const researchResultCache = createCache<unknown>({
   ttl: 60 * 60 * 1000,
   name: 'research',
   maxEntries: 200,
