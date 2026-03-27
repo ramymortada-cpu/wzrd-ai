@@ -16,7 +16,7 @@ import { checkOwner, isSuperAdmin } from "../_core/authorization";
 import { z } from "zod";
 import { logger } from "../_core/logger";
 import { eq, desc, sql, and } from "drizzle-orm";
-import { users, creditTransactions, clients, projects } from "../../drizzle/schema";
+import { users, creditTransactions, clients, projects, blogPosts } from "../../drizzle/schema";
 import { getDb } from "../db/index";
 import { TOOL_COSTS, SIGNUP_BONUS, getCreditStats, updateToolCost } from "../db/credits";
 
@@ -896,6 +896,150 @@ export const wzrdAdminRouter = router({
       checkOwner(ctx);
       const { deletePromoCode } = await import('../db/promoCodes');
       await deletePromoCode(input.id);
+      return { success: true };
+    }),
+
+  // ─── BLOG CRUD ───────────────────────────────────────────────────────────
+
+  /** List all blog posts (admin) */
+  blogList: protectedProcedure
+    .input(z.object({
+      limit: z.number().int().min(1).max(200).default(100),
+      offset: z.number().int().min(0).default(0),
+    }).optional())
+    .query(async ({ input, ctx }) => {
+      checkOwner(ctx);
+      const db = await getDb();
+      if (!db) return { posts: [], total: 0 };
+      const limit = input?.limit ?? 100;
+      const offset = input?.offset ?? 0;
+      const posts = await db.select().from(blogPosts)
+        .orderBy(desc(blogPosts.createdAt))
+        .limit(limit).offset(offset);
+      const [cnt] = await db.select({ c: sql<number>`count(*)` }).from(blogPosts);
+      return { posts, total: cnt?.c ?? 0 };
+    }),
+
+  /** Get single blog post by slug (public — no auth) */
+  blogBySlug: protectedProcedure
+    .input(z.object({ slug: z.string().min(1).max(255) }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return null;
+      const [post] = await db.select().from(blogPosts).where(eq(blogPosts.slug, input.slug)).limit(1);
+      return post ?? null;
+    }),
+
+  /** Create a new blog post */
+  blogCreate: protectedProcedure
+    .input(z.object({
+      slug: z.string().min(1).max(255),
+      titleAr: z.string().min(1).max(500),
+      titleEn: z.string().min(1).max(500),
+      excerptAr: z.string().max(2000).optional(),
+      excerptEn: z.string().max(2000).optional(),
+      contentAr: z.string().min(1),
+      contentEn: z.string().min(1),
+      coverImage: z.string().max(1000).optional(),
+      category: z.string().max(100).optional(),
+      tags: z.string().max(500).optional(),
+      published: z.boolean().default(false),
+      seoTitleAr: z.string().max(500).optional(),
+      seoTitleEn: z.string().max(500).optional(),
+      seoDescAr: z.string().max(1000).optional(),
+      seoDescEn: z.string().max(1000).optional(),
+      readingTimeMin: z.number().int().min(1).max(60).default(5),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      checkOwner(ctx);
+      const db = await getDb();
+      if (!db) throw new Error('DB unavailable');
+      const now = new Date();
+      await db.insert(blogPosts).values({
+        slug: input.slug,
+        titleAr: input.titleAr,
+        titleEn: input.titleEn,
+        excerptAr: input.excerptAr ?? null,
+        excerptEn: input.excerptEn ?? null,
+        contentAr: input.contentAr,
+        contentEn: input.contentEn,
+        coverImage: input.coverImage ?? null,
+        category: input.category ?? null,
+        tags: input.tags ?? null,
+        published: input.published ? 1 : 0,
+        publishedAt: input.published ? now : null,
+        seoTitleAr: input.seoTitleAr ?? null,
+        seoTitleEn: input.seoTitleEn ?? null,
+        seoDescAr: input.seoDescAr ?? null,
+        seoDescEn: input.seoDescEn ?? null,
+        readingTimeMin: input.readingTimeMin,
+        createdAt: now,
+        updatedAt: now,
+      });
+      const [created] = await db.select().from(blogPosts).where(eq(blogPosts.slug, input.slug)).limit(1);
+      return created;
+    }),
+
+  /** Update an existing blog post */
+  blogUpdate: protectedProcedure
+    .input(z.object({
+      id: z.number().int(),
+      slug: z.string().min(1).max(255).optional(),
+      titleAr: z.string().min(1).max(500).optional(),
+      titleEn: z.string().min(1).max(500).optional(),
+      excerptAr: z.string().max(2000).optional(),
+      excerptEn: z.string().max(2000).optional(),
+      contentAr: z.string().optional(),
+      contentEn: z.string().optional(),
+      coverImage: z.string().max(1000).optional(),
+      category: z.string().max(100).optional(),
+      tags: z.string().max(500).optional(),
+      published: z.boolean().optional(),
+      seoTitleAr: z.string().max(500).optional(),
+      seoTitleEn: z.string().max(500).optional(),
+      seoDescAr: z.string().max(1000).optional(),
+      seoDescEn: z.string().max(1000).optional(),
+      readingTimeMin: z.number().int().min(1).max(60).optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      checkOwner(ctx);
+      const db = await getDb();
+      if (!db) throw new Error('DB unavailable');
+      const { id, published, ...rest } = input;
+      const updates: Record<string, unknown> = { ...rest, updatedAt: new Date() };
+      if (published !== undefined) {
+        updates.published = published ? 1 : 0;
+        if (published) {
+          // Only set publishedAt if not already set
+          const [existing] = await db.select({ publishedAt: blogPosts.publishedAt }).from(blogPosts).where(eq(blogPosts.id, id)).limit(1);
+          if (!existing?.publishedAt) updates.publishedAt = new Date();
+        }
+      }
+      await db.update(blogPosts).set(updates).where(eq(blogPosts.id, id));
+      const [updated] = await db.select().from(blogPosts).where(eq(blogPosts.id, id)).limit(1);
+      return updated;
+    }),
+
+  /** Delete a blog post */
+  blogDelete: protectedProcedure
+    .input(z.object({ id: z.number().int() }))
+    .mutation(async ({ input, ctx }) => {
+      checkOwner(ctx);
+      const db = await getDb();
+      if (!db) throw new Error('DB unavailable');
+      await db.delete(blogPosts).where(eq(blogPosts.id, input.id));
+      return { success: true };
+    }),
+
+  /** Increment view count for a blog post (public) */
+  blogIncrementView: protectedProcedure
+    .input(z.object({ slug: z.string().min(1).max(255) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { success: false };
+      await db.update(blogPosts)
+        .set({ viewCount: sql`view_count + 1` })
+        .where(eq(blogPosts.slug, input.slug));
       return { success: true };
     }),
 });

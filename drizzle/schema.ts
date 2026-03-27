@@ -327,8 +327,6 @@ export const clientPortalTokens = mysqlTable("client_portal_tokens", {
   isActive: int("isActive").default(1).notNull(),
   expiresAt: timestamp("expiresAt"),
   lastAccessedAt: timestamp("lastAccessedAt"),
-  /** Controls which portal tabs are visible for this token (Sprint B). */
-  features: json("features").$type<string[]>().default(["deliverables", "reports", "copilot", "requests"]),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });  
 
@@ -494,8 +492,6 @@ export const brandHealthSnapshots = mysqlTable("brand_health_snapshots", {
   auditType: mysqlEnum("auditType", ["manual", "ai_auto", "pipeline"]).default("ai_auto").notNull(),
   // Linked research
   researchReportId: int("researchReportId"),
-  /** If 1, the client can see this snapshot in the portal (Sprint B). */
-  isPublished: int("isPublished").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -598,44 +594,6 @@ export const leads = mysqlTable("leads", {
 
 export type Lead = typeof leads.$inferSelect;
 export type InsertLead = typeof leads.$inferInsert;
-
-/**
- * Blog posts — SEO-optimized content for acquisition engine (Sprint A).
- */
-export const blogPosts = mysqlTable("blog_posts", {
-  id: int("id").autoincrement().primaryKey(),
-  slug: varchar("slug", { length: 255 }).notNull().unique(),
-  title: varchar("title", { length: 500 }).notNull(),
-  excerpt: text("excerpt"),
-  content: text("content").notNull(),
-  coverImage: text("coverImage"),
-  status: mysqlEnum("status", ["draft", "published"]).notNull().default("draft"),
-  seoTitle: varchar("seoTitle", { length: 500 }),
-  seoDescription: varchar("seoDescription", { length: 1000 }),
-  seoKeywords: varchar("seoKeywords", { length: 1000 }),
-  publishedAt: timestamp("publishedAt"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type BlogPost = typeof blogPosts.$inferSelect;
-export type InsertBlogPost = typeof blogPosts.$inferInsert;
-
-/**
- * Free teaser reports — LLM-generated lead magnets (Sprint A).
- */
-export const freeReports = mysqlTable("free_reports", {
-  id: int("id").autoincrement().primaryKey(),
-  leadId: int("leadId").notNull(),
-  industry: varchar("industry", { length: 255 }).notNull(),
-  reportContent: text("reportContent"),
-  status: mysqlEnum("status", ["generating", "ready", "failed"]).notNull().default("generating"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type FreeReport = typeof freeReports.$inferSelect;
-export type InsertFreeReport = typeof freeReports.$inferInsert;
 
 /**
  * Proposal acceptances — tracks when a client accepts/rejects a proposal
@@ -1108,4 +1066,29 @@ export const requestFiles = mysqlTable("request_files", {
   uploadedBy: mysqlEnum("uploaded_by", ["client", "team"]).notNull().default("team"),
   description: varchar("description", { length: 500 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+/** Blog posts — SEO-optimised bilingual blog for acquisition engine */
+export const blogPosts = mysqlTable("blog_posts", {
+  id: int("id").autoincrement().primaryKey(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  titleAr: varchar("title_ar", { length: 500 }).notNull(),
+  titleEn: varchar("title_en", { length: 500 }).notNull(),
+  excerptAr: text("excerpt_ar"),
+  excerptEn: text("excerpt_en"),
+  contentAr: text("content_ar").notNull(),
+  contentEn: text("content_en").notNull(),
+  coverImage: varchar("cover_image", { length: 1000 }),
+  category: varchar("category", { length: 100 }),
+  tags: varchar("tags", { length: 500 }),
+  published: int("published").notNull().default(0),
+  publishedAt: timestamp("published_at"),
+  seoTitleAr: varchar("seo_title_ar", { length: 500 }),
+  seoTitleEn: varchar("seo_title_en", { length: 500 }),
+  seoDescAr: text("seo_desc_ar"),
+  seoDescEn: text("seo_desc_en"),
+  readingTimeMin: int("reading_time_min").default(5),
+  viewCount: int("view_count").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

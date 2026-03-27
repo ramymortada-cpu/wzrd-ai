@@ -162,12 +162,16 @@ export function serveStatic(app: Express) {
 
       const [post] = await db
         .select({
-          title: blogPosts.seoTitle,
-          description: blogPosts.seoDescription,
+          seoTitleAr: blogPosts.seoTitleAr,
+          seoTitleEn: blogPosts.seoTitleEn,
+          titleAr: blogPosts.titleAr,
+          titleEn: blogPosts.titleEn,
+          seoDescAr: blogPosts.seoDescAr,
+          seoDescEn: blogPosts.seoDescEn,
           coverImage: blogPosts.coverImage,
         })
         .from(blogPosts)
-        .where(and(eq(blogPosts.slug, req.params.slug), eq(blogPosts.status, "published")))
+        .where(and(eq(blogPosts.slug, req.params.slug), eq(blogPosts.published, 1)))
         .limit(1);
 
       const htmlPath = path.resolve(distPath, "index.html");
@@ -177,8 +181,16 @@ export function serveStatic(app: Express) {
       html = html.replaceAll(/<!-- WZRD_BLOG_SEO_START -->[\s\S]*?<!-- WZRD_BLOG_SEO_END -->/g, "");
 
       if (post) {
-        const seoTitleRaw = post.title || "WZRD AI Blog";
-        const seoDescRaw = post.description || "";
+        const wantsAr = typeof req.headers["accept-language"] === "string"
+          ? req.headers["accept-language"].toLowerCase().includes("ar")
+          : false;
+
+        const seoTitleRaw =
+          (wantsAr ? (post.seoTitleAr || post.titleAr) : (post.seoTitleEn || post.titleEn)) ||
+          "WZRD AI Blog";
+        const seoDescRaw =
+          (wantsAr ? post.seoDescAr : post.seoDescEn) ||
+          "";
         const ogImageRaw = post.coverImage || "";
 
         const seoTitle = escapeHtmlAttr(seoTitleRaw);

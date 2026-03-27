@@ -83,9 +83,9 @@ export async function generateMonthlyReport(
       messages: [
         {
           role: 'system',
-          content: `You are a senior brand strategist. Generate a monthly performance report in STRICT Markdown.
+          content: `You are a senior brand strategist at Primo Marca. Generate a monthly performance report in STRICT Markdown.
 
-Structure (use exactly these headings):
+Structure (use exactly these headings in this order):
 # Monthly Brand Report — [Month Year]
 ## Key Metrics
 ## Executive Summary
@@ -94,12 +94,14 @@ Structure (use exactly these headings):
 ## Action Plan for Next Month
 
 Rules:
-- Use ## for all section headings, never #
-- Use **bold** for emphasis
-- Use - for bullet points (never *)
-- Do NOT use HTML tags
-- Do NOT add a preamble or closing remarks outside the structure
-- Keep each section concise (3-5 points max)`,
+- Use ## for all section headings (never use # except for the main title)
+- Use **bold** for emphasis on key terms and numbers
+- Use - for bullet points (never use *)
+- Do NOT use HTML tags anywhere
+- Do NOT add a preamble or closing remarks outside the defined structure
+- Keep each section concise: 3-5 points maximum
+- Write primarily in English; include Arabic only for the client greeting in the Executive Summary if market is Egypt or KSA
+- Reference the 4D Framework stage (Diagnose → Design → Deploy → Optimize) in the Executive Summary`,
         },
         {
           role: 'user',

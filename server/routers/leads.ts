@@ -19,10 +19,6 @@ import { resilientLLM } from "../_core/llmRouter";
 import { notifyOwner } from "../_core/notification";
 import { notifyLeadSubmitted } from "../_core/notifications";
 import { matchMENACaseStudies } from "../menaCaseStudies";
-import { TRPCError } from "@trpc/server";
-import { freeReports } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
-import { getDb } from "../db";
 import {
   createLead, getLeadById, listLeads, updateLead, getLeadStats, getLeadFunnelStats,
   createClient,
@@ -210,96 +206,6 @@ Respond in JSON format:
         scoreLabel: diagnosis.scoreLabel,
         recommendedService: diagnosis.recommendedService,
       };
-    }),
-
-  /**
-   * PUBLIC: Generate a free teaser report (lead magnet).
-   * Rate limited to 3 req/hour per IP (applied in Express middleware).
-   */
-  generateFreeReport: publicProcedure
-    .input(
-      z.object({
-        email: z.string().email().max(320),
-        companyName: z.string().min(1).max(255),
-        industry: z.string().min(1).max(255),
-      }),
-    )
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB not connected" });
-
-      const email = input.email.trim().toLowerCase();
-      const companyName = input.companyName.trim();
-      const industry = input.industry.trim();
-
-      const lead = await createLead({
-        companyName,
-        email,
-        industry,
-        market: "egypt",
-        status: "new",
-        source: "website",
-      });
-      if (!lead?.id) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create lead" });
-
-      const insertRes = await db
-        .insert(freeReports)
-        .values({
-          leadId: lead.id,
-          industry,
-          status: "generating",
-        });
-
-      const reportId = insertRes[0]?.insertId;
-      if (!reportId) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create report" });
-
-      try {
-        const prompt = `You are WZRD AI. Generate a concise "Industry Brand Benchmark" teaser report in Markdown.
-
-Context:
-- Company: ${companyName}
-- Industry: ${industry}
-
-Requirements:
-- Markdown only (no HTML).
-- Length: 350-700 words max.
-- Include sections with headings:
-  1) Executive Summary
-  2) Market Reality (MENA-aware)
-  3) Brand Risks (top 5 bullet points)
-  4) Quick Wins (top 5 bullet points)
-  5) 14-Day Action Plan (day-by-day checklist)
-- Avoid making up specific company facts; speak in patterns and probabilities.
-- End with a strong CTA to book a WhatsApp clarity call and mention WZRD AI.`;
-
-        const llm = await resilientLLM(
-          {
-            messages: [
-              { role: "system", content: "You are a brand strategy AI. Respond ONLY with Markdown." },
-              { role: "user", content: prompt },
-            ],
-          },
-          { context: "chat" },
-        );
-
-        const content = (llm.choices[0]?.message?.content as string | undefined)?.trim() || "";
-        if (!content) throw new Error("Empty report content");
-
-        await db
-          .update(freeReports)
-          .set({ reportContent: content, status: "ready" })
-          .where(eq(freeReports.id, Number(reportId)));
-
-        return { id: Number(reportId), content };
-      } catch (err) {
-        await db
-          .update(freeReports)
-          .set({ status: "failed" })
-          .where(eq(freeReports.id, Number(reportId)));
-
-        logger.warn({ err, reportId, leadId: lead.id }, "generateFreeReport failed");
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to generate report" });
-      }
     }),
 
   /** List all leads (protected) */
