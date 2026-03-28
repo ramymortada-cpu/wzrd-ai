@@ -1,0 +1,12 @@
+{
+  "name": "wzrd-monorepo-root",
+  "private": true,
+  "scripts": {
+    "db:push": "drizzle-kit push"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.4",
+    "drizzle-orm": "^0.38.3",
+    "mysql2": "^3.11.5"
+  }
+}

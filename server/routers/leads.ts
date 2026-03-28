@@ -1,22 +1,20 @@
 /**
- * Public lead capture.
- * If your repo already exports `leadsRouter` with `submitQuickCheck` etc., merge this
- * `subscribeToLeadMagnet` into that same `router({ ... })` object instead of replacing the file.
+ * Public lead capture — merge additional procedures into this router as needed.
  */
 import { publicProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
-import { leadMagnetSubscribers } from "../db/schema";
+import { leadMagnetSubscribers } from "../../drizzle/schema";
 
 export const leadsRouter = router({
   subscribeToLeadMagnet: publicProcedure
     .input(z.object({ email: z.string().email() }))
     .mutation(async ({ input }) => {
-      const database = await getDb();
-      if (!database) return { success: true as const };
+      const db = await getDb();
+      if (!db) return { success: true };
 
       try {
-        await database.insert(leadMagnetSubscribers).values({
+        await db.insert(leadMagnetSubscribers).values({
           email: input.email,
           source: "home_guide_2026",
         });
@@ -29,6 +27,6 @@ export const leadsRouter = router({
             (err as { code: string }).code === "ER_DUP_ENTRY");
         if (!isDuplicate) throw err;
       }
-      return { success: true as const };
+      return { success: true };
     }),
 });
