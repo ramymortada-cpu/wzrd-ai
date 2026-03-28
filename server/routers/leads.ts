@@ -278,12 +278,7 @@ Respond in JSON format:
     return getLeadStats();
   }),
 
-  /** Funnel statistics */
-  funnelStats: protectedProcedure.query(async () => {
-    return getLeadFunnelStats();
-  }),
-
-  /** Alias — Home.tsx calls leads.funnel */
+  /** Funnel statistics (Home, SalesFunnel, Leads) */
   funnel: protectedProcedure.query(async () => {
     return getLeadFunnelStats();
   }),

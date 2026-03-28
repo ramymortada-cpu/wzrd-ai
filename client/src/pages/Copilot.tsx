@@ -20,6 +20,17 @@ interface CopilotClientOption {
   companyName: string | null;
 }
 
+interface CopilotSessionRow {
+  session_id: string;
+  last_msg?: string | Date;
+  msg_count?: number;
+  first_message?: string | null;
+}
+
+function newSessionId() {
+  return 'sess_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
 export default function Copilot() {
   const { locale } = useI18n();
   const isAr = locale === 'ar';
@@ -30,13 +41,55 @@ export default function Copilot() {
   const [credits, setCredits] = useState<number | null>(null);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [error, setError] = useState('');
-  const [sessionId] = useState(() => 'sess_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
+  const [sessionId, setSessionId] = useState(() => newSessionId());
   const [clientList, setClientList] = useState<CopilotClientOption[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<number | undefined>(undefined);
+  const [sessions, setSessions] = useState<CopilotSessionRow[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const userScrolled = useRef(false);
+
+  const loadSessionHistory = useCallback(
+    async (sid: string) => {
+      setHistoryLoading(true);
+      setError('');
+      try {
+        const input = encodeURIComponent(JSON.stringify({ json: { sessionId: sid } }));
+        const res = await fetch(`/api/trpc/copilot.getHistory?input=${input}`, { credentials: 'include' });
+        const d = await res.json();
+        if (d.error) {
+          const errMsg = d.error?.json?.message || d.error?.message || (isAr ? 'تعذر تحميل المحادثة' : 'Could not load conversation');
+          setError(errMsg);
+          return;
+        }
+        const rows = d.result?.data?.json ?? d.result?.data ?? [];
+        const list = Array.isArray(rows) ? rows : [];
+        setSessionId(sid);
+        setMessages(
+          list.map((m: { id: number; role: string; content: string; createdAt?: string }) => ({
+            id: m.id,
+            role: (m.role === 'user' ? 'user' : 'assistant') as 'user' | 'assistant',
+            content: m.content,
+            createdAt: m.createdAt,
+          })),
+        );
+      } catch {
+        setError(isAr ? 'مشكلة في تحميل المحادثة' : 'Failed to load conversation');
+      } finally {
+        setHistoryLoading(false);
+      }
+    },
+    [isAr],
+  );
+
+  const startNewChat = useCallback(() => {
+    setSessionId(newSessionId());
+    setMessages([]);
+    setError('');
+  }, []);
 
   useEffect(() => {
     fetch('/api/trpc/credits.balance')
@@ -59,6 +112,16 @@ export default function Copilot() {
         if (Array.isArray(data)) setClientList(data as CopilotClientOption[]);
       })
       .catch(() => {});
+
+    setSessionsLoading(true);
+    fetch('/api/trpc/copilot.mySessions', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => {
+        const raw = d.result?.data?.json ?? d.result?.data;
+        setSessions(Array.isArray(raw) ? (raw as CopilotSessionRow[]) : []);
+      })
+      .catch(() => setSessions([]))
+      .finally(() => setSessionsLoading(false));
   }, []);
 
   useEffect(() => {
@@ -96,6 +159,13 @@ export default function Copilot() {
         const aiMsg: Message = { id: Date.now() + 1, role: 'assistant', content: result.response };
         setMessages(prev => [...prev, aiMsg]);
         setCredits(result.creditsRemaining ?? credits);
+        fetch('/api/trpc/copilot.mySessions', { credentials: 'include' })
+          .then(r => r.json())
+          .then(d => {
+            const raw = d.result?.data?.json ?? d.result?.data;
+            if (Array.isArray(raw)) setSessions(raw as CopilotSessionRow[]);
+          })
+          .catch(() => {});
       } else {
         const errMsg = d.error?.json?.message || d.error?.message || 'حصل مشكلة — حاول تاني.';
         setError(errMsg);
@@ -118,39 +188,125 @@ export default function Copilot() {
   const userBubbleSide = isAr ? 'justify-start' : 'justify-end';
   const aiBubbleSide = isAr ? 'justify-end' : 'justify-start';
 
+  const sessionInList = sessions.some((s) => s.session_id === sessionId);
+  const mobileSessionSelectValue = sessionInList ? sessionId : '';
+
+  const sessionRowLabel = (row: CopilotSessionRow) => {
+    const preview = (row.first_message?.trim() || (isAr ? 'محادثة' : 'Chat')).slice(0, 48);
+    const ell = (row.first_message?.trim() || '').length > 48 ? '…' : '';
+    const n = row.msg_count != null ? ` · ${row.msg_count}` : '';
+    return preview + ell + n;
+  };
+
   return (
     <div className="flex min-h-screen flex-col wzrd-page-radial text-zinc-900 dark:text-white" dir={isAr ? 'rtl' : 'ltr'}>
       <WzrdPublicHeader credits={credits} />
 
       <div className="wzrd-public-pt flex flex-1 flex-col px-3 pb-28 sm:px-6">
-        <div className="mx-auto mb-4 flex w-full max-w-3xl items-center justify-between rounded-3xl border-[0.5px] border-white/40 bg-white/50 px-4 py-3 backdrop-blur-xl dark:border-zinc-700/50 dark:bg-zinc-950/40">
-          <div className="flex items-center gap-3 min-w-0">
-            <a href="/my-brand" className="shrink-0 rounded-full border border-zinc-200/80 p-2 text-zinc-500 transition hover:border-primary hover:text-primary dark:border-zinc-600 dark:text-zinc-400">
-              ←
-            </a>
-            <div className="min-w-0">
-              <h1 className="truncate text-base font-extrabold tracking-tight text-zinc-900 dark:text-white">
-                {isAr ? 'مستشار البراند' : 'Brand Copilot'}
-              </h1>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                {isAr ? 'اسأل أي سؤال عن البراند بتاعك' : 'Ask anything about your brand'}
-              </p>
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 md:flex-row md:items-stretch">
+          <aside className="hidden md:flex w-52 shrink-0 flex-col rounded-3xl border-[0.5px] border-white/40 bg-white/40 p-3 backdrop-blur-xl dark:border-zinc-700/50 dark:bg-zinc-950/40 max-h-[min(70vh,560px)]">
+            <h2 className="text-xs font-extrabold uppercase tracking-wide text-zinc-500 dark:text-zinc-400 mb-2">
+              {isAr ? 'محادثات سابقة' : 'Recent Sessions'}
+            </h2>
+            <button
+              type="button"
+              onClick={startNewChat}
+              className="mb-2 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/15"
+            >
+              {isAr ? '+ محادثة جديدة' : '+ New chat'}
+            </button>
+            <div className="min-h-0 flex-1 space-y-1 overflow-y-auto pr-0.5">
+              {sessionsLoading ? (
+                <p className="text-xs text-zinc-400">{isAr ? 'جاري التحميل…' : 'Loading…'}</p>
+              ) : sessions.length === 0 ? (
+                <p className="text-xs text-zinc-400">{isAr ? 'لا توجد جلسات بعد.' : 'No past sessions yet.'}</p>
+              ) : (
+                sessions.map((row) => (
+                  <button
+                    key={row.session_id}
+                    type="button"
+                    onClick={() => loadSessionHistory(row.session_id)}
+                    disabled={historyLoading}
+                    className={`w-full rounded-xl border px-2 py-2 text-start text-xs leading-snug transition disabled:opacity-50 ${
+                      row.session_id === sessionId
+                        ? 'border-primary/50 bg-primary/15 text-zinc-900 dark:text-white'
+                        : 'border-zinc-200/60 bg-white/50 text-zinc-700 hover:border-primary/30 dark:border-zinc-600 dark:bg-zinc-900/40 dark:text-zinc-200'
+                    }`}
+                  >
+                    {sessionRowLabel(row)}
+                  </button>
+                ))
+              )}
             </div>
-          </div>
-          {credits !== null && (
-            <div className="flex shrink-0 items-center gap-1.5 rounded-full border border-primary/25 bg-gradient-to-r from-primary/12 to-cyan-500/10 px-3 py-1 text-xs font-bold text-primary">
-              {credits} {isAr ? 'كريدت' : 'CR'}
-            </div>
-          )}
-        </div>
+          </aside>
 
-        <div
-          className="mx-auto flex w-full max-w-3xl flex-1 flex-col overflow-y-auto rounded-3xl border-[0.5px] border-white/30 bg-white/25 px-3 py-4 backdrop-blur-xl dark:border-zinc-700/40 dark:bg-zinc-950/35 sm:px-5"
-          onScroll={(e) => {
-            const el = e.currentTarget;
-            userScrolled.current = el.scrollTop < el.scrollHeight - el.clientHeight - 100;
-          }}
-        >
+          <div className="flex min-w-0 flex-1 flex-col">
+            <div className="mb-3 flex flex-col gap-2 md:hidden">
+              <label className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400">
+                {isAr ? 'محادثات سابقة' : 'Recent Sessions'}
+              </label>
+              <div className="flex gap-2">
+                <select
+                  value={mobileSessionSelectValue}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v) void loadSessionHistory(v);
+                  }}
+                  disabled={historyLoading || sessionsLoading || sessions.length === 0}
+                  className="min-w-0 flex-1 rounded-xl border border-zinc-200/80 bg-white/70 py-2 pl-2 pr-8 text-xs text-zinc-800 outline-none focus:border-primary/40 dark:border-zinc-600 dark:bg-zinc-900/70 dark:text-zinc-100"
+                >
+                  <option value="">{isAr ? 'اختر محادثة…' : 'Open a session…'}</option>
+                  {sessions.map((row) => (
+                    <option key={row.session_id} value={row.session_id}>
+                      {sessionRowLabel(row)}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={startNewChat}
+                  className="shrink-0 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-xs font-bold text-primary"
+                >
+                  {isAr ? 'جديد' : 'New'}
+                </button>
+              </div>
+            </div>
+
+            <div className="mb-4 flex w-full items-center justify-between rounded-3xl border-[0.5px] border-white/40 bg-white/50 px-4 py-3 backdrop-blur-xl dark:border-zinc-700/50 dark:bg-zinc-950/40">
+              <div className="flex items-center gap-3 min-w-0">
+                <a href="/my-brand" className="shrink-0 rounded-full border border-zinc-200/80 p-2 text-zinc-500 transition hover:border-primary hover:text-primary dark:border-zinc-600 dark:text-zinc-400">
+                  ←
+                </a>
+                <div className="min-w-0">
+                  <h1 className="truncate text-base font-extrabold tracking-tight text-zinc-900 dark:text-white">
+                    {isAr ? 'مستشار البراند' : 'Brand Copilot'}
+                  </h1>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    {isAr ? 'اسأل أي سؤال عن البراند بتاعك' : 'Ask anything about your brand'}
+                  </p>
+                </div>
+              </div>
+              {credits !== null && (
+                <div className="flex shrink-0 items-center gap-1.5 rounded-full border border-primary/25 bg-gradient-to-r from-primary/12 to-cyan-500/10 px-3 py-1 text-xs font-bold text-primary">
+                  {credits} {isAr ? 'كريدت' : 'CR'}
+                </div>
+              )}
+            </div>
+
+            <div
+              className="flex w-full flex-1 flex-col overflow-y-auto rounded-3xl border-[0.5px] border-white/30 bg-white/25 px-3 py-4 backdrop-blur-xl dark:border-zinc-700/40 dark:bg-zinc-950/35 sm:px-5 min-h-[320px] md:min-h-[min(70vh,560px)]"
+              onScroll={(e) => {
+                const el = e.currentTarget;
+                userScrolled.current = el.scrollTop < el.scrollHeight - el.clientHeight - 100;
+              }}
+            >
+              {historyLoading && (
+                <div className="mb-3 flex justify-center">
+                  <p className="rounded-full border border-zinc-200/60 bg-white/50 px-4 py-2 text-xs text-zinc-500 dark:border-zinc-600 dark:bg-zinc-900/50">
+                    {isAr ? 'جاري تحميل المحادثة…' : 'Loading conversation…'}
+                  </p>
+                </div>
+              )}
           {messages.length === 0 && (
             <div className="flex flex-1 flex-col items-center justify-center py-12 text-center">
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-cyan-500/20 text-3xl shadow-inner">🧙‍♂️</div>
@@ -227,11 +383,13 @@ export default function Copilot() {
           )}
 
           <div ref={messagesEndRef} />
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="pointer-events-none fixed bottom-0 left-0 right-0 z-40 px-3 pb-4 pt-2 sm:px-6 sm:pb-6">
-        <div className="pointer-events-auto mx-auto max-w-3xl rounded-3xl p-3 sm:p-4 wzrd-floating-composer">
+        <div className="pointer-events-auto mx-auto max-w-5xl rounded-3xl p-3 sm:p-4 wzrd-floating-composer">
           {clientList.length > 1 && (
             <div className="mb-2 flex flex-wrap items-center gap-2 rounded-2xl border-[0.5px] border-zinc-200/50 bg-white/40 px-3 py-2 text-xs dark:border-zinc-600/50 dark:bg-zinc-900/40">
               <span className="shrink-0 font-semibold text-zinc-500 dark:text-zinc-400">
