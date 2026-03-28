@@ -3,7 +3,6 @@
  */
 import React from "react";
 import WzrdPublicHeader from "../components/WzrdPublicHeader";
-import "../styles/wzrd-welcome.css";
 
 type ToolItem = {
   id: string;

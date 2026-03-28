@@ -3,7 +3,6 @@
  */
 import React, { useState } from "react";
 import WzrdPublicHeader from "../components/WzrdPublicHeader";
-import "../styles/wzrd-welcome.css";
 
 const PLANS = [
   {

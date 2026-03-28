@@ -3,12 +3,8 @@
  * Route: add to wouter (e.g. <Route path="/" component={Welcome} />).
  */
 import React, { useState } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { httpBatchLink } from "@trpc/client";
-import superjson from "superjson";
 import WzrdPublicHeader from "../components/WzrdPublicHeader";
 import { trpc } from "../lib/trpc";
-import "../styles/wzrd-welcome.css";
 
 function CheckIcon({ className }: { className?: string }) {
   return (
@@ -338,7 +334,7 @@ function LeadMagnetSection() {
   );
 }
 
-function WelcomeInner() {
+export default function Welcome() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
       <WzrdPublicHeader />
@@ -560,40 +556,5 @@ function WelcomeInner() {
 
       <LeadMagnetSection />
     </div>
-  );
-}
-
-export default function Welcome() {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: { retry: false },
-          mutations: { retry: false },
-        },
-      })
-  );
-  const [trpcClient] = useState(() =>
-    trpc.createClient({
-      links: [
-        httpBatchLink({
-          url: "/api/trpc",
-          transformer: superjson,
-          fetch: (url, options) =>
-            fetch(url, {
-              ...options,
-              credentials: "include",
-            }),
-        }),
-      ],
-    })
-  );
-
-  return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <WelcomeInner />
-      </QueryClientProvider>
-    </trpc.Provider>
   );
 }
