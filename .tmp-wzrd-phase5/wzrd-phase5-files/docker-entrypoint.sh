@@ -6,7 +6,8 @@ if [ -z "$DATABASE_URL" ]; then
   exit 1
 fi
 echo "✅ DATABASE_URL is set. Proceeding with migrations..."
-
+echo "🔄 Running database migrations..."
 npx drizzle-kit migrate --force
+echo "🚀 Starting WZRD AI server..."
 
 exec "$@"
