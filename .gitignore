@@ -114,3 +114,16 @@ test-results/
 playwright-report/
 blob-report/
 playwright/.cache/
+
+# Local scratch / phase drops (do not commit)
+.tmp-wzrd-phase5/
+
+# Python
+**/__pycache__/
+*.py[cod]
+*.pyo
+.Python
+
+# Archives / duplicate doc drops (keep source in docs/manus-skills/)
+docs/manus-skills.zip
+docs/manus-skills 2/
