@@ -2,8 +2,12 @@
  * WZRD AI — marketing / signup preview landing.
  * Route: add to wouter (e.g. <Route path="/" component={Welcome} />).
  */
-import React from "react";
+import React, { useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { httpBatchLink } from "@trpc/client";
+import superjson from "superjson";
 import WzrdPublicHeader from "../components/WzrdPublicHeader";
+import { trpc } from "../lib/trpc";
 import "../styles/wzrd-welcome.css";
 
 function CheckIcon({ className }: { className?: string }) {
@@ -220,7 +224,121 @@ const HOW_STEPS = [
   { n: 3, title: "أطلق بخطة واضحة", body: "خطة إطلاق عملية قابلة للتنفيذ بدل عروض نظرية طويلة." },
 ];
 
-export default function Welcome() {
+function LeadMagnetSuccessIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="10" className="stroke-emerald-500 dark:stroke-emerald-400" strokeWidth="2" />
+      <path
+        d="M8 12l2.5 2.5L16 9"
+        className="stroke-emerald-600 dark:stroke-emerald-300"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function LeadMagnetSection() {
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const subscribeMutation = trpc.leads.subscribeToLeadMagnet.useMutation();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+    try {
+      await subscribeMutation.mutateAsync({ email });
+      setIsSuccess(true);
+    } catch {
+      setError("حدث خطأ، يرجى المحاولة مرة أخرى.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <section
+      className="border-y border-teal-100 bg-teal-50/50 px-4 py-16 dark:border-teal-900/30 dark:bg-teal-950/20"
+      aria-labelledby="lead-magnet-heading"
+    >
+      <div className="mx-auto grid max-w-5xl items-center gap-10 md:grid-cols-2" dir="rtl">
+        {/* أول عمود في RTL = يمين: النص والنموذج */}
+        <div>
+          <h2 id="lead-magnet-heading" className="text-2xl font-bold text-gray-900 dark:text-white md:text-3xl">
+            لست مستعداً للتشخيص الكامل بعد؟
+          </h2>
+          <p className="mt-3 text-gray-600 dark:text-gray-300">
+            احصل على دليلنا المجاني: أسرار بناء علامة تجارية لا تُقهر في 2026
+          </p>
+
+          {isSuccess ? (
+            <div className="mt-8 flex flex-col items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50/80 p-6 text-center dark:border-emerald-800/60 dark:bg-emerald-950/40">
+              <LeadMagnetSuccessIcon className="h-12 w-12 shrink-0" />
+              <p className="text-base font-medium text-emerald-800 dark:text-emerald-200">
+                تم الإرسال! سيصلك الدليل على بريدك قريباً.
+              </p>
+            </div>
+          ) : (
+            <form className="mt-6" onSubmit={handleSubmit}>
+              <label htmlFor="lead-magnet-email" className="sr-only">
+                بريدك الإلكتروني
+              </label>
+              <input
+                id="lead-magnet-email"
+                type="email"
+                name="email"
+                autoComplete="email"
+                placeholder="بريدك الإلكتروني"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                aria-label="بريدك الإلكتروني"
+                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-white/10 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500"
+              />
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="mt-3 w-full rounded-xl bg-teal-600 py-3 font-semibold text-white transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-teal-500 dark:hover:bg-teal-600"
+              >
+                {isLoading ? "جاري الإرسال…" : "أرسل لي الدليل مجاناً"}
+              </button>
+              {error ? (
+                <p className="mt-3 text-center text-sm text-red-600 dark:text-red-400" role="alert">
+                  {error}
+                </p>
+              ) : null}
+              <p className="mt-2 text-center text-xs text-gray-400 dark:text-gray-500">
+                لن نرسل لك أي بريد مزعج. يمكنك إلغاء الاشتراك في أي وقت.
+              </p>
+            </form>
+          )}
+        </div>
+
+        <div className="hidden items-center justify-center md:flex">
+          <div className="relative aspect-[3/4] w-48 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-700 shadow-2xl transition-transform duration-500 [transform:perspective(1000px)_rotateY(-12deg)] hover:[transform:perspective(1000px)_rotateY(0deg)]">
+            <div className="flex h-full flex-col justify-center px-6 text-center text-white">
+              <p className="text-lg font-bold leading-snug">دليل العلامة التجارية 2026</p>
+              <div className="mx-auto my-3 h-0.5 w-12 bg-white/40" />
+              <p className="text-sm text-white/90 dark:text-white/85">مجاناً من WZRD AI</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function WelcomeInner() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
       <WzrdPublicHeader />
@@ -439,6 +557,43 @@ export default function Welcome() {
           </section>
         </div>
       </div>
+
+      <LeadMagnetSection />
     </div>
+  );
+}
+
+export default function Welcome() {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: { retry: false },
+          mutations: { retry: false },
+        },
+      })
+  );
+  const [trpcClient] = useState(() =>
+    trpc.createClient({
+      links: [
+        httpBatchLink({
+          url: "/api/trpc",
+          transformer: superjson,
+          fetch: (url, options) =>
+            fetch(url, {
+              ...options,
+              credentials: "include",
+            }),
+        }),
+      ],
+    })
+  );
+
+  return (
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <WelcomeInner />
+      </QueryClientProvider>
+    </trpc.Provider>
   );
 }
