@@ -1,4 +1,4 @@
--- MySQL (production): use AUTO_INCREMENT int — do NOT use PostgreSQL SERIAL.
+-- MySQL only. Do NOT use SERIAL (PostgreSQL syntax).
 CREATE TABLE IF NOT EXISTS `lead_magnet_subscribers` (
   `id` int AUTO_INCREMENT PRIMARY KEY NOT NULL,
   `email` varchar(255) NOT NULL,

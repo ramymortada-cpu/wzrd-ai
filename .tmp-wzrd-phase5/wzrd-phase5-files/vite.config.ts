@@ -1,28 +1,40 @@
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const clientRoot = path.resolve(import.meta.dirname, "client");
+const outDir = path.resolve(import.meta.dirname, "dist/public");
 
 export default defineConfig({
-  root: path.join(__dirname, "client"),
+  base: process.env.VITE_BASE_URL || "/",
+  root: clientRoot,
+  define: {
+    "import.meta.env.VITE_APP_URL": JSON.stringify(
+      process.env.APP_URL || "http://localhost:3000"
+    ),
+  },
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
-      "@": path.join(__dirname, "client/src"),
+      "@": path.join(clientRoot, "src"),
     },
   },
   build: {
-    outDir: path.join(__dirname, "dist/public"),
+    outDir,
     emptyOutDir: true,
   },
   server: {
     port: 5173,
+    host: true,
+    allowedHosts: true,
+    fs: {
+      strict: true,
+      deny: ["**/.*"],
+    },
     proxy: {
       "/api": {
-        target: "http://127.0.0.1:3000",
+        target: process.env.VITE_API_URL || "http://localhost:3000",
         changeOrigin: true,
       },
     },
