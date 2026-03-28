@@ -1,8 +1,10 @@
 /**
- * نسخة محلية للتجربة السريعة. المصدر المقترح مع كود WZRD:
- * `.tmp-wzrd-phase5/wzrd-phase5-files/client/src/pages/Welcome.tsx`
+ * WZRD AI — marketing / signup preview landing.
+ * Route: add to wouter (e.g. <Route path="/" component={Welcome} />).
  */
-import React from "react";
+import React, { useState } from "react";
+import WzrdPublicHeader from "../components/WzrdPublicHeader";
+import { trpc } from "../lib/trpc";
 
 function CheckIcon({ className }: { className?: string }) {
   return (
@@ -13,10 +15,16 @@ function CheckIcon({ className }: { className?: string }) {
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden
     >
-      <circle cx="10" cy="10" r="9" className="stroke-emerald-500" strokeWidth="1.5" />
+      <circle
+        cx="10"
+        cy="10"
+        r="9"
+        className="stroke-emerald-600 dark:stroke-emerald-400"
+        strokeWidth="1.5"
+      />
       <path
         d="M6 10.2 8.4 12.6 14 7"
-        className="stroke-emerald-600 dark:stroke-emerald-400"
+        className="stroke-emerald-700 dark:stroke-emerald-300"
         strokeWidth="1.75"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -40,12 +48,12 @@ function CopyIcon({ className }: { className?: string }) {
         width="11"
         height="11"
         rx="2"
-        className="stroke-gray-500 dark:stroke-gray-400"
+        className="stroke-gray-600 dark:stroke-gray-400"
         strokeWidth="1.5"
       />
       <path
         d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"
-        className="stroke-gray-500 dark:stroke-gray-400"
+        className="stroke-gray-600 dark:stroke-gray-400"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
@@ -62,7 +70,7 @@ function HeroBrandReportVisual() {
 
   return (
     <div
-      className="relative overflow-hidden rounded-3xl border border-white/20 bg-white/10 p-5 shadow-2xl backdrop-blur-md dark:border-white/20 dark:bg-white/10 sm:p-7"
+      className="relative overflow-hidden rounded-3xl border border-white/25 bg-white/10 p-5 shadow-2xl backdrop-blur-md dark:border-white/20 dark:bg-white/10 sm:p-7"
       aria-hidden
     >
       <div
@@ -84,7 +92,7 @@ function HeroBrandReportVisual() {
               xmlns="http://www.w3.org/2000/svg"
             >
               <defs>
-                <linearGradient id="heroRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <linearGradient id="wzrdHeroRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#22d3ee" />
                   <stop offset="55%" stopColor="#a78bfa" />
                   <stop offset="100%" stopColor="#fbbf24" />
@@ -94,7 +102,7 @@ function HeroBrandReportVisual() {
                 cx="50"
                 cy="50"
                 r={ringRadius}
-                className="stroke-white/15"
+                className="stroke-white/20 dark:stroke-white/15"
                 strokeWidth="8"
                 fill="none"
               />
@@ -102,7 +110,7 @@ function HeroBrandReportVisual() {
                 cx="50"
                 cy="50"
                 r={ringRadius}
-                stroke="url(#heroRingGrad)"
+                stroke="url(#wzrdHeroRingGrad)"
                 strokeWidth="8"
                 fill="none"
                 strokeLinecap="round"
@@ -112,8 +120,8 @@ function HeroBrandReportVisual() {
             </svg>
             <div className="absolute inset-0 flex items-center justify-center text-center">
               <div dir="ltr" className="text-white">
-                <p className="text-2xl font-semibold tabular-nums leading-none sm:text-3xl">82%</p>
-                <p className="mt-1 text-[10px] font-medium uppercase tracking-wider text-white/70 sm:text-xs">
+                <p className="text-2xl font-semibold tabular-nums leading-none text-white sm:text-3xl">82%</p>
+                <p className="mt-1 text-[10px] font-medium uppercase tracking-wider text-white/80 dark:text-white/70 sm:text-xs">
                   Brand fit
                 </p>
               </div>
@@ -122,11 +130,11 @@ function HeroBrandReportVisual() {
         </div>
 
         <div className="min-w-0 flex-1 space-y-2.5 self-stretch sm:pt-1">
-          <div className="mb-1 flex items-center justify-between gap-2 border-b border-white/15 pb-2">
-            <span className="text-xs font-semibold uppercase tracking-wide text-white/90 sm:text-sm">
+          <div className="mb-1 flex items-center justify-between gap-2 border-b border-white/20 pb-2 dark:border-white/15">
+            <span className="text-xs font-semibold uppercase tracking-wide text-white sm:text-sm">
               AI Brand Report
             </span>
-            <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-medium text-cyan-100 ring-1 ring-white/20 sm:text-xs">
+            <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-cyan-50 ring-1 ring-white/25 dark:bg-white/15 dark:text-cyan-100 dark:ring-white/20 sm:text-xs">
               جاهز للمراجعة
             </span>
           </div>
@@ -138,17 +146,17 @@ function HeroBrandReportVisual() {
           ].map((row) => (
             <div
               key={row.label}
-              className="rounded-xl border border-white/10 bg-black/10 px-3 py-2.5 dark:bg-black/20"
+              className="rounded-xl border border-white/15 bg-black/15 px-3 py-2.5 dark:border-white/10 dark:bg-black/20"
             >
               <div className="mb-1.5 flex items-center justify-between gap-2" dir="rtl">
-                <span className="truncate text-xs font-medium text-white/95 sm:text-sm">{row.label}</span>
-                <span className="shrink-0 rounded-md bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-amber-100 ring-1 ring-white/15 sm:text-xs">
+                <span className="truncate text-xs font-medium text-white sm:text-sm">{row.label}</span>
+                <span className="shrink-0 rounded-md bg-white/15 px-2 py-0.5 text-[10px] font-semibold text-amber-50 ring-1 ring-white/20 dark:bg-white/10 dark:text-amber-100 dark:ring-white/15 sm:text-xs">
                   {row.value}
                 </span>
               </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/15 dark:bg-white/10">
                 <div
-                  className={`h-full rounded-full bg-gradient-to-l from-amber-300/90 via-violet-300/90 to-cyan-300/90 ${row.width}`}
+                  className={`h-full rounded-full bg-gradient-to-l from-amber-300/90 via-violet-300/90 to-cyan-300/90 dark:from-amber-300/80 dark:via-violet-300/80 dark:to-cyan-300/80 ${row.width}`}
                 />
               </div>
             </div>
@@ -206,11 +214,135 @@ function IconActionableStrategy({ className }: { className?: string }) {
   );
 }
 
+const HOW_STEPS = [
+  { n: 1, title: "شخّص علامتك", body: "أدخل تفاصيل نشاطك واحصل على تحليل فوري للفجوات والفرص." },
+  { n: 2, title: "صمّم الهوية والرسالة", body: "نولّد لك نبرة صوت واتجاه بصري متناسق مع جمهورك المحلي." },
+  { n: 3, title: "أطلق بخطة واضحة", body: "خطة إطلاق عملية قابلة للتنفيذ بدل عروض نظرية طويلة." },
+];
+
+function LeadMagnetSuccessIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="10" className="stroke-emerald-500 dark:stroke-emerald-400" strokeWidth="2" />
+      <path
+        d="M8 12l2.5 2.5L16 9"
+        className="stroke-emerald-600 dark:stroke-emerald-300"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function LeadMagnetSection() {
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const subscribeMutation = trpc.leads.subscribeToLeadMagnet.useMutation();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+    try {
+      await subscribeMutation.mutateAsync({ email });
+      setIsSuccess(true);
+    } catch {
+      setError("حدث خطأ، يرجى المحاولة مرة أخرى.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <section
+      className="border-y border-teal-100 bg-teal-50/50 px-4 py-16 dark:border-teal-900/30 dark:bg-teal-950/20"
+      aria-labelledby="lead-magnet-heading"
+    >
+      <div className="mx-auto grid max-w-5xl items-center gap-10 md:grid-cols-2" dir="rtl">
+        {/* أول عمود في RTL = يمين: النص والنموذج */}
+        <div>
+          <h2 id="lead-magnet-heading" className="text-2xl font-bold text-gray-900 dark:text-white md:text-3xl">
+            لست مستعداً للتشخيص الكامل بعد؟
+          </h2>
+          <p className="mt-3 text-gray-600 dark:text-gray-300">
+            احصل على دليلنا المجاني: أسرار بناء علامة تجارية لا تُقهر في 2026
+          </p>
+
+          {isSuccess ? (
+            <div className="mt-8 flex flex-col items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50/80 p-6 text-center dark:border-emerald-800/60 dark:bg-emerald-950/40">
+              <LeadMagnetSuccessIcon className="h-12 w-12 shrink-0" />
+              <p className="text-base font-medium text-emerald-800 dark:text-emerald-200">
+                تم الإرسال! سيصلك الدليل على بريدك قريباً.
+              </p>
+            </div>
+          ) : (
+            <form className="mt-6" onSubmit={handleSubmit}>
+              <label htmlFor="lead-magnet-email" className="sr-only">
+                بريدك الإلكتروني
+              </label>
+              <input
+                id="lead-magnet-email"
+                type="email"
+                name="email"
+                autoComplete="email"
+                placeholder="بريدك الإلكتروني"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                aria-label="بريدك الإلكتروني"
+                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-white/10 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500"
+              />
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="mt-3 w-full rounded-xl bg-teal-600 py-3 font-semibold text-white transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-teal-500 dark:hover:bg-teal-600"
+              >
+                {isLoading ? "جاري الإرسال…" : "أرسل لي الدليل مجاناً"}
+              </button>
+              {error ? (
+                <p className="mt-3 text-center text-sm text-red-600 dark:text-red-400" role="alert">
+                  {error}
+                </p>
+              ) : null}
+              <p className="mt-2 text-center text-xs text-gray-400 dark:text-gray-500">
+                لن نرسل لك أي بريد مزعج. يمكنك إلغاء الاشتراك في أي وقت.
+              </p>
+            </form>
+          )}
+        </div>
+
+        <div className="hidden items-center justify-center md:flex">
+          <div className="relative aspect-[3/4] w-48 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-700 shadow-2xl transition-transform duration-500 [transform:perspective(1000px)_rotateY(-12deg)] hover:[transform:perspective(1000px)_rotateY(0deg)]">
+            <div className="flex h-full flex-col justify-center px-6 text-center text-white">
+              <p className="text-lg font-bold leading-snug">دليل العلامة التجارية 2026</p>
+              <div className="mx-auto my-3 h-0.5 w-12 bg-white/40" />
+              <p className="text-sm text-white/90 dark:text-white/85">مجاناً من WZRD AI</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function Welcome() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      {/* Hero: dark gradient band so glass (white/10) reads clearly in light + dark */}
-      <header className="relative overflow-hidden bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-900 text-white dark:from-slate-950 dark:via-slate-900 dark:to-black">
+    <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
+      <WzrdPublicHeader />
+
+      <section
+        className="relative overflow-hidden bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-900 text-white dark:from-slate-950 dark:via-slate-900 dark:to-black"
+        aria-label="مقدمة الصفحة"
+      >
         <div
           className="pointer-events-none absolute inset-0 opacity-40 dark:opacity-30"
           style={{
@@ -226,7 +358,7 @@ export default function Welcome() {
               <h1 className="text-hero-premium text-3xl font-bold leading-[1.35] tracking-tight sm:text-4xl md:text-5xl lg:text-[2.75rem] lg:leading-[1.3] xl:text-5xl">
                 شخّص. صمّم. أطلق. علامتك التجارية بالذكاء الاصطناعي
               </h1>
-              <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/85 sm:text-lg lg:mx-0 lg:max-w-none">
+              <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/90 dark:text-white/85 sm:text-lg lg:mx-0 lg:max-w-none">
                 بديلك الذكي لوكالات التسويق. احصل على استراتيجية وهوية بصرية متكاملة في دقائق.
               </p>
             </div>
@@ -236,9 +368,8 @@ export default function Welcome() {
             </div>
           </div>
         </div>
-      </header>
+      </section>
 
-      {/* Authority / scarcity proof — no fake avatars */}
       <div
         className="border-b border-slate-200/90 bg-slate-50/95 py-5 dark:border-white/10 dark:bg-slate-900/60"
         role="region"
@@ -252,20 +383,20 @@ export default function Welcome() {
             تم تدريب نماذجنا على تحليل أكثر من 500 علامة تجارية ناجحة في السوق السعودي والخليجي.
           </p>
           <ul
-            className="flex flex-wrap items-center justify-center gap-6 sm:shrink-0 sm:justify-end sm:gap-8"
+            className="flex flex-wrap items-center justify-center gap-6 text-slate-600 dark:text-slate-400 sm:shrink-0 sm:justify-end sm:gap-8"
             dir="rtl"
           >
-            <li className="flex flex-col items-center gap-1.5 text-slate-600 dark:text-slate-400 sm:min-w-[5.5rem]">
+            <li className="flex flex-col items-center gap-1.5 sm:min-w-[5.5rem]">
               <IconPreciseAnalysis className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
-              <span className="text-xs font-medium text-slate-700 dark:text-slate-300">تحليل دقيق</span>
+              <span className="text-xs font-medium text-slate-800 dark:text-slate-300">تحليل دقيق</span>
             </li>
-            <li className="flex flex-col items-center gap-1.5 text-slate-600 dark:text-slate-400 sm:min-w-[5.5rem]">
+            <li className="flex flex-col items-center gap-1.5 sm:min-w-[5.5rem]">
               <IconLocalIdentity className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-xs font-medium text-slate-700 dark:text-slate-300">هوية محلية</span>
+              <span className="text-xs font-medium text-slate-800 dark:text-slate-300">هوية محلية</span>
             </li>
-            <li className="flex flex-col items-center gap-1.5 text-slate-600 dark:text-slate-400 sm:min-w-[6.5rem]">
+            <li className="flex flex-col items-center gap-1.5 sm:min-w-[6.5rem]">
               <IconActionableStrategy className="h-8 w-8 text-amber-600 dark:text-amber-400" />
-              <span className="text-center text-xs font-medium leading-snug text-slate-700 dark:text-slate-300">
+              <span className="text-center text-xs font-medium leading-snug text-slate-800 dark:text-slate-300">
                 استراتيجية قابلة للتنفيذ
               </span>
             </li>
@@ -273,11 +404,40 @@ export default function Welcome() {
         </div>
       </div>
 
+      <section
+        id="how-it-works"
+        className="border-b border-gray-200 bg-white py-12 dark:border-white/10 dark:bg-gray-950"
+        aria-labelledby="how-it-works-heading"
+      >
+        <div className="mx-auto max-w-6xl px-4">
+          <h2
+            id="how-it-works-heading"
+            className="mb-8 text-center text-2xl font-bold text-gray-900 dark:text-white"
+          >
+            كيف يعمل
+          </h2>
+          <div className="flex flex-row flex-wrap justify-center gap-6 md:gap-10" dir="rtl">
+            {HOW_STEPS.map((step) => (
+              <div
+                key={step.n}
+                className="flex max-w-xs flex-col items-center rounded-xl border border-gray-200 bg-gray-50 p-6 text-center shadow-sm dark:border-white/10 dark:bg-gray-900/90 dark:shadow-none dark:ring-1 dark:ring-white/10"
+              >
+                <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-teal-600 text-lg font-bold text-white dark:bg-teal-500">
+                  {step.n}
+                </span>
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white">{step.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-300">{step.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <div className="px-4 py-12">
         <div className="mx-auto max-w-5xl">
           <section
             aria-labelledby="report-preview-heading"
-            className="rounded-2xl border border-gray-200 bg-white/80 p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900/80 md:p-10"
+            className="rounded-2xl border border-gray-200 bg-white/90 p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900/80 dark:shadow-none dark:ring-1 dark:ring-gray-700/80 md:p-10"
           >
             <h2
               id="report-preview-heading"
@@ -289,16 +449,16 @@ export default function Welcome() {
             <div className="grid gap-8 md:grid-cols-2 md:gap-10">
               <div className="order-2 md:order-1">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2 bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+                  <div className="col-span-2 rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:shadow-none dark:ring-1 dark:ring-gray-600/60">
                     <div className="mb-3 flex items-center justify-between gap-3">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Brand Score</span>
+                      <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Brand Score</span>
                       <span className="text-lg font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
                         92<span className="text-sm font-normal text-gray-500 dark:text-gray-400">/100</span>
                       </span>
                     </div>
                     <div className="h-2.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400"
+                        className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 dark:from-emerald-400 dark:to-teal-300"
                         style={{ width: "92%" }}
                       />
                     </div>
@@ -307,14 +467,14 @@ export default function Welcome() {
                     </p>
                   </div>
 
-                  <div className="col-span-1 bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+                  <div className="col-span-1 rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:shadow-none dark:ring-1 dark:ring-gray-600/60">
                     <div className="mb-2 flex items-start justify-between gap-2">
                       <span className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
                         Generated copy
                       </span>
                       <button
                         type="button"
-                        className="rounded-md p-1 text-gray-500 transition hover:bg-gray-100 hover:text-gray-800 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                        className="rounded-md border border-transparent p-1 text-gray-600 transition hover:border-gray-200 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:border-white/10 dark:hover:bg-gray-700 dark:hover:text-gray-100"
                         aria-label="Copy text"
                       >
                         <CopyIcon className="h-4 w-4" />
@@ -325,14 +485,14 @@ export default function Welcome() {
                     </p>
                   </div>
 
-                  <div className="col-span-1 bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+                  <div className="col-span-1 rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:shadow-none dark:ring-1 dark:ring-gray-600/60">
                     <span className="mb-3 block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
                       Sentiment
                     </span>
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
-                          <div className="h-full w-[72%] rounded-full bg-emerald-500" />
+                          <div className="h-full w-[72%] rounded-full bg-emerald-500 dark:bg-emerald-400" />
                         </div>
                         <span className="w-8 text-right text-xs tabular-nums text-gray-600 dark:text-gray-300">
                           72%
@@ -340,7 +500,7 @@ export default function Welcome() {
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
-                          <div className="h-full w-[18%] rounded-full bg-amber-400" />
+                          <div className="h-full w-[18%] rounded-full bg-amber-400 dark:bg-amber-300" />
                         </div>
                         <span className="w-8 text-right text-xs tabular-nums text-gray-600 dark:text-gray-300">
                           18%
@@ -348,22 +508,22 @@ export default function Welcome() {
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
-                          <div className="h-full w-[10%] rounded-full bg-rose-400" />
+                          <div className="h-full w-[10%] rounded-full bg-rose-400 dark:bg-rose-300" />
                         </div>
                         <span className="w-8 text-right text-xs tabular-nums text-gray-600 dark:text-gray-300">
                           10%
                         </span>
                       </div>
                     </div>
-                    <div className="mt-3 flex gap-2 text-[10px] text-gray-500 dark:text-gray-400">
+                    <div className="mt-3 flex flex-wrap gap-2 text-[10px] text-gray-500 dark:text-gray-400">
                       <span className="flex items-center gap-1">
-                        <span className="h-2 w-2 rounded-full bg-emerald-500" /> إيجابي
+                        <span className="h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400" /> إيجابي
                       </span>
                       <span className="flex items-center gap-1">
-                        <span className="h-2 w-2 rounded-full bg-amber-400" /> محايد
+                        <span className="h-2 w-2 rounded-full bg-amber-400 dark:bg-amber-300" /> محايد
                       </span>
                       <span className="flex items-center gap-1">
-                        <span className="h-2 w-2 rounded-full bg-rose-400" /> سلبي
+                        <span className="h-2 w-2 rounded-full bg-rose-400 dark:bg-rose-300" /> سلبي
                       </span>
                     </div>
                   </div>
@@ -393,6 +553,8 @@ export default function Welcome() {
           </section>
         </div>
       </div>
+
+      <LeadMagnetSection />
     </div>
   );
 }

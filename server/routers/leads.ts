@@ -1,5 +1,7 @@
 /**
- * Public lead capture — Lead Magnet on Welcome (no auth).
+ * Public lead capture.
+ * If your repo already exports `leadsRouter` with `submitQuickCheck` etc., merge this
+ * `subscribeToLeadMagnet` into that same `router({ ... })` object instead of replacing the file.
  */
 import { publicProcedure, router } from "../_core/trpc";
 import { z } from "zod";

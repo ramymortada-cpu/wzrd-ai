@@ -1,0 +1,50 @@
+/**
+ * WZRD — hero gradient + report ring glow (import from Welcome or global CSS).
+ * Tailwind base/components/utilities are expected from the app entry (Tailwind v4: @import "tailwindcss").
+ */
+
+@layer utilities {
+  .text-hero-premium {
+    background-image: linear-gradient(
+      120deg,
+      #fef3c7 0%,
+      #fae8ff 22%,
+      #ffffff 45%,
+      #a5f3fc 72%,
+      #c4b5fd 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .dark .text-hero-premium {
+    background-image: linear-gradient(
+      125deg,
+      #fcd34d 0%,
+      #f5d0fe 18%,
+      #ffffff 42%,
+      #67e8f9 68%,
+      #a78bfa 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .ring-glow-pulse {
+    animation: wzrd-ring-glow-pulse 2.8s ease-in-out infinite;
+  }
+}
+
+@keyframes wzrd-ring-glow-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 6px rgb(34 211 238 / 0.45))
+      drop-shadow(0 0 14px rgb(167 139 250 / 0.35));
+  }
+  50% {
+    filter: drop-shadow(0 0 14px rgb(34 211 238 / 0.75))
+      drop-shadow(0 0 28px rgb(167 139 250 / 0.5));
+  }
+}
