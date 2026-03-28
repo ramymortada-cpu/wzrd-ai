@@ -1,0 +1,63 @@
+"""
+Customer Profile Updater — updates counters, tier, and sentiment after each conversation turn.
+Context building is in context_builder.py (separate module per design).
+"""
+from datetime import UTC, datetime
+
+POSITIVE = {"شكرا", "شكراً", "ممتاز", "حلو", "الله يعطيك العافية", "تسلم", "رائع", "ممنون", "جميل", "احسنت", "مشكور", "تمام"}
+NEGATIVE = {"زعلان", "خربان", "سيء", "اسوأ", "ما يشتغل", "مشكلة", "شكوى", "بشتكي", "بنشر تقييم", "غش", "نصب", "كذب", "متاخر", "تاخير", "ما وصل", "مكسور", "غلط"}
+
+
+def compute_sentiment(text: str) -> float:
+    if not text:
+        return 0.5
+    words = set(text.split())
+    p, n = len(words & POSITIVE), len(words & NEGATIVE)
+    if p > n:
+        return min(1.0, 0.6 + p * 0.1)
+    if n > p:
+        return max(0.0, 0.4 - n * 0.1)
+    return 0.5
+
+
+def compute_tier(customer) -> str:
+    total_conv = customer.total_conversations or 0
+    total_esc = customer.total_escalations or 0
+    if total_esc >= 3 and customer.last_complaint_at:
+        days_since = (datetime.now(UTC) - customer.last_complaint_at).days
+        if days_since <= 30:
+            return "at_risk"
+    if total_conv > 10:
+        return "vip"
+    if float(customer.salla_total_revenue or 0) > 5000:
+        return "vip"
+    if total_conv >= 4:
+        return "returning"
+    if total_conv >= 1:
+        return "standard"
+    return "new"
+
+
+async def update_profile(db, customer, resolution_type: str, message_text: str = "") -> None:
+    """Update customer counters, tier, and sentiment after a conversation turn."""
+    customer.total_conversations = (customer.total_conversations or 0) + 1
+    customer.last_seen_at = datetime.now(UTC)
+    if resolution_type in ("escalated_hard", "escalated_soft"):
+        customer.total_escalations = (customer.total_escalations or 0) + 1
+        customer.last_complaint_at = datetime.now(UTC)
+    s = compute_sentiment(message_text)
+    customer.avg_sentiment = round(float(customer.avg_sentiment or 0.5) * 0.7 + s * 0.3, 2)
+    customer.customer_tier = compute_tier(customer)
+    await db.flush()
+
+def build_customer_context(customer) -> dict:
+    """Build a context dict from a customer object for pipeline use."""
+    return {
+        'tier': getattr(customer, 'customer_tier', 'new'),
+        'total_conversations': getattr(customer, 'total_conversations', 0),
+        'total_escalations': getattr(customer, 'total_escalations', 0),
+        'avg_sentiment': float(getattr(customer, 'avg_sentiment', 0) or 0),
+        'language': getattr(customer, 'language', 'ar'),
+        'salla_total_orders': getattr(customer, 'salla_total_orders', 0),
+    }
+
