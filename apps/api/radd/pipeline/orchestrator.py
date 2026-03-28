@@ -198,6 +198,9 @@ async def _run_pipeline_async_impl(
         # خريطة النوايا للـ templates: shipping_inquiry → shipping
         if intent == "shipping_inquiry":
             intent = "shipping"
+        # intent_v2 يرجع order_cancel بينما القوالب والإجراءات تستخدم cancel_request (مثل v1 keywords)
+        if intent == "order_cancel":
+            intent = "cancel_request"
         intent_result = IntentResult(intent=intent, confidence=confidence_intent)
         order_number_from_entities = entities.get("order_number")
     else:

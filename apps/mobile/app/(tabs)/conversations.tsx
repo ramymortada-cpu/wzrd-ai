@@ -23,10 +23,22 @@ export default function ConversationsScreen() {
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["conversations", page, search],
-    queryFn: () => getConversations(page, search || undefined),
+    queryFn: () => getConversations(page),
   });
 
-  const conversations = data?.conversations || [];
+  const rawItems = data?.items ?? [];
+  const q = search.trim().toLowerCase();
+  const conversations = q
+    ? rawItems.filter(
+        (c: any) =>
+          String(c.intent || "")
+            .toLowerCase()
+            .includes(q) ||
+          String(c.id || "")
+            .toLowerCase()
+            .includes(q)
+      )
+    : rawItems;
 
   return (
     <View style={styles.container}>
@@ -54,11 +66,17 @@ export default function ConversationsScreen() {
             <View style={styles.cardTop}>
               <View style={[styles.dot, { backgroundColor: RESOLUTION_COLORS[item.resolution_type] || "#64748b" }]} />
               <Text style={styles.intent} numberOfLines={1}>{item.intent || "بلا نية"}</Text>
-              <Text style={styles.time}>{dayjs(item.created_at).fromNow()}</Text>
+              <Text style={styles.time}>
+                {item.last_message_at ? dayjs(item.last_message_at).fromNow() : "—"}
+              </Text>
             </View>
             <View style={styles.cardBottom}>
               <Text style={styles.dialect}>{item.dialect || "ar"}</Text>
-              <Text style={styles.confidence}>{(item.confidence_score * 100).toFixed(0)}%</Text>
+              <Text style={styles.confidence}>
+                {item.confidence_score != null
+                  ? `${(Number(item.confidence_score) * 100).toFixed(0)}%`
+                  : "—"}
+              </Text>
               <Text style={styles.msgCount}>{item.message_count} رسائل</Text>
             </View>
           </TouchableOpacity>

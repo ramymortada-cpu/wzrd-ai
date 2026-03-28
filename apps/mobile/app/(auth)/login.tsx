@@ -7,20 +7,25 @@ import { router } from "expo-router";
 import { login, getMe } from "../../src/lib/api";
 import { useAuthStore } from "../../src/lib/store";
 
+const DEFAULT_WORKSPACE =
+  (typeof process !== "undefined" && process.env.EXPO_PUBLIC_WORKSPACE_SLUG) || "";
+
 export default function LoginScreen() {
+  const [workspaceSlug, setWorkspaceSlug] = useState(DEFAULT_WORKSPACE);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { setAuth } = useAuthStore();
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("تنبيه", "الرجاء إدخال البريد الإلكتروني وكلمة المرور");
+    const slug = workspaceSlug.trim();
+    if (!slug || !email || !password) {
+      Alert.alert("تنبيه", "أدخل معرّف مساحة العمل (slug) والبريد وكلمة المرور");
       return;
     }
     setLoading(true);
     try {
-      const data = await login(email, password);
+      const data = await login(slug, email, password);
       const user = await getMe();
       await setAuth(user, data.access_token);
       router.replace("/(tabs)/home");
@@ -41,6 +46,15 @@ export default function LoginScreen() {
         <Text style={styles.subtitle}>لوحة تحكم المتجر</Text>
 
         <View style={styles.form}>
+          <TextInput
+            style={styles.input}
+            placeholder="معرّف المتجر (workspace slug)"
+            placeholderTextColor="#64748b"
+            value={workspaceSlug}
+            onChangeText={setWorkspaceSlug}
+            autoCapitalize="none"
+            textAlign="right"
+          />
           <TextInput
             style={styles.input}
             placeholder="البريد الإلكتروني"

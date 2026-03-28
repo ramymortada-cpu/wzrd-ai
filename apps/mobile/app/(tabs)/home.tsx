@@ -50,11 +50,11 @@ export default function HomeScreen() {
         <View style={[styles.card, styles.scoreCard]}>
           <View>
             <Text style={styles.cardLabel}>RADD Score</Text>
-            <Text style={styles.scoreValue}>{score.score ?? "--"}</Text>
+            <Text style={styles.scoreValue}>{score.total ?? "--"}</Text>
             <Text style={styles.scoreGrade}>{score.grade ?? ""}</Text>
           </View>
           <View style={styles.scoreCircle}>
-            <Text style={styles.scoreCircleText}>{score.score ?? "--"}</Text>
+            <Text style={styles.scoreCircleText}>{score.total ?? "--"}</Text>
           </View>
         </View>
       )}
@@ -62,20 +62,20 @@ export default function HomeScreen() {
       {/* KPI Row */}
       <View style={styles.kpiRow}>
         <View style={styles.kpiCard}>
-          <Text style={styles.kpiValue}>{stats?.total_conversations ?? "--"}</Text>
-          <Text style={styles.kpiLabel}>محادثة</Text>
+          <Text style={styles.kpiValue}>{stats?.active_conversations ?? "--"}</Text>
+          <Text style={styles.kpiLabel}>نشطة الآن</Text>
         </View>
         <View style={styles.kpiCard}>
           <Text style={[styles.kpiValue, { color: "#22c55e" }]}>
-            {stats?.automation_rate ? `${(stats.automation_rate * 100).toFixed(0)}%` : "--"}
+            {stats?.automation_rate != null ? `${Number(stats.automation_rate).toFixed(1)}%` : "--"}
           </Text>
-          <Text style={styles.kpiLabel}>أتمتة</Text>
+          <Text style={styles.kpiLabel}>أتمتة (٢٤س)</Text>
         </View>
         <View style={styles.kpiCard}>
           <Text style={[styles.kpiValue, { color: "#f59e0b" }]}>
-            {stats?.escalation_rate ? `${(stats.escalation_rate * 100).toFixed(0)}%` : "--"}
+            {stats?.escalation_rate != null ? `${Number(stats.escalation_rate).toFixed(1)}%` : "--"}
           </Text>
-          <Text style={styles.kpiLabel}>تصعيد</Text>
+          <Text style={styles.kpiLabel}>تصعيد (٢٤س)</Text>
         </View>
       </View>
 

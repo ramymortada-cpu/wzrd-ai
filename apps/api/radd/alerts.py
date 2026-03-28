@@ -155,7 +155,7 @@ class AlertManager:
         try:
             import sentry_sdk
 
-            with sentry_sdk.push_scope() as scope:
+            with sentry_sdk.new_scope() as scope:
                 scope.set_tag("alert.level", level.value)
                 scope.set_tag("alert.event", event)
                 scope.set_tag("environment", self.app_env)

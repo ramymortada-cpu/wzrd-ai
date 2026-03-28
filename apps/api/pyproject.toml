@@ -88,8 +88,8 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-# Integration tests (tests/integration/) require Docker. Run: uv run pytest tests/integration/ -v
-# To skip integration: uv run pytest tests/ --ignore=tests/integration/
+# افتراضياً بدون Docker: تشغيل الوحدة فقط. التكامل: uv run pytest tests/integration/ -v
+addopts = ["-m", "not integration"]
 markers = [
     "integration: marks tests as integration (require Docker via testcontainers)",
 ]
