@@ -12,9 +12,9 @@ import { PageSkeleton, ChatSkeleton, DetailPageSkeleton } from "./components/Pag
 import WzrdAppShell from "./components/WzrdAppShell";
 import QuickSearch from "./components/QuickSearch";
 
-/** Public WZRD funnel + tools; Command Center (/) stays on default app chrome. */
+/** Public WZRD funnel + tools; Command Center (/dashboard, etc.) stays on default app chrome. */
 const WZRD_PREMIUM_SHELL_RE = new RegExp(
-  "^/(?:signup|login|pricing|my-brand|copilot|wzrd-admin|admin|dashboard|panel|profile|settings|my-requests|quick-check|tools|portal|proposal-view)(?:/|$)"
+  "^/(?:signup|login|pricing|my-brand|copilot|wzrd-admin|admin|panel|profile|settings|my-requests|quick-check|tools|portal|proposal-view)(?:/|$)"
 );
 
 // ============ LAZY-LOADED PAGES ============
@@ -22,6 +22,7 @@ const WZRD_PREMIUM_SHELL_RE = new RegExp(
 // This reduces the initial bundle size significantly.
 
 const Home = lazy(() => import("./pages/Home"));
+const WelcomePage = lazy(() => import("./pages/Welcome"));
 const ClientsPage = lazy(() => import("./pages/Clients"));
 const ClientDetailPage = lazy(() => import("./pages/ClientDetail"));
 const ProjectsPage = lazy(() => import("./pages/Projects"));
@@ -82,7 +83,7 @@ function DashboardRouter() {
   return (
     <DashboardLayout>
       <Switch>
-        <Route path="/">{() => <SuspenseWrapper><Home /></SuspenseWrapper>}</Route>
+        <Route path="/dashboard">{() => <SuspenseWrapper><Home /></SuspenseWrapper>}</Route>
         <Route path="/clients">{() => <SuspenseWrapper><ClientsPage /></SuspenseWrapper>}</Route>
         <Route path="/clients/:id">{() => <SuspenseWrapper fallback={<DetailPageSkeleton />}><ClientDetailPage /></SuspenseWrapper>}</Route>
         <Route path="/projects">{() => <SuspenseWrapper><ProjectsPage /></SuspenseWrapper>}</Route>
@@ -150,6 +151,7 @@ function App() {
               <QuickSearch />
               <Switch>
                 {/* WZRD AI — Public funnel pages (no auth) */}
+                <Route path="/">{() => <SuspenseWrapper><WelcomePage /></SuspenseWrapper>}</Route>
                 <Route path="/signup">{() => <SuspenseWrapper><SignupPage /></SuspenseWrapper>}</Route>
                 <Route path="/login">{() => <SuspenseWrapper><LoginPage /></SuspenseWrapper>}</Route>
                 <Route path="/blog">{() => <SuspenseWrapper><BlogIndexPage /></SuspenseWrapper>}</Route>
@@ -168,7 +170,6 @@ function App() {
                 <Route path="/tools/quick">{() => <SuspenseWrapper><QuickDiagnosisPage /></SuspenseWrapper>}</Route>
                 <Route path="/my-requests">{() => <SuspenseWrapper><MyRequestsPage /></SuspenseWrapper>}</Route>
                 <Route path="/admin">{() => <SuspenseWrapper><WzrdAdminPage /></SuspenseWrapper>}</Route>
-                <Route path="/dashboard">{() => <SuspenseWrapper><WzrdAdminPage /></SuspenseWrapper>}</Route>
                 <Route path="/panel">{() => <SuspenseWrapper><WzrdAdminPage /></SuspenseWrapper>}</Route>
                 <Route path="/wzrd-admin">{() => <SuspenseWrapper><WzrdAdminPage /></SuspenseWrapper>}</Route>
                 <Route path="/profile">{() => <SuspenseWrapper><ProfilePage /></SuspenseWrapper>}</Route>

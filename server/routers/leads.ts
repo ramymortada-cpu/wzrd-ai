@@ -24,6 +24,8 @@ import {
   createClient,
   getClientById,
 } from "../db";
+import { getDb } from "../db/index";
+import { leadMagnetSubscribers } from "../../drizzle/schema";
 
 /**
  * Build the pricing reference string from the single source of truth.
@@ -282,4 +284,27 @@ Respond in JSON format:
   funnel: protectedProcedure.query(async () => {
     return getLeadFunnelStats();
   }),
+
+  /** PUBLIC: Lead magnet email from Welcome landing (no auth). */
+  subscribeToLeadMagnet: publicProcedure
+    .input(z.object({ email: z.string().email() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { success: true as const };
+      try {
+        await db.insert(leadMagnetSubscribers).values({
+          email: input.email.trim().toLowerCase(),
+          source: "home_guide_2026",
+        });
+      } catch (err: unknown) {
+        const isDuplicate =
+          (err instanceof Error && err.message.includes("Duplicate entry")) ||
+          (typeof err === "object" &&
+            err !== null &&
+            "code" in err &&
+            (err as { code: string }).code === "ER_DUP_ENTRY");
+        if (!isDuplicate) throw err;
+      }
+      return { success: true as const };
+    }),
 });
