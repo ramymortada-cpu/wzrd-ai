@@ -52,7 +52,7 @@ export default function WzrdPublicHeader({ credits, showCredits = true }: WzrdPu
           </a>
           {showCommandCenter && (
             <a
-              href="/"
+              href="/dashboard"
               className={`${navLinkClass} text-primary font-semibold`}
             >
               {locale === "ar" ? "مركز القيادة" : "Command Center"}

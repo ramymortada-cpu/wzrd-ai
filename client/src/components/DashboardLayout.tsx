@@ -68,7 +68,7 @@ type SidebarNavItem = {
 };
 
 const NAV_OVERVIEW: SidebarNavItem[] = [
-  { icon: LayoutDashboard, labelKey: "nav.dashboard", label: "Dashboard", labelAr: "Dashboard", path: "/" },
+  { icon: LayoutDashboard, labelKey: "nav.dashboard", label: "Dashboard", labelAr: "Dashboard", path: "/dashboard" },
   { icon: BarChart3, labelKey: "nav.analytics", label: "Analytics", labelAr: "Analytics", path: "/analytics" },
   { icon: Zap, labelKey: "nav.pipeline", label: "Pipeline", labelAr: "Pipeline", path: "/pipeline", requiresCommandCenter: true },
 ];
@@ -320,7 +320,8 @@ function DashboardLayoutContent({
                       <SidebarMenu className="px-2 py-0">
                         {items.map((item) => {
                           const isActive =
-                            location === item.path || (item.path !== "/" && location.startsWith(item.path));
+                            location === item.path ||
+                            (item.path !== "/dashboard" && location.startsWith(item.path));
                           return (
                             <SidebarMenuItem key={item.path}>
                               <SidebarMenuButton
