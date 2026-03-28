@@ -150,10 +150,11 @@ type T = (ar: string, en: string) => string;
 // ═══════════════════════════════════════
 // OVERVIEW TAB
 // ═══════════════════════════════════════
-function OverviewTab({ t }: { t: T }) {
+function OverviewTab({ t, onSuccess, onError }: { t: T; onSuccess?: (msg?: string) => void; onError?: (msg: string) => void }) {
   const [data, setData] = useState<WzrdDashboardData | null>(null);
   const [recentRuns, setRecentRuns] = useState<WzrdToolRunHistory | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [observeAllLoading, setObserveAllLoading] = useState(false);
 
   const load = useCallback(async () => {
     setRefreshing(true);
@@ -229,6 +230,37 @@ function OverviewTab({ t }: { t: T }) {
           </div>
         </div>
       )}
+
+      {/* Brand observatory — global job */}
+      <div className="p-5 rounded-xl border border-indigo-200 bg-indigo-50/40 shadow-sm">
+        <h4 className="text-sm font-bold text-indigo-800 mb-1">{t('عمليات النظام', 'System operations')}</h4>
+        <p className="text-xs text-indigo-600/90 mb-3">{t('تشغيل مراقبة البراند لكل العملاء النشطين (قد يستغرق وقتاً).', 'Runs brand observation for all active clients (may take a while).')}</p>
+        <button
+          type="button"
+          disabled={observeAllLoading}
+          onClick={async () => {
+            setObserveAllLoading(true);
+            const result = await apiMutation('brandTwin.observeAll');
+            setObserveAllLoading(false);
+            if (result && typeof result === 'object' && 'scanned' in result) {
+              const r = result as { scanned: number; totalSignals: number; totalAlerts: number };
+              onSuccess?.(
+                t(
+                  `اكتمل: ${r.scanned} عميل، ${r.totalSignals} إشارة، ${r.totalAlerts} تنبيه`,
+                  `Done: ${r.scanned} clients, ${r.totalSignals} signals, ${r.totalAlerts} alerts`,
+                ),
+              );
+            } else if (result === null) {
+              onError?.(t('فشل تشغيل المراقبة — تحقق من الصلاحيات.', 'Observation failed — check permissions.'));
+            } else {
+              onSuccess?.(t('اكتملت المراقبة الشاملة.', 'Global brand observation completed.'));
+            }
+          }}
+          className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition"
+        >
+          {observeAllLoading ? t('جاري التشغيل…', 'Running…') : t('تشغيل مراقبة البراند للجميع', 'Run Global Brand Observation')}
+        </button>
+      </div>
 
       {/* Quick Links — New Features */}
       <div className="p-5 rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -2253,7 +2285,13 @@ export default function WzrdAdmin() {
 
         <main className="flex-1 p-6 overflow-auto">
           <div className="max-w-5xl mx-auto">
-            {tab === 'overview' && <OverviewTab t={t} />}
+            {tab === 'overview' && (
+              <OverviewTab
+                t={t}
+                onSuccess={(m) => showToast(m || t('تم', 'Done'))}
+                onError={(m) => showToast(m, 'error')}
+              />
+            )}
             {tab === 'cms' && <CmsTab t={t} onSuccess={() => showToast(t('تم الحفظ', 'Saved!'))} onError={(m) => showToast(m, 'error')} />}
             {tab === 'agency' && <AgencyTab t={t} onSuccess={() => showToast(t('تم الحفظ', 'Saved!'))} onError={(m) => showToast(m, 'error')} />}
             {tab === 'users' && <UsersTab t={t} onSuccess={(m) => showToast(m || t('تم إضافة الكريدت', 'Credits added!'))} onError={(m) => showToast(m, 'error')} />}
