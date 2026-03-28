@@ -48,7 +48,8 @@ function applyThemeClass(mode: "light" | "dark") {
 function readInitialTheme(): "light" | "dark" {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored === "dark" || stored === "light") return stored;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  // افتراضي فاتح أول زيارة — إحساس «وكالة»؛ التبديل اليدوي يبقى في localStorage
+  return "light";
 }
 
 export default function WzrdPublicHeader() {

@@ -1,5 +1,5 @@
 /**
- * WZRD AI — صفحة الأسعار (ثلاث مستويات + FAQ).
+ * WZRD AI — صفحة الأسعار (Prompt 6: decoy + كوبون + FAQ).
  */
 import React, { useState } from "react";
 import WzrdPublicHeader from "../components/WzrdPublicHeader";
@@ -59,8 +59,33 @@ function displayPriceForBilling(monthly: number, billing: "monthly" | "yearly"):
   return Math.round(monthly * 0.8);
 }
 
+const FAQ_ITEMS: { q: string; a: string }[] = [
+  {
+    q: "هل يمكنني استرداد أموالي؟",
+    a: "نعم، وفق سياسة الاسترداد المعروضة عند الشراء. إن لم تكن راضياً خلال الفترة المحددة يمكنك طلب استرداد وفق الشروط.",
+  },
+  {
+    q: "كيف يعمل التقرير؟",
+    a: "تجيب عن أسئلة قصيرة عن علامتك، يحلل النظام بياناتك ومنافسيك، ثم يصدر لك تقريراً منظماً بتوصيات عملية جاهزة للتنفيذ.",
+  },
+  {
+    q: "هل تدعمون اللغة العربية بالكامل؟",
+    a: "نعم، الواجهة والتقارير مصممة للعربية (RTL) مع دعم كامل للنصوص والمصطلحات المحلية.",
+  },
+  {
+    q: "هل يمكنني الإلغاء في أي وقت؟",
+    a: "نعم، يمكنك إلغاء اشتراكك في أي وقت دون التزام طويل الأمد.",
+  },
+  {
+    q: "ما الفرق بين التقرير المجاني والـ Pro؟",
+    a: "التقرير المجاني يعطيك ملخصاً نصياً. تقرير Pro يعطيك PDF كاملاً مع توصيات مفصّلة وخطة عمل.",
+  },
+];
+
 export default function Pricing() {
   const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
+  const [couponOpen, setCouponOpen] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
 
   return (
     <div className="min-h-screen bg-white text-gray-900 dark:bg-gray-950 dark:text-white" dir="rtl">
@@ -101,21 +126,22 @@ export default function Pricing() {
           </div>
         </div>
 
-        <div className="grid items-start gap-6 md:grid-cols-3">
+        <div className="grid items-start gap-6 py-4 md:grid-cols-3 md:gap-8">
           {PLANS.map((plan) => {
             const shownPrice = displayPriceForBilling(plan.price.monthly, billing);
+            const isMid = plan.highlighted;
             return (
               <div
                 key={plan.name}
                 className={`flex flex-col gap-5 rounded-2xl border p-8 transition-shadow ${
-                  plan.highlighted
-                    ? "relative border-teal-500 bg-teal-50 shadow-xl shadow-teal-500/10 dark:bg-teal-950/30"
+                  isMid
+                    ? "relative z-10 border-teal-500 bg-teal-50 shadow-xl shadow-teal-500/20 ring-2 ring-teal-500 dark:bg-teal-950/40 md:scale-105"
                     : "border-gray-200 bg-white dark:border-white/10 dark:bg-gray-900"
                 }`}
               >
-                {plan.highlighted ? (
+                {isMid ? (
                   <span className="absolute -top-3 right-6 rounded-full bg-teal-600 px-3 py-1 text-xs font-bold text-white">
-                    الأكثر شيوعاً
+                    الأكثر طلباً
                   </span>
                 ) : null}
 
@@ -132,16 +158,9 @@ export default function Pricing() {
                 <ul className="flex flex-col gap-2 text-sm text-gray-700 dark:text-gray-300">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-center gap-2">
-                      <svg
-                        className="h-4 w-4 shrink-0 text-teal-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2.5}
-                        aria-hidden
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
+                      <span className="text-teal-600 dark:text-teal-400" aria-hidden>
+                        ✓
+                      </span>
                       {f}
                     </li>
                   ))}
@@ -150,7 +169,7 @@ export default function Pricing() {
                 <a
                   href={plan.ctaHref}
                   className={`mt-auto rounded-xl py-3 text-center font-semibold transition-colors ${
-                    plan.highlighted
+                    isMid
                       ? "bg-teal-600 text-white hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600"
                       : "bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
                   }`}
@@ -162,26 +181,37 @@ export default function Pricing() {
           })}
         </div>
 
+        <div className="mt-12 text-center">
+          {!couponOpen ? (
+            <button
+              type="button"
+              onClick={() => setCouponOpen(true)}
+              className="text-sm font-medium text-teal-600 underline decoration-teal-600/40 underline-offset-4 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300"
+            >
+              لديك كود خصم؟
+            </button>
+          ) : (
+            <div className="mx-auto flex max-w-sm flex-col gap-2 sm:flex-row sm:items-center">
+              <input
+                type="text"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value)}
+                placeholder="أدخل كود الخصم"
+                className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white"
+              />
+              <button
+                type="button"
+                className="rounded-xl bg-gray-100 px-4 py-2.5 text-sm font-semibold dark:bg-gray-800"
+              >
+                تطبيق
+              </button>
+            </div>
+          )}
+        </div>
+
         <div className="mx-auto mt-20 max-w-2xl">
           <h2 className="mb-8 text-center text-2xl font-bold">أسئلة شائعة</h2>
-          {[
-            {
-              q: "هل يمكنني الإلغاء في أي وقت؟",
-              a: "نعم، يمكنك إلغاء اشتراكك في أي وقت دون أي رسوم إضافية.",
-            },
-            {
-              q: "هل التقارير باللغة العربية؟",
-              a: "نعم، جميع التقارير تصدر باللغة العربية بالكامل.",
-            },
-            {
-              q: "ما الفرق بين التقرير المجاني والـ Pro؟",
-              a: "التقرير المجاني يعطيك ملخصاً نصياً. تقرير Pro يعطيك PDF كامل مع توصيات مفصّلة وخطة عمل.",
-            },
-            {
-              q: "هل يوجد عقد طويل الأمد؟",
-              a: "لا. الاشتراك شهري أو سنوي وتتحكم فيه بالكامل.",
-            },
-          ].map(({ q, a }) => (
+          {FAQ_ITEMS.map(({ q, a }) => (
             <details key={q} className="group border-b border-gray-200 py-4 dark:border-white/10">
               <summary className="flex cursor-pointer list-none items-center justify-between font-semibold text-gray-900 dark:text-white">
                 {q}
