@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { toErrorString } from '@/lib/errorUtils';
 import { INDUSTRIES } from '@/lib/industries';
+import { useI18n } from '@/lib/i18n';
 
 const C = {
   bg:          "#FAFAF5",
@@ -28,6 +29,8 @@ const FONT = "'Cairo', 'Segoe UI', sans-serif";
 
 export default function Signup() {
   const [, navigate] = useLocation();
+  const { locale } = useI18n();
+  const isAr = locale === 'ar';
   const [form, setForm] = useState({
     name: '', email: '', company: '', industry: '', newsletterOptIn: true,
   });
@@ -92,7 +95,7 @@ export default function Signup() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, fontFamily: FONT, direction: "rtl", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100vh", background: C.bg, fontFamily: isAr ? FONT : "'Inter','Segoe UI',sans-serif", display: "flex", flexDirection: "column" }}>
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 
@@ -102,10 +105,10 @@ export default function Signup() {
           <img src="/logo.webp" alt="WZZRD AI" style={{ height: 36 }} />
         </a>
         <span style={{ fontSize: 14, color: C.muted }}>
-          عندك حساب؟{' '}
+          {isAr ? 'عندك حساب؟' : 'Already have an account?'}{' '}
           <a href="/login" onClick={(e) => { e.preventDefault(); navigate('/login'); }}
             style={{ color: C.blue, fontWeight: 700, textDecoration: "none" }}>
-            سجّل الدخول
+            {isAr ? 'سجّل الدخول' : 'Log in'}
           </a>
         </span>
       </div>
@@ -123,10 +126,10 @@ export default function Signup() {
           }}>
             <div style={{ fontSize: 36, marginBottom: 10 }}>🚀</div>
             <h1 style={{ fontSize: 22, fontWeight: 900, color: "#fff", margin: "0 0 8px" }}>
-              ابدأ رحلتك مع WZZRD AI
+              {isAr ? 'ابدأ رحلتك مع WZZRD AI' : 'Start your WZZRD AI journey'}
             </h1>
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", margin: 0, lineHeight: 1.6 }}>
-              حساب مجاني — ابدأ تشخيص علامتك التجارية دلوقتي
+              {isAr ? 'حساب مجاني — ابدأ تشخيص علامتك التجارية دلوقتي' : 'Free account — diagnose your brand right now'}
             </p>
             {refCode && (
               <div style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.15)", borderRadius: 100, padding: "5px 14px" }}>
@@ -151,30 +154,30 @@ export default function Signup() {
             )}
 
             <div style={{ marginBottom: 18 }}>
-              <label style={labelStyle}>الاسم الكامل *</label>
+              <label style={labelStyle}>{isAr ? 'الاسم الكامل *' : 'Full name *'}</label>
               <input type="text" value={form.name} onChange={(e) => set('name', e.target.value)}
-                placeholder="محمد أحمد" style={inputStyle} />
+                placeholder={isAr ? 'محمد أحمد' : 'John Smith'} style={inputStyle} />
             </div>
 
             <div style={{ marginBottom: 18 }}>
-              <label style={labelStyle}>البريد الإلكتروني *</label>
+              <label style={labelStyle}>{isAr ? 'البريد الإلكتروني *' : 'Email address *'}</label>
               <input type="email" value={form.email} onChange={(e) => set('email', e.target.value)}
                 placeholder="your@email.com" dir="ltr" style={inputStyle} />
             </div>
 
             <div style={{ marginBottom: 18 }}>
-              <label style={labelStyle}>اسم الشركة / البراند</label>
+              <label style={labelStyle}>{isAr ? 'اسم الشركة / البراند' : 'Company / Brand name'}</label>
               <input type="text" value={form.company} onChange={(e) => set('company', e.target.value)}
-                placeholder="اسم بزنسك (اختياري)" style={inputStyle} />
+                placeholder={isAr ? 'اسم بزنسك (اختياري)' : 'Your business name (optional)'} style={inputStyle} />
             </div>
 
             <div style={{ marginBottom: 24 }}>
-              <label style={labelStyle}>المجال</label>
+              <label style={labelStyle}>{isAr ? 'المجال' : 'Industry'}</label>
               <select value={form.industry} onChange={(e) => set('industry', e.target.value)}
                 style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
-                <option value="">اختار مجالك (اختياري)</option>
-                {(INDUSTRIES as unknown as Array<{ value: string; labelAr: string }>).map((ind) => (
-                  <option key={ind.value} value={ind.value}>{ind.labelAr}</option>
+                <option value="">{isAr ? 'اختار مجالك (اختياري)' : 'Select your industry (optional)'}</option>
+                {(INDUSTRIES as unknown as Array<{ value: string; labelAr: string; label: string }>).map((ind) => (
+                  <option key={ind.value} value={ind.value}>{isAr ? ind.labelAr : ind.label}</option>
                 ))}
               </select>
             </div>
@@ -191,7 +194,7 @@ export default function Signup() {
                 {form.newsletterOptIn && <span style={{ color: "#fff", fontSize: 12, fontWeight: 900 }}>✓</span>}
               </div>
               <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, margin: 0 }}>
-                أريد استلام نصائح تسويقية واستراتيجيات بناء البراند أسبوعياً على بريدي
+                {isAr ? 'أريد استلام نصائح تسويقية واستراتيجيات بناء البراند أسبوعياً على بريدي' : 'I want to receive weekly marketing tips and brand strategy insights'}
               </p>
             </div>
 
@@ -205,24 +208,28 @@ export default function Signup() {
                 fontFamily: FONT, boxShadow: loading || !form.name || !form.email ? "none" : `0 4px 20px ${C.blueGlow}`,
               }}
             >
-              {loading ? 'جاري إنشاء الحساب...' : 'إنشاء حسابي المجاني ←'}
+              {loading ? (isAr ? 'جاري إنشاء الحساب...' : 'Creating account...') : (isAr ? 'إنشاء حسابي المجاني ←' : 'Create my free account →')}
             </button>
 
             <p style={{ marginTop: 16, textAlign: "center", fontSize: 12, color: C.muted }}>
-              بالتسجيل أنت توافق على{' '}
-              <a href="#" style={{ color: C.blue, textDecoration: "none" }}>شروط الاستخدام</a>
-              {' '}و{' '}
-              <a href="#" style={{ color: C.blue, textDecoration: "none" }}>سياسة الخصوصية</a>
+              {isAr ? 'بالتسجيل أنت توافق على' : 'By signing up you agree to our'}{' '}
+              <a href="#" style={{ color: C.blue, textDecoration: "none" }}>{isAr ? 'شروط الاستخدام' : 'Terms of Service'}</a>
+              {isAr ? ' و' : ' and'}{' '}
+              <a href="#" style={{ color: C.blue, textDecoration: "none" }}>{isAr ? 'سياسة الخصوصية' : 'Privacy Policy'}</a>
             </p>
           </div>
 
           <div style={{ marginTop: 24, padding: "20px 24px", background: C.blueLight, border: `1px solid ${C.borderBlue}`, borderRadius: 12 }}>
-            <p style={{ fontSize: 13, fontWeight: 800, color: C.blue, marginBottom: 12 }}>✓ إيه اللي هتاخده مجاناً:</p>
-            {[
+            <p style={{ fontSize: 13, fontWeight: 800, color: C.blue, marginBottom: 12 }}>{isAr ? '✓ إيه اللي هتاخده مجاناً:' : '✓ What you get for free:'}</p>
+            {(isAr ? [
               "تشخيص أولي مجاني لعلامتك التجارية",
               "تقرير فوري بالمشاكل والحلول",
               "نصائح أسبوعية على بريدك",
-            ].map((item) => (
+            ] : [
+              "Free initial brand diagnosis",
+              "Instant report with problems & solutions",
+              "Weekly tips in your inbox",
+            ]).map((item) => (
               <div key={item} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                 <span style={{ color: C.blue, fontWeight: 900, fontSize: 14 }}>✓</span>
                 <span style={{ fontSize: 13, color: C.text }}>{item}</span>
@@ -231,17 +238,17 @@ export default function Signup() {
           </div>
 
           <p style={{ marginTop: 20, textAlign: "center", fontSize: 14, color: C.muted }}>
-            عندك حساب؟{' '}
+            {isAr ? 'عندك حساب؟' : 'Already have an account?'}{' '}
             <a href="/login" onClick={(e) => { e.preventDefault(); navigate('/login'); }}
               style={{ color: C.blue, fontWeight: 700, textDecoration: "none" }}>
-              سجّل الدخول ←
+              {isAr ? 'سجّل الدخول ←' : 'Log in →'}
             </a>
           </p>
         </div>
       </div>
 
       <div style={{ padding: "20px 24px", textAlign: "center", borderTop: `1px solid ${C.border}` }}>
-        <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>© 2026 WZZRD AI — جميع الحقوق محفوظة</p>
+        <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>© {new Date().getFullYear()} WZZRD AI — {isAr ? 'جميع الحقوق محفوظة' : 'All rights reserved'}</p>
       </div>
     </div>
   );

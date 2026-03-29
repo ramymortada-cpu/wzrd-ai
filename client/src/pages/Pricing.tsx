@@ -203,9 +203,8 @@ export default function Pricing() {
   };
 
   const isAr = locale === 'ar';
-  const dir = isAr ? 'rtl' : 'ltr';
   return (
-    <div className="wzrd-public-page" dir={dir}>
+    <div className="wzrd-public-page">
       <WzrdPublicHeader credits={credits} />
 
       {/* ── Hero ── */}
