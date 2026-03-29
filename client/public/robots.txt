@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+# Block private/dashboard routes from crawling
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /profile
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://www.wzzrdai.com/sitemap.xml
+
+# Crawl-delay for bots
+Crawl-delay: 1
