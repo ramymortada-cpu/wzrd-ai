@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { toErrorString } from '@/lib/errorUtils';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import { useI18n } from '@/lib/i18n';
 
 const C = {
   bg:          "#FAFAF5",
@@ -27,6 +28,8 @@ const FONT = "'Cairo', 'Segoe UI', sans-serif";
 
 export default function Login() {
   const [, navigate] = useLocation();
+  const { locale } = useI18n();
+  const isAr = locale === 'ar';
   const [email, setEmail]     = useState('');
   const [code, setCode]       = useState('');
   const [step, setStep]       = useState<'email' | 'code'>('email');
@@ -84,7 +87,7 @@ export default function Login() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, fontFamily: FONT, direction: "rtl", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100vh", background: C.bg, fontFamily: isAr ? FONT : "'Inter','Segoe UI',sans-serif", display: "flex", flexDirection: "column" }}>
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 
@@ -94,10 +97,10 @@ export default function Login() {
           <img src="/logo.webp" alt="WZZRD AI" style={{ height: 36 }} />
         </a>
         <span style={{ fontSize: 14, color: C.muted }}>
-          مش عندك حساب؟{' '}
+          {isAr ? 'مش عندك حساب؟' : "Don't have an account?"}{' '}
           <a href="/signup" onClick={(e) => { e.preventDefault(); navigate('/signup'); }}
             style={{ color: C.blue, fontWeight: 700, textDecoration: "none" }}>
-            سجّل مجاناً
+            {isAr ? 'سجّل مجاناً' : 'Sign up free'}
           </a>
         </span>
       </div>
@@ -117,12 +120,14 @@ export default function Login() {
               {step === 'email' ? '👋' : '📧'}
             </div>
             <h1 style={{ fontSize: 22, fontWeight: 900, color: "#fff", margin: "0 0 8px" }}>
-              {step === 'email' ? 'أهلاً بعودتك' : 'تحقق من إيميلك'}
+              {step === 'email'
+                ? (isAr ? 'أهلاً بعودتك' : 'Welcome back')
+                : (isAr ? 'تحقق من إيميلك' : 'Check your email')}
             </h1>
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", margin: 0, lineHeight: 1.6 }}>
               {step === 'email'
-                ? 'ادخل إيميلك وهنبعتلك كود دخول فوري — بدون باسورد'
-                : `بعتنالك كود مكوّن من ٦ أرقام على ${email}`}
+                ? (isAr ? 'ادخل إيميلك وهنبعتلك كود دخول فوري — بدون باسورد' : 'Enter your email and we\'ll send you a one-time login code')
+                : (isAr ? `بعتنالك كود مكوّن من ٦ أرقام على ${email}` : `We sent a 6-digit code to ${email}`)}
             </p>
           </div>
 
@@ -174,11 +179,11 @@ export default function Login() {
                     fontFamily: FONT, boxShadow: loading || !email ? "none" : `0 4px 16px ${C.blueGlow}`,
                   }}
                 >
-                  {loading ? 'جاري الإرسال...' : 'ابعتلي كود الدخول ←'}
+                  {loading ? (isAr ? 'جاري الإرسال...' : 'Sending...') : (isAr ? 'ابعتلي كود الدخول ←' : 'Send me a login code →')}
                 </button>
                 <div style={{ marginTop: 20, padding: "12px 16px", borderRadius: 10, background: C.blueLight, border: `1px solid ${C.borderBlue}`, textAlign: "center" }}>
                   <p style={{ fontSize: 12, color: C.blue, fontWeight: 700, margin: 0 }}>
-                    🔒 بدون باسورد — كود مؤقت يُرسل على إيميلك مباشرة
+                    {isAr ? '🔒 بدون باسورد — كود مؤقت يُرسل على إيميلك مباشرة' : '🔒 No password — a one-time code sent directly to your inbox'}
                   </p>
                 </div>
               </>
@@ -212,24 +217,24 @@ export default function Login() {
                     fontFamily: FONT, boxShadow: loading || code.length !== 6 ? "none" : `0 4px 16px ${C.blueGlow}`,
                   }}
                 >
-                  {loading ? 'جاري التحقق...' : 'تأكيد الدخول ←'}
+                  {loading ? (isAr ? 'جاري التحقق...' : 'Verifying...') : (isAr ? 'تأكيد الدخول ←' : 'Confirm login →')}
                 </button>
                 <button
                   type="button"
                   onClick={() => { setStep('email'); setCode(''); setError(''); }}
                   style={{ marginTop: 14, width: "100%", background: "none", border: "none", fontSize: 13, color: C.muted, cursor: "pointer", fontFamily: FONT, padding: "8px" }}
                 >
-                  ← استخدم إيميل تاني
+                  {isAr ? '← استخدم إيميل تاني' : '← Use a different email'}
                 </button>
               </>
             )}
           </div>
 
           <p style={{ marginTop: 24, textAlign: "center", fontSize: 14, color: C.muted }}>
-            مش عندك حساب؟{' '}
+            {isAr ? 'مش عندك حساب؟' : "Don't have an account?"}{' '}
             <a href="/signup" onClick={(e) => { e.preventDefault(); navigate('/signup'); }}
               style={{ color: C.blue, fontWeight: 700, textDecoration: "none" }}>
-              سجّل مجاناً ←
+              {isAr ? 'سجّل مجاناً ←' : 'Sign up free →'}
             </a>
           </p>
         </div>
@@ -237,7 +242,7 @@ export default function Login() {
 
       {/* Footer */}
       <div style={{ padding: "20px 24px", textAlign: "center", borderTop: `1px solid ${C.border}` }}>
-        <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>© 2026 WZZRD AI — جميع الحقوق محفوظة</p>
+        <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>© {new Date().getFullYear()} WZZRD AI — {isAr ? 'جميع الحقوق محفوظة' : 'All rights reserved'}</p>
       </div>
     </div>
   );

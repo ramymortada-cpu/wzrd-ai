@@ -41,7 +41,6 @@ export default function WzrdPublicHeader({ credits }: WzrdPublicHeaderProps = {}
   const { user } = useAuth();
   const { locale, toggleLocale } = useI18n();
   const isAr = locale === "ar";
-  const dir  = isAr ? "rtl" : "ltr";
 
   const isActive = (href: string) =>
     href === "/" ? location === "/" : location.startsWith(href);
@@ -53,12 +52,11 @@ export default function WzrdPublicHeader({ credits }: WzrdPublicHeaderProps = {}
       {/* Google Font */}
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link
-        href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap"
         rel="stylesheet"
       />
 
       <header
-        dir={dir}
         style={{
           position: "sticky",
           top: 0,
@@ -67,7 +65,7 @@ export default function WzrdPublicHeader({ credits }: WzrdPublicHeaderProps = {}
           backdropFilter: "blur(16px)",
           WebkitBackdropFilter: "blur(16px)",
           borderBottom: `1px solid ${BORDER}`,
-          fontFamily: "'Cairo', 'Segoe UI', sans-serif",
+          fontFamily: isAr ? "'Cairo', 'Segoe UI', sans-serif" : "'Inter', 'Segoe UI', sans-serif",
         }}
       >
         {/* ── Main bar ── */}
@@ -144,7 +142,7 @@ export default function WzrdPublicHeader({ credits }: WzrdPublicHeaderProps = {}
                 border: `1.5px solid ${BORDER}`,
                 cursor: "pointer",
                 transition: "all 0.15s",
-                fontFamily: "'Cairo', sans-serif",
+                fontFamily: isAr ? "'Cairo', sans-serif" : "'Inter', sans-serif",
               }}
               onMouseEnter={(e) => {
                 const b = e.currentTarget as HTMLButtonElement;
@@ -194,8 +192,8 @@ export default function WzrdPublicHeader({ credits }: WzrdPublicHeaderProps = {}
                   boxShadow: "0 2px 8px rgba(27,79,216,0.3)",
                 }}
               >
-                {isAr ? "لوحة التحكم ←" : "Dashboard →"}
-              </a>
+              {isAr ? "← لوحة التحكم" : "Dashboard →"}
+                </a>
             ) : (
               <>
                 <a
@@ -229,7 +227,7 @@ export default function WzrdPublicHeader({ credits }: WzrdPublicHeaderProps = {}
                     boxShadow: "0 2px 8px rgba(27,79,216,0.3)",
                   }}
                 >
-                  {isAr ? "ابدأ مجاناً ←" : "Get started →"}
+                  {isAr ? "← ابدأ مجاناً" : "Get started →"}
                 </a>
               </>
             )}
@@ -257,7 +255,6 @@ export default function WzrdPublicHeader({ credits }: WzrdPublicHeaderProps = {}
         {/* ── Mobile Menu ── */}
         {menuOpen && (
           <div
-            dir={dir}
             style={{
               background: "#FAFAF8",
               borderTop: `1px solid ${BORDER}`,
@@ -299,8 +296,8 @@ export default function WzrdPublicHeader({ credits }: WzrdPublicHeaderProps = {}
                 background: "#F3F4F6",
                 border: "none",
                 cursor: "pointer",
-                textAlign: isAr ? "right" : "left",
-                fontFamily: "'Cairo', sans-serif",
+                textAlign: "start",
+                fontFamily: isAr ? "'Cairo', sans-serif" : "'Inter', sans-serif",
               }}
             >
               {isAr ? "🌐 Switch to English" : "🌐 التبديل للعربية"}
@@ -313,7 +310,7 @@ export default function WzrdPublicHeader({ credits }: WzrdPublicHeaderProps = {}
                   onClick={(e) => { e.preventDefault(); navigate("/tools"); setMenuOpen(false); }}
                   style={{ padding: "12px 16px", borderRadius: 8, fontSize: 15, fontWeight: 700, color: "#fff", background: BLUE, textDecoration: "none", textAlign: "center" }}
                 >
-                  {isAr ? "لوحة التحكم ←" : "Dashboard →"}
+                  {isAr ? "← لوحة التحكم" : "Dashboard →"}
                 </a>
               ) : (
                 <>
@@ -329,7 +326,7 @@ export default function WzrdPublicHeader({ credits }: WzrdPublicHeaderProps = {}
                     onClick={(e) => { e.preventDefault(); navigate("/signup"); setMenuOpen(false); }}
                     style={{ padding: "12px 16px", borderRadius: 8, fontSize: 15, fontWeight: 700, color: "#fff", background: BLUE, textDecoration: "none", textAlign: "center" }}
                   >
-                    {isAr ? "ابدأ مجاناً ←" : "Get started →"}
+                    {isAr ? "← ابدأ مجاناً" : "Get started →"}
                   </a>
                 </>
               )}
