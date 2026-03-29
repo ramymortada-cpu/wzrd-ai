@@ -160,3 +160,41 @@ export async function createPublicUser(data: {
     return null;
   }
 }
+
+/**
+ * Create a user from an invitation.
+ * Does NOT grant signup bonus credits — prevents abuse via invite links.
+ */
+export async function createInvitedUser(data: {
+  name: string;
+  email: string;
+}): Promise<{ id: number; openId: string } | null> {
+  const db = await getDb();
+  if (!db) return null;
+
+  const openId = `email:${data.email}`;
+
+  try {
+    await db.insert(users).values({
+      openId,
+      name: data.name,
+      email: data.email,
+      loginMethod: "email",
+      signupSource: "invite",
+      credits: 0,
+      role: "user",
+      lastSignedIn: new Date(),
+    });
+
+    const user = await getUserByEmail(data.email);
+    if (!user) return null;
+
+    logger.info({ userId: user.id, email: data.email }, "Invited user created with 0 credits");
+    return { id: user.id, openId };
+  } catch (err) {
+    const existing = await getUserByEmail(data.email);
+    if (existing) return { id: existing.id, openId: existing.openId };
+    logger.error({ err, email: data.email }, "Failed to create invited user");
+    return null;
+  }
+}

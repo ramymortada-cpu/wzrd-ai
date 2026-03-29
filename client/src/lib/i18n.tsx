@@ -55,8 +55,8 @@ const translations: Record<Locale, Record<string, string>> = {
     "leads.estimatedValue": "Est. Value",
     "leads.convertToClient": "Convert to Client",
     "leads.viewDiagnosis": "View Diagnosis",
-    "leads.sourceTools": "WZRD Tools",
-    "leads.diagnosisFromTools": "Synced from a logged-in WZRD AI tool run.",
+    "leads.sourceTools": "WZZRD Tools",
+    "leads.diagnosisFromTools": "Synced from a logged-in WZZRD AI tool run.",
     "leads.diagnosisFromQuickCheck": "AI-generated assessment from the public Quick-Check.",
     "leads.noLeads": "No leads yet. Share your Brand Health Quick-Check link to start capturing leads.",
     "leads.totalLeads": "Total Leads",
@@ -120,9 +120,9 @@ const translations: Record<Locale, Record<string, string>> = {
     "clientDetail.noNotes": "No notes yet.",
     "clientDetail.noPayments": "No payments recorded.",
     "clientDetail.aiAnalysis": "AI Analysis",
-    "clientDetail.diagnosis": "WZRD diagnoses",
-    "clientDetail.noDiagnosis": "No WZRD tool runs are linked to this email yet.",
-    "clientDetail.noDiagnosisEmail": "Add an email on this client to view linked WZRD diagnoses.",
+    "clientDetail.diagnosis": "WZZRD diagnoses",
+    "clientDetail.noDiagnosis": "No WZZRD tool runs are linked to this email yet.",
+    "clientDetail.noDiagnosisEmail": "Add an email on this client to view linked WZZRD diagnoses.",
 
     // Projects
     "projects.title": "Projects",
@@ -338,7 +338,7 @@ const translations: Record<Locale, Record<string, string>> = {
     // Projects extra
     "projects.selectClient": "Select a client",
 
-    // WZRD AI Public pages
+    // WZZRD AI Public pages
     "wzrd.getCredits": "Get 100 Free Credits",
     "wzrd.creditsFree": "100 CREDITS FREE",
     "wzrd.yourName": "Your name",
@@ -398,7 +398,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "wzrd.remaining": "remaining",
     "wzrd.runAgain": "Run again with different data",
     "wzrd.select": "Select...",
-    "wzrd.analyzing": "WZRD AI is analyzing your data...",
+    "wzrd.analyzing": "WZZRD AI is analyzing your data...",
     "wzrd.whatItMeasures": "What it measures:",
     "wzrd.bestFor": "Best for:",
     "wzrd.learnMore": "Learn more — free",
@@ -463,8 +463,8 @@ const translations: Record<Locale, Record<string, string>> = {
     "leads.estimatedValue": "القيمة المقدرة",
     "leads.convertToClient": "تحويل لعميل",
     "leads.viewDiagnosis": "عرض التشخيص",
-    "leads.sourceTools": "أدوات WZRD",
-    "leads.diagnosisFromTools": "متزامن من تشغيل أداة WZRD لمستخدم مسجّل.",
+    "leads.sourceTools": "أدوات WZZRD",
+    "leads.diagnosisFromTools": "متزامن من تشغيل أداة WZZRD لمستخدم مسجّل.",
     "leads.diagnosisFromQuickCheck": "تقييم من الـ Quick Check العام.",
     "leads.noLeads": "لا يوجد عملاء محتملين بعد. شارك رابط فحص صحة العلامة التجارية لبدء التقاط العملاء.",
     "leads.totalLeads": "إجمالي العملاء المحتملين",
@@ -528,9 +528,9 @@ const translations: Record<Locale, Record<string, string>> = {
     "clientDetail.noNotes": "لا توجد ملاحظات بعد.",
     "clientDetail.noPayments": "لا توجد مدفوعات مسجلة.",
     "clientDetail.aiAnalysis": "تحليل الذكاء الاصطناعي",
-    "clientDetail.diagnosis": "تشخيصات WZRD",
+    "clientDetail.diagnosis": "تشخيصات WZZRD",
     "clientDetail.noDiagnosis": "مفيش تشخيصات أدوات مرتبطة بالإيميل ده لسه.",
-    "clientDetail.noDiagnosisEmail": "ضيف إيميل للعميل عشان تظهر تشخيصات WZRD المرتبطة.",
+    "clientDetail.noDiagnosisEmail": "ضيف إيميل للعميل عشان تظهر تشخيصات WZZRD المرتبطة.",
 
     // Projects
     "projects.title": "المشاريع",
@@ -746,7 +746,7 @@ const translations: Record<Locale, Record<string, string>> = {
     // Projects extra
     "projects.selectClient": "اختر عميل",
 
-    // WZRD AI Public pages (Egyptian Arabic)
+    // WZZRD AI Public pages (Egyptian Arabic)
     "wzrd.getCredits": "احصل على ١٠٠ كريديت مجاني",
     "wzrd.creditsFree": "١٠٠ كريديت مجاني",
     "wzrd.yourName": "اسمك",
@@ -806,7 +806,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "wzrd.remaining": "متبقي",
     "wzrd.runAgain": "حلل تاني ببيانات مختلفة",
     "wzrd.select": "اختر...",
-    "wzrd.analyzing": "WZRD AI بيحلل البيانات بتاعتك...",
+    "wzrd.analyzing": "WZZRD AI بيحلل البيانات بتاعتك...",
     "wzrd.whatItMeasures": "بيقيس إيه:",
     "wzrd.bestFor": "الأفضل لـ:",
     "wzrd.learnMore": "اعرف أكتر — مجاني",

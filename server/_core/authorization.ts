@@ -134,7 +134,7 @@ export function isOwnerAdmin(user: { email?: string | null; role?: string | null
   return email === 'ramy.mortada@gmail.com';
 }
 
-/** True if this session may use WZRD Super Admin APIs (same rules as checkOwner). */
+/** True if this session may use WZZRD Super Admin APIs (same rules as checkOwner). */
 export function isSuperAdmin(ctx: TrpcContext): boolean {
   const user = ctx.user as { email?: string; role?: string } | null;
   if (!user) return false;

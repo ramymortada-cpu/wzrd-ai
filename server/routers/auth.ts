@@ -140,9 +140,9 @@ export const authRouter = router({
       const { sendEmail } = await import('../wzrdEmails');
       await sendEmail({
         to: input.email,
-        subject: `Your WZRD AI login code: ${code}`,
+        subject: `Your WZZRD AI login code: ${code}`,
         html: `<div style="font-family:sans-serif;max-width:400px;margin:0 auto;padding:32px;background:#09090b;color:#f4f4f6;border-radius:16px;text-align:center">
-          <p style="font-size:12px;color:#64647a;letter-spacing:3px">WZRD AI</p>
+          <p style="font-size:12px;color:#64647a;letter-spacing:3px">WZZRD AI</p>
           <h1 style="font-size:40px;font-family:monospace;letter-spacing:8px;margin:24px 0;color:#6d5cff">${code}</h1>
           <p style="font-size:14px;color:#b0b0be">Enter this code to log in. Expires in 10 minutes.</p>
           <p style="font-size:11px;color:#64647a;margin-top:24px">If you didn't request this, ignore this email.</p>

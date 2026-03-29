@@ -11,6 +11,8 @@
     "check": "tsc --noEmit",
     "lint": "eslint 'server/**/*.ts' 'client/src/**/*.{ts,tsx}' --max-warnings 0",
     "db:migrate:sql": "node scripts/run-drizzle-mysql-migrations.mjs",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
     "format": "prettier --write .",
     "test": "vitest run && tsx scripts/verify-diagnosis-tool-contract.ts",
     "test:diagnosis-contract": "tsx scripts/verify-diagnosis-tool-contract.ts",

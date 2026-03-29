@@ -1,5 +1,5 @@
 /**
- * Contract verification (Node + tsx) — WZRD ToolPage payloads vs tRPC Zod inputs.
+ * Contract verification (Node + tsx) — WZZRD ToolPage payloads vs tRPC Zod inputs.
  * Vitest in this repo hits a Vite SSR bug when importing local shared/*.ts modules.
  *
  * Run: pnpm test:diagnosis-contract

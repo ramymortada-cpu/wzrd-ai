@@ -187,7 +187,7 @@ export const adminRouter = router({
     .query(async ({ input, ctx }) => {
       checkOwner(ctx);
       if (input.template === 'welcome') {
-        return { html: `<p>Use admin.testEmail to send a real welcome email and check your inbox.</p><p>Template: Welcome email with 100 credits CTA, tool list, WZRD AI branding.</p>` };
+        return { html: `<p>Use admin.testEmail to send a real welcome email and check your inbox.</p><p>Template: Welcome email with 100 credits CTA, tool list, WZZRD AI branding.</p>` };
       }
       if (input.template === 'toolResult') {
         return { html: `<p>Template: Tool result email with score circle (color-coded), findings list, recommendation, and guide CTA.</p><p>Triggered automatically after each AI tool run.</p>` };

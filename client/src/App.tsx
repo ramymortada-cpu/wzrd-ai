@@ -12,8 +12,8 @@ import { PageSkeleton, ChatSkeleton, DetailPageSkeleton } from "./components/Pag
 import WzrdAppShell from "./components/WzrdAppShell";
 import QuickSearch from "./components/QuickSearch";
 
-/** Public WZRD funnel + tools; Command Center (/dashboard, etc.) stays on default app chrome. */
-const WZRD_PREMIUM_SHELL_RE = new RegExp(
+/** Public WZZRD funnel + tools; Command Center (/dashboard, etc.) stays on default app chrome. */
+const WZZRD_PREMIUM_SHELL_RE = new RegExp(
   "^/(?:signup|login|pricing|my-brand|copilot|wzrd-admin|admin|panel|profile|settings|my-requests|quick-check|tools|portal|proposal-view)(?:/|$)"
 );
 
@@ -47,7 +47,7 @@ const SalesFunnelPage = lazy(() => import("./pages/SalesFunnel"));
 const QuickCheckPage = lazy(() => import("./pages/QuickCheck"));
 const ProposalViewPage = lazy(() => import("./pages/ProposalView"));
 
-// WZRD AI — Public funnel pages
+// WZZRD AI — Public funnel pages
 const SignupPage = lazy(() => import("./pages/Signup"));
 const LoginPage = lazy(() => import("./pages/Login"));
 const BlogIndexPage = lazy(() => import("./pages/public/BlogIndex"));
@@ -69,6 +69,7 @@ const QuickDiagnosisPage = lazy(() => import("./pages/QuickDiagnosis"));
 const MyRequestsPage = lazy(() => import("./pages/MyRequests"));
 const SettingsPage = lazy(() => import("./pages/Settings"));
 const ContractsPage = lazy(() => import("./pages/Contracts"));
+const InvitePage = lazy(() => import("./pages/Invite"));
 const InvoicesPage = lazy(() => import("./pages/Invoices"));
 
 function SuspenseWrapper({ children, fallback }: { children: React.ReactNode; fallback?: React.ReactNode }) {
@@ -135,7 +136,7 @@ function DashboardRouter() {
 
 function PremiumShellLayout({ children }: { children: React.ReactNode }) {
   const [loc] = useLocation();
-  const useShell = useMemo(() => WZRD_PREMIUM_SHELL_RE.test(loc), [loc]);
+  const useShell = useMemo(() => WZZRD_PREMIUM_SHELL_RE.test(loc), [loc]);
   if (useShell) return <WzrdAppShell>{children}</WzrdAppShell>;
   return <>{children}</>;
 }
@@ -150,7 +151,7 @@ function App() {
               <Toaster />
               <QuickSearch />
               <Switch>
-                {/* WZRD AI — Public funnel pages (no auth) */}
+                {/* WZZRD AI — Public funnel pages (no auth) */}
                 <Route path="/">{() => <SuspenseWrapper><WelcomePage /></SuspenseWrapper>}</Route>
                 <Route path="/signup">{() => <SuspenseWrapper><SignupPage /></SuspenseWrapper>}</Route>
                 <Route path="/login">{() => <SuspenseWrapper><LoginPage /></SuspenseWrapper>}</Route>
@@ -179,6 +180,7 @@ function App() {
                 <Route path="/settings">{() => <SuspenseWrapper><SettingsPage /></SuspenseWrapper>}</Route>
                 {/* Existing public routes */}
                 <Route path="/quick-check">{() => <SuspenseWrapper><QuickCheckPage /></SuspenseWrapper>}</Route>
+                <Route path="/invite">{() => <SuspenseWrapper><InvitePage /></SuspenseWrapper>}</Route>
                 <Route path="/portal/:token">{() => <SuspenseWrapper><ClientPortalPage /></SuspenseWrapper>}</Route>
                 <Route path="/proposal-view/:id">{() => <SuspenseWrapper><ProposalViewPage /></SuspenseWrapper>}</Route>
                 {/* Dashboard routes (auth required) */}

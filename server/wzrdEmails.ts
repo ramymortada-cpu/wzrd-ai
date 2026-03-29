@@ -1,5 +1,5 @@
 /**
- * WZRD AI Email Templates
+ * WZZRD AI Email Templates
  * 
  * Templates:
  * 1. Welcome — after signup (100 credits activated)
@@ -68,7 +68,7 @@ interface EmailPayload {
 export async function sendEmail(payload: EmailPayload): Promise<boolean> {
   const provider = process.env.EMAIL_PROVIDER || 'none';
   const apiKey = process.env.EMAIL_API_KEY;
-  const from = process.env.EMAIL_FROM || 'WZRD AI <noreply@primomarca.com>';
+  const from = process.env.EMAIL_FROM || 'WZZRD AI <noreply@primomarca.com>';
 
   if (provider === 'none' || !apiKey) {
     logger.info({ to: payload.to, subject: payload.subject }, '[Email] Skipped — no provider configured');
@@ -90,7 +90,7 @@ export async function sendEmail(payload: EmailPayload): Promise<boolean> {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
         body: JSON.stringify({
           personalizations: [{ to: [{ email: payload.to }] }],
-          from: { email: from.replace(/<|>/g, '').split(' ').pop() || from, name: 'WZRD AI' },
+          from: { email: from.replace(/<|>/g, '').split(' ').pop() || from, name: 'WZZRD AI' },
           subject: payload.subject,
           content: [{ type: 'text/html', value: payload.html }],
         }),
@@ -152,7 +152,7 @@ function wrapEmail(body: string, preheader: string = ''): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<title>WZRD AI</title>
+<title>WZZRD AI</title>
 <!--[if mso]><style>table,td{font-family:Arial,sans-serif!important}</style><![endif]-->
 </head>
 <body style="margin:0;padding:0;background-color:#09090b;">
@@ -162,7 +162,7 @@ ${preheader ? `<div style="display:none;font-size:1px;color:#09090b;line-height:
 <table role="presentation" cellpadding="0" cellspacing="0" width="560" style="max-width:560px;width:100%;">
 <!-- Logo -->
 <tr><td style="padding:0 0 4px 0;">
-  <span style="${STYLE.logo}">WZRD <span style="${STYLE.logoAI}">AI</span></span>
+  <span style="${STYLE.logo}">WZZRD <span style="${STYLE.logoAI}">AI</span></span>
 </td></tr>
 <tr><td style="${STYLE.sub}padding-bottom:20px;">by Primo Marca</td></tr>
 <!-- Content -->
@@ -171,7 +171,7 @@ ${body}
 </td></tr>
 <!-- Footer -->
 <tr><td style="${STYLE.footer}padding-top:24px;border-top:1px solid #1a1a28;">
-  <p style="margin:0 0 4px;">WZRD AI by <a href="https://primomarca.com" style="${STYLE.footerLink}">Primo Marca</a></p>
+  <p style="margin:0 0 4px;">WZZRD AI by <a href="https://primomarca.com" style="${STYLE.footerLink}">Primo Marca</a></p>
   <p style="margin:0;font-style:italic;${STYLE.gold}">"Marks Fade, MARCAS Don't."</p>
 </td></tr>
 </table>
@@ -207,7 +207,7 @@ export async function sendWelcomeEmail(to: string, name: string): Promise<boolea
 
   return sendEmail({
     to,
-    subject: `Welcome to WZRD AI — 100 credits activated ⚡`,
+    subject: `Welcome to WZZRD AI — 100 credits activated ⚡`,
     html: wrapEmail(body, `Welcome ${name}! You have 100 free credits to diagnose your brand.`),
   });
 }

@@ -153,8 +153,8 @@ export default function DashboardLayout({
           <div className="flex flex-col items-center gap-3 w-full">
             <p className="text-sm text-muted-foreground text-center max-w-sm">
               {locale === "ar"
-                ? "تسجيل الدخول لمساحة الوكالة الداخلية — العملاء، المشاريع، التسليمات. (ليست لوحة إدارة منتج WZRD العامة.)"
-                : "Sign in to the agency workspace — clients, projects, deliverables. (Not the public WZRD product admin.)"}
+                ? "تسجيل الدخول لمساحة الوكالة الداخلية — العملاء، المشاريع، التسليمات. (ليست لوحة إدارة منتج WZZRD العامة.)"
+                : "Sign in to the agency workspace — clients, projects, deliverables. (Not the public WZZRD product admin.)"}
             </p>
             <Button
               onClick={() => {
@@ -360,7 +360,7 @@ function DashboardLayoutContent({
               >
                 <span className="flex items-center gap-2">
                   <span>⚡</span>
-                  <span>WZRD AI · {locale === "ar" ? "إدارة الموقع العام" : "Public site admin"}</span>
+                  <span>WZZRD AI · {locale === "ar" ? "إدارة الموقع العام" : "Public site admin"}</span>
                 </span>
                 <span className="text-[10px] font-normal text-muted-foreground ps-6">
                   {locale === "ar" ? "يفتح في تبويب جديد" : "Opens in new tab"}

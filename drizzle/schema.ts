@@ -1103,3 +1103,19 @@ export const leadMagnetSubscribers = mysqlTable("lead_magnet_subscribers", {
 
 export type LeadMagnetSubscriber = typeof leadMagnetSubscribers.$inferSelect;
 export type InsertLeadMagnetSubscriber = typeof leadMagnetSubscribers.$inferInsert;
+
+/**
+ * Invite tokens for the workspace invitation system (V6.2).
+ */
+export const inviteTokens = mysqlTable("invite_tokens", {
+  id: int("id").autoincrement().primaryKey(),
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  workspaceId: int("workspaceId").notNull(),
+  email: varchar("email", { length: 320 }).notNull(),
+  role: mysqlEnum("role", ["owner", "admin", "editor", "viewer"]).notNull().default("viewer"),
+  expiresAt: timestamp("expiresAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type InviteToken = typeof inviteTokens.$inferSelect;
+export type InsertInviteToken = typeof inviteTokens.$inferInsert;

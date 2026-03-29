@@ -1,4 +1,4 @@
-# WZRD AI — Phase 4 Deploy: Ops Checklist
+# WZZRD AI — Phase 4 Deploy: Ops Checklist
 
 **Engineer:** _______________  **Date:** _______________  **Start Time:** _______________
 

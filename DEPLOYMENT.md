@@ -3,7 +3,7 @@
 
 ---
 
-## 🚀 Quick Deploy (WZRD AI) — 3 خطوات
+## 🚀 Quick Deploy (WZZRD AI) — 3 خطوات
 
 ### Step 1: اعمل Domain
 - تحت **Networking** → اضغط **Generate Domain**
@@ -30,7 +30,7 @@ GROQ_API_KEY=<الـ key الجديد بتاعك>
 GROQ_MODEL=llama-3.3-70b-versatile
 APP_URL=https://wzzrdai.com
 EMAIL_PROVIDER=none
-EMAIL_FROM=WZRD AI <noreply@wzzrdai.com>
+EMAIL_FROM=WZZRD AI <noreply@wzzrdai.com>
 ```
 
 - اضغط **Add** أو **Save**

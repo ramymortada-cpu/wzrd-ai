@@ -4,7 +4,7 @@ import { PageSkeleton } from "@/components/PageSkeleton";
 import NotFound from "@/pages/NotFound";
 
 /**
- * Restricts children to users with Primo / WZRD admin access (same rules as auth.me.canAccessCommandCenter).
+ * Restricts children to users with Primo / WZZRD admin access (same rules as auth.me.canAccessCommandCenter).
  */
 export default function CommandCenterGuard({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();

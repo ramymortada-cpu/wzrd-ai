@@ -51,7 +51,7 @@ async function sendStatusEmail(opts: {
 }): Promise<void> {
   try {
     const apiKey = process.env.EMAIL_API_KEY;
-    const from = process.env.EMAIL_FROM || 'WZRD AI <noreply@wzzrdai.com>';
+    const from = process.env.EMAIL_FROM || 'WZZRD AI <noreply@wzzrdai.com>';
     if (!apiKey) { logger.warn('EMAIL_API_KEY not set — skipping status email'); return; }
 
     const db = await getDb();
@@ -108,7 +108,7 @@ async function sendStatusEmail(opts: {
           </div>
         </div>
         <p style="text-align:center;color:#94a3b8;font-size:11px;margin-top:16px;">
-          WZRD AI by Primo Marca
+          WZZRD AI by Primo Marca
         </p>
       </div>
     </body></html>`;

@@ -26,7 +26,7 @@ export default function WzrdPublicHeader({ credits, showCredits = true }: WzrdPu
       >
         <a href="/tools" className="flex shrink-0 items-baseline gap-1" onClick={(e) => { e.preventDefault(); navigate("/tools"); }}>
           <span className="font-display text-base font-bold tracking-tight text-zinc-900 dark:text-white sm:text-lg">
-            WZRD
+            WZZRD
           </span>
           <span className="wzrd-badge-cyan py-0.5 text-[10px] font-semibold leading-none sm:text-[11px]">AI</span>
         </a>

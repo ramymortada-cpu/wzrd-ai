@@ -215,7 +215,7 @@ export default function Welcome() {
         {/* SECTION 3 — How It Works */}
         <section id="how-it-works" className="scroll-mt-28 bg-white px-4 py-20 dark:bg-gray-950">
           <h2 className="mb-14 text-center text-3xl font-black text-zinc-900 dark:text-white">
-            كيف يعمل WZRD AI؟
+            كيف يعمل WZZRD AI؟
           </h2>
           <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 text-center md:grid-cols-3">
             {[
@@ -338,7 +338,7 @@ export default function Welcome() {
             <div className="hidden justify-center md:flex">
               <div className="flex aspect-[3/4] w-48 max-w-full flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-teal-600 to-purple-600 p-6 text-center text-white shadow-2xl transition-transform duration-300 [transform:perspective(1000px)_rotateY(-12deg)] hover:[transform:perspective(1000px)_rotateY(0deg)]">
                 <p className="font-bold">أسرار بناء علامة لا تُقهر</p>
-                <p className="mt-2 text-xs text-white/85">2026 · WZRD AI</p>
+                <p className="mt-2 text-xs text-white/85">2026 · WZZRD AI</p>
                 <div className="my-3 h-px w-16 bg-white/40" />
                 <p className="text-xs text-white/80">دليل مجاني</p>
               </div>

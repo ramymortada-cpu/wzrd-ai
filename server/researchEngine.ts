@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════
- * WZRD AI — RESEARCH ENGINE
+ * WZZRD AI — RESEARCH ENGINE
  * ═══════════════════════════════════════════════════════════════════════════
  * 
  * The Research Engine is what transforms Wzrd AI from a chatbot into a

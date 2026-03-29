@@ -1,5 +1,5 @@
 /**
- * WZRD AI Admin Router — manages the public-facing system.
+ * WZZRD AI Admin Router — manages the public-facing system.
  * 
  * Endpoints:
  * - wzrdAdmin.dashboard → overview stats (signups, credits, tools, revenue)
@@ -11,12 +11,22 @@
  * - wzrdAdmin.config → read/update AI prompts, tool costs, credit plans
  */
 
+import { randomBytes } from "crypto";
 import { protectedProcedure, router } from "../_core/trpc";
 import { checkOwner, isSuperAdmin } from "../_core/authorization";
 import { z } from "zod";
 import { logger } from "../_core/logger";
 import { eq, desc, sql, and } from "drizzle-orm";
-import { users, creditTransactions, clients, projects, blogPosts } from "../../drizzle/schema";
+import {
+  users,
+  creditTransactions,
+  clients,
+  projects,
+  blogPosts,
+  workspaces,
+  workspaceMembers,
+  inviteTokens,
+} from "../../drizzle/schema";
 import { getDb } from "../db/index";
 import { TOOL_COSTS, SIGNUP_BONUS, getCreditStats, updateToolCost } from "../db/credits";
 
@@ -347,7 +357,7 @@ export const wzrdAdminRouter = router({
     return { subscribers: rows, total: countResult?.count || 0 };
   }),
 
-  /** WZRD AI config — read tool costs + credit plans */
+  /** WZZRD AI config — read tool costs + credit plans */
   config: protectedProcedure.query(({ ctx }) => {
     checkOwner(ctx);
     const { getCreditPlansList } = require('../siteConfig');
@@ -1041,5 +1051,104 @@ export const wzrdAdminRouter = router({
         .set({ viewCount: sql`view_count + 1` })
         .where(eq(blogPosts.slug, input.slug));
       return { success: true };
+    }),
+
+  // ═══════════════════════════════════════
+  // WORKSPACE MANAGEMENT (Super Admin)
+  // ═══════════════════════════════════════
+
+  /** List all workspaces across the entire platform with member counts */
+  listWorkspaces: protectedProcedure.query(async ({ ctx }) => {
+    checkOwner(ctx);
+    const db = await getDb();
+    if (!db) return { workspaces: [] };
+
+    const rows = await db
+      .select({
+        id: workspaces.id,
+        name: workspaces.name,
+        plan: workspaces.plan,
+        createdAt: workspaces.createdAt,
+        memberCount: sql<number>`count(${workspaceMembers.userId})`,
+      })
+      .from(workspaces)
+      .leftJoin(workspaceMembers, eq(workspaceMembers.workspaceId, workspaces.id))
+      .groupBy(workspaces.id, workspaces.name, workspaces.plan, workspaces.createdAt)
+      .orderBy(desc(workspaces.createdAt))
+      .limit(200);
+
+    return { workspaces: rows };
+  }),
+
+  /**
+   * Create a new workspace for a client and send them an owner invite.
+   *
+   * Strategy (the "Temporary Owner" pattern):
+   * 1. Create the workspace with the Super Admin as the initial owner (required by DB constraint).
+   * 2. Immediately remove the Super Admin from the workspace members.
+   * 3. Generate a secure invite token with role "owner" for the client's email.
+   * 4. Return the invite token so the frontend can build the invite link.
+   *
+   * The client clicks the link, accepts the invite, and becomes the true owner.
+   * The Super Admin never appears in the workspace member list.
+   */
+  createWorkspaceAndInviteOwner: protectedProcedure
+    .input(
+      z.object({
+        workspaceName: z.string().min(2).max(255),
+        ownerEmail: z.string().email(),
+        plan: z.enum(["free", "pro", "enterprise"]).default("pro"),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      checkOwner(ctx);
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const adminUser = ctx.user as { id: number };
+
+      const result = await db.insert(workspaces).values({
+        name: input.workspaceName,
+        plan: input.plan,
+      });
+      const workspaceId = Number(result[0].insertId);
+
+      await db.insert(workspaceMembers).values({
+        workspaceId,
+        userId: adminUser.id,
+        role: "owner",
+      });
+
+      await db
+        .delete(workspaceMembers)
+        .where(
+          and(
+            eq(workspaceMembers.workspaceId, workspaceId),
+            eq(workspaceMembers.userId, adminUser.id),
+          ),
+        );
+
+      const token = randomBytes(48).toString("hex").slice(0, 64);
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+      await db.insert(inviteTokens).values({
+        token,
+        workspaceId,
+        email: input.ownerEmail,
+        role: "owner",
+        expiresAt,
+      });
+
+      logger.info(
+        { workspaceId, ownerEmail: input.ownerEmail, plan: input.plan },
+        "Super Admin created workspace and generated owner invite",
+      );
+
+      return {
+        workspaceId,
+        token,
+        expiresAt,
+        inviteUrl: `${process.env.APP_URL ?? ""}/invite?token=${token}`,
+      };
     }),
 });

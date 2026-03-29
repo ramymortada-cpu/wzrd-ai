@@ -98,7 +98,7 @@ const DEFAULT_CONFIG: SiteConfig = {
   },
   prompts: [
     { toolId: 'brand_diagnosis', toolName: 'Brand Diagnosis', enabled: true,
-      systemPrompt: 'You are WZRD AI — a brand diagnosis engine trained on Keller\'s CBBE, Kapferer\'s Identity Prism, Sharp\'s How Brands Grow, and real MENA market data.' },
+      systemPrompt: 'You are WZZRD AI — a brand diagnosis engine trained on Keller\'s CBBE, Kapferer\'s Identity Prism, Sharp\'s How Brands Grow, and real MENA market data.' },
     { toolId: 'offer_check', toolName: 'Offer Logic Check', enabled: true,
       systemPrompt: 'You are a pricing and offer strategist. Analyze offer structure using the jam study principle, anchoring effects, and decoy pricing.' },
     { toolId: 'message_check', toolName: 'Message Check', enabled: true,

@@ -78,7 +78,7 @@ export async function fireEmailTrigger(
           const { Resend } = await import('resend');
           const resend = new Resend(process.env.EMAIL_API_KEY);
           await resend.emails.send({
-            from: process.env.EMAIL_FROM || 'WZRD AI <noreply@wzzrdai.com>',
+            from: process.env.EMAIL_FROM || 'WZZRD AI <noreply@wzzrdai.com>',
             to: user.email,
             subject: template.subjectAr || template.subject,
             html,

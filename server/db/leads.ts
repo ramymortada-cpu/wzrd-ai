@@ -145,7 +145,7 @@ export async function upsertLeadFromToolDiagnosis(args: {
     return;
   }
 
-  const companyName = (user!.company || user!.name || email.split("@")[0] || "WZRD user").slice(0, 255);
+  const companyName = (user!.company || user!.name || email.split("@")[0] || "WZZRD user").slice(0, 255);
   const row = await createLead({
     companyName,
     contactName: user!.name || undefined,

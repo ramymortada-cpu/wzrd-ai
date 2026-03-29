@@ -1,5 +1,5 @@
 /**
- * WZRD AI Admin — manages the public WZRD AI system.
+ * WZZRD AI Admin — manages the public WZZRD AI system.
  * Sidebar nav, bilingual, improved UX.
  */
 import { useState, useEffect, useCallback } from 'react';
@@ -776,7 +776,7 @@ function ConfigTab({ t }: { t: T }) {
 
   return (
     <div>
-      <h3 className="text-lg font-bold mb-4">WZRD AI {t('الإعدادات', 'Config')}</h3>
+      <h3 className="text-lg font-bold mb-4">WZZRD AI {t('الإعدادات', 'Config')}</h3>
 
       {/* System Status */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
@@ -2237,7 +2237,7 @@ export default function WzrdAdmin() {
         ${sidebarOpen ? 'translate-x-0' : isRtl ? 'translate-x-full md:translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
         <div className="p-5 border-b border-gray-100">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-lg font-bold">WZRD <span className="text-indigo-600">AI</span></span>
+            <span className="font-mono text-lg font-bold">WZZRD <span className="text-indigo-600">AI</span></span>
             <span className="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full font-bold">{t('أدمن', 'ADMIN')}</span>
           </div>
         </div>

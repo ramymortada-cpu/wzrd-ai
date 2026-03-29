@@ -1,7 +1,7 @@
-# WZRD AI - UI/UX Overhaul Specification (For Cursor)
+# WZZRD AI - UI/UX Overhaul Specification (For Cursor)
 
 **Context for Cursor:**
-The current UI of the client-facing pages in WZRD AI looks too basic, generic, and "AI-generated". The goal of this prompt is to execute a **180-degree UI/UX transformation** to make it look like a premium, high-end, bespoke product built by a top-tier design agency (Primo Marca). 
+The current UI of the client-facing pages in WZZRD AI looks too basic, generic, and "AI-generated". The goal of this prompt is to execute a **180-degree UI/UX transformation** to make it look like a premium, high-end, bespoke product built by a top-tier design agency (Primo Marca). 
 
 We need to move away from generic Tailwind defaults (like standard borders, basic shadows, and flat colors) and introduce a sophisticated design system with depth, glassmorphism, refined typography, and micro-interactions.
 
@@ -72,7 +72,7 @@ Please apply the following design system and component upgrades across all clien
 ### F. `Copilot.tsx` (The AI Chat)
 *   **Chat Interface:** Move away from the standard "ChatGPT clone" look.
 *   **User Messages:** Sleek, dark bubbles (or primary color) aligned right.
-*   **AI Messages:** Glassmorphic bubbles aligned left, with a custom avatar/icon for WZRD AI.
+*   **AI Messages:** Glassmorphic bubbles aligned left, with a custom avatar/icon for WZZRD AI.
 *   **Input Area:** A floating, pill-shaped input bar at the bottom with a glowing send button.
 
 ### G. `Login.tsx` & `Signup.tsx` (Auth)

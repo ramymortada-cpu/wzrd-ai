@@ -1,12 +1,12 @@
 /**
- * WZRD AI Smoke Test — run after every deployment.
+ * WZZRD AI Smoke Test — run after every deployment.
  * 
  * Usage:
  *   npx playwright test e2e/smoke.test.ts
  * 
  * Checks:
  * 1. Health endpoint returns 200
- * 2. Homepage loads with WZRD branding
+ * 2. Homepage loads with WZZRD branding
  * 3. Tools page loads
  * 4. Admin page loads
  * 5. Site config API returns valid JSON
@@ -21,7 +21,7 @@ import { test, expect } from '@playwright/test';
 
 const BASE = process.env.TEST_URL || 'https://wzzrdai.com';
 
-test.describe('WZRD AI Smoke Tests', () => {
+test.describe('WZZRD AI Smoke Tests', () => {
 
   test('healthz returns 200', async ({ request }) => {
     const res = await request.get(`${BASE}/healthz`);
@@ -30,7 +30,7 @@ test.describe('WZRD AI Smoke Tests', () => {
 
   test('homepage loads', async ({ page }) => {
     await page.goto(`${BASE}/welcome`);
-    await expect(page.locator('body')).toContainText('WZRD');
+    await expect(page.locator('body')).toContainText('WZZRD');
     // Check no crash
     const errors: string[] = [];
     page.on('pageerror', e => errors.push(e.message));
@@ -40,7 +40,7 @@ test.describe('WZRD AI Smoke Tests', () => {
 
   test('tools page loads', async ({ page }) => {
     await page.goto(`${BASE}/tools`);
-    await expect(page).toHaveTitle(/WZRD|أدوات|Primo|Command Center|Wzrd/i);
+    await expect(page).toHaveTitle(/WZZRD|WZRD|أدوات|Primo|Command Center|Wzrd/i);
     await page.waitForTimeout(2000);
     const body = await page.textContent('body');
     expect(body).toMatch(/تشخيص|diagnosis|tools|أدوات/i);
@@ -111,7 +111,7 @@ test.describe('WZRD AI Smoke Tests', () => {
       body.includes('تشخيص') ||
         body.includes('Brand') ||
         body.includes('تسجيل') ||
-        body.includes('WZRD'),
+        body.includes('WZZRD') || body.includes('WZRD'),
     ).toBe(true);
   });
 

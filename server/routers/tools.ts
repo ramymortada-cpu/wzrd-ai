@@ -12,7 +12,7 @@
  * Each tool:
  * 1. Checks credit balance
  * 2. Deducts credits
- * 3. Calls WZRD AI (resilientLLM)
+ * 3. Calls WZZRD AI (resilientLLM)
  * 4. Returns structured result
  * 5. Links to educational content + services
  */
@@ -435,7 +435,7 @@ async function runToolAI(
 // TOOL PROMPTS
 // ════════════════════════════════════════════
 
-const TOOL_SYSTEM = `You are WZRD AI — a brand diagnosis engine trained on Keller's CBBE, Kapferer's Identity Prism, Sharp's How Brands Grow, and real MENA market data.
+const TOOL_SYSTEM = `You are WZZRD AI — a brand diagnosis engine trained on Keller's CBBE, Kapferer's Identity Prism, Sharp's How Brands Grow, and real MENA market data.
 
 You analyze brands with brutal honesty. No fluff. No generic advice. Every finding must be specific and actionable.
 
@@ -1039,7 +1039,7 @@ export const toolsRouter = router({
       }
 
       const allCompanies = [input.companyName, ...input.competitors];
-      const benchmarkPrompt = `You are WZRD AI Competitive Benchmark Engine. Analyze and compare these ${allCompanies.length} brands in the "${input.industry}" industry:
+      const benchmarkPrompt = `You are WZZRD AI Competitive Benchmark Engine. Analyze and compare these ${allCompanies.length} brands in the "${input.industry}" industry:
 
 ${allCompanies.map((c, i) => `${i + 1}. ${c}`).join('\n')}
 ${input.socialLinks ? `\nSocial links: ${input.socialLinks}` : ''}
