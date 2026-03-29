@@ -1,15 +1,37 @@
+/**
+ * Login.tsx — WZZRD AI
+ * Design: warm cream (#FAFAF5) + cobalt blue (#1B4FD8) — matches homepage
+ * RTL Arabic-first, passwordless OTP flow
+ */
+
 import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { toErrorString } from '@/lib/errorUtils';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
+const C = {
+  bg:          "#FAFAF5",
+  surface:     "#FFFFFF",
+  blue:        "#1B4FD8",
+  blueLight:   "#EEF2FF",
+  blueGlow:    "rgba(27,79,216,0.12)",
+  borderBlue:  "rgba(27,79,216,0.2)",
+  text:        "#111827",
+  muted:       "#6B7280",
+  border:      "#E5E7EB",
+  errorColor:  "#DC2626",
+  errorBg:     "#FEF2F2",
+  errorBorder: "#FECACA",
+};
+const FONT = "'Cairo', 'Segoe UI', sans-serif";
+
 export default function Login() {
   const [, navigate] = useLocation();
-  const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
-  const [step, setStep] = useState<'email' | 'code'>('email');
+  const [email, setEmail]     = useState('');
+  const [code, setCode]       = useState('');
+  const [step, setStep]       = useState<'email' | 'code'>('email');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError]     = useState('');
 
   const requestCode = async () => {
     if (!email) return;
@@ -62,117 +84,140 @@ export default function Login() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#0D0D1A] text-white" dir="rtl">
-      {/* Background glows */}
-      <div className="pointer-events-none absolute -top-40 right-1/3 h-[500px] w-[500px] rounded-full bg-[#7058F8]/15 blur-[140px]" />
-      <div className="pointer-events-none absolute bottom-0 left-1/4 h-80 w-80 rounded-full bg-cyan-500/8 blur-[120px]" />
+    <div style={{ minHeight: "100vh", background: C.bg, fontFamily: FONT, direction: "rtl", display: "flex", flexDirection: "column" }}>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 
-      {/* Grid pattern overlay */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
-        }}
-      />
-
-      <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-16">
-        {/* Logo */}
-        <a href="/" className="mb-10 flex items-baseline gap-1.5 text-xl font-extrabold tracking-tight text-white transition hover:opacity-80">
-          <span>WZZRD</span>
-          <span className="rounded bg-[#7058F8] px-1.5 py-0.5 text-[10px] font-bold text-white">AI</span>
+      {/* Top Bar */}
+      <div style={{ padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${C.border}` }}>
+        <a href="/" onClick={(e) => { e.preventDefault(); navigate('/'); }} style={{ textDecoration: "none" }}>
+          <img src="/logo.webp" alt="WZZRD AI" style={{ height: 36 }} />
         </a>
+        <span style={{ fontSize: 14, color: C.muted }}>
+          مش عندك حساب؟{' '}
+          <a href="/signup" onClick={(e) => { e.preventDefault(); navigate('/signup'); }}
+            style={{ color: C.blue, fontWeight: 700, textDecoration: "none" }}>
+            سجّل مجاناً
+          </a>
+        </span>
+      </div>
 
-        <div className="w-full max-w-md">
-          {/* Card */}
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm sm:p-10">
+      {/* Main */}
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "48px 24px" }}>
+        <div style={{ width: "100%", maxWidth: 420 }}>
+
+          {/* Blue header strip */}
+          <div style={{
+            background: `linear-gradient(135deg, ${C.blue} 0%, #1239A6 100%)`,
+            borderRadius: "16px 16px 0 0",
+            padding: "28px 32px",
+            textAlign: "center",
+          }}>
+            <div style={{ fontSize: 36, marginBottom: 10 }}>
+              {step === 'email' ? '👋' : '📧'}
+            </div>
+            <h1 style={{ fontSize: 22, fontWeight: 900, color: "#fff", margin: "0 0 8px" }}>
+              {step === 'email' ? 'أهلاً بعودتك' : 'تحقق من إيميلك'}
+            </h1>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", margin: 0, lineHeight: 1.6 }}>
+              {step === 'email'
+                ? 'ادخل إيميلك وهنبعتلك كود دخول فوري — بدون باسورد'
+                : `بعتنالك كود مكوّن من ٦ أرقام على ${email}`}
+            </p>
+          </div>
+
+          {/* White card */}
+          <div style={{
+            background: C.surface,
+            border: `1px solid ${C.border}`,
+            borderTop: "none",
+            borderRadius: "0 0 16px 16px",
+            padding: "32px",
+            boxShadow: `0 8px 40px ${C.blueGlow}`,
+          }}>
+            {error && (
+              <div style={{
+                marginBottom: 20, padding: "12px 16px", borderRadius: 10,
+                background: C.errorBg, border: `1px solid ${C.errorBorder}`,
+                fontSize: 14, color: C.errorColor, fontWeight: 600,
+              }}>
+                ⚠ {error}
+              </div>
+            )}
+
             {step === 'email' ? (
               <>
-                <div className="mb-6">
-                  <h1 className="text-2xl font-extrabold tracking-tight text-white">أهلاً بعودتك</h1>
-                  <p className="mt-2 text-sm leading-relaxed text-white/50">
-                    ادخل إيميلك وهنبعتلك كود دخول فوري — بدون باسورد.
-                  </p>
-                </div>
-
-                {error && (
-                  <div className="mb-5 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-                    {error}
-                  </div>
-                )}
-
-                <div className="mb-5">
-                  <label className="mb-2 block text-xs font-semibold uppercase tracking-widest text-white/40">
+                <div style={{ marginBottom: 20 }}>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: C.muted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
                     البريد الإلكتروني
                   </label>
                   <input
-                    type="email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && requestCode()}
+                    type="email" value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && requestCode()}
                     placeholder="your@email.com"
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm text-white placeholder-white/30 outline-none transition focus:border-[#7058F8]/50 focus:ring-2 focus:ring-[#7058F8]/20"
                     dir="ltr"
+                    style={{
+                      width: "100%", padding: "13px 16px", borderRadius: 10, fontSize: 15,
+                      border: `1.5px solid ${C.border}`, background: C.bg, color: C.text,
+                      outline: "none", fontFamily: FONT, boxSizing: "border-box",
+                    }}
                   />
                 </div>
-
                 <button
-                  type="button"
-                  onClick={requestCode}
+                  type="button" onClick={requestCode}
                   disabled={loading || !email}
-                  className="w-full rounded-xl bg-gradient-to-l from-[#7058F8] to-cyan-500 py-4 text-sm font-bold text-white shadow-lg shadow-[#7058F8]/20 transition hover:opacity-90 hover:shadow-[0_0_24px_rgba(112,88,248,0.5)] disabled:opacity-50"
+                  style={{
+                    width: "100%", padding: "14px", borderRadius: 10, fontSize: 15, fontWeight: 800,
+                    color: "#fff", background: loading || !email ? "#9CA3AF" : C.blue,
+                    border: "none", cursor: loading || !email ? "not-allowed" : "pointer",
+                    fontFamily: FONT, boxShadow: loading || !email ? "none" : `0 4px 16px ${C.blueGlow}`,
+                  }}
                 >
-                  {loading ? 'جاري الإرسال...' : 'ابعتلي كود الدخول'}
+                  {loading ? 'جاري الإرسال...' : 'ابعتلي كود الدخول ←'}
                 </button>
+                <div style={{ marginTop: 20, padding: "12px 16px", borderRadius: 10, background: C.blueLight, border: `1px solid ${C.borderBlue}`, textAlign: "center" }}>
+                  <p style={{ fontSize: 12, color: C.blue, fontWeight: 700, margin: 0 }}>
+                    🔒 بدون باسورد — كود مؤقت يُرسل على إيميلك مباشرة
+                  </p>
+                </div>
               </>
             ) : (
               <>
-                <div className="mb-6">
-                  <h1 className="text-2xl font-extrabold tracking-tight text-white">تحقق من إيميلك</h1>
-                  <p className="mt-2 text-sm text-white/50">
-                    بعتنالك كود مكوّن من ٦ أرقام على
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-[#a08fff]" dir="ltr">{email}</p>
-                </div>
-
-                {error && (
-                  <div className="mb-5 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-                    {error}
-                  </div>
-                )}
-
-                <div className="mb-6">
-                  <label className="mb-3 block text-xs font-semibold uppercase tracking-widest text-white/40">
-                    كود التحقق
+                <div style={{ marginBottom: 24 }}>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: C.muted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16, textAlign: "center" }}>
+                    كود التحقق (٦ أرقام)
                   </label>
-                  <div className="flex justify-center" dir="ltr">
+                  <div style={{ display: "flex", justifyContent: "center" }} dir="ltr">
                     <InputOTP maxLength={6} value={code} onChange={setCode}>
                       <InputOTPGroup className="gap-2">
                         {Array.from({ length: 6 }).map((_, i) => (
                           <InputOTPSlot
-                            key={i}
-                            index={i}
-                            className="h-12 w-10 rounded-xl border border-white/10 bg-white/5 text-lg font-mono font-bold text-white sm:h-14 sm:w-11 data-[active=true]:border-[#7058F8]/70 data-[active=true]:ring-2 data-[active=true]:ring-[#7058F8]/30"
+                            key={i} index={i}
+                            className="h-12 w-10 rounded-xl border text-lg font-mono font-bold sm:h-14 sm:w-11 data-[active=true]:ring-2"
+                            style={{ borderColor: C.border, background: C.bg, color: C.text }}
                           />
                         ))}
                       </InputOTPGroup>
                     </InputOTP>
                   </div>
                 </div>
-
                 <button
-                  type="button"
-                  onClick={verifyCode}
+                  type="button" onClick={verifyCode}
                   disabled={loading || code.length !== 6}
-                  className="w-full rounded-xl bg-gradient-to-l from-[#7058F8] to-cyan-500 py-4 text-sm font-bold text-white shadow-lg shadow-[#7058F8]/20 transition hover:opacity-90 hover:shadow-[0_0_24px_rgba(112,88,248,0.5)] disabled:opacity-50"
+                  style={{
+                    width: "100%", padding: "14px", borderRadius: 10, fontSize: 15, fontWeight: 800,
+                    color: "#fff", background: loading || code.length !== 6 ? "#9CA3AF" : C.blue,
+                    border: "none", cursor: loading || code.length !== 6 ? "not-allowed" : "pointer",
+                    fontFamily: FONT, boxShadow: loading || code.length !== 6 ? "none" : `0 4px 16px ${C.blueGlow}`,
+                  }}
                 >
-                  {loading ? 'جاري التحقق...' : 'تأكيد الدخول'}
+                  {loading ? 'جاري التحقق...' : 'تأكيد الدخول ←'}
                 </button>
-
                 <button
                   type="button"
                   onClick={() => { setStep('email'); setCode(''); setError(''); }}
-                  className="mt-4 w-full text-sm text-white/40 transition hover:text-white/70"
+                  style={{ marginTop: 14, width: "100%", background: "none", border: "none", fontSize: 13, color: C.muted, cursor: "pointer", fontFamily: FONT, padding: "8px" }}
                 >
                   ← استخدم إيميل تاني
                 </button>
@@ -180,14 +225,19 @@ export default function Login() {
             )}
           </div>
 
-          {/* Footer link */}
-          <p className="mt-6 text-center text-sm text-white/40">
+          <p style={{ marginTop: 24, textAlign: "center", fontSize: 14, color: C.muted }}>
             مش عندك حساب؟{' '}
-            <a href="/signup" className="font-semibold text-[#a08fff] transition hover:text-white">
-              سجّل دلوقتي
+            <a href="/signup" onClick={(e) => { e.preventDefault(); navigate('/signup'); }}
+              style={{ color: C.blue, fontWeight: 700, textDecoration: "none" }}>
+              سجّل مجاناً ←
             </a>
           </p>
         </div>
+      </div>
+
+      {/* Footer */}
+      <div style={{ padding: "20px 24px", textAlign: "center", borderTop: `1px solid ${C.border}` }}>
+        <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>© 2026 WZZRD AI — جميع الحقوق محفوظة</p>
       </div>
     </div>
   );

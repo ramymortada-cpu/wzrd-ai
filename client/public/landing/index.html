@@ -6,397 +6,361 @@
 <title>WZZRD AI — شخّص البراند بتاعك بالذكاء الاصطناعي</title>
 <meta name="description" content="أدوات تشخيص براند احترافية مبنية على أطر عالمية. اعرف نقاط القوة والضعف — في دقيقة واحدة.">
 <meta property="og:title" content="WZZRD AI — تشخيص البراند بالذكاء الاصطناعي">
-<meta property="og:description" content="شخّص البراند بتاعك مجاناً — ١٠٠ كريدت هدية">
+<meta property="og:description" content="شخّص البراند بتاعك مجاناً — ابدأ دلوقتي">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- Google tag (gtag.js) — GA4 (G-20GXRBPFGR — same as VITE_GA4_ID) -->
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-20GXRBPFGR"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-20GXRBPFGR');</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root {
-  --bg: #000000;
-  --bg2: #0a0a0a;
-  --bg3: #111111;
-  --text: #f4f4f5;
-  --text2: #a1a1aa;
-  --text3: #52525b;
-  --card: #18181b;
-  --border: rgba(39,39,42,0.6);
-  --accent: #8b5cf6;
-  --accent2: #06b6d4;
-  --accentL: rgba(139,92,246,0.1);
-  --green:#10b981;
-  --amber:#f59e0b;
-  --red:#ef4444;
-  --R:16px;
-  --S:0 1px 3px rgba(0,0,0,.04),0 6px 24px rgba(0,0,0,.06);
-  --SL:0 8px 40px rgba(0,0,0,.08);
-  --f:'IBM Plex Sans Arabic',sans-serif;
-  --fe:'Space Grotesk',sans-serif
+:root{
+  --bg:#FAFAF5;--bg2:#F4F3EE;--bg3:#EEEEE8;--surface:#FFFFFF;
+  --blue:#1B4FD8;--blue2:#1239A6;--blue-light:#EEF2FF;--blue-glow:rgba(27,79,216,0.12);--blue-border:rgba(27,79,216,0.2);
+  --text:#111827;--text2:#374151;--muted:#6B7280;--border:#E5E7EB;--border2:#D1D5DB;
+  --green:#059669;--f:'Cairo','Segoe UI',sans-serif;
 }
 html{scroll-behavior:smooth}
 body{font-family:var(--f);background:var(--bg);color:var(--text);line-height:1.75;overflow-x:hidden;-webkit-font-smoothing:antialiased}
-.en-mode{direction:ltr;font-family:var(--fe)}
 a{color:inherit;text-decoration:none}
-
-/* ═══ NAV ═══ */
-.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(0,0,0,.55);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-bottom:1px solid rgba(39,39,42,0.6);transition:all .4s}
-.nav.scrolled{box-shadow:0 2px 20px rgba(0,0,0,.06)}
-.nav-in{max-width:1120px;margin:0 auto;padding:12px 28px;display:flex;align-items:center;justify-content:space-between}
-.logo{font-family:var(--fe);font-weight:700;font-size:20px;letter-spacing:-.5px;display:flex;align-items:center;gap:4px}.logo b{color:var(--accent)}
-.nav-r{display:flex;align-items:center;gap:20px}
-.nav-r a{font-size:13.5px;color:var(--text2);font-weight:500;transition:.2s;padding:6px 0;border-bottom:2px solid transparent}
-.nav-r a:hover{color:var(--text);border-bottom-color:var(--accent)}
-.btn-s{padding:9px 22px;border-radius:100px;font-size:13px;font-weight:600;transition:all .25s;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:6px}
-.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(79,70,229,.28)}
-.btn-o{background:transparent;border:1.5px solid var(--border);color:var(--text2)}.btn-o:hover{border-color:rgba(255,255,255,0.2);color:var(--text)}
-.lang{font-size:12px;padding:5px 14px;border-radius:100px;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;font-weight:600;font-family:var(--fe);transition:.2s}.lang:hover{border-color:var(--accent);color:var(--accent)}
+.btn{padding:10px 22px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;border:none;font-family:var(--f);transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.btn-outline{background:transparent;border:1.5px solid var(--border2);color:var(--text2)}.btn-outline:hover{border-color:var(--blue);color:var(--blue)}
+.btn-primary{background:var(--blue);color:#fff;box-shadow:0 4px 14px var(--blue-glow)}.btn-primary:hover{background:var(--blue2);transform:translateY(-1px)}
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(250,250,245,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);transition:box-shadow .3s}
+.nav.scrolled{box-shadow:0 2px 16px rgba(0,0,0,0.08)}
+.nav-in{max-width:1120px;margin:0 auto;padding:14px 28px;display:flex;align-items:center;justify-content:space-between}
+.logo img{height:36px}
+.nav-links{display:flex;align-items:center;gap:28px}
+.nav-links a{font-size:14px;font-weight:600;color:var(--text2);transition:.2s;padding:4px 0;border-bottom:2px solid transparent}
+.nav-links a:hover,.nav-links a.active{color:var(--blue);border-bottom-color:var(--blue)}
+.nav-r{display:flex;align-items:center;gap:12px}
 .mob-tog{display:none;background:none;border:none;font-size:24px;cursor:pointer;color:var(--text)}
-@media(max-width:860px){.nav-r{display:none}.mob-tog{display:block}.nav-r.open{display:flex;flex-direction:column;position:absolute;top:100%;right:0;left:0;background:var(--bg);padding:24px;gap:16px;border-bottom:1px solid var(--border);box-shadow:var(--S)}}
-
-/* ═══ HERO ═══ */
-.hero{padding:170px 28px 110px;position:relative;overflow:hidden;background:var(--bg)}
-.hero-chip{display:inline-flex;align-items:center;gap:8px;padding:7px 16px;border-radius:100px;background:var(--accentL);color:var(--text);font-size:13px;font-weight:600;margin:0 auto 22px;border:1px solid var(--border)}
-.hero-chip svg{width:14px;height:14px}
-.hero-p{font-size:17px;color:var(--text2);line-height:1.75;margin:0 auto 34px;max-width:560px}
-.hero-btns{display:flex;gap:12px;flex-wrap:wrap;margin:0 auto 28px;justify-content:center}
-.hero-btns .btn-s{padding:14px 32px;font-size:15px}
-.hero-trust{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
-.hero-trust span{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text3);font-weight:600}
-
-/* Hero ambient glow */
-.hero-ambient{position:absolute;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(139,92,246,0.15), transparent),radial-gradient(ellipse 40% 30% at 80% 80%, rgba(6,182,212,0.08), transparent);pointer-events:none}
-.hero-inner{text-align:center;max-width:720px;margin:0 auto;position:relative;z-index:1}
-
-/* Headline */
-.hero h1{font-size:clamp(36px, 6vw, 72px);font-weight:800;line-height:1.15;letter-spacing:-1px;margin-bottom:24px}
-.hero h1 em{font-style:normal;background:linear-gradient(135deg, #8b5cf6, #06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-
-/* Primary CTA with glow */
-.btn-primary-glow{background:#000;color:#fff;border:1px solid rgba(139,92,246,0.5);box-shadow:0 0 20px rgba(139,92,246,0.25), inset 0 0 20px rgba(139,92,246,0.05);transition:all 0.3s ease}
-.btn-primary-glow:hover{border-color:rgba(6,182,212,0.6);box-shadow:0 0 30px rgba(6,182,212,0.3), inset 0 0 20px rgba(6,182,212,0.08);transform:translateY(-2px)}
-
-/* Ghost dark button */
-.btn-ghost-dark{background:transparent;color:var(--text2);border:1px solid var(--border)}
-.btn-ghost-dark:hover{color:var(--text);border-color:rgba(255,255,255,0.2)}
-
-/* ═══ SECTIONS ═══ */
-section{padding:90px 28px}
-.sec-in{max-width:1000px;margin:0 auto}
-.sec-lab{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
-.sec-h{font-size:clamp(26px,3.5vw,38px);font-weight:700;line-height:1.25;margin-bottom:14px;letter-spacing:-.2px}
-.sec-p{font-size:16px;color:var(--text2);max-width:540px;line-height:1.75}
-.tc{text-align:center}.mx{margin-left:auto;margin-right:auto}
-
-/* ═══ HOW ═══ */
-.how{background:var(--bg2)}
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:50px;position:relative}
-.steps::before{content:'';position:absolute;top:48px;left:15%;right:15%;height:2px;background:linear-gradient(to left,var(--accent),var(--accent2),var(--accent));opacity:.15;z-index:0}
-.step{text-align:center;padding:36px 24px 28px;border-radius:var(--R);background:rgba(24,24,27,0.5);border:1px solid rgba(39,39,42,0.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transition:.35s;position:relative;z-index:1}
-.step:hover{transform:translateY(-6px);border-color:rgba(139,92,246,0.3);box-shadow:0 0 20px rgba(139,92,246,0.1)}
-.step-n{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin:0 auto 18px;font-family:var(--fe);box-shadow:0 4px 16px rgba(79,70,229,.25)}
-.step h3{font-size:17px;font-weight:700;margin-bottom:8px}
-.step p{font-size:13.5px;color:var(--text2);line-height:1.65}
-@media(max-width:768px){.steps{grid-template-columns:1fr;gap:16px}.steps::before{display:none}}
-
-/* ═══ TOOLS ═══ */
-.tg{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:48px}
-.tc2{display:grid;grid-template-columns:1fr;gap:0}
-.tool{padding:26px;border-radius:var(--R);background:rgba(24,24,27,0.5);border:1px solid rgba(39,39,42,0.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transition:.35s;position:relative;overflow:hidden;display:block}
-.tool:hover{border-color:rgba(139,92,246,0.3);box-shadow:0 0 20px rgba(139,92,246,0.1);transform:translateY(-4px)}
-.tool.feat{border-color:rgba(139,92,246,0.35);grid-column:span 3;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:24px;padding:32px;background:rgba(24,24,27,0.55)}
-.tool.feat .ti{width:56px;height:56px;font-size:28px}
-.tool.feat h3{font-size:20px}
-.tool.feat p{font-size:14px}
-.feat-badge{position:absolute;top:14px;left:14px;padding:4px 14px;border-radius:100px;background:var(--accent);color:#fff;font-size:10.5px;font-weight:700;letter-spacing:.5px}
-.en-mode .feat-badge{content:'START HERE'}
-.ti{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:21px;margin-bottom:12px;flex-shrink:0}
-.ti-1{background:#eef2ff}.ti-2{background:#fffbeb}.ti-3{background:#ecfdf5}.ti-4{background:#fef2f2}.ti-5{background:#f5f3ff}.ti-6{background:#fff7ed}
-.tool h3{font-size:16px;font-weight:700;margin-bottom:4px}
-.tool p{font-size:12.5px;color:var(--text2);line-height:1.6;margin-bottom:12px}
-.tool-f{display:flex;align-items:center;justify-content:space-between}
-.tool-c{font-size:12px;color:var(--text3);font-weight:600}
-.tool-a{width:30px;height:30px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text3);transition:.2s}
-.tool:hover .tool-a{background:var(--accent);color:#fff;transform:scale(1.1)}
-.tool-det{font-size:12px;color:var(--accent);font-weight:600;margin-top:8px;display:inline-flex;align-items:center;gap:4px;opacity:0;transition:.2s}
-.tool:hover .tool-det{opacity:1}
-@media(max-width:860px){.tg{grid-template-columns:1fr}.tool.feat{grid-column:span 1;grid-template-columns:1fr}}
-
-/* ═══ EXAMPLE ═══ */
-.example{background:var(--bg2)}
-.ex-box{max-width:580px;margin:40px auto 0;padding:32px;border-radius:20px;background:var(--card);box-shadow:var(--SL);border:1px solid var(--border)}
-.ex-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
-.ex-num{font-size:40px;font-weight:700;font-family:var(--fe);color:var(--text)}.ex-num small{font-size:16px;color:var(--text3)}
-.ex-badge{font-size:12px;font-weight:700;padding:5px 14px;border-radius:100px;background:#fef3c7;color:#92400e}
-.ex-bar{height:7px;border-radius:7px;background:linear-gradient(to left,var(--green),var(--amber),var(--red));position:relative;margin-bottom:4px}
-.ex-bar::after{content:'';position:absolute;top:-4.5px;right:42%;width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid var(--text);box-shadow:0 2px 8px rgba(0,0,0,.15)}
-.ex-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:20px}
-.ex-items{display:flex;flex-direction:column;gap:7px}
-.ex-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:var(--bg2);font-size:12.5px;font-weight:500;transition:.2s}
-.ex-item:hover{background:var(--bg3)}
-.ex-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.ex-dot.h{background:var(--red)}.ex-dot.m{background:var(--amber)}.ex-dot.l{background:var(--green)}
-
-/* ═══ WHY (+ shared feature grids) ═══ */
-.wg{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:48px}
-.wc{padding:28px;border-radius:var(--R);background:var(--card);border:1.5px solid var(--border);transition:.35s}
-.wc:hover{border-color:var(--accent);box-shadow:var(--S);transform:translateY(-3px)}
-.wi{width:42px;height:42px;border-radius:11px;background:var(--accentL);display:flex;align-items:center;justify-content:center;margin-bottom:14px;font-size:19px}
-.wc h3{font-size:15px;font-weight:700;margin-bottom:6px}
-.wc p{font-size:13px;color:var(--text2);line-height:1.65}
-@media(max-width:768px){.wg{grid-template-columns:1fr}}
-
-/* #why — premium glass (matches React funnel UI overhaul) */
-.sec-why{position:relative;overflow:hidden;background:radial-gradient(ellipse 110% 70% at 50% -20%,rgba(99,102,241,.12),transparent 50%),radial-gradient(ellipse 80% 50% at 100% 80%,rgba(6,182,212,.08),transparent 45%),linear-gradient(180deg,#f1f5f9 0%,#fff 55%,#faf5ff 100%)}
-.sec-why::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 60% 40% at 0% 60%,rgba(139,92,246,.07),transparent 50%);animation:why-mesh 18s ease-in-out infinite alternate}
-@keyframes why-mesh{0%{opacity:.85;transform:scale(1)}100%{opacity:1;transform:scale(1.03) translate(1%,-1%)}}
-.sec-why .sec-in{position:relative;z-index:1}
-.sec-why .sec-h{font-size:clamp(28px,4vw,42px);letter-spacing:-.03em;margin-bottom:18px;background:linear-gradient(135deg,var(--text) 0%,var(--accent) 45%,#0891b2 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.sec-why .wg{gap:22px;margin-top:52px}
-.sec-why .wc{position:relative;overflow:hidden;padding:32px 28px;border-radius:20px;background:rgba(255,255,255,.74);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border:0.5px solid rgba(255,255,255,.65);box-shadow:0 20px 44px -18px rgba(15,23,42,.1),0 0 0 1px rgba(255,255,255,.5) inset;transition:transform .45s ease,box-shadow .45s ease,border-color .3s}
-.sec-why .wc::after{content:'';position:absolute;inset:0;opacity:0;transition:opacity .5s ease;background:radial-gradient(ellipse 90% 70% at 100% 0%,rgba(99,102,241,.14),transparent 55%),radial-gradient(ellipse 70% 60% at 0% 100%,rgba(6,182,212,.1),transparent 50%);pointer-events:none}
-.sec-why .wc:hover{transform:translateY(-8px);border-color:rgba(79,70,229,.4);box-shadow:0 28px 56px -14px rgba(79,70,229,.2),0 0 0 1px rgba(255,255,255,.6) inset}
-.sec-why .wc:hover::after{opacity:1}
-.sec-why .wi{position:relative;z-index:1;width:52px;height:52px;border-radius:16px;font-size:24px;background:linear-gradient(145deg,rgba(99,102,241,.22),rgba(255,255,255,.9));box-shadow:0 10px 28px -10px rgba(99,102,241,.45),inset 0 1px 0 rgba(255,255,255,.8);border:0.5px solid rgba(99,102,241,.15)}
-.sec-why .wc h3{position:relative;z-index:1;font-size:16px}
-.sec-why .wc p{position:relative;z-index:1;font-size:13.5px;line-height:1.7}
-
-/* ═══ ABOUT ═══ */
-.about{background:var(--bg2)}
-.ab-box{max-width:680px;margin:0 auto;text-align:center}
-.ab-box p{font-size:16px;color:var(--text2);line-height:1.8;margin-bottom:14px}
-
-/* ═══ CTA ═══ */
-.cta-s{text-align:center;padding:100px 28px;background:linear-gradient(135deg,#1e1b4b,#3730a3,#4f46e5);color:#fff;position:relative;overflow:hidden}
-.cta-s::before{content:'';position:absolute;width:600px;height:600px;border-radius:50%;background:rgba(255,255,255,.04);top:-200px;right:-200px}
-.cta-s::after{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,.03);bottom:-100px;left:-50px}
-.cta-s h2{font-size:clamp(26px,4vw,38px);font-weight:700;margin-bottom:12px;position:relative;z-index:1}
-.cta-s p{font-size:16px;opacity:.75;margin-bottom:36px;max-width:480px;margin-left:auto;margin-right:auto;position:relative;z-index:1}
-.btn-w{display:inline-flex;align-items:center;gap:8px;padding:16px 44px;border-radius:100px;background:#fff;color:var(--accent);font-size:16px;font-weight:700;transition:.3s;position:relative;z-index:1;border:none;cursor:pointer}
-.btn-w:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.2)}
-.btn-g{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:100px;border:1.5px solid rgba(255,255,255,.25);color:#fff;font-size:14px;font-weight:500;margin-top:16px;transition:.2s;position:relative;z-index:1}
-.btn-g:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.4)}
-
-/* ═══ FOOTER ═══ */
-footer{padding:48px 28px 32px;text-align:center;border-top:1px solid var(--border);background:var(--bg2)}
-.ft-logo{font-family:var(--fe);font-size:18px;font-weight:700;margin-bottom:6px}.ft-logo b{color:var(--accent)}
-.ft-tag{font-size:13px;color:var(--text3);font-style:italic;margin-bottom:20px}
-.ft-links{display:flex;justify-content:center;gap:24px;margin-bottom:20px}
-.ft-links a{font-size:13px;color:var(--text3);transition:.2s}.ft-links a:hover{color:var(--accent)}
-.ft-copy{font-size:10.5px;color:var(--text3);letter-spacing:.5px}
-
-/* ═══ ANIMATIONS ═══ */
-.fi{opacity:0;transform:translateY(28px);transition:all .65s cubic-bezier(.22,1,.36,1)}
+@media(max-width:860px){.nav-links{display:none}.mob-tog{display:block}.nav-links.open{display:flex;flex-direction:column;position:absolute;top:100%;right:0;left:0;background:var(--surface);padding:24px;gap:16px;border-bottom:1px solid var(--border);box-shadow:0 8px 24px rgba(0,0,0,0.08)}}
+/* HERO */
+.hero{padding:140px 28px 80px;text-align:center;background:var(--bg)}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 18px;border-radius:100px;background:var(--blue-light);color:var(--blue);font-size:13px;font-weight:700;margin-bottom:24px;border:1px solid var(--blue-border)}
+.hero h1{font-size:clamp(32px,5vw,58px);font-weight:900;line-height:1.15;letter-spacing:-1.5px;margin-bottom:20px}
+.hero h1 em{font-style:normal;color:var(--blue)}
+.hero-sub{font-size:18px;color:var(--muted);line-height:1.75;margin-bottom:36px;max-width:600px;margin-left:auto;margin-right:auto}
+.hero-btns{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;margin-bottom:36px}
+.hero-trust{display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap}
+.trust-item{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);font-weight:600}
+.trust-item span{color:var(--green)}
+/* STATS */
+.stats{background:var(--blue);padding:48px 28px}
+.stats-in{max-width:900px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:24px;text-align:center}
+.stat-n{font-size:clamp(32px,4vw,48px);font-weight:900;color:#fff;line-height:1}
+.stat-l{font-size:13px;color:rgba(255,255,255,0.7);margin-top:6px;font-weight:600}
+@media(max-width:640px){.stats-in{grid-template-columns:repeat(2,1fr)}}
+/* SECTIONS */
+.section{padding:80px 28px}
+.section-inner{max-width:1100px;margin:0 auto}
+.section-label{font-size:13px;font-weight:700;color:var(--blue);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;text-align:center}
+.section-title{font-size:clamp(26px,4vw,40px);font-weight:900;line-height:1.2;letter-spacing:-1px;text-align:center;margin-bottom:12px}
+.section-sub{font-size:16px;color:var(--muted);text-align:center;margin-bottom:48px;max-width:560px;margin-left:auto;margin-right:auto}
+/* TOOLS GRID */
+.tools-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+@media(max-width:900px){.tools-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.tools-grid{grid-template-columns:1fr}}
+.tool-card{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:24px;transition:all .25s;position:relative}
+.tool-card:hover{border-color:var(--blue-border);box-shadow:0 8px 32px var(--blue-glow);transform:translateY(-2px)}
+.tool-badge{position:absolute;top:16px;left:16px;background:var(--blue);color:#fff;font-size:11px;font-weight:800;padding:3px 10px;border-radius:100px}
+.tool-icon{font-size:28px;margin-bottom:12px}
+.tool-credits{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px}
+.tool-tag{font-size:11px;font-weight:700;color:var(--blue);background:var(--blue-light);padding:3px 10px;border-radius:100px;display:inline-block;margin-bottom:10px}
+.tool-name{font-size:18px;font-weight:800;color:var(--text);margin-bottom:8px}
+.tool-desc{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:16px}
+.tool-cta{font-size:13px;font-weight:700;color:var(--blue)}
+/* HOW */
+.how-bg{background:var(--bg2)}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;margin-top:48px}
+@media(max-width:700px){.steps{grid-template-columns:1fr}}
+.step{text-align:center}
+.step-n{width:52px;height:52px;border-radius:50%;background:var(--blue);color:#fff;font-size:20px;font-weight:900;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.step-title{font-size:17px;font-weight:800;margin-bottom:8px}
+.step-desc{font-size:14px;color:var(--muted);line-height:1.65}
+/* TESTIMONIALS */
+.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:48px}
+@media(max-width:900px){.testi-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.testi-grid{grid-template-columns:1fr}}
+.testi-card{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:24px}
+.testi-stars{color:#F59E0B;font-size:16px;margin-bottom:12px}
+.testi-text{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:16px}
+.testi-author{display:flex;align-items:center;gap:10px}
+.testi-avatar{width:40px;height:40px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:18px}
+.testi-name{font-size:14px;font-weight:700}
+.testi-role{font-size:12px;color:var(--muted)}
+/* LEAD MAGNET */
+.lm-bg{background:var(--blue);padding:72px 28px}
+.lm-in{max-width:620px;margin:0 auto;text-align:center}
+.lm-in h2{font-size:clamp(24px,4vw,36px);font-weight:900;color:#fff;margin-bottom:12px}
+.lm-in p{font-size:16px;color:rgba(255,255,255,0.75);margin-bottom:28px}
+.lm-form{display:flex;gap:10px;max-width:460px;margin:0 auto;flex-wrap:wrap}
+.lm-form input{flex:1;min-width:200px;padding:13px 18px;border-radius:8px;border:none;font-size:15px;font-family:var(--f);background:#fff;color:var(--text);outline:none}
+.lm-form button{padding:13px 24px;border-radius:8px;background:#fff;color:var(--blue);font-size:14px;font-weight:800;border:none;cursor:pointer;font-family:var(--f);white-space:nowrap}
+/* CTA FINAL */
+.cta-final{padding:80px 28px;text-align:center}
+.cta-final h2{font-size:clamp(28px,4vw,44px);font-weight:900;margin-bottom:14px;letter-spacing:-1px}
+.cta-final p{font-size:16px;color:var(--muted);margin-bottom:32px}
+/* FOOTER */
+footer{background:var(--text);color:#fff;padding:56px 28px 32px}
+.footer-in{max-width:1100px;margin:0 auto}
+.footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1.5fr;gap:40px;margin-bottom:48px}
+@media(max-width:860px){.footer-top{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.footer-top{grid-template-columns:1fr}}
+.footer-brand p{font-size:13px;color:rgba(255,255,255,0.55);line-height:1.7;margin-top:12px;max-width:260px}
+.footer-col h4{font-size:13px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:16px}
+.footer-col a{display:block;font-size:14px;color:rgba(255,255,255,0.65);margin-bottom:10px;transition:.2s}
+.footer-col a:hover{color:#fff}
+.footer-nl p{font-size:13px;color:rgba(255,255,255,0.55);margin-bottom:14px;line-height:1.6}
+.nl-form{display:flex;gap:8px}
+.nl-form input{flex:1;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:#fff;font-size:13px;font-family:var(--f);outline:none}
+.nl-form input::placeholder{color:rgba(255,255,255,0.35)}
+.nl-form button{padding:10px 16px;border-radius:8px;background:var(--blue);color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:var(--f);white-space:nowrap}
+.footer-bottom{border-top:1px solid rgba(255,255,255,0.1);padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.footer-bottom p{font-size:12px;color:rgba(255,255,255,0.35)}
+.footer-bottom-links{display:flex;gap:20px}
+.footer-bottom-links a{font-size:12px;color:rgba(255,255,255,0.35);transition:.2s}
+.footer-bottom-links a:hover{color:rgba(255,255,255,0.7)}
+.fi{opacity:0;transform:translateY(24px);transition:opacity .6s,transform .6s}
 .fi.v{opacity:1;transform:translateY(0)}
-.fi:nth-child(2){transition-delay:.08s}.fi:nth-child(3){transition-delay:.16s}.fi:nth-child(4){transition-delay:.24s}
 </style>
 </head>
 <body>
 
 <nav class="nav" id="nav">
- <div class="nav-in">
-  <a href="/welcome" class="logo">WZZRD <b>AI</b></a>
-  <div class="nav-r" id="navR">
-   <a href="#how" data-ar="إزاي بيشتغل" data-en="How It Works">إزاي بيشتغل</a>
-   <a href="#tools" data-ar="الأدوات" data-en="Tools">الأدوات</a>
-   <a href="#why" data-ar="ليه WZZRD" data-en="Why WZZRD">ليه WZZRD</a>
-   <a href="/services-info" data-ar="خدماتنا" data-en="Services">خدماتنا</a>
-   <a href="/pricing" data-ar="الأسعار" data-en="Pricing">الأسعار</a>
-   <a href="/my-brand" data-ar="صحة البراند" data-en="My Brand">صحة البراند</a>
-   <button class="lang" onclick="tl()">EN</button>
-   <a href="/signup" class="btn-s btn-p" data-ar="ابدأ مجاناً" data-en="Start Free">ابدأ مجاناً</a>
+  <div class="nav-in">
+    <a href="/" class="logo"><img src="/logo.webp" alt="WZZRD AI" /></a>
+    <div class="nav-links" id="navLinks">
+      <a href="/" class="active">الرئيسية</a>
+      <a href="/tools">الأدوات</a>
+      <a href="/pricing">الأسعار</a>
+      <a href="/landing/services.html">الخدمات</a>
+    </div>
+    <div class="nav-r">
+      <a href="/login" class="btn btn-outline">تسجيل الدخول</a>
+      <a href="/signup" class="btn btn-primary">ابدأ مجاناً ←</a>
+    </div>
+    <button class="mob-tog" onclick="document.getElementById('navLinks').classList.toggle('open')">☰</button>
   </div>
-  <button class="mob-tog" onclick="document.getElementById('navR').classList.toggle('open')">☰</button>
- </div>
 </nav>
 
 <section class="hero">
-  <!-- Ambient glow background -->
-  <div class="hero-ambient" aria-hidden="true"></div>
+  <div class="hero-badge">🧠 مدعوم بالذكاء الاصطناعي</div>
+  <h1>علامتك التجارية تستحق<br><em>تشخيصاً حقيقياً</em></h1>
+  <p class="hero-sub">المشكلة مش في المنتج — المشكلة في <strong>غياب التشخيص الصح</strong>.<br>WZZRD AI يديك التشخيص الصح في دقائق.</p>
+  <div class="hero-btns">
+    <a href="/signup" class="btn btn-primary" style="font-size:16px;padding:14px 32px">ابدأ تشخيصك المجاني ←</a>
+    <a href="/pricing" class="btn btn-outline" style="font-size:15px;padding:14px 24px">شوف الأسعار</a>
+  </div>
+  <div class="hero-trust">
+    <div class="trust-item"><span>✓</span> بدون بطاقة بنكية</div>
+    <div class="trust-item"><span>✓</span> نتيجة في 30 ثانية</div>
+    <div class="trust-item"><span>✓</span> 500+ تشخيص اتعمل</div>
+  </div>
+</section>
 
-  <div class="hero-inner">
-    <!-- Badge -->
-    <div class="hero-chip">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-      </svg>
-      أول منصة ذكاء اصطناعي لبناء البراند في العالم العربي
+<section class="stats fi">
+  <div class="stats-in">
+    <div><div class="stat-n">500+</div><div class="stat-l">تشخيص اتعمل في أول 30 يوم</div></div>
+    <div><div class="stat-n">93%</div><div class="stat-l">توفير مقارنة بالوكالات</div></div>
+    <div><div class="stat-n">30ث</div><div class="stat-l">وقت التشخيص الأولي</div></div>
+    <div><div class="stat-n">6</div><div class="stat-l">أدوات تشخيصية متخصصة</div></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-inner">
+    <div class="section-label fi">أدواتنا التشخيصية</div>
+    <h2 class="section-title fi">6 أدوات — كل أداة بتحل مشكلة محددة</h2>
+    <p class="section-sub fi">مش أداة واحدة تعمل كل حاجة — كل أداة متخصصة في جانب معين من البراند.</p>
+    <div class="tools-grid">
+      <div class="tool-card fi" style="border-color:rgba(27,79,216,0.3)">
+        <div class="tool-badge">الأكثر طلباً</div>
+        <div class="tool-icon">🔬</div>
+        <div class="tool-credits">20 كريدت</div>
+        <div class="tool-tag">الأكثر طلباً</div>
+        <div class="tool-name">تشخيص البراند</div>
+        <div class="tool-desc">اعرف صحة علامتك التجارية في 30 لأنية — مع تقرير مفصل بأهم المشاكل والحلول.</div>
+        <a href="/signup" class="tool-cta">✓ ابدأ من هنا لو حاسس إن في حاجة غلط →</a>
+      </div>
+      <div class="tool-card fi">
+        <div class="tool-icon">📦</div>
+        <div class="tool-credits">25 كريدت</div>
+        <div class="tool-tag">سوشيال + ويب</div>
+        <div class="tool-name">فحص منطق العرض</div>
+        <div class="tool-desc">هل عرضك واضح ومقنع؟ الأداة دي بتسعرك تعرف ليه العملاء بيقولوا "هفكر" وبتديك الحل.</div>
+        <a href="/signup" class="tool-cta">✓ حول الـ "هفكر" لـ "اشتريت" →</a>
+      </div>
+      <div class="tool-card fi">
+        <div class="tool-icon">💬</div>
+        <div class="tool-credits">20 كريدت</div>
+        <div class="tool-tag">هوية واضحة</div>
+        <div class="tool-name">فحص الرسالة</div>
+        <div class="tool-desc">رسالتك متسقة في كل مكان؟ الأداة دي بتفحص الـ bio والمحتوى وبتديك تقرير الاتساق.</div>
+        <a href="/signup" class="tool-cta">✓ خلي جمهورك يفهم قيمتك من أول نظرة →</a>
+      </div>
+      <div class="tool-card fi">
+        <div class="tool-icon">🌐</div>
+        <div class="tool-credits">25 كريدت</div>
+        <div class="tool-tag">سوشيال + ويب</div>
+        <div class="tool-name">فحص الحضور الرقمي</div>
+        <div class="tool-desc">الغريب بيشوف إيه لما بيبحث عنك؟ فحص شامل للاستمرارية والموقع وقنوات التواصل.</div>
+        <a href="/signup" class="tool-cta">✓ اعرف قدك بيبدو ازاي لمنافسيك →</a>
+      </div>
+      <div class="tool-card fi">
+        <div class="tool-icon">🪞</div>
+        <div class="tool-credits">20 كريدت</div>
+        <div class="tool-tag">شخصية البراند</div>
+        <div class="tool-name">لقطة الهوية</div>
+        <div class="tool-desc">شخصية البراند بتاعتك بتجذب النوع الصح من العملاء؟ أو بتنبذ أرخص من الفعلي؟</div>
+        <a href="/signup" class="tool-cta">✓ اجذب العميل المثالي بشكل تلقائي →</a>
+      </div>
+      <div class="tool-card fi">
+        <div class="tool-icon">🚀</div>
+        <div class="tool-credits">30 كريدت</div>
+        <div class="tool-tag">قبل ما تصرف فلوس</div>
+        <div class="tool-name">جاهزية الإطلاق</div>
+        <div class="tool-desc">قبل ما تنزل السوق — شغّل الأداة دي. بتشوف لو أنت جاهز فعلاً أو في أي إنفاق على ماركتينج.</div>
+        <a href="/signup" class="tool-cta">✓ وفّر آلاف الجنيهات من الإنفاق الخاطئ →</a>
+      </div>
     </div>
-
-    <!-- Headline — MASSIVE & CENTERED -->
-    <h1>
-      اكتشف <em>ضعف براندك</em><br>
-      قبل أن يكتشفه منافسك
-    </h1>
-
-    <!-- Subheadline -->
-    <p class="hero-p">
-      WZZRD AI يحلّل هويتك التجارية في دقائق ويعطيك تقرير دقيق بأكبر 3 مشاكل تعيق نموك.
-    </p>
-
-    <!-- CTAs -->
-    <div class="hero-btns">
-      <a href="/tools" class="btn-s btn-primary-glow">ابدأ التشخيص مجاناً ←</a>
-      <a href="/services-info" class="btn-s btn-ghost-dark">شوف كيف يعمل</a>
-    </div>
-
-    <!-- Trust signals -->
-    <div class="hero-trust">
-      <span>✓ مجاني تماماً</span>
-      <span>✓ بدون تسجيل</span>
-      <span>✓ نتيجة فورية</span>
+    <div style="text-align:center;margin-top:36px" class="fi">
+      <a href="/tools" class="btn btn-primary" style="font-size:15px;padding:13px 32px">شوف كل الأدوات ←</a>
     </div>
   </div>
 </section>
 
-<section class="how" id="how">
- <div class="sec-in tc">
-  <div class="sec-lab fi" data-ar="٣ خطوات بس" data-en="Just 3 Steps">٣ خطوات بس</div>
-  <h2 class="sec-h fi" data-ar="إزاي الموضوع بيشتغل؟" data-en="How Does It Work?">إزاي الموضوع بيشتغل؟</h2>
-  <div class="steps">
-   <div class="step fi"><div class="step-n">١</div><h3 data-ar="سجّل في ثواني" data-en="Sign Up">سجّل في ثواني</h3><p data-ar="احصل على ١٠٠ كريدت مجاني — بدون بطاقة ائتمان" data-en="Get 100 free credits — no credit card">احصل على ١٠٠ كريدت مجاني — بدون بطاقة ائتمان</p></div>
-   <div class="step fi"><div class="step-n">٢</div><h3 data-ar="اختار التشخيص" data-en="Pick a Tool">اختار التشخيص</h3><p data-ar="٨ أدوات — كل واحدة بتحلل جانب مختلف من البراند" data-en="8 tools — each analyzes a different brand aspect">٨ أدوات — كل واحدة بتحلل جانب مختلف من البراند</p></div>
-   <div class="step fi"><div class="step-n">٣</div><h3 data-ar="استلم التقرير" data-en="Get Report">استلم التقرير</h3><p data-ar="نتيجة من ١٠٠ + مشاكل بالأولوية + توصيات عملية" data-en="Score/100 + prioritized issues + recommendations">نتيجة من ١٠٠ + مشاكل بالأولوية + توصيات عملية</p></div>
+<section class="section how-bg">
+  <div class="section-inner">
+    <div class="section-label fi">إزاي بيشتغل</div>
+    <h2 class="section-title fi">٣ خطوات وتقريرك جاهز</h2>
+    <div class="steps">
+      <div class="step fi">
+        <div class="step-n">١</div>
+        <div class="step-title">اختار الأداة المناسبة</div>
+        <div class="step-desc">٦ أدوات تشخيصية متخصصة — ابدأ بتشخيص البراند لو مش عارف من فين.</div>
+      </div>
+      <div class="step fi">
+        <div class="step-n">٢</div>
+        <div class="step-title">أجب على الأسئلة</div>
+        <div class="step-desc">أسئلة ذكية ومحددة عن بزنسك — الـ AI بيفهم السياق ويحلل بعمق.</div>
+      </div>
+      <div class="step fi">
+        <div class="step-n">٣</div>
+        <div class="step-title">استلم تقريرك الفوري</div>
+        <div class="step-desc">تقرير مفصل بالمشاكل والحلول العملية — جاهز للتنفيذ على طول.</div>
+      </div>
+    </div>
   </div>
- </div>
 </section>
 
-<section id="tools">
- <div class="sec-in tc">
-  <div class="sec-lab fi" data-ar="أدوات التشخيص" data-en="Diagnostic Tools">أدوات التشخيص</div>
-  <h2 class="sec-h fi" data-ar="٨ أدوات — كل واحدة بتكشف زاوية مختلفة" data-en="8 Tools — Each Reveals a Different Angle">٨ أدوات — كل واحدة بتكشف زاوية مختلفة</h2>
-  <p class="sec-p mx fi" data-ar="مبنية على أطر أكاديمية زي Keller's CBBE و Kapferer's Prism." data-en="Built on frameworks like Keller's CBBE and Kapferer's Prism.">مبنية على أطر أكاديمية زي Keller's CBBE و Kapferer's Prism.</p>
-  <div class="tg">
-   <a href="/signup" class="tool feat fi"><span class="feat-badge" data-ar="ابدأ من هنا" data-en="Start Here">ابدأ من هنا</span><div class="ti ti-1">🔬</div><div><h3 data-ar="تشخيص البراند" data-en="Brand Diagnosis">تشخيص البراند</h3><p data-ar="تقييم شامل — تموضع، رسائل، عرض، هوية بصرية، رحلة عميل. ١٢ سؤال تحليلي." data-en="Full assessment — positioning, messaging, offer, identity, journey. 12 diagnostic questions.">تقييم شامل — تموضع، رسائل، عرض، هوية بصرية، رحلة عميل. ١٢ سؤال تحليلي.</p><span class="tool-det" data-ar="اعرف أكتر ←" data-en="Learn more →">اعرف أكتر ←</span></div><div style="text-align:left"><span class="tool-c" data-ar="٢٠ كريدت" data-en="20 credits">٢٠ كريدت</span></div></a>
-   <a href="/signup" class="tool fi"><div class="ti ti-2">📦</div><h3 data-ar="فحص منطق العرض" data-en="Offer Logic Check">فحص منطق العرض</h3><p data-ar="باكدجاتك منطقية؟ التسعير بيستخدم Anchoring صح؟" data-en="Packages logical? Pricing using Anchoring right?">باكدجاتك منطقية؟ التسعير بيستخدم Anchoring صح؟</p><div class="tool-f"><span class="tool-c" data-ar="٢٥ كريدت" data-en="25 credits">٢٥ كريدت</span><span class="tool-a">←</span></div></a>
-   <a href="/signup" class="tool fi"><div class="ti ti-3">💬</div><h3 data-ar="فحص الرسالة" data-en="Message Check">فحص الرسالة</h3><p data-ar="رسالتك متسقة ولا كل منصة بتقول حاجة مختلفة؟" data-en="Messaging consistent or each platform says different?">رسالتك متسقة ولا كل منصة بتقول حاجة مختلفة؟</p><div class="tool-f"><span class="tool-c" data-ar="٢٠ كريدت" data-en="20 credits">٢٠ كريدت</span><span class="tool-a">←</span></div></a>
-   <a href="/signup" class="tool fi"><div class="ti ti-4">🌐</div><h3 data-ar="فحص الحضور الرقمي" data-en="Presence Audit">فحص الحضور الرقمي</h3><p data-ar="إزاي بتظهر أونلاين؟ الصورة اللي بتوصل هي اللي عايزها؟" data-en="How you appear online? Is the image what you want?">إزاي بتظهر أونلاين؟ الصورة اللي بتوصل هي اللي عايزها؟</p><div class="tool-f"><span class="tool-c" data-ar="٢٥ كريدت" data-en="25 credits">٢٥ كريدت</span><span class="tool-a">←</span></div></a>
-   <a href="/signup" class="tool fi"><div class="ti ti-5">🪞</div><h3 data-ar="لقطة الهوية" data-en="Identity Snapshot">لقطة الهوية</h3><p data-ar="شخصية البراند بتوصل صح لجمهورك المستهدف؟" data-en="Brand personality resonating with target audience?">شخصية البراند بتوصل صح لجمهورك المستهدف؟</p><div class="tool-f"><span class="tool-c" data-ar="٢٠ كريدت" data-en="20 credits">٢٠ كريدت</span><span class="tool-a">←</span></div></a>
-   <a href="/signup" class="tool fi"><div class="ti ti-6">🚀</div><h3 data-ar="جاهزية الإطلاق" data-en="Launch Readiness">جاهزية الإطلاق</h3><p data-ar="جاهز تنزل السوق ولا فيه حاجات ناقصة؟" data-en="Ready for market or missing pieces?">جاهز تنزل السوق ولا فيه حاجات ناقصة؟</p><div class="tool-f"><span class="tool-c" data-ar="٣٠ كريدت" data-en="30 credits">٣٠ كريدت</span><span class="tool-a">←</span></div></a>
-   <a href="/tools/quick" class="tool fi"><div class="ti" style="background:linear-gradient(135deg,#06b6d4,#0891b2)">⚡</div><h3 data-ar="تشخيص سريع" data-en="Quick Diagnosis">تشخيص سريع</h3><p data-ar="٥ أسئلة بس — نتيجة في دقيقة. أسرع طريقة تعرف وضعك." data-en="Just 5 questions — result in 1 minute.">٥ أسئلة بس — نتيجة في دقيقة. أسرع طريقة تعرف وضعك.</p><div class="tool-f"><span class="tool-c" data-ar="٢٠ كريدت" data-en="20 credits">٢٠ كريدت</span><span class="tool-a">←</span></div></a>
-   <a href="/tools/benchmark" class="tool fi"><div class="ti" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)">📊</div><h3 data-ar="مقارنة بالمنافسين" data-en="Competitive Benchmark">مقارنة بالمنافسين</h3><p data-ar="قارن البراند بتاعك بـ ٣ منافسين على ٥ محاور." data-en="Compare your brand vs 3 competitors on 5 pillars.">قارن البراند بتاعك بـ ٣ منافسين على ٥ محاور.</p><div class="tool-f"><span class="tool-c" data-ar="٤٠ كريدت" data-en="40 credits">٤٠ كريدت</span><span class="tool-a">←</span></div></a>
+<section class="section">
+  <div class="section-inner">
+    <div class="section-label fi">قصص نجاح عملائنا</div>
+    <h2 class="section-title fi">بيقولوا إيه عننا</h2>
+    <div class="testi-grid">
+      <div class="testi-card fi">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">"كنت فاكر المشكلة في المنتج — اتضح إن المشكلة في رسالتي. التقرير فتح عيني على حاجات مكنتش شايفها."</div>
+        <div class="testi-author"><div class="testi-avatar">👨</div><div><div class="testi-name">أحمد خالد</div><div class="testi-role">مؤسس، متجر إلكتروني</div></div></div>
+      </div>
+      <div class="testi-card fi">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">"في 10 دقايق عرفت ليه الناس مش بتشتري. التشخيص كان دقيق جداً وعملي — مش كلام فاضي."</div>
+        <div class="testi-author"><div class="testi-avatar">👩</div><div><div class="testi-name">سارة محمود</div><div class="testi-role">مديرة تسويق، شركة ناشئة</div></div></div>
+      </div>
+      <div class="testi-card fi">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">"وفّرت على الأقل 15,000 جنيه كنت هصرفهم على وكالة. التقرير كان أدق من اللي توقعته."</div>
+        <div class="testi-author"><div class="testi-avatar">👨‍💼</div><div><div class="testi-name">محمد عمر</div><div class="testi-role">صاحب مطعم، القاهرة</div></div></div>
+      </div>
+    </div>
   </div>
- </div>
 </section>
 
-<section class="example">
- <div class="sec-in tc">
-  <div class="sec-lab fi" data-ar="مثال حقيقي" data-en="Real Example">مثال حقيقي</div>
-  <h2 class="sec-h fi" data-ar="شوف شكل نتيجة التشخيص" data-en="See What a Result Looks Like">شوف شكل نتيجة التشخيص</h2>
-  <div class="ex-box fi">
-   <div class="ex-top"><span class="ex-num">42<small>/100</small></span><span class="ex-badge" data-ar="محتاج شغل" data-en="Needs Work">محتاج شغل</span></div>
-   <div class="ex-bar"></div>
-   <div class="ex-labels"><span>١٠٠</span><span>٠</span></div>
-   <div class="ex-items">
-    <div class="ex-item"><span class="ex-dot h"></span><span data-ar="التموضع مش واضح — العميل مش فاهم المميز عندك" data-en="Unclear positioning — customer doesn't get differentiator">التموضع مش واضح — العميل مش فاهم المميز عندك</span></div>
-    <div class="ex-item"><span class="ex-dot h"></span><span data-ar="رحلة العميل فيها احتكاك — مفيش CTA واضح" data-en="Customer journey friction — no clear CTA">رحلة العميل فيها احتكاك — مفيش CTA واضح</span></div>
-    <div class="ex-item"><span class="ex-dot m"></span><span data-ar="الرسائل مش متسقة بين الموقع والسوشيال" data-en="Inconsistent messaging between site and social">الرسائل مش متسقة بين الموقع والسوشيال</span></div>
-    <div class="ex-item"><span class="ex-dot l"></span><span data-ar="الهوية البصرية متسقة ✓" data-en="Visual identity is consistent ✓">الهوية البصرية متسقة ✓</span></div>
-   </div>
+<section class="lm-bg fi">
+  <div class="lm-in">
+    <h2>حمّل الدليل المجاني</h2>
+    <p>دليل "٧ أخطاء تقتل البراند" — الأكثر تحميلاً بين المؤسسين العرب</p>
+    <div class="lm-form" id="lmForm">
+      <input type="email" id="lmEmail" placeholder="بريدك الإلكتروني" />
+      <button onclick="submitLM()">أرسل لي الدليل</button>
+    </div>
+    <p style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:12px">بدون سبام — ممكن تلغي الاشتراك في أي وقت</p>
   </div>
- </div>
 </section>
 
-<section id="why" class="sec-why">
- <div class="sec-in tc">
-  <div class="sec-lab fi" data-ar="ليه WZZRD AI؟" data-en="Why WZZRD AI?">ليه WZZRD AI؟</div>
-  <h2 class="sec-h fi" data-ar="مش أداة عشوائية — ده نظام تشخيص حقيقي" data-en="Not Random — A Real Diagnostic System">مش أداة عشوائية — ده نظام تشخيص حقيقي</h2>
-  <div class="wg">
-   <div class="wc fi"><div class="wi">🎯</div><h3 data-ar="أطر أكاديمية معتمدة" data-en="Proven Frameworks">أطر أكاديمية معتمدة</h3><p data-ar="Keller's CBBE, Kapferer's Prism, Behavioral Economics — نفس الأطر اللي في MBA." data-en="Keller's CBBE, Kapferer's Prism, Behavioral Economics — MBA-level.">Keller's CBBE, Kapferer's Prism, Behavioral Economics — نفس الأطر اللي في MBA.</p></div>
-   <div class="wc fi"><div class="wi">⚡</div><h3 data-ar="نتايج فورية" data-en="Instant Results">نتايج فورية</h3><p data-ar="بدل أسابيع وآلاف لاستشاري — تشخيص أولي في دقيقة." data-en="Instead of weeks and thousands — initial diagnosis in a minute.">بدل أسابيع وآلاف لاستشاري — تشخيص أولي في دقيقة.</p></div>
-   <div class="wc fi"><div class="wi">📊</div><h3 data-ar="تقرير مفصّل" data-en="Detailed Report">تقرير مفصّل</h3><p data-ar="مشاكل بالأولوية + مستوى الخطورة + توصيات تقدر تنفذها." data-en="Prioritized issues + severity + actionable recommendations.">مشاكل بالأولوية + مستوى الخطورة + توصيات تقدر تنفذها.</p></div>
-   <div class="wc fi"><div class="wi">🔒</div><h3 data-ar="بياناتك في أمان" data-en="Data Security">بياناتك في أمان</h3><p data-ar="بياناتك للتشخيص بس — مش بنشاركها مع أي طرف تالت." data-en="Data used for diagnosis only — never shared.">بياناتك للتشخيص بس — مش بنشاركها مع أي طرف تالت.</p></div>
-  </div>
- </div>
-</section>
-
-<section class="about">
- <div class="sec-in"><div class="ab-box fi">
-  <div class="sec-lab" data-ar="مين إحنا" data-en="Who We Are">مين إحنا</div>
-  <h2 class="sec-h" data-ar="WZZRD AI من بريمو ماركا" data-en="WZZRD AI by Primo Marca">WZZRD AI من بريمو ماركا</h2>
-  <p data-ar="فريق متخصص في استراتيجيات البراند — بنشتغل مع شركات في مصر والسعودية والإمارات. WZZRD AI أداتنا الذكية اللي بتديك تشخيص أولي." data-en="Brand strategy team working with companies across Egypt, Saudi Arabia, and UAE.">فريق متخصص في استراتيجيات البراند — بنشتغل مع شركات في مصر والسعودية والإمارات. WZZRD AI أداتنا الذكية اللي بتديك تشخيص أولي.</p>
-  <a href="/services-info" style="display:inline-block;margin-top:8px;color:var(--accent);font-weight:600;font-size:14px" data-ar="اعرف أكتر عن خدماتنا ←" data-en="Learn about our services →">اعرف أكتر عن خدماتنا ←</a>
- </div></div>
-</section>
-
-<!-- NEW: Extra Features Section -->
-<section style="background:var(--bg2)">
- <div class="sec-in tc">
-  <div class="sec-lab fi" data-ar="مش بس تشخيص" data-en="Beyond Diagnosis">مش بس تشخيص</div>
-  <h2 class="sec-h fi" data-ar="أدوات تساعدك تنفّذ — مش بس تعرف" data-en="Tools to Act — Not Just Know">أدوات تساعدك تنفّذ — مش بس تعرف</h2>
-  <div class="wg">
-   <div class="wc fi"><div class="wi">🧙‍♂️</div><h3 data-ar="المستشار الذكي" data-en="AI Copilot">المستشار الذكي</h3><p data-ar="اسأل أي سؤال عن البراند واحصل على نصيحة مخصصة. بيقرأ نتايج تشخيصاتك ويديك إجابات عملية." data-en="Ask any brand question. AI reads your diagnosis history and gives personalized advice.">اسأل أي سؤال عن البراند واحصل على نصيحة مخصصة. بيقرأ نتايج تشخيصاتك ويديك إجابات عملية.</p></div>
-   <div class="wc fi"><div class="wi">📈</div><h3 data-ar="متتبع صحة البراند" data-en="Brand Health Tracker">متتبع صحة البراند</h3><p data-ar="شوف الـ score بيتغير مع الوقت. شغّل تشخيص كل شهر وقارن التحسّن." data-en="Track your score over time. Run monthly diagnosis and compare improvement.">شوف الـ score بيتغير مع الوقت. شغّل تشخيص كل شهر وقارن التحسّن.</p></div>
-   <div class="wc fi"><div class="wi">✅</div><h3 data-ar="خطوات عملية" data-en="Action Checklist">خطوات عملية</h3><p data-ar="كل finding بيتحوّل لمهام عملية تقدر تنفذها النهاردة. أشّر على اللي خلّصته وتابع تقدمك." data-en="Every finding becomes actionable tasks. Check off what you've done and track progress.">كل finding بيتحوّل لمهام عملية تقدر تنفذها النهاردة. أشّر على اللي خلّصته وتابع تقدمك.</p></div>
-   <div class="wc fi"><div class="wi">🎁</div><h3 data-ar="ادعي صاحبك" data-en="Refer Friends">ادعي صاحبك</h3><p data-ar="كل واحد بتدعيه — الاتنين بتاخدوا ٥٠ كريدت هدية. ادعي ١٠ = تقرير Premium مجاني." data-en="Each invite earns both 50 credits. Refer 10 = free Premium report.">كل واحد بتدعيه — الاتنين بتاخدوا ٥٠ كريدت هدية. ادعي ١٠ = تقرير Premium مجاني.</p></div>
-  </div>
- </div>
-</section>
-
-<section class="cta-s">
- <div class="fi">
-  <h2 data-ar="جاهز تعرف وضع البراند بتاعك؟" data-en="Ready to Know Your Brand Status?">جاهز تعرف وضع البراند بتاعك؟</h2>
-  <p data-ar="١٠٠ كريدت هدية. بدون بطاقة. بدون التزام." data-en="100 free credits. No card. No commitment.">١٠٠ كريدت هدية. بدون بطاقة. بدون التزام.</p>
-  <a href="/signup" class="btn-w" data-ar="ابدأ مجاناً" data-en="Start Free">ابدأ مجاناً</a><br>
-  <a href="/services-info" class="btn-g" data-ar="أو تواصل مع خبير" data-en="Or talk to an expert">أو تواصل مع خبير</a>
- </div>
+<section class="cta-final fi">
+  <h2>علامتك تستاهل أكتر من كده</h2>
+  <p>آلاف المؤسسين في المنطقة العربية يستخدموا WZZRD AI عشان يبنوا علامات تجارية تبيع.</p>
+  <a href="/signup" class="btn btn-primary" style="font-size:16px;padding:15px 40px">ابدأ تشخيص مجاني الآن ←</a>
+  <p style="margin-top:14px;font-size:13px;color:var(--muted)">لا بطاقة بنكية — لا التزامات — نتيجة في دقائق</p>
 </section>
 
 <footer>
- <div class="ft-logo">WZZRD <b>AI</b></div>
- <div class="ft-tag">"Marks Fade, MARCAS Don't."</div>
- <div class="ft-links"><a href="https://instagram.com/primomarca">Instagram</a><a href="https://linkedin.com/company/primomarca">LinkedIn</a></div>
- <div class="ft-copy">© 2026 WZZRD AI by Primo Marca</div>
+  <div class="footer-in">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="/logo.webp" alt="WZZRD AI" style="height:36px;filter:brightness(10)" />
+        <p>منصة تشخيص العلامة التجارية بالذكاء الاصطناعي — للمؤسسين العرب الطموحين.</p>
+      </div>
+      <div class="footer-col">
+        <h4>الأدوات</h4>
+        <a href="/tools/brand-diagnosis">تشخيص البراند</a>
+        <a href="/tools/offer-check">فحص العرض</a>
+        <a href="/tools/message-check">فحص الرسالة</a>
+        <a href="/tools/presence-audit">فحص الحضور</a>
+        <a href="/tools/identity-snapshot">لقطة الهوية</a>
+        <a href="/tools/launch-readiness">جاهزية الإطلاق</a>
+      </div>
+      <div class="footer-col">
+        <h4>الشركة</h4>
+        <a href="/">الرئيسية</a>
+        <a href="/pricing">الأسعار</a>
+        <a href="/landing/services.html">الخدمات</a>
+        <a href="/login">تسجيل الدخول</a>
+        <a href="/signup">إنشاء حساب</a>
+      </div>
+      <div class="footer-nl">
+        <h4>النشرة الأسبوعية</h4>
+        <p>استراتيجيات تسويقية ونصائح بناء البراند — كل أسبوع على بريدك.</p>
+        <div class="nl-form" id="nlForm">
+          <input type="email" id="nlEmail" placeholder="بريدك الإلكتروني" />
+          <button onclick="submitNL()">اشترك</button>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 WZZRD AI — جميع الحقوق محفوظة</p>
+      <div class="footer-bottom-links">
+        <a href="#">سياسة الخصوصية</a>
+        <a href="#">شروط الاستخدام</a>
+      </div>
+    </div>
+  </div>
 </footer>
 
 <script>
-var o=new IntersectionObserver(function(e){e.forEach(function(x){if(x.isIntersecting)x.target.classList.add('v')})},{threshold:.08,rootMargin:'0px 0px -40px 0px'});
-document.querySelectorAll('.fi').forEach(function(el){o.observe(el)});
-window.addEventListener('scroll',function(){document.getElementById('nav').classList.toggle('scrolled',window.scrollY>20)});
-var l=(function(){var s=localStorage.getItem('wzrd-locale');return(s==='en'||s==='ar')?s:'ar';})();
-function mergeSiteConfig(cfg){
- if(!cfg||!cfg.homepage)return;
- var hp=cfg.homepage;var site=cfg.site||{};
- var chip=document.querySelector('.hero-chip span[data-ar]');
- if(chip&&site.companyName){
-  chip.setAttribute('data-ar','من '+site.companyName);
-  chip.setAttribute('data-en','by '+site.companyName);
- }
- var h1=document.querySelector('.hero h1');
- if(h1&&hp.heroTitleAr){h1.setAttribute('data-ar',hp.heroTitleAr);h1.setAttribute('data-en',hp.heroTitle||hp.heroTitleAr);}
- var sub=document.querySelector('.hero-p');
- if(sub&&hp.heroSubtitleAr){sub.setAttribute('data-ar',hp.heroSubtitleAr);sub.setAttribute('data-en',hp.heroSubtitle||hp.heroSubtitleAr);}
- var cta=document.querySelector('.hero-btns .btn-p');
- if(cta&&hp.ctaTextAr){cta.setAttribute('data-ar',hp.ctaTextAr);cta.setAttribute('data-en',hp.ctaText||hp.ctaTextAr);if(hp.ctaUrl){cta.setAttribute('href',hp.ctaUrl);}}
- var cta2=document.querySelector('.cta-s .btn-w');
- if(cta2&&hp.ctaTextAr){cta2.setAttribute('data-ar',hp.ctaTextAr);cta2.setAttribute('data-en',hp.ctaText||hp.ctaTextAr);if(hp.ctaUrl){cta2.setAttribute('href',hp.ctaUrl);}}
- var navSignup=document.querySelector('.nav-r a.btn-p');
- if(navSignup&&hp.ctaTextAr){navSignup.setAttribute('data-ar',hp.ctaTextAr);navSignup.setAttribute('data-en',hp.ctaText||hp.ctaTextAr);if(hp.ctaUrl){navSignup.setAttribute('href',hp.ctaUrl);}}
- var ft=document.querySelector('.ft-tag');
- if(ft&&site.taglineEn){ft.setAttribute('data-ar',site.taglineAr||site.taglineEn);ft.setAttribute('data-en',site.taglineEn);}
+var obs=new IntersectionObserver(function(e){e.forEach(function(x){if(x.isIntersecting)x.target.classList.add('v')});},{threshold:.08,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.fi').forEach(function(el){obs.observe(el);});
+window.addEventListener('scroll',function(){document.getElementById('nav').classList.toggle('scrolled',window.scrollY>20);});
+function submitLM(){
+  var e=document.getElementById('lmEmail').value;if(!e)return;
+  fetch('/api/trpc/newsletter.subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({json:{email:e,source:'lead-magnet-landing'}})}).catch(function(){});
+  document.getElementById('lmForm').innerHTML='<p style="color:#fff;font-weight:700;font-size:16px">✓ تم! هيوصلك الدليل على بريدك دلوقتي</p>';
 }
-function apply(){
- document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';
- document.body.classList.toggle('en-mode',l==='en');
- document.querySelectorAll('[data-ar]').forEach(function(e){var t=l==='ar'?e.getAttribute('data-ar'):e.getAttribute('data-en');if(t)e.innerHTML=t});
- document.querySelectorAll('.lang').forEach(function(b){b.textContent=l==='ar'?'EN':'ع'});
- var n=document.querySelectorAll('.step-n');if(n.length){if(l==='ar'){n[0].textContent='١';n[1].textContent='٢';n[2].textContent='٣'}else{n[0].textContent='1';n[1].textContent='2';n[2].textContent='3'}}
+function submitNL(){
+  var e=document.getElementById('nlEmail').value;if(!e)return;
+  fetch('/api/trpc/newsletter.subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({json:{email:e,source:'footer-landing'}})}).catch(function(){});
+  document.getElementById('nlForm').innerHTML='<p style="color:rgba(255,255,255,0.8);font-weight:700">✓ تم الاشتراك!</p>';
 }
-function tl(){
- l=l==='ar'?'en':'ar';localStorage.setItem('wzrd-locale',l);apply();
+function runSessionSwap(){
+  if(document.cookie.includes('app_session_id=')){
+    document.querySelectorAll('[href="/signup"]').forEach(function(e){e.setAttribute('href','/tools/brand-diagnosis');if(e.textContent.includes('ابدأ'))e.textContent='شغّل التشخيص ←';});
+  }
 }
-function runSessionSignupSwap(){
- if(document.cookie.includes('app_session_id=')){document.querySelectorAll('[href="/signup"]').forEach(function(e){e.setAttribute('href','/tools/brand-diagnosis');e.innerHTML=l==='ar'?'شغّل التشخيص':'Run Diagnosis'})}
-}
-document.addEventListener('DOMContentLoaded',function(){
- apply();
- runSessionSignupSwap();
- fetch('/api/public/site-config')
-  .then(function(r){return r.json()})
-  .then(function(cfg){mergeSiteConfig(cfg);apply();runSessionSignupSwap();})
-  .catch(function(){});
-});
+document.addEventListener('DOMContentLoaded',runSessionSwap);
 </script>
 </body>
 </html>

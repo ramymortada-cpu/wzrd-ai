@@ -1,104 +1,280 @@
+/**
+ * WzrdPublicHeader — الـ navbar الموحد لكل الـ public pages
+ *
+ * Design tokens:
+ *   bg:      #FAFAF8  (warm white / beige)
+ *   border:  #E8E3DC
+ *   blue:    #1B4FD8  (from logo)
+ *   text:    #111827
+ *   muted:   #6B7280
+ *
+ * NOTE: هذا الـ header للـ public pages فقط (Welcome, Pricing, Login, Signup, Tools, Blog)
+ * الـ dashboard له WzrdAppShell منفصل
+ */
+
+import { useState } from "react";
 import { useLocation } from "wouter";
-import { useI18n } from "@/lib/i18n";
-import { useTheme } from "@/contexts/ThemeContext";
-import { toArabicNumerals } from "@/lib/formatUtils";
 import { useAuth } from "@/_core/hooks/useAuth";
 
-interface WzrdPublicHeaderProps {
-  credits?: number | null;
-  showCredits?: boolean;
-}
+const BLUE = "#1B4FD8";
 
-const navLinkClass =
-  "whitespace-nowrap text-xs sm:text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-primary transition shrink-0";
+const NAV_LINKS = [
+  { label: "الرئيسية", href: "/" },
+  { label: "الأدوات",  href: "/tools" },
+  { label: "الأسعار",  href: "/pricing" },
+  { label: "المدونة",  href: "/blog" },
+];
 
-export default function WzrdPublicHeader({ credits, showCredits = true }: WzrdPublicHeaderProps) {
-  const [, navigate] = useLocation();
-  const { locale, toggleLocale, t } = useI18n();
-  const { theme, toggleTheme, switchable } = useTheme();
+export default function WzrdPublicHeader() {
+  const [location, navigate] = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
   const { user } = useAuth();
-  const showCommandCenter = Boolean(user && "canAccessCommandCenter" in user && (user as { canAccessCommandCenter?: boolean }).canAccessCommandCenter);
+
+  const isActive = (href: string) =>
+    href === "/" ? location === "/" : location.startsWith(href);
 
   return (
-    <header className="fixed top-4 left-0 right-0 z-50 flex justify-center px-3 sm:px-5 pointer-events-none">
-      <div
-        className="pointer-events-auto flex w-full max-w-6xl items-center gap-2 sm:gap-3 rounded-full border-[0.5px] border-white/50 dark:border-zinc-600/50 bg-white/75 dark:bg-zinc-950/70 backdrop-blur-2xl pl-3 pr-2 py-2 sm:pl-5 sm:pr-3 sm:py-2.5 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.18),0_0_0_1px_rgba(255,255,255,0.1)_inset] dark:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.06)_inset]"
+    <>
+      {/* ── Google Font ── */}
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link
+        href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap"
+        rel="stylesheet"
+      />
+
+      <header
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+          background: "rgba(250,250,248,0.96)",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
+          borderBottom: "1px solid #E8E3DC",
+          fontFamily: "'Cairo', 'Segoe UI', sans-serif",
+        }}
       >
-        <a href="/tools" className="flex shrink-0 items-baseline gap-1" onClick={(e) => { e.preventDefault(); navigate("/tools"); }}>
-          <span className="font-display text-base font-bold tracking-tight text-zinc-900 dark:text-white sm:text-lg">
-            WZZRD
-          </span>
-          <span className="wzrd-badge-cyan py-0.5 text-[10px] font-semibold leading-none sm:text-[11px]">AI</span>
-        </a>
-
-        <nav className="flex min-w-0 flex-1 items-center justify-center gap-3 sm:gap-5 overflow-x-auto scrollbar-hide px-1 py-0.5">
-          <a href="/tools" className={navLinkClass} onClick={(e) => { e.preventDefault(); navigate("/tools"); }}>
-            {t("wzrd.tools")}
-          </a>
-          <a href="/profile" className={navLinkClass}>
-            {t("wzrd.profile")}
-          </a>
-          <a href="/pricing" className={navLinkClass}>
-            {t("wzrd.buyCredits")}
-          </a>
-          <a href="/my-brand" className={navLinkClass}>
-            {locale === "ar" ? "صحة البراند" : "My Brand"}
-          </a>
-          <a href="/copilot" className={navLinkClass}>
-            {locale === "ar" ? "المستشار" : "Copilot"}
-          </a>
-          <a href="/my-requests" className={navLinkClass}>
-            {locale === "ar" ? "طلباتي" : "My Requests"}
-          </a>
-          {showCommandCenter && (
-            <a
-              href="/dashboard"
-              className={`${navLinkClass} text-primary font-semibold`}
-            >
-              {locale === "ar" ? "مركز القيادة" : "Command Center"}
-            </a>
-          )}
-        </nav>
-
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-          {showCredits && credits != null && (
-            <div className="flex items-center gap-2 rounded-full border-[0.5px] border-primary/25 bg-gradient-to-r from-primary/12 to-cyan-500/10 px-3 py-1.5 dark:from-primary/20 dark:to-cyan-500/15">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-40" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-gradient-to-br from-cyan-300 to-primary" />
-              </span>
-              <span className="font-mono text-xs font-bold text-primary sm:text-sm">
-                {locale === "ar" ? toArabicNumerals(credits) : credits} {t("wzrd.credits")}
-              </span>
-            </div>
-          )}
-          {switchable && toggleTheme && (
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="rounded-full p-2 text-zinc-500 transition hover:bg-zinc-100 dark:hover:bg-zinc-800 dark:text-zinc-400"
-              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            >
-              {theme === "dark" ? (
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              ) : (
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                </svg>
-              )}
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={toggleLocale}
-            className="rounded-full bg-zinc-100 px-2.5 py-1.5 text-[10px] font-bold text-zinc-700 transition hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 sm:text-xs"
+        <div
+          style={{
+            maxWidth: 1200,
+            margin: "0 auto",
+            padding: "0 24px",
+            height: 68,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 24,
+          }}
+          dir="rtl"
+        >
+          {/* ── Logo → Home ── */}
+          <a
+            href="/"
+            onClick={(e) => { e.preventDefault(); navigate("/"); setMenuOpen(false); }}
+            style={{ display: "flex", alignItems: "center", flexShrink: 0, textDecoration: "none" }}
+            aria-label="WZZRD AI — الرئيسية"
           >
-            {locale === "ar" ? "EN" : "ع"}
+            <img
+              src="/logo.webp"
+              alt="WZZRD AI"
+              style={{ height: 38, width: "auto", objectFit: "contain" }}
+            />
+          </a>
+
+          {/* ── Desktop Nav ── */}
+          <nav
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
+              flex: 1,
+              justifyContent: "center",
+            }}
+            className="wzrd-nav-desktop"
+          >
+            {NAV_LINKS.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={(e) => { e.preventDefault(); navigate(link.href); }}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: 8,
+                  fontSize: 15,
+                  fontWeight: isActive(link.href) ? 700 : 600,
+                  color: isActive(link.href) ? BLUE : "#4B5563",
+                  background: isActive(link.href) ? "#EEF2FF" : "transparent",
+                  textDecoration: "none",
+                  transition: "all 0.15s",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+
+          {/* ── Desktop CTAs ── */}
+          <div
+            style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}
+            className="wzrd-nav-desktop"
+          >
+            {user ? (
+              <a
+                href="/tools"
+                onClick={(e) => { e.preventDefault(); navigate("/tools"); }}
+                style={{
+                  padding: "9px 22px",
+                  borderRadius: 8,
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: "#fff",
+                  background: BLUE,
+                  textDecoration: "none",
+                  boxShadow: "0 2px 8px rgba(27,79,216,0.3)",
+                }}
+              >
+                لوحة التحكم ←
+              </a>
+            ) : (
+              <>
+                <a
+                  href="/login"
+                  onClick={(e) => { e.preventDefault(); navigate("/login"); }}
+                  style={{
+                    padding: "9px 20px",
+                    borderRadius: 8,
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: "#374151",
+                    background: "transparent",
+                    border: "1.5px solid #D1D5DB",
+                    textDecoration: "none",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  تسجيل الدخول
+                </a>
+                <a
+                  href="/signup"
+                  onClick={(e) => { e.preventDefault(); navigate("/signup"); }}
+                  style={{
+                    padding: "9px 22px",
+                    borderRadius: 8,
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: "#fff",
+                    background: BLUE,
+                    textDecoration: "none",
+                    boxShadow: "0 2px 8px rgba(27,79,216,0.3)",
+                  }}
+                >
+                  ابدأ مجاناً ←
+                </a>
+              </>
+            )}
+          </div>
+
+          {/* ── Mobile Hamburger ── */}
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="wzrd-nav-mobile"
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 8,
+              color: "#374151",
+              display: "none",
+            }}
+            aria-label="القائمة"
+          >
+            {menuOpen ? (
+              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
           </button>
         </div>
-      </div>
-    </header>
+
+        {/* ── Mobile Menu ── */}
+        {menuOpen && (
+          <div
+            dir="rtl"
+            style={{
+              background: "#FAFAF8",
+              borderTop: "1px solid #E8E3DC",
+              padding: "16px 24px 24px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 4,
+            }}
+          >
+            {NAV_LINKS.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={(e) => { e.preventDefault(); navigate(link.href); setMenuOpen(false); }}
+                style={{
+                  padding: "12px 16px",
+                  borderRadius: 8,
+                  fontSize: 16,
+                  fontWeight: isActive(link.href) ? 700 : 600,
+                  color: isActive(link.href) ? BLUE : "#374151",
+                  background: isActive(link.href) ? "#EEF2FF" : "transparent",
+                  textDecoration: "none",
+                  display: "block",
+                }}
+              >
+                {link.label}
+              </a>
+            ))}
+            <div style={{ borderTop: "1px solid #E8E3DC", marginTop: 12, paddingTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+              {user ? (
+                <a
+                  href="/tools"
+                  onClick={(e) => { e.preventDefault(); navigate("/tools"); setMenuOpen(false); }}
+                  style={{ padding: "12px 16px", borderRadius: 8, fontSize: 15, fontWeight: 700, color: "#fff", background: BLUE, textDecoration: "none", textAlign: "center" }}
+                >
+                  لوحة التحكم ←
+                </a>
+              ) : (
+                <>
+                  <a
+                    href="/login"
+                    onClick={(e) => { e.preventDefault(); navigate("/login"); setMenuOpen(false); }}
+                    style={{ padding: "12px 16px", borderRadius: 8, fontSize: 15, fontWeight: 700, color: "#374151", border: "1.5px solid #D1D5DB", textDecoration: "none", textAlign: "center" }}
+                  >
+                    تسجيل الدخول
+                  </a>
+                  <a
+                    href="/signup"
+                    onClick={(e) => { e.preventDefault(); navigate("/signup"); setMenuOpen(false); }}
+                    style={{ padding: "12px 16px", borderRadius: 8, fontSize: 15, fontWeight: 700, color: "#fff", background: BLUE, textDecoration: "none", textAlign: "center" }}
+                  >
+                    ابدأ مجاناً ←
+                  </a>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Responsive CSS ── */}
+        <style>{`
+          @media (max-width: 768px) {
+            .wzrd-nav-desktop { display: none !important; }
+            .wzrd-nav-mobile  { display: block !important; }
+          }
+          @media (min-width: 769px) {
+            .wzrd-nav-mobile  { display: none !important; }
+          }
+        `}</style>
+      </header>
+    </>
   );
 }

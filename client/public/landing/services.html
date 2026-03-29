@@ -1,255 +1,275 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<!-- Google tag (gtag.js) — GA4 -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-20GXRBPFGR"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-20GXRBPFGR');</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>الخدمات — WZZRD AI | بناء أنظمة براند متكاملة</title>
-<meta name="description" content="مش بنعمل بوستات — بنبني أنظمة براند. تشخيص، بناء، وإطلاق براند يبيع في السوق العربي.">
-<meta property="og:title" content="خدمات WZZRD AI — أنظمة براند متكاملة">
-<meta property="og:description" content="مش بنعمل بوستات. بنبني أنظمة براند تشتغل.">
+<title>خدمات WZZRD AI — تشخيص البراند والتسويق بالذكاء الاصطناعي</title>
+<meta name="description" content="خدمات تشخيص البراند والتسويق الرقمي بالذكاء الاصطناعي. من التشخيص السريع لحزم الاستشارة الكاملة.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-20GXRBPFGR"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-20GXRBPFGR');</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0D0D1A;--bg2:#111120;--bg3:#16162A;--text:#F0F0FF;--text2:#9090B0;--card:rgba(255,255,255,0.04);--border:rgba(255,255,255,0.08);--cobalt:#7058F8;--cobalt2:#9580FF;--cyan:#22D3EE;--green:#10B981;--amber:#F59E0B;--red:#EF4444;--f:'IBM Plex Sans Arabic',sans-serif;--fe:'Space Grotesk',sans-serif}
+:root{
+  --bg:#FAFAF5;--bg2:#F4F3EE;--surface:#FFFFFF;
+  --blue:#1B4FD8;--blue2:#1239A6;--blue-light:#EEF2FF;--blue-glow:rgba(27,79,216,0.12);--blue-border:rgba(27,79,216,0.2);
+  --text:#111827;--text2:#374151;--muted:#6B7280;--border:#E5E7EB;--border2:#D1D5DB;
+  --green:#059669;--green-bg:#ECFDF5;--f:'Cairo','Segoe UI',sans-serif;
+}
 html{scroll-behavior:smooth}
 body{font-family:var(--f);background:var(--bg);color:var(--text);line-height:1.75;overflow-x:hidden;-webkit-font-smoothing:antialiased}
-.en-mode{direction:ltr;font-family:var(--fe)}
 a{color:inherit;text-decoration:none}
-.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(13,13,26,0.7);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);transition:all .4s}
-.nav.scrolled{box-shadow:0 2px 40px rgba(112,88,248,0.08)}
-.nav-in{max-width:1140px;margin:0 auto;padding:14px 28px;display:flex;align-items:center;justify-content:space-between}
-.logo{font-family:var(--fe);font-weight:800;font-size:20px;display:flex;align-items:center;gap:6px}
-.logo-badge{background:var(--cobalt);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px}
-.nav-r{display:flex;align-items:center;gap:24px}
-.nav-r a{font-size:13.5px;color:var(--text2);font-weight:500;transition:.2s}.nav-r a:hover{color:var(--text)}
-.btn-nav{padding:9px 22px;border-radius:8px;font-size:13px;font-weight:700;transition:all .25s;cursor:pointer;border:none;font-family:var(--f)}
-.btn-primary{background:var(--cobalt);color:#fff;box-shadow:0 0 20px rgba(112,88,248,0.3)}.btn-primary:hover{background:var(--cobalt2);transform:translateY(-1px)}
-.lang{font-size:12px;padding:5px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-weight:600;font-family:var(--fe);transition:.2s}.lang:hover{border-color:var(--cobalt);color:var(--cobalt)}
+.btn{padding:10px 22px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;border:none;font-family:var(--f);transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.btn-outline{background:transparent;border:1.5px solid var(--border2);color:var(--text2)}.btn-outline:hover{border-color:var(--blue);color:var(--blue)}
+.btn-primary{background:var(--blue);color:#fff;box-shadow:0 4px 14px var(--blue-glow)}.btn-primary:hover{background:var(--blue2);transform:translateY(-1px)}
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(250,250,245,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);transition:box-shadow .3s}
+.nav.scrolled{box-shadow:0 2px 16px rgba(0,0,0,0.08)}
+.nav-in{max-width:1120px;margin:0 auto;padding:14px 28px;display:flex;align-items:center;justify-content:space-between}
+.logo img{height:36px}
+.nav-links{display:flex;align-items:center;gap:28px}
+.nav-links a{font-size:14px;font-weight:600;color:var(--text2);transition:.2s;padding:4px 0;border-bottom:2px solid transparent}
+.nav-links a:hover,.nav-links a.active{color:var(--blue);border-bottom-color:var(--blue)}
+.nav-r{display:flex;align-items:center;gap:12px}
 .mob-tog{display:none;background:none;border:none;font-size:24px;cursor:pointer;color:var(--text)}
-@media(max-width:860px){.nav-r{display:none}.mob-tog{display:block}.nav-r.open{display:flex;flex-direction:column;position:absolute;top:100%;right:0;left:0;background:var(--bg);padding:24px;gap:16px;border-bottom:1px solid var(--border)}}
-.hero{padding:150px 28px 80px;text-align:center;position:relative;overflow:hidden}
-.hero-glow{position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:700px;height:500px;background:radial-gradient(ellipse,rgba(112,88,248,0.15),transparent 70%);pointer-events:none}
-.hero-inner{max-width:700px;margin:0 auto;position:relative;z-index:1}
-.hero-chip{display:inline-flex;align-items:center;gap:8px;padding:7px 18px;border-radius:100px;background:rgba(112,88,248,0.12);color:var(--cobalt2);font-size:13px;font-weight:600;margin-bottom:24px;border:1px solid rgba(112,88,248,0.25)}
-.hero h1{font-size:clamp(32px,5vw,52px);font-weight:800;line-height:1.15;letter-spacing:-1px;margin-bottom:20px}
-.hero h1 em{font-style:normal;background:linear-gradient(135deg,var(--cobalt),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.hero-sub{font-size:17px;color:var(--text2);line-height:1.75;margin-bottom:36px}
-.btn-hero{display:inline-flex;align-items:center;gap:8px;padding:16px 36px;border-radius:10px;font-size:16px;font-weight:700;background:var(--cobalt);color:#fff;box-shadow:0 0 30px rgba(112,88,248,0.4);transition:all .25s;font-family:var(--f);border:none;cursor:pointer}
-.btn-hero:hover{background:var(--cobalt2);transform:translateY(-2px);box-shadow:0 0 50px rgba(112,88,248,0.6)}
-section{padding:80px 28px}
-.sec-in{max-width:1000px;margin:0 auto}
-.tc{text-align:center}
-.sec-lab{display:inline-block;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--cobalt2);margin-bottom:14px;padding:5px 14px;border-radius:100px;background:rgba(112,88,248,0.1);border:1px solid rgba(112,88,248,0.2)}
-.sec-h{font-size:clamp(26px,4vw,40px);font-weight:800;line-height:1.2;letter-spacing:-0.5px;margin-bottom:16px}
-.sec-p{font-size:17px;color:var(--text2);line-height:1.75;max-width:580px;margin:0 auto 48px}
-.phases{margin-top:48px;display:flex;flex-direction:column;gap:20px}
-.phase{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:36px;display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:start;transition:.3s}
-.phase:hover{border-color:rgba(112,88,248,0.3);background:rgba(112,88,248,0.04);transform:translateY(-2px)}
-.phase-num{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;font-family:var(--fe);color:#fff;flex-shrink:0}
-.phase-num.a{background:linear-gradient(135deg,var(--cobalt),var(--cobalt2))}
-.phase-num.b{background:linear-gradient(135deg,var(--amber),#F97316)}
-.phase-num.t{background:linear-gradient(135deg,var(--green),#06B6D4)}
-.phase-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
-.phase-label.a{color:var(--cobalt2)}.phase-label.b{color:var(--amber)}.phase-label.t{color:var(--green)}
-.phase h3{font-size:20px;font-weight:800;margin-bottom:10px}
-.phase p{font-size:14.5px;color:var(--text2);line-height:1.7;margin-bottom:16px}
-.phase-items{display:flex;flex-direction:column;gap:8px}
-.phase-item{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;color:var(--text2)}
-.phase-item::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0;margin-top:2px}
-.phase-price{display:inline-block;margin-top:16px;font-size:13px;font-weight:700;padding:6px 16px;border-radius:100px;background:rgba(112,88,248,0.1);color:var(--cobalt2);border:1px solid rgba(112,88,248,0.2)}
-.diff-bg{background:var(--bg2)}
-.diff-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:48px}
-.diff-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px}
-.diff-box h4{font-size:15px;font-weight:700;margin-bottom:16px}
-.diff-box ul{list-style:none;display:flex;flex-direction:column;gap:10px}
-.diff-box li{font-size:14px;color:var(--text2);display:flex;align-items:flex-start;gap:8px;line-height:1.5}
-.diff-quote{grid-column:span 2;text-align:center;padding:28px;font-size:17px;color:var(--text2);font-style:italic;background:rgba(112,88,248,0.06);border-radius:16px;border:1px solid rgba(112,88,248,0.15)}
-@media(max-width:640px){.diff-grid{grid-template-columns:1fr}.diff-quote{grid-column:span 1}}
-.process-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:48px}
-.process-step{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;text-align:center;transition:.3s}
-.process-step:hover{border-color:rgba(112,88,248,0.3);transform:translateY(-2px)}
-.process-icon{font-size:32px;margin-bottom:14px}
-.process-step h3{font-size:15px;font-weight:700;margin-bottom:8px}
-.process-step p{font-size:13px;color:var(--text2);line-height:1.6}
-.cta-s{padding:100px 28px;text-align:center;position:relative;overflow:hidden}
-.cta-s::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(112,88,248,0.12),transparent);pointer-events:none}
-.cta-s h2{font-size:clamp(28px,5vw,48px);font-weight:800;letter-spacing:-1px;margin-bottom:16px;position:relative}
-.cta-s p{font-size:18px;color:var(--text2);margin-bottom:36px;position:relative}
-.cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;position:relative}
-.btn-w{display:inline-flex;align-items:center;gap:8px;padding:16px 36px;border-radius:10px;font-size:16px;font-weight:700;background:var(--cobalt);color:#fff;box-shadow:0 0 40px rgba(112,88,248,0.4);transition:all .25s;font-family:var(--f)}
-.btn-w:hover{background:var(--cobalt2);transform:translateY(-2px)}
-.btn-outline{display:inline-flex;align-items:center;gap:8px;padding:16px 36px;border-radius:10px;font-size:16px;font-weight:700;background:transparent;color:var(--text2);border:1px solid var(--border);transition:all .25s;font-family:var(--f)}
-.btn-outline:hover{border-color:rgba(255,255,255,0.2);color:var(--text)}
-footer{padding:40px 28px;border-top:1px solid var(--border);text-align:center}
-.ft-logo{font-family:var(--fe);font-weight:800;font-size:18px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:6px}
-.ft-logo-badge{background:var(--cobalt);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px}
-.ft-tag{font-size:13px;color:var(--text2);margin-bottom:16px;font-style:italic}
-.ft-links{display:flex;gap:20px;justify-content:center;margin-bottom:16px}
-.ft-links a{font-size:13px;color:var(--text2);transition:.2s}.ft-links a:hover{color:var(--text)}
-.ft-copy{font-size:12px;color:var(--text2)}
-.fi{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}
+@media(max-width:860px){.nav-links{display:none}.mob-tog{display:block}.nav-links.open{display:flex;flex-direction:column;position:absolute;top:100%;right:0;left:0;background:var(--surface);padding:24px;gap:16px;border-bottom:1px solid var(--border);box-shadow:0 8px 24px rgba(0,0,0,0.08)}}
+.hero{padding:140px 28px 72px;text-align:center;background:var(--bg)}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 18px;border-radius:100px;background:var(--blue-light);color:var(--blue);font-size:13px;font-weight:700;margin-bottom:24px;border:1px solid var(--blue-border)}
+.hero h1{font-size:clamp(30px,5vw,52px);font-weight:900;line-height:1.2;letter-spacing:-1.5px;margin-bottom:16px}
+.hero h1 em{font-style:normal;color:var(--blue)}
+.hero-sub{font-size:17px;color:var(--muted);margin-bottom:32px;max-width:560px;margin-left:auto;margin-right:auto}
+.section{padding:72px 28px}
+.section-inner{max-width:1100px;margin:0 auto}
+.section-label{font-size:13px;font-weight:700;color:var(--blue);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;text-align:center}
+.section-title{font-size:clamp(24px,4vw,38px);font-weight:900;line-height:1.2;letter-spacing:-1px;text-align:center;margin-bottom:12px}
+.section-sub{font-size:16px;color:var(--muted);text-align:center;margin-bottom:48px;max-width:560px;margin-left:auto;margin-right:auto}
+.services-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+@media(max-width:900px){.services-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.services-grid{grid-template-columns:1fr}}
+.svc-card{background:var(--surface);border:1.5px solid var(--border);border-radius:16px;padding:28px;transition:all .25s}
+.svc-card:hover{border-color:var(--blue-border);box-shadow:0 8px 32px var(--blue-glow);transform:translateY(-3px)}
+.svc-card.featured{border-color:var(--blue);background:linear-gradient(135deg,var(--blue-light),var(--surface))}
+.svc-icon{font-size:32px;margin-bottom:14px}
+.svc-badge{display:inline-block;font-size:11px;font-weight:800;padding:3px 10px;border-radius:100px;margin-bottom:10px}
+.svc-badge.blue{background:var(--blue);color:#fff}
+.svc-badge.green{background:var(--green-bg);color:var(--green)}
+.svc-name{font-size:19px;font-weight:800;margin-bottom:8px}
+.svc-desc{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:16px}
+.svc-includes{margin-bottom:20px}
+.svc-includes p{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px}
+.svc-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;font-size:13px;color:var(--text2)}
+.svc-item span{color:var(--blue);font-weight:900;flex-shrink:0;margin-top:2px}
+.svc-price{font-size:22px;font-weight:900;color:var(--text);margin-bottom:4px}
+.svc-price-note{font-size:12px;color:var(--muted);margin-bottom:16px}
+.how-bg{background:var(--bg2)}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:48px}
+@media(max-width:860px){.steps{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.steps{grid-template-columns:1fr}}
+.step{text-align:center;padding:24px}
+.step-n{width:48px;height:48px;border-radius:50%;background:var(--blue);color:#fff;font-size:18px;font-weight:900;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.step-title{font-size:15px;font-weight:800;margin-bottom:6px}
+.step-desc{font-size:13px;color:var(--muted);line-height:1.6}
+.faq-list{max-width:720px;margin:48px auto 0}
+.faq-item{border-bottom:1px solid var(--border);padding:20px 0}
+.faq-q{font-size:16px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq-q span{color:var(--blue);font-size:20px;flex-shrink:0;transition:.2s}
+.faq-a{font-size:14px;color:var(--muted);line-height:1.7;margin-top:12px;display:none}
+.faq-item.open .faq-a{display:block}
+.faq-item.open .faq-q span{transform:rotate(45deg)}
+.cta-final{padding:80px 28px;text-align:center}
+.cta-final h2{font-size:clamp(26px,4vw,40px);font-weight:900;margin-bottom:14px;letter-spacing:-1px}
+.cta-final p{font-size:16px;color:var(--muted);margin-bottom:32px}
+footer{background:var(--text);color:#fff;padding:48px 28px 28px}
+.footer-in{max-width:1100px;margin:0 auto}
+.footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1.5fr;gap:40px;margin-bottom:40px}
+@media(max-width:860px){.footer-top{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.footer-top{grid-template-columns:1fr}}
+.footer-brand p{font-size:13px;color:rgba(255,255,255,0.55);line-height:1.7;margin-top:12px;max-width:260px}
+.footer-col h4{font-size:13px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:16px}
+.footer-col a{display:block;font-size:14px;color:rgba(255,255,255,0.65);margin-bottom:10px;transition:.2s}
+.footer-col a:hover{color:#fff}
+.footer-nl p{font-size:13px;color:rgba(255,255,255,0.55);margin-bottom:14px;line-height:1.6}
+.nl-form{display:flex;gap:8px}
+.nl-form input{flex:1;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:#fff;font-size:13px;font-family:var(--f);outline:none}
+.nl-form input::placeholder{color:rgba(255,255,255,0.35)}
+.nl-form button{padding:10px 16px;border-radius:8px;background:var(--blue);color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:var(--f);white-space:nowrap}
+.footer-bottom{border-top:1px solid rgba(255,255,255,0.1);padding-top:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.footer-bottom p{font-size:12px;color:rgba(255,255,255,0.35)}
+.footer-bottom-links{display:flex;gap:20px}
+.footer-bottom-links a{font-size:12px;color:rgba(255,255,255,0.35)}
+.fi{opacity:0;transform:translateY(24px);transition:opacity .6s,transform .6s}
 .fi.v{opacity:1;transform:translateY(0)}
 </style>
 </head>
 <body>
+
 <nav class="nav" id="nav">
- <div class="nav-in">
-  <a href="/" class="logo">WZZRD <span class="logo-badge">AI</span></a>
-  <div class="nav-r" id="navLinks">
-   <a href="/" data-ar="الرئيسية" data-en="Home">الرئيسية</a>
-   <a href="/pricing" data-ar="الأسعار" data-en="Pricing">الأسعار</a>
-   <a href="/login" style="color:var(--text2);font-size:13.5px;font-weight:500" data-ar="دخول" data-en="Login">دخول</a>
-   <a href="/signup" class="btn-nav btn-primary" data-ar="ابدأ مجاناً" data-en="Start Free">ابدأ مجاناً</a>
-   <button class="lang" onclick="tl()">EN</button>
+  <div class="nav-in">
+    <a href="/" class="logo"><img src="/logo.webp" alt="WZZRD AI" /></a>
+    <div class="nav-links" id="navLinks">
+      <a href="/">الرئيسية</a>
+      <a href="/tools">الأدوات</a>
+      <a href="/pricing">الأسعار</a>
+      <a href="/landing/services.html" class="active">الخدمات</a>
+    </div>
+    <div class="nav-r">
+      <a href="/login" class="btn btn-outline">تسجيل الدخول</a>
+      <a href="/signup" class="btn btn-primary">ابدأ مجاناً ←</a>
+    </div>
+    <button class="mob-tog" onclick="document.getElementById('navLinks').classList.toggle('open')">&#9776;</button>
   </div>
-  <button class="mob-tog" onclick="document.getElementById('navLinks').classList.toggle('open')">☰</button>
- </div>
 </nav>
 
 <section class="hero">
- <div class="hero-glow"></div>
- <div class="hero-inner">
-  <div class="hero-chip fi" data-ar="خدمات WZZRD AI × Primo Marca" data-en="WZZRD AI × Primo Marca Services">خدمات WZZRD AI × Primo Marca</div>
-  <h1 class="fi" data-ar='مش بنعمل <em>بوستات</em> —<br>بنبني أنظمة براند' data-en='We Don&apos;t Make <em>Posts</em> —<br>We Build Brand Systems'>مش بنعمل <em>بوستات</em> —<br>بنبني أنظمة براند</h1>
-  <p class="hero-sub fi" data-ar="فريق متخصص في استراتيجيات البراند — بنشتغل مع شركات في مصر والسعودية والإمارات. WZZRD AI أداتنا الذكية اللي بتديك تشخيص أولي مجاناً." data-en="Brand strategy team working with companies across Egypt, KSA, and UAE. WZZRD AI is our intelligent tool for free initial diagnosis.">فريق متخصص في استراتيجيات البراند — بنشتغل مع شركات في مصر والسعودية والإمارات. WZZRD AI أداتنا الذكية اللي بتديك تشخيص أولي مجاناً.</p>
-  <a href="/signup" class="btn-hero fi" data-ar="ابدأ بالتشخيص المجاني ←" data-en="Start Free Diagnosis ←">ابدأ بالتشخيص المجاني ←</a>
- </div>
+  <div class="hero-badge">🎯 خدماتنا</div>
+  <h1>من التشخيص السريع<br>لـ<em>الاستشارة الكاملة</em></h1>
+  <p class="hero-sub">سواء كنت بتبدأ أو بتسكيل — عندنا الخدمة الصح لمرحلتك.</p>
+  <a href="/signup" class="btn btn-primary" style="font-size:16px;padding:14px 32px">ابدأ مجاناً ←</a>
 </section>
 
-<section style="background:var(--bg2)">
- <div class="sec-in tc">
-  <div class="sec-lab fi" data-ar="منهجية العمل" data-en="Our Methodology">منهجية العمل</div>
-  <h2 class="sec-h fi" data-ar="٣ مراحل — من التشخيص للإطلاق" data-en="3 Phases — From Diagnosis to Launch">٣ مراحل — من التشخيص للإطلاق</h2>
-  <p class="sec-p fi" data-ar="كل مشروع بيمر بـ ٣ مراحل واضحة — مفيش تخمين، مفيش وقت ضايع." data-en="Every project goes through 3 clear phases — no guessing, no wasted time.">كل مشروع بيمر بـ ٣ مراحل واضحة — مفيش تخمين، مفيش وقت ضايع.</p>
-  <div class="phases">
-   <div class="phase fi">
-    <div class="phase-num a">١</div>
-    <div>
-     <div class="phase-label a" data-ar="المرحلة الأولى — فحص" data-en="Phase One — Audit">المرحلة الأولى — فحص</div>
-     <h3 data-ar="التشخيص — اعرف وضعك الحقيقي" data-en="Diagnosis — Know Your Real Status">التشخيص — اعرف وضعك الحقيقي</h3>
-     <p data-ar="قبل ما نبني أي حاجة، لازم نفهم المشكلة الحقيقية. بنستخدم WZZRD AI + جلسة استراتيجية عميقة." data-en="Before building anything, we need to understand the real problem. We use WZZRD AI + a deep strategy session.">قبل ما نبني أي حاجة، لازم نفهم المشكلة الحقيقية. بنستخدم WZZRD AI + جلسة استراتيجية عميقة.</p>
-     <div class="phase-items">
-      <div class="phase-item" data-ar="تشخيص البراند الشامل بـ WZZRD AI" data-en="Full brand diagnosis with WZZRD AI">تشخيص البراند الشامل بـ WZZRD AI</div>
-      <div class="phase-item" data-ar="تحليل المنافسين والسوق" data-en="Competitor and market analysis">تحليل المنافسين والسوق</div>
-      <div class="phase-item" data-ar="تحديد الـ positioning الصح" data-en="Identifying the right positioning">تحديد الـ positioning الصح</div>
-      <div class="phase-item" data-ar="تقرير مكتوب بالأولويات" data-en="Written report with priorities">تقرير مكتوب بالأولويات</div>
-     </div>
-     <span class="phase-price" data-ar="يبدأ من ٥٠٠$" data-en="Starting from $500">يبدأ من ٥٠٠$</span>
+<section class="section">
+  <div class="section-inner">
+    <div class="section-label fi">خدماتنا</div>
+    <h2 class="section-title fi">اختار الخدمة المناسبة لمرحلتك</h2>
+    <p class="section-sub fi">من الأدوات الـ self-serve للحزم الكاملة مع خبير — كل حاجة موجودة.</p>
+    <div class="services-grid">
+      <div class="svc-card fi">
+        <div class="svc-icon">🔬</div>
+        <div class="svc-badge blue">الأكثر طلباً</div>
+        <div class="svc-name">تشخيص البراند الذكي</div>
+        <div class="svc-desc">تقرير شامل عن صحة علامتك التجارية في 30 لأنية — بدون وكالة وبدون انتظار.</div>
+        <div class="svc-includes">
+          <p>يشمل:</p>
+          <div class="svc-item"><span>✓</span> تحليل على 5 محاور أساسية</div>
+          <div class="svc-item"><span>✓</span> تقرير مفصل بالمشاكل والحلول</div>
+          <div class="svc-item"><span>✓</span> خطوات عملية للتنفيذ الفوري</div>
+          <div class="svc-item"><span>✓</span> مقارنة بالمعايير العالمية</div>
+        </div>
+        <div class="svc-price">20 كريدت</div>
+        <div class="svc-price-note">≈ 5% من تكلفة وكالة تقليدية</div>
+        <a href="/signup" class="btn btn-primary" style="width:100%;justify-content:center">ابدأ التشخيص ←</a>
+      </div>
+      <div class="svc-card featured fi">
+        <div class="svc-icon">🚀</div>
+        <div class="svc-badge blue">الأفضل قيمة</div>
+        <div class="svc-name">حزمة التشخيص الكامل</div>
+        <div class="svc-desc">شغّل كل الأدوات الـ 6 وخد صورة كاملة عن البراند بتاعك من كل الاتجاهات.</div>
+        <div class="svc-includes">
+          <p>يشمل:</p>
+          <div class="svc-item"><span>✓</span> الـ 6 أدوات التشخيصية كاملة</div>
+          <div class="svc-item"><span>✓</span> تقارير مفصلة لكل أداة</div>
+          <div class="svc-item"><span>✓</span> خطة تحسين شاملة</div>
+          <div class="svc-item"><span>✓</span> أولوية الدعم الفني</div>
+        </div>
+        <div class="svc-price">140 كريدت</div>
+        <div class="svc-price-note">بدل 140 كريدت — وفّر 20%</div>
+        <a href="/pricing" class="btn btn-primary" style="width:100%;justify-content:center">شوف الباقات ←</a>
+      </div>
+      <div class="svc-card fi">
+        <div class="svc-icon">💼</div>
+        <div class="svc-badge green">للشركات</div>
+        <div class="svc-name">استشارة مع خبير</div>
+        <div class="svc-desc">جلسة استشارية مع خبير براند متخصص — بعد التشخيص الآلي لتعمق أكتر في الحلول.</div>
+        <div class="svc-includes">
+          <p>يشمل:</p>
+          <div class="svc-item"><span>✓</span> جلسة 60 دقيقة مع خبير</div>
+          <div class="svc-item"><span>✓</span> مراجعة تقارير التشخيص</div>
+          <div class="svc-item"><span>✓</span> خطة تنفيذية مخصصة</div>
+          <div class="svc-item"><span>✓</span> متابعة لمدة أسبوعين</div>
+        </div>
+        <div class="svc-price">تواصل معنا</div>
+        <div class="svc-price-note">سعر مخصص حسب الاحتياج</div>
+        <a href="https://wa.me/201000000000" class="btn btn-outline" style="width:100%;justify-content:center">تواصل على واتساب ←</a>
+      </div>
     </div>
-   </div>
-   <div class="phase fi">
-    <div class="phase-num b">٢</div>
-    <div>
-     <div class="phase-label b" data-ar="المرحلة الثانية — بناء" data-en="Phase Two — Build">المرحلة الثانية — بناء</div>
-     <h3 data-ar="البناء — هوية وأنظمة تشتغل" data-en="Build — Identity and Systems That Work">البناء — هوية وأنظمة تشتغل</h3>
-     <p data-ar="بنبني الأساس اللي البراند بيقف عليه — من الـ messaging للهوية البصرية للـ content system." data-en="We build the foundation the brand stands on — from messaging to visual identity to content system.">بنبني الأساس اللي البراند بيقف عليه — من الـ messaging للهوية البصرية للـ content system.</p>
-     <div class="phase-items">
-      <div class="phase-item" data-ar="Brand Voice & Messaging Guide" data-en="Brand Voice & Messaging Guide">Brand Voice &amp; Messaging Guide</div>
-      <div class="phase-item" data-ar="هوية بصرية متكاملة (لوجو، ألوان، خطوط)" data-en="Full visual identity (logo, colors, fonts)">هوية بصرية متكاملة (لوجو، ألوان، خطوط)</div>
-      <div class="phase-item" data-ar="Content System + قوالب جاهزة" data-en="Content System + ready templates">Content System + قوالب جاهزة</div>
-      <div class="phase-item" data-ar="Website Copywriting بالعربي والإنجليزي" data-en="Website Copywriting in Arabic and English">Website Copywriting بالعربي والإنجليزي</div>
-     </div>
-     <span class="phase-price" data-ar="يبدأ من ١٢٠٠$" data-en="Starting from $1,200">يبدأ من ١٢٠٠$</span>
+  </div>
+</section>
+
+<section class="section how-bg">
+  <div class="section-inner">
+    <div class="section-label fi">كيف تبدأ</div>
+    <h2 class="section-title fi">٤ خطوات من الصفر للتقرير</h2>
+    <div class="steps">
+      <div class="step fi"><div class="step-n">١</div><div class="step-title">سجّل حسابك</div><div class="step-desc">بدون بطاقة بنكية — دقيقة واحدة بس.</div></div>
+      <div class="step fi"><div class="step-n">٢</div><div class="step-title">اختار الأداة</div><div class="step-desc">ابدأ بتشخيص البراند لو مش عارف من فين.</div></div>
+      <div class="step fi"><div class="step-n">٣</div><div class="step-title">أجب على الأسئلة</div><div class="step-desc">أسئلة ذكية — الـ AI بيفهم السياق ويحلل بعمق.</div></div>
+      <div class="step fi"><div class="step-n">٤</div><div class="step-title">استلم التقرير</div><div class="step-desc">تقرير فوري جاهز للتنفيذ — بدون انتظار.</div></div>
     </div>
-   </div>
-   <div class="phase fi">
-    <div class="phase-num t">٣</div>
-    <div>
-     <div class="phase-label t" data-ar="المرحلة الثالثة — إطلاق" data-en="Phase Three — Launch">المرحلة الثالثة — إطلاق</div>
-     <h3 data-ar="الإطلاق — نزّل السوق بثقة" data-en="Launch — Enter Market with Confidence">الإطلاق — نزّل السوق بثقة</h3>
-     <p data-ar="بنساعدك تنزل السوق بطريقة صح — بـ launch strategy واضحة وأدوات قياس حقيقية." data-en="We help you enter the market the right way — with a clear launch strategy and real measurement tools.">بنساعدك تنزل السوق بطريقة صح — بـ launch strategy واضحة وأدوات قياس حقيقية.</p>
-     <div class="phase-items">
-      <div class="phase-item" data-ar="Launch Campaign Strategy" data-en="Launch Campaign Strategy">Launch Campaign Strategy</div>
-      <div class="phase-item" data-ar="إعداد قنوات التواصل + أول ٣٠ يوم" data-en="Channel setup + first 30 days plan">إعداد قنوات التواصل + أول ٣٠ يوم</div>
-      <div class="phase-item" data-ar="KPIs + Brand Health Dashboard" data-en="KPIs + Brand Health Dashboard">KPIs + Brand Health Dashboard</div>
-      <div class="phase-item" data-ar="متابعة شهرية لمدة ٣ أشهر" data-en="Monthly follow-up for 3 months">متابعة شهرية لمدة ٣ أشهر</div>
-     </div>
-     <span class="phase-price" data-ar="يبدأ من ٨٠٠$" data-en="Starting from $800">يبدأ من ٨٠٠$</span>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-inner">
+    <div class="section-label fi">أسئلة شائعة</div>
+    <h2 class="section-title fi">عندك سؤال؟</h2>
+    <div class="faq-list">
+      <div class="faq-item fi"><div class="faq-q" onclick="toggleFaq(this)">إيه الفرق بين WZZRD AI والوكالات التقليدية؟<span>+</span></div><div class="faq-a">الوكالات بتاخد أسابيع وآلاف الجنيهات عشان تعمل تقرير براند. WZZRD AI بيديك نفس العمق في 30 ثانية وبتكلفة أقل بـ 93%.</div></div>
+      <div class="faq-item fi"><div class="faq-q" onclick="toggleFaq(this)">الكريدت بتنتهي؟<span>+</span></div><div class="faq-a">الكريدت مش بتنتهي بتاريخ محدد — بتستخدمها لما تحتاجها.</div></div>
+      <div class="faq-item fi"><div class="faq-q" onclick="toggleFaq(this)">التقارير بالعربي؟<span>+</span></div><div class="faq-a">أيوه — كل التقارير بالعربي الكامل، مع مصطلحات إنجليزية للمفاهيم التقنية عشان تكون واضحة.</div></div>
     </div>
-   </div>
   </div>
- </div>
 </section>
 
-<section class="diff-bg">
- <div class="sec-in tc">
-  <div class="sec-lab fi" data-ar="الفرق" data-en="The Difference">الفرق</div>
-  <h2 class="sec-h fi" data-ar="إحنا مش وكالة تسويق" data-en="We're Not a Marketing Agency">إحنا مش وكالة تسويق</h2>
-  <div class="diff-grid">
-   <div class="diff-box fi">
-    <h4 data-ar="❌ مش بنعمل" data-en="❌ We Don't">❌ مش بنعمل</h4>
-    <ul>
-     <li data-ar="مش بندير صفحات سوشيال ميديا" data-en="We don't manage social media pages">مش بندير صفحات سوشيال ميديا</li>
-     <li data-ar="مش بنعمل بوستات يومية" data-en="We don't make daily posts">مش بنعمل بوستات يومية</li>
-     <li data-ar="مش بنشتغل بالشهر" data-en="We don't do monthly retainers">مش بنشتغل بالشهر</li>
-    </ul>
-   </div>
-   <div class="diff-box fi">
-    <h4 data-ar="✅ بنعمل" data-en="✅ We Do">✅ بنعمل</h4>
-    <ul>
-     <li data-ar="بنشخّص المشكلة الحقيقية" data-en="Diagnose the real problem">بنشخّص المشكلة الحقيقية</li>
-     <li data-ar="بنبني نظام براند متكامل" data-en="Build a complete brand system">بنبني نظام براند متكامل</li>
-     <li data-ar="بنشتغل بالمشروع — بداية ونهاية ونتيجة" data-en="Project-based — start, finish, result">بنشتغل بالمشروع — بداية ونهاية ونتيجة</li>
-    </ul>
-   </div>
-   <div class="diff-quote fi" data-ar='"فكّر فينا كدكتور مش ممرض — بنشخّص، بنعالج، وبنخلّيك تمشي لوحدك."' data-en='"Think of us as a doctor, not a nurse — we diagnose, treat, and let you walk on your own."'>"فكّر فينا كدكتور مش ممرض — بنشخّص، بنعالج، وبنخلّيك تمشي لوحدك."</div>
-  </div>
- </div>
-</section>
-
-<section>
- <div class="sec-in tc">
-  <div class="sec-lab fi" data-ar="كيف نشتغل" data-en="How We Work">كيف نشتغل</div>
-  <h2 class="sec-h fi" data-ar="من أول تواصل لآخر تسليم" data-en="From First Contact to Final Delivery">من أول تواصل لآخر تسليم</h2>
-  <div class="process-grid">
-   <div class="process-step fi"><div class="process-icon">📋</div><h3 data-ar="١. تشخيص مجاني" data-en="1. Free Diagnosis">١. تشخيص مجاني</h3><p data-ar="ابدأ بـ WZZRD AI وشوف وضع البراند بتاعك" data-en="Start with WZZRD AI and see your brand status">ابدأ بـ WZZRD AI وشوف وضع البراند بتاعك</p></div>
-   <div class="process-step fi"><div class="process-icon">📞</div><h3 data-ar="٢. جلسة استراتيجية" data-en="2. Strategy Session">٢. جلسة استراتيجية</h3><p data-ar="٦٠ دقيقة مع خبير براند نفهم فيها وضعك بالتفصيل" data-en="60 minutes with a brand expert to understand your situation">٦٠ دقيقة مع خبير براند نفهم فيها وضعك بالتفصيل</p></div>
-   <div class="process-step fi"><div class="process-icon">🗺️</div><h3 data-ar="٣. خطة واضحة" data-en="3. Clear Plan">٣. خطة واضحة</h3><p data-ar="بنديك roadmap مكتوب بالأولويات والتكاليف" data-en="We give you a written roadmap with priorities and costs">بنديك roadmap مكتوب بالأولويات والتكاليف</p></div>
-   <div class="process-step fi"><div class="process-icon">🚀</div><h3 data-ar="٤. تنفيذ ومتابعة" data-en="4. Execute & Follow Up">٤. تنفيذ ومتابعة</h3><p data-ar="بنشتغل مع بعض ونقيس النتايج كل شهر" data-en="We work together and measure results monthly">بنشتغل مع بعض ونقيس النتايج كل شهر</p></div>
-  </div>
- </div>
-</section>
-
-<section class="cta-s">
- <div class="fi">
-  <h2 data-ar="ابدأ بالتشخيص المجاني" data-en="Start with the Free Diagnosis">ابدأ بالتشخيص المجاني</h2>
-  <p data-ar="١٠٠ كريدت مجاناً — شخّص البراند بتاعك في دقيقة وشوف وين المشكلة." data-en="100 free credits — diagnose your brand in a minute and see where the problem is.">١٠٠ كريدت مجاناً — شخّص البراند بتاعك في دقيقة وشوف وين المشكلة.</p>
-  <div class="cta-btns">
-   <a href="/signup" class="btn-w" data-ar="شخّص مجاناً ←" data-en="Diagnose Free ←">شخّص مجاناً ←</a>
-   <a href="https://wa.me/201000000000" class="btn-outline" data-ar="تواصل على واتساب" data-en="Contact on WhatsApp">تواصل على واتساب</a>
-  </div>
- </div>
+<section class="cta-final fi">
+  <h2>جاهز تعرف وضع البراند بتاعك؟</h2>
+  <p>ابدأ مجاناً — بدون بطاقة بنكية، بدون التزام.</p>
+  <a href="/signup" class="btn btn-primary" style="font-size:16px;padding:15px 40px">ابدأ تشخيص مجاني الآن ←</a>
+  <p style="margin-top:14px;font-size:13px;color:var(--muted)">نتيجة في دقائق — لا وكالة، لا انتظار</p>
 </section>
 
 <footer>
- <div class="ft-logo">WZZRD <span class="ft-logo-badge">AI</span></div>
- <div class="ft-tag" data-ar='"العلامات تتلاشى — المارقات تبقى."' data-en='"Marks Fade, MARCAS Don&apos;t."'>"العلامات تتلاشى — المارقات تبقى."</div>
- <div class="ft-links">
-  <a href="/" data-ar="الرئيسية" data-en="Home">الرئيسية</a>
-  <a href="/pricing" data-ar="الأسعار" data-en="Pricing">الأسعار</a>
-  <a href="https://instagram.com/primomarca">Instagram</a>
-  <a href="https://linkedin.com/company/primomarca">LinkedIn</a>
- </div>
- <div class="ft-copy">© 2026 WZZRD AI by Primo Marca</div>
+  <div class="footer-in">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="/logo.webp" alt="WZZRD AI" style="height:36px;filter:brightness(10)" />
+        <p>منصة تشخيص العلامة التجارية بالذكاء الاصطناعي — للمؤسسين العرب الطموحين.</p>
+      </div>
+      <div class="footer-col">
+        <h4>الأدوات</h4>
+        <a href="/tools/brand-diagnosis">تشخيص البراند</a>
+        <a href="/tools/offer-check">فحص العرض</a>
+        <a href="/tools/message-check">فحص الرسالة</a>
+        <a href="/tools/presence-audit">فحص الحضور</a>
+        <a href="/tools/identity-snapshot">لقطة الهوية</a>
+        <a href="/tools/launch-readiness">جاهزية الإطلاق</a>
+      </div>
+      <div class="footer-col">
+        <h4>الشركة</h4>
+        <a href="/">الرئيسية</a>
+        <a href="/pricing">الأسعار</a>
+        <a href="/landing/services.html">الخدمات</a>
+        <a href="/login">تسجيل الدخول</a>
+        <a href="/signup">إنشاء حساب</a>
+      </div>
+      <div class="footer-nl">
+        <h4>النشرة الأسبوعية</h4>
+        <p>استراتيجيات تسويقية ونصائح بناء البراند — كل أسبوع على بريدك.</p>
+        <div class="nl-form" id="nlForm">
+          <input type="email" id="nlEmail" placeholder="بريدك الإلكتروني" />
+          <button onclick="submitNL()">اشترك</button>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 WZZRD AI — جميع الحقوق محفوظة</p>
+      <div class="footer-bottom-links">
+        <a href="#">سياسة الخصوصية</a>
+        <a href="#">شروط الاستخدام</a>
+      </div>
+    </div>
+  </div>
 </footer>
 
 <script>
-var o=new IntersectionObserver(function(e){e.forEach(function(x){if(x.isIntersecting)x.target.classList.add('v')})},{threshold:.08,rootMargin:'0px 0px -40px 0px'});
-document.querySelectorAll('.fi').forEach(function(el){o.observe(el)});
-window.addEventListener('scroll',function(){document.getElementById('nav').classList.toggle('scrolled',window.scrollY>20)});
-var l=(function(){var s=localStorage.getItem('wzrd-locale');return(s==='en'||s==='ar')?s:'ar';})();
-function apply(){
- document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';
- document.body.classList.toggle('en-mode',l==='en');
- document.querySelectorAll('[data-ar]').forEach(function(e){var t=l==='ar'?e.getAttribute('data-ar'):e.getAttribute('data-en');if(t)e.innerHTML=t});
- document.querySelectorAll('.lang').forEach(function(b){b.textContent=l==='ar'?'EN':'ع'});
+var obs=new IntersectionObserver(function(e){e.forEach(function(x){if(x.isIntersecting)x.target.classList.add('v');});},{threshold:.08,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.fi').forEach(function(el){obs.observe(el);});
+window.addEventListener('scroll',function(){document.getElementById('nav').classList.toggle('scrolled',window.scrollY>20);});
+function toggleFaq(el){el.closest('.faq-item').classList.toggle('open');}
+function submitNL(){
+  var e=document.getElementById('nlEmail').value;if(!e)return;
+  fetch('/api/trpc/newsletter.subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({json:{email:e,source:'footer-services'}})}).catch(function(){});
+  document.getElementById('nlForm').innerHTML='<p style="color:rgba(255,255,255,0.8);font-weight:700">✓ تم الاشتراك!</p>';
 }
-function tl(){l=l==='ar'?'en':'ar';localStorage.setItem('wzrd-locale',l);apply();}
-document.addEventListener('DOMContentLoaded',apply);
 </script>
 </body>
 </html>
