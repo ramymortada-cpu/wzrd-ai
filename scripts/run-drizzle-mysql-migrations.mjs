@@ -49,6 +49,18 @@ const EXPECT = new Set([
   'invite_tokens',
 ]);
 
+/**
+ * Split a SQL file into individual statements.
+ * Handles multi-line CREATE TABLE statements by splitting on semicolons
+ * that appear at the end of a line (possibly followed by whitespace/newlines).
+ */
+function splitStatements(sql) {
+  return sql
+    .split(/;\s*(?:\n|$)/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0 && !s.startsWith('--'));
+}
+
 async function main() {
   const conn = await mysql.createConnection(DATABASE_URL);
   conn.config.namedPlaceholders = false;
@@ -60,7 +72,11 @@ async function main() {
     }
     const sql = fs.readFileSync(fp, 'utf8');
     console.log(`\n── Running ${file} ──`);
-    await conn.query(sql);
+    const statements = splitStatements(sql);
+    console.log(`   Found ${statements.length} statement(s)`);
+    for (const stmt of statements) {
+      await conn.query(stmt);
+    }
     console.log('   OK');
   }
 
