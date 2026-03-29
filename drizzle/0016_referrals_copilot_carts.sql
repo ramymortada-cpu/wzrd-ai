@@ -13,8 +13,8 @@ CREATE TABLE IF NOT EXISTS `referrals` (
 );
 
 -- Add referral_code to users table
-ALTER TABLE `users` ADD COLUMN IF NOT EXISTS `referral_code` VARCHAR(20) DEFAULT NULL;
-ALTER TABLE `users` ADD COLUMN IF NOT EXISTS `referred_by` INT DEFAULT NULL;
+ALTER TABLE `users` ADD COLUMN `referral_code` VARCHAR(20) DEFAULT NULL;
+ALTER TABLE `users` ADD COLUMN `referred_by` INT DEFAULT NULL;
 
 CREATE TABLE IF NOT EXISTS `copilot_messages` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
