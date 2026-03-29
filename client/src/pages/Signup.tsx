@@ -155,7 +155,7 @@ export default function Signup() {
                   className="w-full rounded-xl border border-white/10 bg-[#0D0D1A] px-4 py-3.5 text-sm text-white outline-none transition focus:border-[#7058F8]/50 focus:ring-2 focus:ring-[#7058F8]/20"
                 >
                   <option value="">اختار القطاع</option>
-                  {INDUSTRIES.map(i => (
+                  {(INDUSTRIES as readonly { value: string; label: string; labelAr: string }[]).map(i => (
                     <option key={i.value} value={i.value}>{i.labelAr || i.label}</option>
                   ))}
                 </select>
