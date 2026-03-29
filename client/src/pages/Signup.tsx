@@ -1,20 +1,47 @@
+/**
+ * Signup.tsx — WZZRD AI
+ * Design: warm cream (#FAFAF5) + cobalt blue (#1B4FD8) — matches homepage
+ * RTL Arabic-first, all original signup logic preserved
+ */
+
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { toErrorString } from '@/lib/errorUtils';
 import { INDUSTRIES } from '@/lib/industries';
 
+const C = {
+  bg:          "#FAFAF5",
+  bgAlt:       "#F4F3EE",
+  surface:     "#FFFFFF",
+  blue:        "#1B4FD8",
+  blueLight:   "#EEF2FF",
+  blueGlow:    "rgba(27,79,216,0.12)",
+  borderBlue:  "rgba(27,79,216,0.2)",
+  text:        "#111827",
+  muted:       "#6B7280",
+  border:      "#E5E7EB",
+  errorColor:  "#DC2626",
+  errorBg:     "#FEF2F2",
+  errorBorder: "#FECACA",
+};
+const FONT = "'Cairo', 'Segoe UI', sans-serif";
+
 export default function Signup() {
   const [, navigate] = useLocation();
-  const [form, setForm] = useState({ name: '', email: '', company: '', industry: '', newsletterOptIn: true });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [refCode, setRefCode] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    name: '', email: '', company: '', industry: '', newsletterOptIn: true,
+  });
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState('');
+  const [refCode, setRefCode]   = useState<string | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const ref = params.get('ref');
     if (ref) setRefCode(ref.toUpperCase());
   }, []);
+
+  const set = (k: string, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }));
 
   const handleSubmit = async () => {
     if (!form.name.trim() || !form.email.trim()) {
@@ -54,147 +81,167 @@ export default function Signup() {
     }
   };
 
+  const inputStyle: React.CSSProperties = {
+    width: "100%", padding: "13px 16px", borderRadius: 10, fontSize: 15,
+    border: `1.5px solid ${C.border}`, background: C.bg, color: C.text,
+    outline: "none", fontFamily: FONT, boxSizing: "border-box",
+  };
+  const labelStyle: React.CSSProperties = {
+    display: "block", fontSize: 12, fontWeight: 700, color: C.muted,
+    letterSpacing: 1, textTransform: "uppercase", marginBottom: 8,
+  };
+
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#0D0D1A] text-white" dir="rtl">
-      {/* Background glows */}
-      <div className="pointer-events-none absolute -top-40 left-1/3 h-[500px] w-[500px] rounded-full bg-[#7058F8]/15 blur-[140px]" />
-      <div className="pointer-events-none absolute bottom-0 right-1/4 h-80 w-80 rounded-full bg-cyan-500/8 blur-[120px]" />
+    <div style={{ minHeight: "100vh", background: C.bg, fontFamily: FONT, direction: "rtl", display: "flex", flexDirection: "column" }}>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 
-      {/* Grid pattern */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
-        }}
-      />
-
-      <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-16">
-        {/* Logo */}
-        <a href="/" className="mb-8 flex items-baseline gap-1.5 text-xl font-extrabold tracking-tight text-white transition hover:opacity-80">
-          <span>WZZRD</span>
-          <span className="rounded bg-[#7058F8] px-1.5 py-0.5 text-[10px] font-bold text-white">AI</span>
+      {/* Top Bar */}
+      <div style={{ padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${C.border}` }}>
+        <a href="/" onClick={(e) => { e.preventDefault(); navigate('/'); }} style={{ textDecoration: "none" }}>
+          <img src="/logo.webp" alt="WZZRD AI" style={{ height: 36 }} />
         </a>
+        <span style={{ fontSize: 14, color: C.muted }}>
+          عندك حساب؟{' '}
+          <a href="/login" onClick={(e) => { e.preventDefault(); navigate('/login'); }}
+            style={{ color: C.blue, fontWeight: 700, textDecoration: "none" }}>
+            سجّل الدخول
+          </a>
+        </span>
+      </div>
 
-        <div className="w-full max-w-md">
-          {/* Card */}
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm sm:p-10">
-            <div className="mb-6">
-              <h1 className="text-2xl font-extrabold tracking-tight text-white">ابدأ مجاناً</h1>
-              <p className="mt-2 text-sm leading-relaxed text-white/50">
-                سجّل وهتاخد كريدت مجاني تجرّب بيه أدوات تشخيص البراند فوراً.
-              </p>
-              <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#7058F8]/30 bg-[#7058F8]/10 px-3 py-1.5 text-xs font-bold text-[#a08fff]">
-                ⚡ كريدت مجاني عند التسجيل
+      {/* Main */}
+      <div style={{ flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "48px 24px" }}>
+        <div style={{ width: "100%", maxWidth: 480 }}>
+
+          {/* Blue header strip */}
+          <div style={{
+            background: `linear-gradient(135deg, ${C.blue} 0%, #1239A6 100%)`,
+            borderRadius: "16px 16px 0 0",
+            padding: "28px 32px",
+            textAlign: "center",
+          }}>
+            <div style={{ fontSize: 36, marginBottom: 10 }}>🚀</div>
+            <h1 style={{ fontSize: 22, fontWeight: 900, color: "#fff", margin: "0 0 8px" }}>
+              ابدأ رحلتك مع WZZRD AI
+            </h1>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", margin: 0, lineHeight: 1.6 }}>
+              حساب مجاني — ابدأ تشخيص علامتك التجارية دلوقتي
+            </p>
+            {refCode && (
+              <div style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.15)", borderRadius: 100, padding: "5px 14px" }}>
+                <span style={{ fontSize: 12, color: "#fff", fontWeight: 700 }}>🎁 كود إحالة: {refCode}</span>
               </div>
+            )}
+          </div>
+
+          {/* White card */}
+          <div style={{
+            background: C.surface,
+            border: `1px solid ${C.border}`,
+            borderTop: "none",
+            borderRadius: "0 0 16px 16px",
+            padding: "32px",
+            boxShadow: `0 8px 40px ${C.blueGlow}`,
+          }}>
+            {error && (
+              <div style={{ marginBottom: 20, padding: "12px 16px", borderRadius: 10, background: C.errorBg, border: `1px solid ${C.errorBorder}`, fontSize: 14, color: C.errorColor, fontWeight: 600 }}>
+                ⚠ {error}
+              </div>
+            )}
+
+            <div style={{ marginBottom: 18 }}>
+              <label style={labelStyle}>الاسم الكامل *</label>
+              <input type="text" value={form.name} onChange={(e) => set('name', e.target.value)}
+                placeholder="محمد أحمد" style={inputStyle} />
             </div>
 
-            {refCode && (
-              <div className="mb-5 flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
-                🎁 صاحبك بعتلك دعوة — هتاخدوا ٥٠ كريدت إضافي لكل واحد!
-              </div>
-            )}
+            <div style={{ marginBottom: 18 }}>
+              <label style={labelStyle}>البريد الإلكتروني *</label>
+              <input type="email" value={form.email} onChange={(e) => set('email', e.target.value)}
+                placeholder="your@email.com" dir="ltr" style={inputStyle} />
+            </div>
 
-            {error && (
-              <div className="mb-5 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-                {error}
-              </div>
-            )}
+            <div style={{ marginBottom: 18 }}>
+              <label style={labelStyle}>اسم الشركة / البراند</label>
+              <input type="text" value={form.company} onChange={(e) => set('company', e.target.value)}
+                placeholder="اسم بزنسك (اختياري)" style={inputStyle} />
+            </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-widest text-white/40">
-                  الاسم
-                </label>
-                <input
-                  type="text"
-                  placeholder="اسمك الكامل"
-                  maxLength={100}
-                  value={form.name}
-                  onChange={e => setForm({ ...form, name: e.target.value })}
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm text-white placeholder-white/30 outline-none transition focus:border-[#7058F8]/50 focus:ring-2 focus:ring-[#7058F8]/20"
-                />
-              </div>
+            <div style={{ marginBottom: 24 }}>
+              <label style={labelStyle}>المجال</label>
+              <select value={form.industry} onChange={(e) => set('industry', e.target.value)}
+                style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
+                <option value="">اختار مجالك (اختياري)</option>
+                {(INDUSTRIES as unknown as Array<{ value: string; labelAr: string }>).map((ind) => (
+                  <option key={ind.value} value={ind.value}>{ind.labelAr}</option>
+                ))}
+              </select>
+            </div>
 
-              <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-widest text-white/40">
-                  البريد الإلكتروني
-                </label>
-                <input
-                  type="email"
-                  placeholder="your@email.com"
-                  maxLength={255}
-                  value={form.email}
-                  onChange={e => setForm({ ...form, email: e.target.value })}
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm text-white placeholder-white/30 outline-none transition focus:border-[#7058F8]/50 focus:ring-2 focus:ring-[#7058F8]/20"
-                  dir="ltr"
-                />
+            <div style={{ marginBottom: 24, display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}
+              onClick={() => set('newsletterOptIn', !form.newsletterOptIn)}>
+              <div style={{
+                width: 20, height: 20, borderRadius: 6, flexShrink: 0, marginTop: 2,
+                border: `2px solid ${form.newsletterOptIn ? C.blue : C.border}`,
+                background: form.newsletterOptIn ? C.blue : C.surface,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                transition: "all 0.15s",
+              }}>
+                {form.newsletterOptIn && <span style={{ color: "#fff", fontSize: 12, fontWeight: 900 }}>✓</span>}
               </div>
-
-              <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-widest text-white/40">
-                  اسم الشركة / البراند <span className="normal-case text-white/25">(اختياري)</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="اسم الشركة أو البراند"
-                  maxLength={255}
-                  value={form.company}
-                  onChange={e => setForm({ ...form, company: e.target.value })}
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm text-white placeholder-white/30 outline-none transition focus:border-[#7058F8]/50 focus:ring-2 focus:ring-[#7058F8]/20"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-widest text-white/40">
-                  القطاع <span className="normal-case text-white/25">(اختياري)</span>
-                </label>
-                <select
-                  value={form.industry}
-                  onChange={e => setForm({ ...form, industry: e.target.value })}
-                  className="w-full rounded-xl border border-white/10 bg-[#0D0D1A] px-4 py-3.5 text-sm text-white outline-none transition focus:border-[#7058F8]/50 focus:ring-2 focus:ring-[#7058F8]/20"
-                >
-                  <option value="">اختار القطاع</option>
-                  {(INDUSTRIES as readonly { value: string; label: string; labelAr: string }[]).map(i => (
-                    <option key={i.value} value={i.value}>{i.labelAr || i.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <label className="flex cursor-pointer items-start gap-3 pt-1">
-                <input
-                  type="checkbox"
-                  className="mt-1 h-4 w-4 accent-[#7058F8]"
-                  checked={form.newsletterOptIn}
-                  onChange={e => setForm({ ...form, newsletterOptIn: e.target.checked })}
-                />
-                <span className="text-sm leading-relaxed text-white/50">
-                  أبعتلي نصايح أسبوعية عن تطوير البراند والتسويق — مجاناً.
-                </span>
-              </label>
+              <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, margin: 0 }}>
+                أريد استلام نصائح تسويقية واستراتيجيات بناء البراند أسبوعياً على بريدي
+              </p>
             </div>
 
             <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={loading}
-              className="mt-6 w-full rounded-xl bg-gradient-to-l from-[#7058F8] to-cyan-500 py-4 text-sm font-bold text-white shadow-lg shadow-[#7058F8]/20 transition hover:opacity-90 hover:shadow-[0_0_24px_rgba(112,88,248,0.5)] disabled:opacity-50"
+              type="button" onClick={handleSubmit}
+              disabled={loading || !form.name || !form.email}
+              style={{
+                width: "100%", padding: "15px", borderRadius: 10, fontSize: 16, fontWeight: 900,
+                color: "#fff", background: loading || !form.name || !form.email ? "#9CA3AF" : C.blue,
+                border: "none", cursor: loading || !form.name || !form.email ? "not-allowed" : "pointer",
+                fontFamily: FONT, boxShadow: loading || !form.name || !form.email ? "none" : `0 4px 20px ${C.blueGlow}`,
+              }}
             >
-              {loading ? 'جاري التسجيل...' : 'ابدأ مجاناً — بدون كارت'}
+              {loading ? 'جاري إنشاء الحساب...' : 'إنشاء حسابي المجاني ←'}
             </button>
 
-            <p className="mt-3 text-center text-xs text-white/30">
-              بالتسجيل بتوافق على شروط الاستخدام وسياسة الخصوصية.
+            <p style={{ marginTop: 16, textAlign: "center", fontSize: 12, color: C.muted }}>
+              بالتسجيل أنت توافق على{' '}
+              <a href="#" style={{ color: C.blue, textDecoration: "none" }}>شروط الاستخدام</a>
+              {' '}و{' '}
+              <a href="#" style={{ color: C.blue, textDecoration: "none" }}>سياسة الخصوصية</a>
             </p>
           </div>
 
-          <p className="mt-6 text-center text-sm text-white/40">
-            عندك حساب بالفعل؟{' '}
-            <a href="/login" className="font-semibold text-[#a08fff] transition hover:text-white">
-              سجّل دخولك
+          <div style={{ marginTop: 24, padding: "20px 24px", background: C.blueLight, border: `1px solid ${C.borderBlue}`, borderRadius: 12 }}>
+            <p style={{ fontSize: 13, fontWeight: 800, color: C.blue, marginBottom: 12 }}>✓ إيه اللي هتاخده مجاناً:</p>
+            {[
+              "تشخيص أولي مجاني لعلامتك التجارية",
+              "تقرير فوري بالمشاكل والحلول",
+              "نصائح أسبوعية على بريدك",
+            ].map((item) => (
+              <div key={item} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <span style={{ color: C.blue, fontWeight: 900, fontSize: 14 }}>✓</span>
+                <span style={{ fontSize: 13, color: C.text }}>{item}</span>
+              </div>
+            ))}
+          </div>
+
+          <p style={{ marginTop: 20, textAlign: "center", fontSize: 14, color: C.muted }}>
+            عندك حساب؟{' '}
+            <a href="/login" onClick={(e) => { e.preventDefault(); navigate('/login'); }}
+              style={{ color: C.blue, fontWeight: 700, textDecoration: "none" }}>
+              سجّل الدخول ←
             </a>
           </p>
         </div>
+      </div>
+
+      <div style={{ padding: "20px 24px", textAlign: "center", borderTop: `1px solid ${C.border}` }}>
+        <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>© 2026 WZZRD AI — جميع الحقوق محفوظة</p>
       </div>
     </div>
   );

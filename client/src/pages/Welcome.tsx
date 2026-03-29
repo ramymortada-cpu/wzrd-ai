@@ -1,301 +1,415 @@
-import React, { useState } from "react";
-import { Link } from "wouter";
+/**
+ * Welcome.tsx — WZZRD AI Homepage
+ * Design: warm cream bg (#FAFAF5), cobalt blue (#1B4FD8), charcoal text (#111827)
+ * RTL Arabic-first, all 6 tools displayed and selling
+ */
+
+import { useState } from "react";
+import { useLocation } from "wouter";
 import WzrdPublicHeader from "@/components/WzrdPublicHeader";
-const COBALT = "#7058F8";
-const RING_R = 44;
-const RING_C = 2 * Math.PI * RING_R;
 
-function ArrowRight() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-function CheckCircle() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden>
-      <circle cx="10" cy="10" r="9" stroke={COBALT} strokeWidth="1.5" />
-      <path d="M6 10.2 8.4 12.6 14 7" stroke={COBALT} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-function StarIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill={COBALT} aria-hidden>
-      <path d="M7 1l1.545 4.757H13.5l-4.045 2.938 1.545 4.757L7 10.514l-3.999 2.938 1.545-4.757L.5 5.757h4.955z" />
-    </svg>
-  );
-}
+const C = {
+  bg:         "#FAFAF5",
+  bgAlt:      "#F4F3EE",
+  surface:    "#FFFFFF",
+  blue:       "#1B4FD8",
+  blueDark:   "#1239A6",
+  blueLight:  "#EEF2FF",
+  blueGlow:   "rgba(27,79,216,0.12)",
+  text:       "#111827",
+  muted:      "#6B7280",
+  border:     "#E5E7EB",
+  borderBlue: "rgba(27,79,216,0.2)",
+};
+const FONT = "'Cairo', 'Segoe UI', sans-serif";
 
-function DiagnosticCard() {
+const TOOLS = [
+  {
+    id: "brand_diagnosis",
+    icon: "🔬",
+    nameAr: "تشخيص البراند",
+    tagAr: "الأكثر طلباً",
+    descAr: "اعرف نتيجة صحة علامتك التجارية في 30 ثانية — مع تقرير مفصّل بأهم المشاكل والحلول.",
+    benefitAr: "ابدأ من هنا لو حاسس إن في حاجة غلط",
+    cost: 20,
+    route: "/tools/brand-diagnosis",
+    popular: true,
+  },
+  {
+    id: "offer_check",
+    icon: "📦",
+    nameAr: "فحص منطق العرض",
+    tagAr: "لو المبيعات ضعيفة",
+    descAr: "هل عرضك واضح؟ تسعيرك منطقي؟ الأداة دي بتكشف ليه العملاء بيقولوا 'هفكّر' وبتديك الحل.",
+    benefitAr: "حوّل الـ 'هفكّر' لـ 'اشتريت'",
+    cost: 25,
+    route: "/tools/offer-check",
+    popular: false,
+  },
+  {
+    id: "message_check",
+    icon: "💬",
+    nameAr: "فحص الرسالة",
+    tagAr: "هوية واضحة",
+    descAr: "رسالتك متسقة في كل مكان؟ الأداة بتفحص الـ bio والموقع والمحتوى وبتديك تقرير الاتساق.",
+    benefitAr: "خلي جمهورك يفهم قيمتك من أول نظرة",
+    cost: 20,
+    route: "/tools/message-check",
+    popular: false,
+  },
+  {
+    id: "presence_audit",
+    icon: "🌐",
+    nameAr: "فحص الحضور الرقمي",
+    tagAr: "سوشيال + ويب",
+    descAr: "الغريب بيشوف إيه لما يبحث عنك؟ فحص شامل للإنستجرام والموقع وقنوات التواصل.",
+    benefitAr: "اعرف فجواتك قبل ما يعرفها منافسك",
+    cost: 25,
+    route: "/tools/presence-audit",
+    popular: false,
+  },
+  {
+    id: "identity_snapshot",
+    icon: "🪞",
+    nameAr: "لقطة الهوية",
+    tagAr: "شخصية البراند",
+    descAr: "شخصية البراند بتاعتك بتجذب النوع الصح من العملاء؟ أو بتبدو أرخص من المنتج الفعلي؟",
+    benefitAr: "اجذب العميل المثالي بشكل تلقائي",
+    cost: 20,
+    route: "/tools/identity-snapshot",
+    popular: false,
+  },
+  {
+    id: "launch_readiness",
+    icon: "🚀",
+    nameAr: "جاهزية الإطلاق",
+    tagAr: "قبل ما تصرف فلوس",
+    descAr: "أد إيه أنت فعلاً جاهز تنزل السوق؟ شغّل الأداة دي قبل أي إنفاق على ماركتينج.",
+    benefitAr: "وفّر آلاف الجنيهات من الإنفاق الخاطئ",
+    cost: 30,
+    route: "/tools/launch-readiness",
+    popular: false,
+  },
+];
+
+const STEPS = [
+  {
+    n: "١",
+    title: "اختار الأداة المناسبة",
+    desc: "٦ أدوات تشخيصية متخصصة — كل أداة بتحل مشكلة محددة. ابدأ بتشخيص البراند لو مش عارف من فين.",
+  },
+  {
+    n: "٢",
+    title: "أجب على الأسئلة",
+    desc: "أسئلة ذكية ومحددة عن بزنسك — مش استبيان ممل. الـ AI بيفهم السياق ويحلل بعمق.",
+  },
+  {
+    n: "٣",
+    title: "استلم تقريرك الفوري",
+    desc: "تقرير مفصّل بالمشاكل المكتشفة والحلول العملية — جاهز للتنفيذ على طول.",
+  },
+];
+
+const STATS = [
+  { num: "+٥٠٠", label: "تشخيص اتعمل", sub: "في أول ٣٠ يوم" },
+  { num: "٩٣٪",  label: "توفير مقارنة بالوكالات", sub: "في التكلفة" },
+  { num: "٣٠ث",  label: "وقت التشخيص الأولي", sub: "نتيجة فورية" },
+  { num: "٦",    label: "أدوات تشخيصية", sub: "متخصصة ومتكاملة" },
+];
+
+const TESTIMONIALS = [
+  {
+    quote: "WZZRD AI ساعدتني أكتشف إن رسالتي التسويقية مش واضحة — وده كان سبب ضعف المبيعات. بعد التقرير غيّرت الـ bio وزاد التفاعل ٣ أضعاف.",
+    name: "أحمد خالد",
+    title: "مؤسس متجر إلكتروني",
+    result: "×٣ تفاعل",
+  },
+  {
+    quote: "جربت الأداة قبل إطلاق منتجي الجديد — اكتشفت ٤ مشاكل في التسعير والعرض. وفّرت عليّ آلاف الجنيهات من الإنفاق الخاطئ.",
+    name: "سارة محمود",
+    title: "مؤسسة براند أزياء",
+    result: "وفّرت آلاف الجنيهات",
+  },
+  {
+    quote: "التقرير كان أعمق من استشارة وكالة دفعت فيها ٥٠٠٠ جنيه. الـ AI فهم بزنسي وديني حلول عملية فعلاً.",
+    name: "محمد عمر",
+    title: "صاحب شركة خدمات",
+    result: "أعمق من استشارة بـ٥٠٠٠ج",
+  },
+];
+
+// ─── Tool Card ────────────────────────────────────────────────────────────────
+function ToolCard({ tool, navigate }: { tool: typeof TOOLS[0]; navigate: (p: string) => void }) {
+  const [hovered, setHovered] = useState(false);
   return (
-    <div className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-xl">
-      <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-[#7058F8]/30 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-10 -left-8 h-32 w-32 rounded-full bg-cyan-500/20 blur-3xl" />
-      <div className="relative">
-        <div className="mb-4 flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-widest text-white/50">تقرير العلامة التجارية</span>
-          <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs font-semibold text-emerald-400">مكتمل</span>
-        </div>
-        <div className="mb-5 flex items-center gap-4">
-          <div className="relative h-28 w-28 shrink-0">
-            <svg className="h-full w-full -rotate-90" viewBox="0 0 100 100" aria-hidden>
-              <circle cx="50" cy="50" r={RING_R} fill="none" className="stroke-white/10" strokeWidth="8" />
-              <circle
-                cx="50" cy="50" r={RING_R} fill="none"
-                stroke={COBALT} strokeWidth="8" strokeLinecap="round"
-                strokeDasharray={RING_C}
-                strokeDashoffset={RING_C * (1 - 0.82)}
-              />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-xl font-black text-white">82</span>
-            </div>
-          </div>
-          <div className="text-right">
-            <p className="text-2xl font-black text-white">82 / 100</p>
-            <p className="text-sm text-white/60">Brand Health Score</p>
-            <p className="mt-1 text-xs text-amber-400">3 نقاط تحتاج تحسين</p>
-          </div>
-        </div>
-        <div className="space-y-3">
-          {[
-            { label: "تماسك الهوية البصرية", pct: 92, color: "#7058F8" },
-            { label: "وضوح رسالة البيع", pct: 68, color: "#f59e0b" },
-            { label: "التمايز عن المنافسين", pct: 85, color: "#22d3ee" },
-          ].map((row) => (
-            <div key={row.label}>
-              <div className="mb-1 flex justify-between text-xs text-white/70">
-                <span>{row.pct}%</span>
-                <span>{row.label}</span>
-              </div>
-              <div className="h-1.5 rounded-full bg-white/10">
-                <div className="h-full rounded-full" style={{ width: `${row.pct}%`, background: row.color }} />
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="mt-5 rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-right">
-          <p className="text-xs font-semibold text-amber-300">التوصية الأولى</p>
-          <p className="mt-0.5 text-xs text-white/70">رسالة البيع مش واضحة — العميل مش فاهم ليه يختارك</p>
-        </div>
+    <div
+      onClick={() => navigate(tool.route)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: C.surface,
+        border: `1.5px solid ${hovered || tool.popular ? C.blue : C.border}`,
+        borderRadius: 16, padding: "28px 24px", cursor: "pointer",
+        position: "relative", transition: "all 0.2s",
+        boxShadow: hovered ? `0 8px 32px ${C.blueGlow}` : tool.popular ? `0 4px 24px ${C.blueGlow}` : "0 1px 4px rgba(0,0,0,0.04)",
+        transform: hovered ? "translateY(-3px)" : "translateY(0)",
+      }}
+    >
+      {tool.popular && (
+        <span style={{
+          position: "absolute", top: -12, right: 20,
+          background: C.blue, color: "#fff",
+          fontSize: 11, fontWeight: 800, padding: "4px 12px", borderRadius: 100,
+        }}>
+          ⭐ الأكثر طلباً
+        </span>
+      )}
+      <span style={{
+        position: "absolute", top: 20, left: 20,
+        background: C.blueLight, color: C.blue,
+        fontSize: 11, fontWeight: 800, padding: "4px 10px", borderRadius: 100,
+        border: `1px solid ${C.borderBlue}`,
+      }}>
+        {tool.cost} كريدت
+      </span>
+      <div style={{
+        width: 56, height: 56, borderRadius: 14,
+        background: C.blueLight, border: `1px solid ${C.borderBlue}`,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: 28, marginBottom: 16,
+      }}>
+        {tool.icon}
+      </div>
+      <p style={{ fontSize: 11, fontWeight: 700, color: C.blue, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>
+        {tool.tagAr}
+      </p>
+      <h3 style={{ fontSize: 19, fontWeight: 800, color: C.text, marginBottom: 10 }}>
+        {tool.nameAr}
+      </h3>
+      <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.7, marginBottom: 18 }}>
+        {tool.descAr}
+      </p>
+      <div style={{
+        background: C.blueLight, borderRadius: 8, padding: "10px 14px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: C.blue }}>✓ {tool.benefitAr}</span>
+        <span style={{ fontSize: 16, color: C.blue }}>←</span>
       </div>
     </div>
   );
 }
 
-const PAINS = [
-  {
-    icon: "💸",
-    title: "بتصرف على ماركتنج ومش شايف نتيجة",
-    desc: "وكالات بتاخد فلوسك وبترجعلك تقارير فاضية. WZZRD AI بيديك الـ insights اللي بتحتاجها بنفسك.",
-  },
-  {
-    icon: "😤",
-    title: "البراند بتاعك واقف — مش بيتكلم",
-    desc: "الناس بتزور الموقع وبتمشي. مش لأن المنتج وحش — لأن الرسالة مش واصلة.",
-  },
-  {
-    icon: "⏰",
-    title: "وقتك أغلى من إنك تستنى موافقة وكالة",
-    desc: "في عصر الـ AI، المؤسس الذكي بيعمل في ساعة ما كانت بتاخد أسبوع.",
-  },
-];
+// ─── Footer Newsletter ────────────────────────────────────────────────────────
+function FooterNewsletter() {
+  const [email, setEmail] = useState("");
+  const [done, setDone] = useState(false);
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    try { await fetch("/api/newsletter/subscribe", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }) }); } catch { /* ignore */ }
+    setDone(true);
+  };
+  if (done) return <p style={{ fontSize: 13, color: "#4ADE80", fontWeight: 700 }}>✓ تم الاشتراك! شكراً</p>;
+  return (
+    <form onSubmit={submit} style={{ display: "flex", gap: 8 }}>
+      <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="بريدك الإلكتروني"
+        style={{ flex: 1, padding: "10px 14px", borderRadius: 8, fontSize: 13, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", outline: "none", fontFamily: FONT }} />
+      <button type="submit" style={{ padding: "10px 16px", borderRadius: 8, fontSize: 13, fontWeight: 700, color: "#fff", background: C.blue, border: "none", cursor: "pointer", fontFamily: FONT, whiteSpace: "nowrap" }}>
+        اشترك
+      </button>
+    </form>
+  );
+}
 
-const STEPS = [
-  { n: "01", title: "شخّص علامتك", desc: "أجب على 5 أسئلة — WZZRD AI يحلل وضعك الحالي ويطلع تقرير فوري." },
-  { n: "02", title: "افهم الفجوة", desc: "شوف بالظبط فين المشكلة: الهوية؟ الرسالة؟ التمايز؟ الجمهور؟" },
-  { n: "03", title: "نفّذ بنفسك", desc: "خطوات واضحة، أدوات AI جاهزة، بدون وكالة وبدون انتظار." },
-];
-
-const TESTIMONIALS = [
-  {
-    name: "أحمد الشمري",
-    role: "مؤسس SaaS — الرياض",
-    text: "في أسبوع واحد فهمت ليه كل حملاتي كانت بتفشل. WZZRD AI أعطاني وضوح ما حصلتش عليه من وكالة دفعتلها 30 ألف.",
-    stars: 5,
-  },
-  {
-    name: "نور العبدالله",
-    role: "صاحبة علامة تجارية — دبي",
-    text: "كنت فاكرة المشكلة في المنتج. اتضح المشكلة في الرسالة. التقرير غيّر طريقة تفكيري كلها.",
-    stars: 5,
-  },
-  {
-    name: "محمد رضا",
-    role: "مؤسس تقني — القاهرة",
-    text: "أخيراً أداة بتتكلم عربي وبتفهم السوق. مش مجرد ترجمة لأداة غربية.",
-    stars: 5,
-  },
-];
-
-const FEATURES = [
-  { icon: "🧠", title: "تشخيص AI فوري", desc: "تقرير Brand Health Score في دقائق — مش أيام.", wide: false },
-  { icon: "🎯", title: "رسالة بيع تبيع", desc: "WZZRD AI يكتب لك الـ positioning statement اللي يخلي العميل يقول ده بالظبط اللي أنا محتاجه.", wide: true },
-  { icon: "📊", title: "تحليل المنافسين", desc: "شوف فين أنت مقارنة بالسوق — وفين الفرصة.", wide: false },
-  { icon: "✍️", title: "كوبي يبيع", desc: "عناوين، إعلانات، بيو — كلها مكتوبة بلغة عميلك.", wide: false },
-  { icon: "🚀", title: "خطة تنفيذ واضحة", desc: "مش توصيات فاضية — خطوات مرتبة بالأولوية.", wide: false },
-];
-
+// ─── Main Component ───────────────────────────────────────────────────────────
 export default function Welcome() {
+  const [, navigate] = useLocation();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
     setSubmitting(true);
-    try {
-      await fetch("/api/newsletter/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      setSent(true);
-    } catch {
-      setSent(true);
-    } finally {
-      setSubmitting(false);
-    }
+    try { await fetch("/api/newsletter/subscribe", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }) }); } catch { /* ignore */ }
+    setSent(true);
+    setSubmitting(false);
   };
 
   return (
-    <div className="min-h-screen bg-[#0D0D1A] text-white" dir="rtl">
+    <div style={{ background: C.bg, fontFamily: FONT, direction: "rtl", color: C.text, minHeight: "100vh" }}>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+
       <WzrdPublicHeader />
 
       {/* ══ HERO ══ */}
-      <section className="relative overflow-hidden px-4 pb-24 pt-20 md:pb-32 md:pt-28">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute left-1/2 top-0 h-[600px] w-[900px] -translate-x-1/2 rounded-full bg-[#7058F8]/10 blur-[120px]" />
-          <div className="absolute -left-20 top-40 h-64 w-64 rounded-full bg-cyan-500/8 blur-[80px]" />
-        </div>
-        <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-16 lg:flex-row lg:items-start">
-          <div className="flex-1 text-center lg:text-right">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#7058F8]/30 bg-[#7058F8]/10 px-4 py-1.5 text-sm font-semibold text-[#a78bfa]">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-[#7058F8]" />
-              وكالة التسويق الذكية للمؤسسين الطموحين
-            </div>
-            <h1 className="mb-6 text-4xl font-black leading-tight tracking-tight text-white md:text-5xl lg:text-6xl">
-              علامتك التجارية{" "}
-              <span className="bg-gradient-to-l from-[#7058F8] to-cyan-400 bg-clip-text text-transparent">
-                مش ضعيفة —
-              </span>
-              <br />
-              رسالتها مش واصلة
-            </h1>
-            <p className="mb-8 max-w-xl text-lg leading-relaxed text-white/60 lg:mr-0 lg:text-right">
-              WZZRD AI بيشخّص علامتك التجارية، يكشف الفجوة، ويديك خطة تنفيذ واضحة —
-              بدون وكالة، بدون انتظار، بدون ما تصرف على حاجة مش عارف نتيجتها.
-            </p>
-            <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-end lg:justify-start">
-              <Link
-                href="/signup"
-                className="group inline-flex items-center gap-2 rounded-xl bg-[#7058F8] px-8 py-4 text-base font-bold text-white shadow-lg shadow-[#7058F8]/30 transition-all hover:bg-[#5a45d4] hover:shadow-[#7058F8]/50"
-              >
-                ابدأ تشخيص مجاني <ArrowRight />
-              </Link>
-              <Link
-                href="/login"
-                className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-8 py-4 text-base font-semibold text-white/80 transition hover:bg-white/10"
-              >
-                سجّل دخول
-              </Link>
-            </div>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-white/40 lg:justify-start">
-              <span className="flex items-center gap-1.5"><CheckCircle /> مجاني للبدء</span>
-              <span className="flex items-center gap-1.5"><CheckCircle /> لا بطاقة ائتمان</span>
-              <span className="flex items-center gap-1.5"><CheckCircle /> نتيجة في دقائق</span>
-            </div>
+      <section style={{ padding: "80px 24px 72px", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: `radial-gradient(ellipse 70% 50% at 50% 0%, ${C.blueGlow}, transparent)` }} />
+        <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative" }}>
+          {/* Badge */}
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "7px 18px", borderRadius: 100, background: C.blueLight, border: `1px solid ${C.borderBlue}`, fontSize: 13, fontWeight: 700, color: C.blue }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: C.blue, display: "inline-block" }} />
+              أدوات تشخيص البراند بالذكاء الاصطناعي — للمؤسسين العرب
+            </span>
           </div>
-          <div className="flex w-full justify-center lg:w-auto lg:justify-end">
-            <DiagnosticCard />
+          {/* Headline */}
+          <h1 style={{ textAlign: "center", fontSize: "clamp(34px, 5.5vw, 64px)", fontWeight: 900, lineHeight: 1.15, letterSpacing: "-0.5px", marginBottom: 24, color: C.text }}>
+            علامتك التجارية تستاهل أكتر —<br />
+            <span style={{ color: C.blue }}>اعرف وين المشكلة</span> دلوقتي
+          </h1>
+          {/* Sub */}
+          <p style={{ textAlign: "center", fontSize: 18, color: C.muted, lineHeight: 1.8, maxWidth: 600, margin: "0 auto 36px" }}>
+            WZZRD AI بيحلل علامتك التجارية بعمق ويديك تقرير فوري بالمشاكل والحلول —
+            بدل ما تدفع آلاف الجنيهات لوكالة وتستنى أسابيع.
+          </p>
+          {/* CTAs */}
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 20 }}>
+            <a href="/tools/brand-diagnosis" onClick={(e) => { e.preventDefault(); navigate("/tools/brand-diagnosis"); }}
+              style={{ padding: "14px 32px", borderRadius: 10, fontSize: 16, fontWeight: 800, color: "#fff", background: C.blue, textDecoration: "none", boxShadow: `0 4px 20px ${C.blueGlow}` }}>
+              ابدأ تشخيص مجاني ←
+            </a>
+            <a href="/pricing" onClick={(e) => { e.preventDefault(); navigate("/pricing"); }}
+              style={{ padding: "14px 28px", borderRadius: 10, fontSize: 15, fontWeight: 700, color: C.blue, background: C.blueLight, border: `1.5px solid ${C.borderBlue}`, textDecoration: "none" }}>
+              شوف الأسعار
+            </a>
+          </div>
+          {/* Trust */}
+          <div style={{ display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap" }}>
+            {["✓ بدون بطاقة ائتمان", "✓ نتيجة في أقل من دقيقة", "✓ تقرير باللغة العربية"].map((t) => (
+              <span key={t} style={{ fontSize: 13, color: C.muted, fontWeight: 600 }}>{t}</span>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ══ PAIN POINTS ══ */}
-      <section className="border-y border-white/5 bg-white/[0.02] px-4 py-20">
-        <div className="mx-auto max-w-5xl">
-          <div className="mb-12 text-center">
-            <p className="mb-3 text-sm font-bold uppercase tracking-widest text-[#7058F8]">بتعاني من ده؟</p>
-            <h2 className="text-3xl font-black text-white md:text-4xl">المشكلة مش في المنتج — في الطريقة</h2>
+      {/* ══ SOCIAL PROOF BAR ══ */}
+      <section style={{ background: C.bgAlt, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, padding: "20px 24px" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
+          <p style={{ fontSize: 12, color: C.muted, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 14 }}>يثق بنا مؤسسون من</p>
+          <div style={{ display: "flex", gap: 32, justifyContent: "center", alignItems: "center", flexWrap: "wrap", opacity: 0.55 }}>
+            {["🇪🇬 مصر", "🇸🇦 السعودية", "🇦🇪 الإمارات", "🇰🇼 الكويت", "🇯🇴 الأردن"].map((c) => (
+              <span key={c} style={{ fontSize: 15, fontWeight: 800, color: C.text }}>{c}</span>
+            ))}
           </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {PAINS.map((p) => (
-              <div
-                key={p.title}
-                className="group rounded-2xl border border-white/8 bg-white/[0.03] p-6 transition-all hover:border-[#7058F8]/40 hover:bg-[#7058F8]/5"
-              >
-                <div className="mb-4 text-3xl">{p.icon}</div>
-                <h3 className="mb-2 text-base font-bold text-white">{p.title}</h3>
-                <p className="text-sm leading-relaxed text-white/50">{p.desc}</p>
+        </div>
+      </section>
+
+      {/* ══ PROBLEM STATEMENT ══ */}
+      <section style={{ padding: "80px 24px" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
+          <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: C.blue, marginBottom: 12 }}>هل ده بيحصل معاك؟</p>
+          <h2 style={{ fontSize: "clamp(26px, 3.5vw, 40px)", fontWeight: 800, lineHeight: 1.3, marginBottom: 48, color: C.text }}>
+            بتصرف على ماركتينج ومش شايف نتيجة؟
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20 }}>
+            {[
+              { icon: "😤", prob: "الناس مش فاهمة إيه اللي بتقدمه بالظبط" },
+              { icon: "💸", prob: "بتصرف على إعلانات بس الـ conversion ضعيف" },
+              { icon: "😕", prob: "البراند بتاعك بيبدو أرخص من قيمته الحقيقية" },
+              { icon: "🤷", prob: "مش عارف من فين تبدأ تصلح الموضوع" },
+            ].map((item) => (
+              <div key={item.prob} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: "24px 20px", display: "flex", gap: 14, alignItems: "flex-start", textAlign: "right" }}>
+                <span style={{ fontSize: 28, flexShrink: 0 }}>{item.icon}</span>
+                <p style={{ fontSize: 15, color: C.text, fontWeight: 600, lineHeight: 1.6, margin: 0 }}>{item.prob}</p>
               </div>
             ))}
+          </div>
+          <p style={{ marginTop: 40, fontSize: 17, color: C.muted, lineHeight: 1.8 }}>
+            المشكلة مش في المنتج — المشكلة في{" "}
+            <strong style={{ color: C.text }}>تشخيص غلط أو غياب التشخيص خالص.</strong>
+            <br />WZZRD AI بيديك التشخيص الصح في دقائق.
+          </p>
+        </div>
+      </section>
+
+      {/* ══ TOOLS GRID ══ */}
+      <section style={{ background: C.bgAlt, padding: "80px 24px", borderTop: `1px solid ${C.border}` }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 52 }}>
+            <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: C.blue, marginBottom: 12 }}>أدواتنا التشخيصية</p>
+            <h2 style={{ fontSize: "clamp(26px, 3.5vw, 40px)", fontWeight: 800, lineHeight: 1.3, color: C.text, marginBottom: 14 }}>
+              ٦ أدوات — كل أداة بتحل مشكلة محددة
+            </h2>
+            <p style={{ fontSize: 16, color: C.muted, maxWidth: 520, margin: "0 auto" }}>
+              مش أداة واحدة تعمل كل حاجة — كل أداة متخصصة في جانب معين من البراند عشان التشخيص يكون دقيق.
+            </p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20 }}>
+            {TOOLS.map((tool) => (
+              <ToolCard key={tool.id} tool={tool} navigate={navigate} />
+            ))}
+          </div>
+          <div style={{ textAlign: "center", marginTop: 44 }}>
+            <a href="/tools" onClick={(e) => { e.preventDefault(); navigate("/tools"); }}
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "13px 28px", borderRadius: 10, fontSize: 15, fontWeight: 700, color: C.blue, background: C.blueLight, border: `1.5px solid ${C.borderBlue}`, textDecoration: "none" }}>
+              شوف كل الأدوات ←
+            </a>
           </div>
         </div>
       </section>
 
       {/* ══ HOW IT WORKS ══ */}
-      <section className="px-4 py-20">
-        <div className="mx-auto max-w-5xl">
-          <div className="mb-14 text-center">
-            <p className="mb-3 text-sm font-bold uppercase tracking-widest text-[#7058F8]">إزاي بيشتغل</p>
-            <h2 className="text-3xl font-black text-white md:text-4xl">3 خطوات — من التشخيص للتنفيذ</h2>
+      <section style={{ padding: "80px 24px" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 52 }}>
+            <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: C.blue, marginBottom: 12 }}>إزاي بيشتغل</p>
+            <h2 style={{ fontSize: "clamp(26px, 3.5vw, 38px)", fontWeight: 800, lineHeight: 1.3, color: C.text }}>٣ خطوات وتقريرك جاهز</h2>
           </div>
-          <div className="grid gap-8 md:grid-cols-3">
-            {STEPS.map((s) => (
-              <div key={s.n} className="rounded-2xl border border-white/8 bg-white/[0.03] p-6 text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[#7058F8]/15 text-lg font-black text-[#7058F8]">
-                  {s.n}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 24 }}>
+            {STEPS.map((step, i) => (
+              <div key={i} style={{ textAlign: "center", padding: "32px 24px" }}>
+                <div style={{ width: 60, height: 60, borderRadius: "50%", background: C.blue, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 900, margin: "0 auto 20px", boxShadow: `0 4px 16px ${C.blueGlow}` }}>
+                  {step.n}
                 </div>
-                <h3 className="mb-2 text-base font-bold text-white">{s.title}</h3>
-                <p className="text-sm leading-relaxed text-white/50">{s.desc}</p>
+                <h3 style={{ fontSize: 18, fontWeight: 800, color: C.text, marginBottom: 10 }}>{step.title}</h3>
+                <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.7 }}>{step.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ══ FEATURES BENTO ══ */}
-      <section className="border-y border-white/5 bg-white/[0.02] px-4 py-20">
-        <div className="mx-auto max-w-5xl">
-          <div className="mb-14 text-center">
-            <p className="mb-3 text-sm font-bold uppercase tracking-widest text-[#7058F8]">الأدوات</p>
-            <h2 className="text-3xl font-black text-white md:text-4xl">كل حاجة محتاجها — في مكان واحد</h2>
-          </div>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-            {FEATURES.map((f) => (
-              <div
-                key={f.title}
-                className={`rounded-2xl border border-white/8 bg-white/[0.03] p-6 transition hover:border-[#7058F8]/30 hover:bg-[#7058F8]/5 ${f.wide ? "col-span-2" : ""}`}
-              >
-                <div className="mb-3 text-2xl">{f.icon}</div>
-                <h3 className="mb-1.5 text-sm font-bold text-white">{f.title}</h3>
-                <p className="text-xs leading-relaxed text-white/50">{f.desc}</p>
+      {/* ══ STATS ══ */}
+      <section style={{ background: C.blue, padding: "64px 24px" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 32, textAlign: "center" }}>
+            {STATS.map((s) => (
+              <div key={s.num}>
+                <div style={{ fontSize: "clamp(36px, 5vw, 52px)", fontWeight: 900, color: "#fff", lineHeight: 1 }}>{s.num}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "rgba(255,255,255,0.9)", marginTop: 8 }}>{s.label}</div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 4 }}>{s.sub}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ══ SOCIAL PROOF ══ */}
-      <section className="px-4 py-20">
-        <div className="mx-auto max-w-5xl">
-          <div className="mb-14 text-center">
-            <p className="mb-3 text-sm font-bold uppercase tracking-widest text-[#7058F8]">قالوا عننا</p>
-            <h2 className="text-3xl font-black text-white md:text-4xl">مؤسسون غيّروا مسار علامتهم</h2>
+      {/* ══ TESTIMONIALS ══ */}
+      <section style={{ padding: "80px 24px", background: C.bgAlt, borderTop: `1px solid ${C.border}` }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 48 }}>
+            <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: C.blue, marginBottom: 12 }}>قصص نجاح عملائنا</p>
+            <h2 style={{ fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 800, color: C.text }}>ناس حقيقية — نتايج حقيقية</h2>
           </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {TESTIMONIALS.map((t) => (
-              <div key={t.name} className="rounded-2xl border border-white/8 bg-white/[0.03] p-6">
-                <div className="mb-3 flex gap-0.5">
-                  {Array.from({ length: t.stars }).map((_, i) => <StarIcon key={i} />)}
-                </div>
-                <p className="mb-4 text-sm leading-relaxed text-white/70">"{t.text}"</p>
-                <div className="border-t border-white/8 pt-4">
-                  <p className="text-sm font-bold text-white">{t.name}</p>
-                  <p className="text-xs text-white/40">{t.role}</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 24 }}>
+            {TESTIMONIALS.map((t, i) => (
+              <div key={i} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "28px 24px", display: "flex", flexDirection: "column", gap: 20 }}>
+                <span style={{ display: "inline-block", background: "#DCFCE7", color: "#16A34A", fontSize: 12, fontWeight: 800, padding: "5px 12px", borderRadius: 100, alignSelf: "flex-start" }}>
+                  📈 {t.result}
+                </span>
+                <p style={{ fontSize: 15, color: C.text, lineHeight: 1.75, fontStyle: "italic", flex: 1 }}>"{t.quote}"</p>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ width: 42, height: 42, borderRadius: "50%", background: C.blueLight, border: `2px solid ${C.borderBlue}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 800, color: C.blue }}>
+                    {t.name[0]}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: C.text }}>{t.name}</div>
+                    <div style={{ fontSize: 12, color: C.muted }}>{t.title}</div>
+                  </div>
                 </div>
               </div>
             ))}
@@ -304,91 +418,120 @@ export default function Welcome() {
       </section>
 
       {/* ══ LEAD MAGNET ══ */}
-      <section className="border-y border-white/5 bg-white/[0.02] px-4 py-20">
-        <div className="mx-auto max-w-4xl">
-          <div className="overflow-hidden rounded-3xl border border-[#7058F8]/20 bg-gradient-to-br from-[#7058F8]/10 to-cyan-500/5 p-8 md:p-12">
-            <div className="flex flex-col items-center gap-8 md:flex-row">
-              <div className="flex h-48 w-36 shrink-0 flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-[#7058F8] to-cyan-500 p-5 text-center text-white shadow-2xl shadow-[#7058F8]/30 [transform:perspective(800px)_rotateY(-8deg)]">
-                <p className="text-xs font-bold uppercase tracking-widest text-white/70">WZZRD AI</p>
-                <div className="my-2 h-px w-12 bg-white/30" />
-                <p className="text-sm font-black leading-snug">دليل بناء علامة لا تُقهر</p>
-                <p className="mt-2 text-xs text-white/60">2026 - مجاناً</p>
-              </div>
-              <div className="flex-1 text-center md:text-right">
-                <span className="mb-3 inline-block rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-bold text-emerald-400">
-                  مجاناً تماماً
-                </span>
-                <h2 className="mb-3 text-2xl font-black text-white md:text-3xl">
-                  حمّل دليل العلامة التجارية 2026
-                </h2>
-                <p className="mb-6 text-sm leading-relaxed text-white/60">
-                  12 صفحة من الاستراتيجيات العملية لبناء علامة تجارية قوية في السوق العربي.
-                </p>
-                {sent ? (
-                  <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-400">
-                    تم الإرسال! سيصلك الدليل على بريدك قريباً
-                  </p>
-                ) : (
-                  <form onSubmit={onSubmit} className="flex max-w-md flex-col gap-3 sm:flex-row">
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="بريدك الإلكتروني"
-                      className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/30 outline-none focus:border-[#7058F8]/50 focus:ring-2 focus:ring-[#7058F8]/20"
-                      disabled={submitting}
-                    />
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className="rounded-xl bg-[#7058F8] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#5a45d4] disabled:opacity-60"
-                    >
-                      أرسل لي الدليل
-                    </button>
-                  </form>
-                )}
-              </div>
+      <section style={{ padding: "80px 24px" }}>
+        <div style={{ maxWidth: 800, margin: "0 auto" }}>
+          <div style={{ background: C.surface, border: `1.5px solid ${C.borderBlue}`, borderRadius: 20, padding: "48px 40px", boxShadow: `0 8px 40px ${C.blueGlow}`, display: "flex", gap: 40, alignItems: "center", flexWrap: "wrap" }}>
+            <div style={{ flexShrink: 0, width: 120, height: 160, background: `linear-gradient(135deg, ${C.blue}, #1239A6)`, borderRadius: 12, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 16, textAlign: "center", color: "#fff", boxShadow: `0 12px 32px ${C.blueGlow}`, transform: "perspective(600px) rotateY(-8deg)" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.7, letterSpacing: 1, marginBottom: 8 }}>WZZRD AI</div>
+              <div style={{ width: 40, height: 1, background: "rgba(255,255,255,0.3)", marginBottom: 10 }} />
+              <div style={{ fontSize: 14, fontWeight: 900, lineHeight: 1.4 }}>دليل بناء علامة لا تُقهر</div>
+              <div style={{ fontSize: 10, opacity: 0.6, marginTop: 10 }}>2026 — مجاناً</div>
+            </div>
+            <div style={{ flex: 1, minWidth: 260 }}>
+              <span style={{ display: "inline-block", background: "#DCFCE7", color: "#16A34A", fontSize: 11, fontWeight: 800, padding: "4px 12px", borderRadius: 100, marginBottom: 12 }}>مجاناً تماماً</span>
+              <h3 style={{ fontSize: 22, fontWeight: 900, color: C.text, marginBottom: 10, lineHeight: 1.3 }}>حمّل دليل العلامة التجارية 2026</h3>
+              <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.7, marginBottom: 20 }}>
+                ١٢ صفحة من الاستراتيجيات العملية لبناء علامة تجارية قوية في السوق العربي.
+              </p>
+              {sent ? (
+                <div style={{ background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 10, padding: "14px 18px", fontSize: 14, fontWeight: 700, color: "#16A34A" }}>
+                  ✓ تم الإرسال! سيصلك الدليل على بريدك قريباً
+                </div>
+              ) : (
+                <form onSubmit={onSubmit} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="بريدك الإلكتروني" disabled={submitting}
+                    style={{ flex: 1, minWidth: 200, padding: "12px 16px", borderRadius: 8, fontSize: 14, border: `1.5px solid ${C.border}`, background: C.bg, color: C.text, outline: "none", fontFamily: FONT }} />
+                  <button type="submit" disabled={submitting} style={{ padding: "12px 22px", borderRadius: 8, fontSize: 14, fontWeight: 800, color: "#fff", background: C.blue, border: "none", cursor: "pointer", fontFamily: FONT }}>
+                    أرسل لي الدليل
+                  </button>
+                </form>
+              )}
             </div>
           </div>
         </div>
       </section>
 
       {/* ══ FINAL CTA ══ */}
-      <section className="relative overflow-hidden px-4 py-28 text-center">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute left-1/2 top-1/2 h-[500px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#7058F8]/12 blur-[100px]" />
-        </div>
-        <div className="relative mx-auto max-w-2xl">
-          <p className="mb-4 text-sm font-bold uppercase tracking-widest text-[#7058F8]">ابدأ دلوقتي</p>
-          <h2 className="mb-5 text-4xl font-black leading-tight text-white md:text-5xl">
-            علامتك تستاهل أكتر من كده
-          </h2>
-          <p className="mb-10 text-lg text-white/50">
+      <section style={{ background: C.bgAlt, borderTop: `1px solid ${C.border}`, padding: "80px 24px", textAlign: "center" }}>
+        <div style={{ maxWidth: 600, margin: "0 auto" }}>
+          <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: C.blue, marginBottom: 16 }}>ابدأ دلوقتي</p>
+          <h2 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 900, lineHeight: 1.2, color: C.text, marginBottom: 16 }}>علامتك تستاهل أكتر من كده</h2>
+          <p style={{ fontSize: 17, color: C.muted, lineHeight: 1.8, marginBottom: 36 }}>
             آلاف المؤسسين في المنطقة العربية بيستخدموا WZZRD AI عشان يبنوا علامات تجارية تبيع — مش بس تبدو كويسة.
           </p>
-          <Link
-            href="/signup"
-            className="inline-flex items-center gap-3 rounded-xl bg-[#7058F8] px-10 py-5 text-lg font-black text-white shadow-2xl shadow-[#7058F8]/40 transition-all hover:bg-[#5a45d4] hover:shadow-[#7058F8]/60"
-          >
-            ابدأ تشخيص مجاني الآن <ArrowRight />
-          </Link>
-          <p className="mt-5 text-sm text-white/30">لا بطاقة ائتمان - لا التزامات - نتيجة في دقائق</p>
+          <a href="/signup" onClick={(e) => { e.preventDefault(); navigate("/signup"); }}
+            style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "16px 40px", borderRadius: 12, fontSize: 17, fontWeight: 900, color: "#fff", background: C.blue, textDecoration: "none", boxShadow: `0 6px 28px ${C.blueGlow}` }}>
+            ابدأ تشخيص مجاني الآن ←
+          </a>
+          <p style={{ marginTop: 16, fontSize: 13, color: C.muted }}>لا بطاقة ائتمان — لا التزامات — نتيجة في دقائق</p>
         </div>
       </section>
 
       {/* ══ FOOTER ══ */}
-      <footer className="border-t border-white/5 px-4 py-8">
-        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 text-sm text-white/30 md:flex-row">
-          <p className="font-bold text-white/50">WZZRD AI</p>
-          <div className="flex gap-6">
-            <Link href="/pricing" className="transition hover:text-white/60">الأسعار</Link>
-            <Link href="/login" className="transition hover:text-white/60">دخول</Link>
-            <Link href="/signup" className="transition hover:text-white/60">تسجيل</Link>
+      <footer style={{ background: C.text, color: "rgba(255,255,255,0.7)", padding: "56px 24px 32px", fontFamily: FONT }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }} dir="rtl">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 40, marginBottom: 48 }}>
+            <div>
+              <img src="/logo.webp" alt="WZZRD AI" style={{ height: 36, marginBottom: 16, filter: "brightness(0) invert(1)" }} />
+              <p style={{ fontSize: 14, lineHeight: 1.7, color: "rgba(255,255,255,0.55)", maxWidth: 240 }}>
+                منصة تشخيص العلامة التجارية بالذكاء الاصطناعي — للمؤسسين العرب الطموحين.
+              </p>
+            </div>
+            <div>
+              <h4 style={{ fontSize: 13, fontWeight: 800, color: "#fff", letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>الأدوات</h4>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {[
+                  { label: "تشخيص البراند", href: "/tools/brand-diagnosis" },
+                  { label: "فحص العرض", href: "/tools/offer-check" },
+                  { label: "فحص الرسالة", href: "/tools/message-check" },
+                  { label: "فحص الحضور", href: "/tools/presence-audit" },
+                  { label: "لقطة الهوية", href: "/tools/identity-snapshot" },
+                  { label: "جاهزية الإطلاق", href: "/tools/launch-readiness" },
+                ].map((l) => (
+                  <a key={l.href} href={l.href} onClick={(e) => { e.preventDefault(); navigate(l.href); }}
+                    style={{ fontSize: 14, color: "rgba(255,255,255,0.55)", textDecoration: "none" }}>{l.label}</a>
+                ))}
+              </div>
+            </div>
+            <div>
+              <h4 style={{ fontSize: 13, fontWeight: 800, color: "#fff", letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>الشركة</h4>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {[
+                  { label: "الرئيسية", href: "/" },
+                  { label: "الأسعار", href: "/pricing" },
+                  { label: "المدونة", href: "/blog" },
+                  { label: "تسجيل الدخول", href: "/login" },
+                  { label: "إنشاء حساب", href: "/signup" },
+                ].map((l) => (
+                  <a key={l.href} href={l.href} onClick={(e) => { e.preventDefault(); navigate(l.href); }}
+                    style={{ fontSize: 14, color: "rgba(255,255,255,0.55)", textDecoration: "none" }}>{l.label}</a>
+                ))}
+              </div>
+            </div>
+            <div>
+              <h4 style={{ fontSize: 13, fontWeight: 800, color: "#fff", letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>النشرة الأسبوعية</h4>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.6, marginBottom: 16 }}>
+                استراتيجيات تسويقية ونصائح بناء البراند — كل أسبوع على بريدك.
+              </p>
+              <FooterNewsletter />
+            </div>
           </div>
-          <p>2026 WZZRD AI - جميع الحقوق محفوظة</p>
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 24, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>© 2026 WZZRD AI — جميع الحقوق محفوظة</p>
+            <div style={{ display: "flex", gap: 20 }}>
+              {["سياسة الخصوصية", "شروط الاستخدام"].map((l) => (
+                <a key={l} href="#" style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>{l}</a>
+              ))}
+            </div>
+          </div>
         </div>
       </footer>
+
+      <style>{`
+        @media (max-width: 640px) {
+          section { padding-left: 16px !important; padding-right: 16px !important; }
+        }
+      `}</style>
     </div>
   );
 }
