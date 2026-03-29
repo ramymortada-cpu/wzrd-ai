@@ -163,4 +163,11 @@ export const rateLimiters = {
     windowMs: 60 * 60_000,
     message: 'Too many purchase attempts. Please try again later.',
   }),
+
+  /** Invite token acceptance — 5 per hour per IP (prevents brute-force token guessing) */
+  acceptInvite: createRateLimit({
+    max: process.env.NODE_ENV === 'production' ? 5 : 50,
+    windowMs: 60 * 60_000,
+    message: 'Too many invite attempts. Please try again later.',
+  }),
 };

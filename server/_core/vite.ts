@@ -79,7 +79,7 @@ export async function setupVite(app: Express, server: Server) {
       try {
         const { unsubscribeUser } = await import("../newsletter");
         await unsubscribeUser(email);
-        res.send('<html><body style="background:#fff;color:#111;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center"><div><h2>Unsubscribed ✓</h2><p>You won\'t receive weekly tips anymore.</p><a href="/welcome">← Back to WZRD AI</a></div></body></html>');
+        res.send('<html><body style="background:#fff;color:#111;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center"><div><h2>Unsubscribed ✓</h2><p>You won\'t receive weekly tips anymore.</p><a href="/welcome">← Back to WZZRD AI</a></div></body></html>');
       } catch { res.status(500).send("Error processing unsubscribe"); }
     });
   }
@@ -145,7 +145,7 @@ export function serveStatic(app: Express) {
       try {
         const { unsubscribeUser } = await import("../newsletter");
         await unsubscribeUser(email);
-        res.send('<html><body style="background:#fff;color:#111;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center"><div><h2>Unsubscribed ✓</h2><p>You won\'t receive weekly tips anymore.</p><a href="/welcome">← Back to WZRD AI</a></div></body></html>');
+        res.send('<html><body style="background:#fff;color:#111;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center"><div><h2>Unsubscribed ✓</h2><p>You won\'t receive weekly tips anymore.</p><a href="/welcome">← Back to WZZRD AI</a></div></body></html>');
       } catch { res.status(500).send("Error processing unsubscribe"); }
     });
   }
@@ -192,18 +192,18 @@ export function serveStatic(app: Express) {
       let html = fs.readFileSync(htmlPath, "utf-8");
 
       // Clear any prior injected block (defensive in case of template reuse).
-      html = html.replaceAll(/<!-- WZRD_BLOG_SEO_START -->[\s\S]*?<!-- WZRD_BLOG_SEO_END -->/g, "");
+      html = html.replaceAll(/<!-- WZZRD_BLOG_SEO_START -->[\s\S]*?<!-- WZZRD_BLOG_SEO_END -->/g, "");
 
       const wantsAr = typeof req.headers["accept-language"] === "string"
         ? req.headers["accept-language"].toLowerCase().includes("ar")
         : false;
 
       const seoTitleRaw = post
-        ? ((wantsAr ? (post.seoTitleAr || post.titleAr) : (post.seoTitleEn || post.titleEn)) || "WZRD AI Blog")
-        : "WZRD AI Blog";
+        ? ((wantsAr ? (post.seoTitleAr || post.titleAr) : (post.seoTitleEn || post.titleEn)) || "WZZRD AI Blog")
+        : "WZZRD AI Blog";
       const seoDescRaw = post
         ? ((wantsAr ? post.seoDescAr : post.seoDescEn) || "")
-        : "WZRD AI Blog";
+        : "WZZRD AI Blog";
       const ogImageRaw = post?.coverImage || "";
 
       const seoTitle = escapeHtmlAttr(seoTitleRaw);
@@ -222,14 +222,14 @@ export function serveStatic(app: Express) {
 
       html = html.replace(
         "</head>",
-        `<!-- WZRD_BLOG_SEO_START -->\n<meta name="description" content="${seoDesc}">\n<meta property="og:title" content="${seoTitle}">\n<meta property="og:description" content="${seoDesc}">\n<meta property="og:image" content="${ogImage}">\n<meta property="og:type" content="article">\n<meta name="twitter:card" content="summary_large_image">\n<!-- WZRD_BLOG_SEO_END -->\n</head>`,
+        `<!-- WZZRD_BLOG_SEO_START -->\n<meta name="description" content="${seoDesc}">\n<meta property="og:title" content="${seoTitle}">\n<meta property="og:description" content="${seoDesc}">\n<meta property="og:image" content="${ogImage}">\n<meta property="og:type" content="article">\n<meta name="twitter:card" content="summary_large_image">\n<!-- WZZRD_BLOG_SEO_END -->\n</head>`,
       );
 
       res
         .status(200)
         .set({
           "Content-Type": "text/html",
-          "X-WZRD-SEO": !db ? "no_db" : (post ? "injected" : "no_post"),
+          "X-WZZRD-SEO": !db ? "no_db" : (post ? "injected" : "no_post"),
         })
         .end(html);
     } catch {

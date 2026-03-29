@@ -52,10 +52,10 @@ export function waMeQualifiedLeadHref(
 
   if (score != null) {
     lines.push(
-      `عملت تشخيص (${diagnosisLabel}) على WZRD AI والـ Score بتاعي ${score}/100.`,
+      `عملت تشخيص (${diagnosisLabel}) على WZZRD AI والـ Score بتاعي ${score}/100.`,
     );
   } else {
-    lines.push(`عملت تشخيص (${diagnosisLabel}) على WZRD AI.`);
+    lines.push(`عملت تشخيص (${diagnosisLabel}) على WZZRD AI.`);
   }
 
   if (topIssue) {

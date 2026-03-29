@@ -32,6 +32,7 @@ const FILES = [
   '0017_service_requests.sql',
   '0018_credit_transaction_enum.sql',
   '0019_paymob_processed_transactions.sql',
+  '0025_invite_tokens.sql',
 ];
 
 /** Tables we expect after 0015–0017 (0018 alters enum, 0019 Paymob idempotency). */
@@ -45,6 +46,7 @@ const EXPECT = new Set([
   'request_updates',
   'request_files',
   'paymob_processed_transactions',
+  'invite_tokens',
 ]);
 
 async function main() {

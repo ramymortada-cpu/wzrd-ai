@@ -392,7 +392,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
           {/* Header */}
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-bold mb-4">
-              ⭐ تقرير WZRD AI Premium
+              ⭐ تقرير WZZRD AI Premium
             </div>
             <h1 className="text-3xl font-bold mb-2">{config.nameAr || config.name}</h1>
             <p className="text-sm text-gray-500">تقرير مفصّل — {r.creditsUsed} كريدت · {r.creditsRemaining} متبقي</p>

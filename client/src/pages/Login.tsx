@@ -73,7 +73,7 @@ export default function Login() {
     <div className="wzrd-auth-mesh relative grid min-h-screen text-white md:grid-cols-[minmax(0,1fr)_minmax(0,420px)] lg:grid-cols-[minmax(0,1.1fr)_minmax(0,440px)]">
       <aside className="relative hidden flex-col justify-between overflow-hidden p-10 md:flex lg:p-12">
         <a href="/tools" className="flex w-fit items-baseline gap-1 text-lg font-bold transition hover:text-white">
-          <span className="font-display tracking-tight">WZRD</span>
+          <span className="font-display tracking-tight">WZZRD</span>
           <span className="wzrd-badge-cyan text-[10px]">AI</span>
         </a>
         <div>
@@ -90,12 +90,12 @@ export default function Login() {
               : 'Request your next scan in one click — results stay in one place.'}
           </p>
         </div>
-        <p className="text-xs text-white/40">WZRD AI</p>
+        <p className="text-xs text-white/40">WZZRD AI</p>
       </aside>
 
       <div className="relative flex min-h-screen flex-col justify-center px-4 pb-16 pt-24 md:px-8">
         <a href="/tools" className="absolute left-6 top-6 z-10 flex items-baseline gap-1 text-lg font-bold text-white/90 drop-shadow-md transition hover:text-white md:hidden">
-          <span className="font-display">WZRD</span>
+          <span className="font-display">WZZRD</span>
           <span className="wzrd-badge-cyan text-[10px]">AI</span>
         </a>
 

@@ -1,5 +1,5 @@
 /**
- * Shapes returned by WZRD admin REST helpers (`api` / `apiMutation`) — not tRPC RouterOutputs.
+ * Shapes returned by WZZRD admin REST helpers (`api` / `apiMutation`) — not tRPC RouterOutputs.
  */
 
 export type WzrdTopToolEntry = { tool?: string; uses?: number; creditsSpent?: number };

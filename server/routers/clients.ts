@@ -41,7 +41,7 @@ export const clientsRouter = router({
       return getClientById(input.id, ctx.workspaceId);
     }),
 
-  /** WZRD tool diagnosis history for users whose email matches this client (Brand Health Tracker data). */
+  /** WZZRD tool diagnosis history for users whose email matches this client (Brand Health Tracker data). */
   diagnosisForClient: protectedProcedure
     .input(z.object({ clientId: z.number().int().positive() }))
     .query(async ({ input, ctx }) => {

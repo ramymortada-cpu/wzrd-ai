@@ -1,5 +1,5 @@
 /**
- * Shared form select options for WZRD AI tools.
+ * Shared form select options for WZZRD AI tools.
  * Use labelAr when locale is Arabic, label when English.
  */
 export const MARKET_OPTIONS = [

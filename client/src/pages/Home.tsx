@@ -78,7 +78,7 @@ export default function Home() {
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 rounded-lg px-2 py-1 hover:bg-indigo-500/10 transition-colors"
         >
-          {locale === "ar" ? "WZRD — لوحة المنتج العام" : "WZRD — public product admin"}
+          {locale === "ar" ? "WZZRD — لوحة المنتج العام" : "WZZRD — public product admin"}
           <ExternalLink className="h-3 w-3 opacity-70" />
         </a>
       </div>

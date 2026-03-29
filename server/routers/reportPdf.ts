@@ -64,7 +64,7 @@ function generateReportHtml(data: {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>تقرير ${data.toolNameAr} — WZRD AI</title>
+<title>تقرير ${data.toolNameAr} — WZZRD AI</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -132,7 +132,7 @@ body{font-family:'IBM Plex Sans Arabic',sans-serif;background:#fff;color:#1e293b
   <!-- Header -->
   <div class="header">
     <div>
-      <div class="logo">WZRD <b>AI</b></div>
+      <div class="logo">WZZRD <b>AI</b></div>
       <div style="font-size:12px;color:#94a3b8;margin-top:2px">by Primo Marca</div>
     </div>
     <div class="header-meta">
@@ -188,7 +188,7 @@ body{font-family:'IBM Plex Sans Arabic',sans-serif;background:#fff;color:#1e293b
   <!-- Footer -->
   <div class="footer">
     <div>
-      <strong>WZRD AI</strong> by Primo Marca<br>
+      <strong>WZZRD AI</strong> by Primo Marca<br>
       "Marks Fade, MARCAS Don't."
     </div>
     <div style="text-align:left">
@@ -285,7 +285,7 @@ export const reportPdfRouter = router({
         const { sendEmail } = await import('../wzrdEmails');
         const sent = await sendEmail({
           to: input.email,
-          subject: `تقرير ${input.toolNameAr} — WZRD AI (${input.score}/١٠٠)`,
+          subject: `تقرير ${input.toolNameAr} — WZZRD AI (${input.score}/١٠٠)`,
           html,
         });
 

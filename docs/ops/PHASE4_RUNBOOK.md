@@ -1,4 +1,4 @@
-# WZRD AI — Production Hardening & Runbook (Phase 4)
+# WZZRD AI — Production Hardening & Runbook (Phase 4)
 
 This document provides the operational procedures, rollback strategies, and monitoring guidelines for the Phase 4 Enterprise & B2B Foundation deployment on Railway.
 

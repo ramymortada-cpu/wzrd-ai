@@ -175,14 +175,14 @@ p{margin:0 0 14px;line-height:1.8;font-size:14px}
 .footer{text-align:center;padding:20px;font-size:11px;color:#64647a}
 .footer a{color:#9a7a3a}
 </style></head><body><div class="c">
-<div class="logo">WZRD <span>AI</span></div>
+<div class="logo">WZZRD <span>AI</span></div>
 <div class="card">
 <h2>${tip.subject}</h2>
 <p>${tip.tip}</p>
 <p><a href="${appUrl}${tip.ctaUrl}" class="btn">${tip.cta}</a></p>
 </div>
 <div class="footer">
-<p>Weekly brand tip from <a href="${appUrl}">WZRD AI</a> by Primo Marca</p>
+<p>Weekly brand tip from <a href="${appUrl}">WZZRD AI</a> by Primo Marca</p>
 <p><a href="${appUrl}/unsubscribe?email=${encodeURIComponent(email)}">Unsubscribe</a></p>
 </div>
 </div></body></html>`;
@@ -206,7 +206,7 @@ export async function sendWeeklyNewsletter(): Promise<{ sent: number; failed: nu
   const tipIndex = weekNum % WEEKLY_TIPS.length;
   const tip = WEEKLY_TIPS[tipIndex];
   const appUrl = process.env.APP_URL || 'https://wzzrdai.com';
-  const from = process.env.EMAIL_FROM || 'WZRD AI <noreply@primomarca.com>';
+  const from = process.env.EMAIL_FROM || 'WZZRD AI <noreply@primomarca.com>';
 
   let sent = 0, failed = 0;
 

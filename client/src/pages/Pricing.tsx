@@ -203,7 +203,7 @@ export default function Pricing() {
               type="text"
               value={promoCode}
               onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoResult(null); }}
-              placeholder={locale === 'ar' ? 'WZRD١٠' : 'CODE'}
+              placeholder={locale === 'ar' ? 'WZZRD١٠' : 'CODE'}
               className="flex-1 px-4 py-2.5 rounded-xl border border-zinc-700 bg-zinc-950 font-mono text-sm"
               maxLength={50}
             />

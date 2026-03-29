@@ -112,7 +112,7 @@ export async function createPaymentIntention(
         items: [{
           name: plan.name,
           amount: chargeCents,
-          description: `WZRD AI ${plan.name}`,
+          description: `WZZRD AI ${plan.name}`,
           quantity: 1,
         }],
         billing_data: {

@@ -13,7 +13,7 @@
   --card-foreground: oklch(0.18 0.015 280);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.015 280);
-  /* Midnight violet + readable foreground (WZRD premium) */
+  /* Midnight violet + readable foreground (WZZRD premium) */
   --primary: oklch(0.48 0.16 290);
   --primary-foreground: oklch(0.98 0.005 80);
   --secondary: oklch(0.96 0.005 80);
@@ -120,7 +120,7 @@
   --font-serif: "Playfair Display", serif;
   --wzrd-accent: oklch(0.78 0.14 195);
   --wzrd-glow: oklch(0.62 0.2 290 / 0.45);
-  /* Premium AI-native funnel (WZRD guide) — Tailwind v4 tokens */
+  /* Premium AI-native funnel (WZZRD guide) — Tailwind v4 tokens */
   --font-display: "Space Grotesk", "Inter", "IBM Plex Sans Arabic", system-ui, sans-serif;
   --color-brand-cyan: #00f0ff;
   --color-brand-violet: #7000ff;
@@ -267,7 +267,7 @@
     }
   }
 
-  /* WZRD premium shell — radial mesh (light / dark) + subtle drift layer */
+  /* WZZRD premium shell — radial mesh (light / dark) + subtle drift layer */
   .wzrd-page-radial {
     position: relative;
     isolation: isolate;
@@ -304,7 +304,7 @@
     z-index: 1;
   }
 
-  /* Let ambient shell (#050505 + orbs) show through on WZRD funnel routes */
+  /* Let ambient shell (#050505 + orbs) show through on WZZRD funnel routes */
   [data-wzrd-premium-shell="true"] .wzrd-page-radial {
     background: radial-gradient(ellipse 120% 90% at 50% -15%, oklch(0.94 0.05 290 / 0.42), transparent 52%),
       radial-gradient(ellipse 70% 55% at 100% 20%, oklch(0.92 0.04 220 / 0.3), transparent 48%),

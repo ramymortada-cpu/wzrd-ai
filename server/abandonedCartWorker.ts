@@ -20,7 +20,7 @@ function checkoutReminderHtml(amountEgp: number, productType: string, appUrl: st
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0f0f12;padding:32px 16px;">
     <tr><td align="center">
       <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:linear-gradient(180deg,#1a1a22 0%,#121218 100%);border-radius:16px;border:1px solid #27272a;overflow:hidden;">
-        <tr><td style="padding:28px 28px 12px;font-size:13px;color:#a1a1aa;">WZRD AI</td></tr>
+        <tr><td style="padding:28px 28px 12px;font-size:13px;color:#a1a1aa;">WZZRD AI</td></tr>
         <tr><td style="padding:0 28px 8px;font-size:22px;font-weight:700;color:#fafafa;">لسه فاكر عربية الشراء؟</td></tr>
         <tr><td style="padding:0 28px 16px;font-size:15px;line-height:1.7;color:#d4d4d8;">
           بدأت عملية شراء باقة <strong style="color:#fff;">${productType}</strong> بمبلغ تقريبي <strong style="color:#fbbf24;">${amountEgp} ج.م</strong> ومكتملتش الدفع.
@@ -70,7 +70,7 @@ export async function processAbandonedCartsOnce(): Promise<void> {
     const html = checkoutReminderHtml(row.amountEgp, row.productType, appUrl);
     const ok = await sendEmail({
       to: row.email,
-      subject: "WZRD AI — إكمال طلبك",
+      subject: "WZZRD AI — إكمال طلبك",
       html,
       text: `أكمل شراءك على ${appUrl}/pricing`,
     });

@@ -1,5 +1,5 @@
 /**
- * Zod inputs for WZRD diagnosis tools — must match client ToolPage field `name` values.
+ * Zod inputs for WZZRD diagnosis tools — must match client ToolPage field `name` values.
  */
 import { z } from "zod";
 

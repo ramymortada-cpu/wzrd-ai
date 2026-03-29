@@ -1,5 +1,5 @@
 /**
- * WhatsApp account linking — authenticated users link E.164 to WZRD for WA Copilot.
+ * WhatsApp account linking — authenticated users link E.164 to WZZRD for WA Copilot.
  */
 import { z } from "zod";
 import { router, protectedProcedure } from "../_core/trpc";
