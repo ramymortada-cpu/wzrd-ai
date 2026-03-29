@@ -7,7 +7,7 @@ export default function BlogIndexPage() {
   const postsQuery = trpc.blog.getPosts.useQuery({ limit: 20, offset: 0 }, { retry: false });
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50">
+    <div className="wzrd-public-page min-h-screen">
       <WzrdPublicHeader credits={null} />
       <div className="wzrd-public-pt mx-auto max-w-5xl px-6 pb-20">
         <div className="mb-10 text-center">
@@ -17,7 +17,7 @@ export default function BlogIndexPage() {
           <h1 className="text-4xl font-bold tracking-tight mb-2">
             {locale === "ar" ? "مقالات WZZRD AI" : "WZZRD AI Blog"}
           </h1>
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-[#6B7280]">
             {locale === "ar"
               ? "محتوى عملي لتحسين البراند — خطوة بخطوة."
               : "Actionable brand engineering content — step by step."}
@@ -29,11 +29,11 @@ export default function BlogIndexPage() {
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className="rounded-2xl border border-zinc-800/50 bg-zinc-900/30 backdrop-blur-sm p-6 animate-pulse"
+                className="wzrd-public-card p-6 animate-pulse"
               >
-                <div className="h-5 w-2/3 rounded bg-zinc-800/60 mb-3" />
-                <div className="h-4 w-full rounded bg-zinc-800/40 mb-2" />
-                <div className="h-4 w-5/6 rounded bg-zinc-800/40" />
+                <div className="h-5 w-2/3 rounded bg-[#F3F4F6]/60 mb-3" />
+                <div className="h-4 w-full rounded bg-[#F3F4F6]/40 mb-2" />
+                <div className="h-4 w-5/6 rounded bg-[#F3F4F6]/40" />
               </div>
             ))}
           </div>
@@ -47,16 +47,16 @@ export default function BlogIndexPage() {
               <a
                 key={p.id}
                 href={`/blog/${p.slug}`}
-                className="group rounded-2xl border border-zinc-800/50 bg-zinc-900/30 backdrop-blur-sm p-6 transition hover:border-zinc-700/50"
+                className="wzrd-public-card group p-6 transition hover:border-[#1B4FD8]/30"
               >
-                <p className="font-mono text-[10px] text-zinc-500 tracking-widest uppercase mb-2">
+                <p className="font-mono text-[10px] text-[#9CA3AF] tracking-widest uppercase mb-2">
                   {p.publishedAt ? new Date(p.publishedAt).toLocaleDateString("ar-EG") : "—"}
                 </p>
-                <h2 className="text-lg font-bold text-zinc-100 group-hover:text-white transition">
+                <h2 className="text-lg font-bold text-[#111827] group-hover:text-[#1B4FD8] transition">
                   {locale === "ar" ? p.titleAr : p.titleEn}
                 </h2>
                 {((locale === "ar" ? p.excerptAr : p.excerptEn) || null) ? (
-                  <p className="mt-2 text-sm text-zinc-400 leading-relaxed line-clamp-3">
+                  <p className="mt-2 text-sm text-[#6B7280] leading-relaxed line-clamp-3">
                     {locale === "ar" ? p.excerptAr : p.excerptEn}
                   </p>
                 ) : null}

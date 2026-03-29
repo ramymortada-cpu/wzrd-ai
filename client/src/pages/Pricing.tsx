@@ -202,8 +202,10 @@ export default function Pricing() {
     ];
   };
 
+  const isAr = locale === 'ar';
+  const dir = isAr ? 'rtl' : 'ltr';
   return (
-    <div className="min-h-screen bg-[#0D0D1A] text-white" dir="rtl">
+    <div className="wzrd-public-page" dir={dir}>
       <WzrdPublicHeader credits={credits} />
 
       {/* ── Hero ── */}
@@ -213,8 +215,8 @@ export default function Pricing() {
         <div className="pointer-events-none absolute top-20 left-1/4 h-64 w-64 rounded-full bg-cyan-500/10 blur-[100px]" />
 
         <div className="relative mx-auto max-w-3xl text-center">
-          <span className="mb-4 inline-block rounded-full border border-[#7058F8]/30 bg-[#7058F8]/10 px-4 py-1.5 text-xs font-semibold tracking-widest text-[#a08fff] uppercase">
-            الأسعار
+          <span className="wzrd-section-pill" style={{marginBottom: 16}}>
+            {isAr ? 'الأسعار' : 'Pricing'}
           </span>
           <h1 className="mb-4 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
             استثمار في نتيجة —{' '}
@@ -222,12 +224,12 @@ export default function Pricing() {
               مش مصروف على تجربة
             </span>
           </h1>
-          <p className="mx-auto max-w-xl text-base leading-relaxed text-white/60">
+          <p className="mx-auto max-w-xl text-base leading-relaxed" style={{color: '#6B7280'}}>
             كل جنيه بتدفعه بيرجع لك في شكل وضوح — تعرف بالظبط إيه اللي بيوقف علامتك، وإيه الخطوة الجاية.
           </p>
 
           {/* Trust badges */}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-white/40">
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs" style={{color: '#6B7280'}}>
             <span className="flex items-center gap-1.5"><span className="text-emerald-400">✓</span> بدون اشتراك شهري</span>
             <span className="flex items-center gap-1.5"><span className="text-emerald-400">✓</span> ادفع مرة واحدة</span>
             <span className="flex items-center gap-1.5"><span className="text-emerald-400">✓</span> نتائج فورية</span>
@@ -238,21 +240,21 @@ export default function Pricing() {
 
       {/* ── Promo Code ── */}
       <section className="px-6 pb-8">
-        <div className="mx-auto max-w-2xl rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
-          <p className="mb-3 text-sm font-semibold text-white/80">عندك كود خصم؟</p>
+        <div className="wzrd-public-card mx-auto max-w-2xl p-6">
+          <p className="mb-3 text-sm font-semibold" style={{color: '#374151'}}>عندك كود خصم؟ {!isAr && <span style={{color: '#374151'}}>Have a promo code?</span>}</p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <input
               type="text"
               value={promoCode}
               onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoResult(null); }}
               placeholder="WZZRD10"
-              className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 font-mono text-sm text-white placeholder-white/30 outline-none focus:border-[#7058F8]/50 focus:ring-2 focus:ring-[#7058F8]/20"
+              className="wzrd-public-input flex-1 font-mono"
               maxLength={50}
             />
             <select
               value={promoPlanId}
               onChange={(e) => { setPromoPlanId(e.target.value); setPromoResult(null); }}
-              className="rounded-xl border border-white/10 bg-[#0D0D1A] px-4 py-2.5 text-sm text-white min-w-[180px]"
+              className="wzrd-public-input min-w-[180px]"
             >
               {plans.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -264,13 +266,13 @@ export default function Pricing() {
               type="button"
               onClick={verifyPromo}
               disabled={promoLoading}
-              className="rounded-xl bg-[#7058F8] px-6 py-2.5 text-sm font-bold text-white transition hover:bg-[#5a45d4] disabled:opacity-50"
+              className="wzrd-btn-primary px-6 py-2.5 text-sm"
             >
               {promoLoading ? '...' : 'تحقق'}
             </button>
           </div>
           {promoResult && (
-            <p className={`mt-3 text-sm font-medium ${promoResult.valid ? 'text-emerald-400' : 'text-red-400'}`}>
+            <p className="mt-3 text-sm font-medium" style={{color: promoResult.valid ? '#16A34A' : '#DC2626'}}>
               {promoResult.valid
                 ? `✓ الكود صالح — السعر بعد الخصم: ${toArabicNumerals(String(promoResult.finalAmountEGP))} ج.م (كان ${toArabicNumerals(String(promoResult.originalAmountEGP))} ج.م)`
                 : `✗ ${promoResult.message || 'الكود غير صالح'}`}
@@ -291,47 +293,47 @@ export default function Pricing() {
             return (
               <div
                 key={plan.id}
-                className={`relative flex flex-col rounded-2xl p-px transition-transform hover:-translate-y-1 ${
+                className={`relative flex flex-col rounded-2xl p-px transition-transform hover:-translate-y-1 wzrd-public-card ${
                   isPopular
-                    ? 'bg-gradient-to-b from-[#7058F8] via-cyan-500/50 to-transparent shadow-[0_0_60px_rgba(112,88,248,0.25)]'
-                    : 'bg-white/10'
+                    ? ''
+                    : ''
                 }`}
               >
                 {isPopular && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-[#7058F8] to-cyan-400 px-5 py-1 text-xs font-bold text-white shadow-lg whitespace-nowrap">
-                    🔥 الأكثر طلباً
+                  <div style={{position: 'absolute', top: -12, right: isAr ? 'auto' : 20, left: isAr ? 20 : 'auto', background: '#F59E0B', color: '#fff', fontSize: 11, fontWeight: 800, padding: '4px 12px', borderRadius: 999}}>
+                    {isAr ? '⭐ الأكثر طلباً' : '⭐ Most Popular'}
                   </div>
                 )}
-                <div className={`flex h-full flex-col gap-5 rounded-2xl p-7 ${isPopular ? 'bg-[#13132A]' : 'bg-[#0D0D1A]'}`}>
+                <div className="flex h-full flex-col gap-5 rounded-2xl p-7" style={{background: isPopular ? '#1B4FD8' : '#FFFFFF'}}>
                   {/* Plan header */}
                   <div>
                     <div className="mb-3 text-3xl">{icon}</div>
-                    <h3 className="text-lg font-bold text-white">
+                    <h3 className="text-lg font-bold" style={{color: isPopular ? '#fff' : '#111827'}}>
                       {locale === 'ar' ? plan.label : plan.labelEn}
                     </h3>
-                    <p className="mt-1 text-sm text-white/50">
+                    <p className="mt-1 text-sm" style={{color: isPopular ? 'rgba(255,255,255,0.75)' : '#6B7280'}}>
                       {locale === 'ar' ? (plan.description || plan.descEn) : (plan.descEn || plan.description)}
                     </p>
                   </div>
 
                   {/* Price */}
                   <div className="flex items-baseline gap-1">
-                    <span className={`text-5xl font-extrabold tracking-tight ${isPopular ? 'text-white' : 'text-white/90'}`}>
+                    <span className="text-5xl font-extrabold tracking-tight" style={{color: isPopular ? '#fff' : '#111827'}}>
                       {locale === 'ar' ? toArabicNumerals(plan.price.toLocaleString()) : plan.price.toLocaleString()}
                     </span>
-                    <span className="text-sm text-white/40">ج.م</span>
-                    <span className="mr-2 text-xs text-white/30">دفعة واحدة</span>
+                    <span className="text-sm" style={{color: isPopular ? 'rgba(255,255,255,0.7)' : '#9CA3AF'}}>ج.م</span>
+                    <span className="mr-2 text-xs" style={{color: isPopular ? 'rgba(255,255,255,0.6)' : '#9CA3AF'}}>{isAr ? 'دفعة واحدة' : 'one-time'}</span>
                   </div>
 
                   {/* Credits badge */}
-                  <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-[#7058F8]/30 bg-[#7058F8]/10 px-3 py-1 text-xs font-semibold text-[#a08fff]">
+                  <div style={{display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 999, background: isPopular ? 'rgba(255,255,255,0.15)' : '#EEF2FF', fontSize: 12, fontWeight: 700, color: isPopular ? '#fff' : '#1B4FD8'}}>
                     ⚡ {locale === 'ar' ? toArabicNumerals(plan.credits.toLocaleString()) : plan.credits.toLocaleString()} كريدت
                   </div>
 
                   {/* Features */}
                   <ul className="flex-1 space-y-2.5">
                     {features.map((f, i) => (
-                      <li key={i} className="flex items-start gap-2.5 text-sm text-white/70">
+                      <li key={i} className="flex items-start gap-2.5 text-sm" style={{color: isPopular ? 'rgba(255,255,255,0.85)' : '#374151'}}>
                         <span className={`mt-0.5 shrink-0 text-base ${isPopular ? 'text-[#7058F8]' : 'text-emerald-400'}`}>✓</span>
                         <span>{f}</span>
                       </li>
@@ -343,13 +345,10 @@ export default function Pricing() {
                     type="button"
                     onClick={() => void purchasePlan(plan.id)}
                     disabled={isPurchasing}
-                    className={`mt-auto w-full rounded-xl py-3.5 text-sm font-bold transition disabled:opacity-60 ${
-                      isPopular
-                        ? 'bg-gradient-to-l from-[#7058F8] to-cyan-500 text-white hover:opacity-90 hover:shadow-[0_0_24px_rgba(112,88,248,0.5)]'
-                        : 'border border-white/20 text-white hover:border-[#7058F8]/50 hover:bg-[#7058F8]/10'
-                    }`}
+                    className="mt-auto w-full rounded-xl py-3.5 text-sm font-bold transition"
+                    style={{background: isPopular ? '#fff' : '#1B4FD8', color: isPopular ? '#1B4FD8' : '#fff', border: isPopular ? 'none' : 'none', opacity: isPurchasing ? 0.6 : 1, cursor: isPurchasing ? 'not-allowed' : 'pointer', fontFamily: "'Cairo', sans-serif"}}
                   >
-                    {isPurchasing ? '...' : 'ابدأ دلوقتي'}
+                    {isPurchasing ? '...' : (isAr ? 'ابدأ دلوقتي ←' : 'Get started →')}
                   </button>
                 </div>
               </div>
@@ -359,21 +358,21 @@ export default function Pricing() {
       </section>
 
       {/* ── Value Comparison ── */}
-      <section className="px-6 pb-16">
-        <div className="mx-auto max-w-3xl">
-          <h2 className="mb-8 text-center text-2xl font-bold text-white">
-            مقارنة — WZZRD AI vs. الوكالة التقليدية
+      <section style={{padding: '0 24px 64px', background: '#F9FAFB'}}>
+        <div style={{maxWidth: 800, margin: '0 auto', paddingTop: 48}}>
+          <h2 style={{textAlign: 'center', fontSize: 26, fontWeight: 800, color: '#111827', marginBottom: 32, fontFamily: "'Cairo', sans-serif"}}>
+            {isAr ? 'مقارنة — WZZRD AI vs. الوكالة التقليدية' : 'WZZRD AI vs. Traditional Agency'}
           </h2>
-          <div className="overflow-hidden rounded-2xl border border-white/10">
-            <table className="w-full text-sm">
+          <div style={{borderRadius: 16, overflow: 'hidden', border: '1px solid #E5E7EB', background: '#fff'}}>
+            <table style={{width: '100%', borderCollapse: 'collapse', fontSize: 14}}>
               <thead>
-                <tr className="border-b border-white/10 bg-white/5">
-                  <th className="px-6 py-4 text-right font-semibold text-white/60"></th>
-                  <th className="px-6 py-4 text-center font-bold text-[#7058F8]">WZZRD AI</th>
-                  <th className="px-6 py-4 text-center font-semibold text-white/40">وكالة تقليدية</th>
+                <tr style={{background: '#F3F4F6', borderBottom: '1px solid #E5E7EB'}}>
+                  <th style={{padding: '14px 20px', textAlign: isAr ? 'right' : 'left', color: '#6B7280', fontWeight: 600}}></th>
+                  <th style={{padding: '14px 20px', textAlign: 'center', color: '#1B4FD8', fontWeight: 800}}>WZZRD AI</th>
+                  <th style={{padding: '14px 20px', textAlign: 'center', color: '#9CA3AF', fontWeight: 600}}>{isAr ? 'وكالة تقليدية' : 'Traditional Agency'}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody>
                 {[
                   ['التكلفة', 'من ٩٩ ج.م', '٥٠٠٠–٣٠٠٠٠ ج.م/شهر'],
                   ['وقت التسليم', 'فوري — دقائق', '٢–٤ أسابيع'],
@@ -382,10 +381,10 @@ export default function Pricing() {
                   ['التحديث', 'في أي وقت', 'بتدفع مرة تانية'],
                   ['الـ AI', 'مدرّب على السوق المصري والخليجي', 'عام ومش مخصّص'],
                 ].map(([feature, wzrd, agency]) => (
-                  <tr key={feature} className="hover:bg-white/3 transition">
-                    <td className="px-6 py-4 font-medium text-white/70">{feature}</td>
-                    <td className="px-6 py-4 text-center font-semibold text-emerald-400">{wzrd}</td>
-                    <td className="px-6 py-4 text-center text-white/30">{agency}</td>
+                  <tr key={feature as string} style={{borderBottom: '1px solid #F3F4F6'}}>
+                    <td style={{padding: '12px 20px', fontWeight: 600, color: '#374151'}}>{feature}</td>
+                    <td style={{padding: '12px 20px', textAlign: 'center', fontWeight: 700, color: '#16A34A'}}>{wzrd}</td>
+                    <td style={{padding: '12px 20px', textAlign: 'center', color: '#9CA3AF'}}>{agency}</td>
                   </tr>
                 ))}
               </tbody>
@@ -395,10 +394,10 @@ export default function Pricing() {
       </section>
 
       {/* ── FAQ ── */}
-      <section className="px-6 pb-16">
-        <div className="mx-auto max-w-2xl">
-          <h2 className="mb-8 text-center text-2xl font-bold text-white">أسئلة شائعة</h2>
-          <div className="space-y-4">
+      <section style={{padding: '48px 24px 64px'}}>
+        <div style={{maxWidth: 680, margin: '0 auto'}}>
+          <h2 style={{textAlign: 'center', fontSize: 26, fontWeight: 800, color: '#111827', marginBottom: 32, fontFamily: "'Cairo', sans-serif"}}>{isAr ? 'أسئلة شائعة' : 'FAQ'}</h2>
+          <div style={{display: 'flex', flexDirection: 'column', gap: 12}}>
             {[
               {
                 q: 'إيه الفرق بين الكريدت والتقرير؟',
@@ -417,11 +416,9 @@ export default function Pricing() {
                 a: 'لو استخدمت أقل من ١٠% من الكريدت خلال ٧ أيام، نقدر نرتب استرداد. تواصل معنا على WhatsApp.',
               },
             ].map(({ q, a }) => (
-              <details key={q} className="group rounded-xl border border-white/10 bg-white/5 p-5">
-                <summary className="cursor-pointer list-none font-semibold text-white/90 group-open:text-[#7058F8]">
-                  {q}
-                </summary>
-                <p className="mt-3 text-sm leading-relaxed text-white/60">{a}</p>
+              <details key={q} className="wzrd-public-card" style={{padding: '16px 20px'}}>
+                <summary style={{listStyle: 'none', fontWeight: 700, color: '#111827', fontSize: 15, cursor: 'pointer', fontFamily: "'Cairo', sans-serif"}}>{q}</summary>
+                <p style={{marginTop: 10, fontSize: 14, color: '#6B7280', lineHeight: 1.7}}>{a}</p>
               </details>
             ))}
           </div>
@@ -429,28 +426,14 @@ export default function Pricing() {
       </section>
 
       {/* ── Enterprise CTA ── */}
-      <section className="px-6 pb-24">
-        <div className="mx-auto max-w-2xl rounded-2xl border border-[#7058F8]/20 bg-gradient-to-b from-[#7058F8]/10 to-transparent p-10 text-center">
-          <div className="mb-4 text-4xl">🏢</div>
-          <h3 className="mb-3 text-xl font-bold text-white">محتاج حل Enterprise؟</h3>
-          <p className="mb-6 text-sm leading-relaxed text-white/60">
-            لو عندك فريق أو وكالة أو شركة — عندنا باقات مخصوصة بـ multi-workspace وتقارير white-label وأولوية دعم.
-          </p>
-          <div className="flex flex-wrap justify-center gap-3">
-            <a
-              href={waMeHref()}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-xl bg-[#7058F8] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#5a45d4] hover:shadow-[0_0_20px_rgba(112,88,248,0.4)]"
-            >
-              تكلّم معنا على WhatsApp
-            </a>
-            <button
-              onClick={() => navigate('/landing/services.html')}
-              className="rounded-xl border border-white/20 px-6 py-3 text-sm font-semibold text-white/70 transition hover:border-[#7058F8]/50 hover:text-white"
-            >
-              شوف الخدمات
-            </button>
+      <section style={{padding: '0 24px 80px'}}>
+        <div style={{maxWidth: 640, margin: '0 auto', background: 'linear-gradient(135deg, #EEF2FF 0%, #F0F9FF 100%)', border: '1px solid rgba(27,79,216,0.15)', borderRadius: 20, padding: '40px 32px', textAlign: 'center'}}>
+          <div style={{fontSize: 40, marginBottom: 16}}>🏢</div>
+          <h3 style={{fontSize: 22, fontWeight: 800, color: '#111827', marginBottom: 10, fontFamily: "'Cairo', sans-serif"}}>{isAr ? 'محتاج حل Enterprise؟' : 'Need an Enterprise solution?'}</h3>
+          <p style={{fontSize: 14, color: '#6B7280', lineHeight: 1.7, marginBottom: 24}}>{isAr ? 'لو عندك فريق أو وكالة أو شركة — عندنا باقات مخصوصة بـ multi-workspace وتقارير white-label وأولوية دعم.' : 'If you have a team, agency, or company — we offer custom plans with multi-workspace, white-label reports, and priority support.'}</p>
+          <div style={{display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 12}}>
+            <a href={waMeHref()} target="_blank" rel="noreferrer" className="wzrd-btn-primary" style={{padding: '12px 24px', fontSize: 14, borderRadius: 8, textDecoration: 'none'}}>{isAr ? 'تكلّم معنا على WhatsApp' : 'Chat on WhatsApp'}</a>
+            <button onClick={() => navigate('/landing/services.html')} className="wzrd-btn-ghost" style={{padding: '12px 24px', fontSize: 14}}>{isAr ? 'شوف الخدمات' : 'View services'}</button>
           </div>
         </div>
       </section>

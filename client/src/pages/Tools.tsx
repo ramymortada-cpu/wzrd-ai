@@ -64,7 +64,7 @@ function ToolsGridCard({
       className={`group relative overflow-hidden rounded-3xl border-[0.5px] p-8 sm:p-10 text-left transition-all duration-500 ease-out ${
         canAfford
           ? 'wzrd-glass cursor-pointer border-white/40 hover:-translate-y-2 hover:shadow-2xl dark:border-zinc-600/50'
-          : 'cursor-not-allowed border-zinc-200/50 bg-zinc-100/40 opacity-55 dark:border-zinc-800 dark:bg-zinc-900/30'
+          : 'cursor-not-allowed border-zinc-200/50 bg-zinc-100/40 opacity-55'
       }`}
     >
       {canAfford && (
@@ -95,7 +95,7 @@ function ToolsGridCard({
         <p className="mb-8 text-sm leading-loose text-zinc-600 dark:text-zinc-400">
           {locale === 'ar' ? tool.descAr : tool.desc}
         </p>
-        <div className="flex items-center justify-between rounded-2xl border-[0.5px] border-zinc-200/60 bg-white/40 px-4 py-3 backdrop-blur-sm dark:border-zinc-700/50 dark:bg-zinc-950/30">
+        <div className="flex items-center justify-between rounded-2xl border border-[#E5E7EB] bg-white px-4 py-3">
           <span className="text-sm font-semibold text-primary">
             {canAfford ? `${t('wzrd.run')} →` : <span className="text-red-500 dark:text-red-400">{t('wzrd.notEnoughCredits')}</span>}
           </span>
@@ -154,7 +154,7 @@ export default function Tools() {
   const heroTitle = locale === 'ar' ? 'أدوات التحليل الذكي' : 'AI Toolkit';
 
   return (
-    <div className="wzrd-page-radial text-zinc-900 dark:text-white">
+    <div className="wzrd-public-page">
       <WzrdPublicHeader credits={credits} />
 
       <div className="wzrd-public-pt max-w-5xl mx-auto px-6 pb-16">
@@ -169,7 +169,7 @@ export default function Tools() {
                   <button type="button" onClick={() => navigate('/tools/brand-diagnosis')} className="wzrd-shimmer-btn rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/25 transition duration-500 hover:-translate-y-0.5">
                     🔬 {t('wzrd.startDiagnosis')}
                   </button>
-                  <button type="button" onClick={() => document.getElementById('tools-grid')?.scrollIntoView({ behavior: 'smooth' })} className="rounded-full border-[0.5px] border-zinc-300/80 bg-white/50 px-5 py-2.5 text-sm font-medium text-zinc-700 backdrop-blur-sm transition hover:border-primary/40 dark:border-zinc-600 dark:bg-zinc-900/40 dark:text-zinc-300">
+                  <button type="button" onClick={() => document.getElementById('tools-grid')?.scrollIntoView({ behavior: 'smooth' })} className="rounded-full border border-[#E5E7EB] bg-white px-5 py-2.5 text-sm font-medium text-[#374151] transition hover:border-[#1B4FD8]/40">
                     {t('wzrd.browseTools')}
                   </button>
                 </div>
