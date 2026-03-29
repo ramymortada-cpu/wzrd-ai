@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { toErrorString } from '@/lib/errorUtils';
-import { useI18n } from '@/lib/i18n';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
 export default function Login() {
   const [, navigate] = useLocation();
-  const { t, locale } = useI18n();
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [step, setStep] = useState<'email' | 'code'>('email');
@@ -33,14 +31,14 @@ export default function Login() {
         setError(toErrorString(result?.message, 'Failed to send code.'));
       }
     } catch {
-      setError('Network error. Please try again.');
+      setError('خطأ في الاتصال. حاول تاني.');
     } finally {
       setLoading(false);
     }
   };
 
   const verifyCode = async () => {
-    if (!code || code.length !== 6) { setError(t('wzrd.enterCode')); return; }
+    if (!code || code.length !== 6) { setError('اكتب الكود كامل'); return; }
     setLoading(true);
     setError('');
     try {
@@ -54,118 +52,140 @@ export default function Login() {
       if (result?.success) {
         navigate('/tools');
       } else {
-        setError(toErrorString(result?.message, 'Invalid code.'));
+        setError(toErrorString(result?.message, 'الكود غلط أو انتهى.'));
       }
     } catch {
-      setError('Network error. Please try again.');
+      setError('خطأ في الاتصال. حاول تاني.');
     } finally {
       setLoading(false);
     }
   };
 
-  const inputClass =
-    'w-full rounded-2xl border-[0.5px] border-zinc-200/80 bg-zinc-50/80 px-4 py-3.5 text-sm text-zinc-900 placeholder-zinc-500 outline-none backdrop-blur-sm transition focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-zinc-700 dark:bg-zinc-900/50 dark:text-white dark:placeholder-zinc-500';
-
-  const otpSlotClass =
-    'h-12 w-10 sm:h-14 sm:w-11 rounded-xl border-[0.5px] border-zinc-200/90 bg-white/70 text-lg font-mono font-bold text-zinc-900 first:rounded-xl last:rounded-xl dark:border-zinc-600 dark:bg-zinc-900/60 dark:text-white data-[active=true]:border-primary data-[active=true]:ring-2 data-[active=true]:ring-primary/25';
-
   return (
-    <div className="wzrd-auth-mesh relative grid min-h-screen text-white md:grid-cols-[minmax(0,1fr)_minmax(0,420px)] lg:grid-cols-[minmax(0,1.1fr)_minmax(0,440px)]">
-      <aside className="relative hidden flex-col justify-between overflow-hidden p-10 md:flex lg:p-12">
-        <a href="/tools" className="flex w-fit items-baseline gap-1 text-lg font-bold transition hover:text-white">
-          <span className="font-display tracking-tight">WZZRD</span>
-          <span className="wzrd-badge-cyan text-[10px]">AI</span>
-        </a>
-        <div>
-          <p className="wzrd-badge-violet mb-4 w-fit text-[10px]">{t('wzrd.welcomeBack')}</p>
-          <h1
-            className={`max-w-md text-3xl font-bold leading-tight tracking-tight lg:text-4xl ${locale === 'ar' ? 'font-sans' : 'font-display'}`}
-          >
-            <span className="wzrd-gradient-text">{locale === 'ar' ? 'أهلاً بعودتك' : 'Welcome back'}</span>
-            {locale === 'ar' ? ' — تابع تشخيص براندك.' : ' — pick up where you left off.'}
-          </h1>
-          <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/60">
-            {locale === 'ar'
-              ? 'أنشئ طلبك بنقرة، وتتبع النتائج من نفس المكان.'
-              : 'Request your next scan in one click — results stay in one place.'}
-          </p>
-        </div>
-        <p className="text-xs text-white/40">WZZRD AI</p>
-      </aside>
+    <div className="relative min-h-screen overflow-hidden bg-[#0D0D1A] text-white" dir="rtl">
+      {/* Background glows */}
+      <div className="pointer-events-none absolute -top-40 right-1/3 h-[500px] w-[500px] rounded-full bg-[#7058F8]/15 blur-[140px]" />
+      <div className="pointer-events-none absolute bottom-0 left-1/4 h-80 w-80 rounded-full bg-cyan-500/8 blur-[120px]" />
 
-      <div className="relative flex min-h-screen flex-col justify-center px-4 pb-16 pt-24 md:px-8">
-        <a href="/tools" className="absolute left-6 top-6 z-10 flex items-baseline gap-1 text-lg font-bold text-white/90 drop-shadow-md transition hover:text-white md:hidden">
-          <span className="font-display">WZZRD</span>
-          <span className="wzrd-badge-cyan text-[10px]">AI</span>
+      {/* Grid pattern overlay */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+          backgroundSize: '40px 40px',
+        }}
+      />
+
+      <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-16">
+        {/* Logo */}
+        <a href="/" className="mb-10 flex items-baseline gap-1.5 text-xl font-extrabold tracking-tight text-white transition hover:opacity-80">
+          <span>WZZRD</span>
+          <span className="rounded bg-[#7058F8] px-1.5 py-0.5 text-[10px] font-bold text-white">AI</span>
         </a>
 
-        <div className="w-full max-w-md mx-auto">
-          <div className="wzrd-glass wzrd-auth-card rounded-3xl p-8 sm:p-10">
+        <div className="w-full max-w-md">
+          {/* Card */}
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm sm:p-10">
             {step === 'email' ? (
               <>
-                <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-white">{t('wzrd.welcomeBack')}</h2>
-                <p className="mb-6 text-sm leading-relaxed text-white/70">{t('wzrd.enterEmailSendCode')}</p>
-                {error && <div className="mb-6 rounded-2xl border border-red-400/30 bg-red-500/15 px-4 py-3 text-sm text-red-100">{error}</div>}
                 <div className="mb-6">
-                  <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-white/60">Email</label>
+                  <h1 className="text-2xl font-extrabold tracking-tight text-white">أهلاً بعودتك</h1>
+                  <p className="mt-2 text-sm leading-relaxed text-white/50">
+                    ادخل إيميلك وهنبعتلك كود دخول فوري — بدون باسورد.
+                  </p>
+                </div>
+
+                {error && (
+                  <div className="mb-5 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                    {error}
+                  </div>
+                )}
+
+                <div className="mb-5">
+                  <label className="mb-2 block text-xs font-semibold uppercase tracking-widest text-white/40">
+                    البريد الإلكتروني
+                  </label>
                   <input
                     type="email"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && requestCode()}
                     placeholder="your@email.com"
-                    className={inputClass}
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm text-white placeholder-white/30 outline-none transition focus:border-[#7058F8]/50 focus:ring-2 focus:ring-[#7058F8]/20"
+                    dir="ltr"
                   />
                 </div>
+
                 <button
                   type="button"
                   onClick={requestCode}
                   disabled={loading || !email}
-                  className="wzrd-shimmer-btn w-full rounded-2xl bg-gradient-to-r from-primary to-violet-600 py-4 text-base font-bold text-white shadow-lg shadow-primary/30 transition hover:-translate-y-0.5 disabled:opacity-50"
+                  className="w-full rounded-xl bg-gradient-to-l from-[#7058F8] to-cyan-500 py-4 text-sm font-bold text-white shadow-lg shadow-[#7058F8]/20 transition hover:opacity-90 hover:shadow-[0_0_24px_rgba(112,88,248,0.5)] disabled:opacity-50"
                 >
-                  {loading ? t('wzrd.sending') : t('wzrd.sendLoginCode')}
+                  {loading ? 'جاري الإرسال...' : 'ابعتلي كود الدخول'}
                 </button>
               </>
             ) : (
               <>
-                <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-white">{t('wzrd.checkEmail')}</h2>
-                <p className="mb-1 text-sm text-white/70">{t('wzrd.sentCodeTo')}</p>
-                <p className="mb-6 text-sm font-semibold text-cyan-200">{email}</p>
-                {error && <div className="mb-6 rounded-2xl border border-red-400/30 bg-red-500/15 px-4 py-3 text-sm text-red-100">{error}</div>}
                 <div className="mb-6">
-                  <label className="mb-3 block text-xs font-semibold uppercase tracking-wider text-white/60">Code</label>
+                  <h1 className="text-2xl font-extrabold tracking-tight text-white">تحقق من إيميلك</h1>
+                  <p className="mt-2 text-sm text-white/50">
+                    بعتنالك كود مكوّن من ٦ أرقام على
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-[#a08fff]" dir="ltr">{email}</p>
+                </div>
+
+                {error && (
+                  <div className="mb-5 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                    {error}
+                  </div>
+                )}
+
+                <div className="mb-6">
+                  <label className="mb-3 block text-xs font-semibold uppercase tracking-widest text-white/40">
+                    كود التحقق
+                  </label>
                   <div className="flex justify-center" dir="ltr">
                     <InputOTP maxLength={6} value={code} onChange={setCode}>
                       <InputOTPGroup className="gap-2">
                         {Array.from({ length: 6 }).map((_, i) => (
-                          <InputOTPSlot key={i} index={i} className={otpSlotClass} />
+                          <InputOTPSlot
+                            key={i}
+                            index={i}
+                            className="h-12 w-10 rounded-xl border border-white/10 bg-white/5 text-lg font-mono font-bold text-white sm:h-14 sm:w-11 data-[active=true]:border-[#7058F8]/70 data-[active=true]:ring-2 data-[active=true]:ring-[#7058F8]/30"
+                          />
                         ))}
                       </InputOTPGroup>
                     </InputOTP>
                   </div>
                 </div>
+
                 <button
                   type="button"
                   onClick={verifyCode}
                   disabled={loading || code.length !== 6}
-                  className="wzrd-shimmer-btn w-full rounded-2xl bg-gradient-to-r from-primary to-cyan-500 py-4 text-base font-bold text-white shadow-lg transition hover:-translate-y-0.5 disabled:opacity-50"
+                  className="w-full rounded-xl bg-gradient-to-l from-[#7058F8] to-cyan-500 py-4 text-sm font-bold text-white shadow-lg shadow-[#7058F8]/20 transition hover:opacity-90 hover:shadow-[0_0_24px_rgba(112,88,248,0.5)] disabled:opacity-50"
                 >
-                  {loading ? t('wzrd.verifying') : t('wzrd.verifyLogin')}
+                  {loading ? 'جاري التحقق...' : 'تأكيد الدخول'}
                 </button>
+
                 <button
                   type="button"
                   onClick={() => { setStep('email'); setCode(''); setError(''); }}
-                  className="mt-4 w-full text-sm text-white/60 transition hover:text-white"
+                  className="mt-4 w-full text-sm text-white/40 transition hover:text-white/70"
                 >
-                  ← {t('wzrd.useDifferentEmail')}
+                  ← استخدم إيميل تاني
                 </button>
               </>
             )}
           </div>
 
-          <p className="mt-8 text-center text-sm text-white/55">
-            {t('wzrd.noAccount')}{' '}
-            <a href="/signup" className="font-semibold text-cyan-200 underline-offset-4 hover:text-white hover:underline">{t('wzrd.getCredits')}</a>
+          {/* Footer link */}
+          <p className="mt-6 text-center text-sm text-white/40">
+            مش عندك حساب؟{' '}
+            <a href="/signup" className="font-semibold text-[#a08fff] transition hover:text-white">
+              سجّل دلوقتي
+            </a>
           </p>
         </div>
       </div>
