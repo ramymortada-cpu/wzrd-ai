@@ -60,7 +60,13 @@ async function main() {
     }
     const sql = fs.readFileSync(fp, 'utf8');
     console.log(`\n── Running ${file} ──`);
-    await conn.query(sql);
+    const statements = sql
+      .split('-->')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    for (const statement of statements) {
+      await conn.query(statement);
+    }
     console.log('   OK');
   }
 
