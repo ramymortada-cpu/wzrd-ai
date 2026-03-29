@@ -50,6 +50,14 @@ const EXPECT = new Set([
 ]);
 
 /**
+ * Normalize SQL to remove unsupported MySQL syntax variants.
+ * - Removes "IF NOT EXISTS" from ALTER TABLE ADD COLUMN (not supported in all MySQL versions)
+ */
+function normalizeSql(sql) {
+  return sql.replace(/ADD COLUMN IF NOT EXISTS\s+/gi, 'ADD COLUMN ');
+}
+
+/**
  * Split a SQL file into individual statements.
  * Handles multi-line CREATE TABLE statements by splitting on semicolons
  * that appear at the end of a line (possibly followed by whitespace/newlines).
@@ -70,7 +78,8 @@ async function main() {
     if (!fs.existsSync(fp)) {
       throw new Error(`Missing ${fp}`);
     }
-    const sql = fs.readFileSync(fp, 'utf8');
+    const rawSql = fs.readFileSync(fp, 'utf8');
+    const sql = normalizeSql(rawSql);
     console.log(`\n── Running ${file} ──`);
     const statements = splitStatements(sql);
     console.log(`   Found ${statements.length} statement(s)`);
@@ -78,12 +87,10 @@ async function main() {
       try {
         await conn.query(stmt);
       } catch (err) {
-        // MySQL error 1060 (ER_DUP_FIELDNAME) means the column already exists.
-        // This happens when ALTER TABLE ADD COLUMN is used without IF NOT EXISTS
-        // (e.g. on MySQL versions that don't support that clause). Treat it as a
-        // no-op so migrations remain idempotent.
-        if (err.errno === 1060) {
-          console.warn(`   ⚠ Column already exists, skipping: ${err.sqlMessage}`);
+        // errno 1060 (ER_DUP_FIELDNAME): column already exists — safe to skip
+        // errno 1050 (ER_TABLE_EXISTS_ERROR): table already exists — safe to skip
+        if (err.errno === 1060 || err.errno === 1050) {
+          console.warn(`   ⚠ Already exists, skipping: ${err.sqlMessage}`);
           continue;
         }
         throw err;
