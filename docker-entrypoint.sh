@@ -7,11 +7,7 @@
 set -e
 
 echo "🔄 Running database migrations..."
-if [ -f "node_modules/.bin/drizzle-kit" ]; then
-  npx drizzle-kit migrate --force 2>&1 || echo "⚠️ Migration failed or already up to date"
-else
-  echo "⚠️ drizzle-kit not found — skipping migrations"
-fi
+node scripts/run-drizzle-mysql-migrations.mjs
 
 echo "🚀 Starting WZRD AI server..."
 exec node dist/index.js
