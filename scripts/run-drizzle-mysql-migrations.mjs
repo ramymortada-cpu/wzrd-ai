@@ -75,7 +75,19 @@ async function main() {
     const statements = splitStatements(sql);
     console.log(`   Found ${statements.length} statement(s)`);
     for (const stmt of statements) {
-      await conn.query(stmt);
+      try {
+        await conn.query(stmt);
+      } catch (err) {
+        // MySQL error 1060 (ER_DUP_FIELDNAME) means the column already exists.
+        // This happens when ALTER TABLE ADD COLUMN is used without IF NOT EXISTS
+        // (e.g. on MySQL versions that don't support that clause). Treat it as a
+        // no-op so migrations remain idempotent.
+        if (err.errno === 1060) {
+          console.warn(`   ⚠ Column already exists, skipping: ${err.sqlMessage}`);
+          continue;
+        }
+        throw err;
+      }
     }
     console.log('   OK');
   }
