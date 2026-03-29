@@ -25,7 +25,11 @@ const NAV_LINKS = [
   { label: "المدونة",  href: "/blog" },
 ];
 
-export default function WzrdPublicHeader() {
+interface WzrdPublicHeaderProps {
+  credits?: number | null;
+}
+
+export default function WzrdPublicHeader({ credits }: WzrdPublicHeaderProps = {}) {
   const [location, navigate] = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const { user } = useAuth();
@@ -120,22 +124,38 @@ export default function WzrdPublicHeader() {
             className="wzrd-nav-desktop"
           >
             {user ? (
-              <a
-                href="/tools"
-                onClick={(e) => { e.preventDefault(); navigate("/tools"); }}
-                style={{
-                  padding: "9px 22px",
-                  borderRadius: 8,
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: "#fff",
-                  background: BLUE,
-                  textDecoration: "none",
-                  boxShadow: "0 2px 8px rgba(27,79,216,0.3)",
-                }}
-              >
-                لوحة التحكم ←
-              </a>
+              <>
+                {credits != null && (
+                  <div style={{
+                    padding: "6px 14px",
+                    borderRadius: 100,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: BLUE,
+                    background: "#EEF2FF",
+                    border: "1px solid rgba(27,79,216,0.2)",
+                    whiteSpace: "nowrap",
+                  }}>
+                    {credits} كريدت
+                  </div>
+                )}
+                <a
+                  href="/tools"
+                  onClick={(e) => { e.preventDefault(); navigate("/tools"); }}
+                  style={{
+                    padding: "9px 22px",
+                    borderRadius: 8,
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: "#fff",
+                    background: BLUE,
+                    textDecoration: "none",
+                    boxShadow: "0 2px 8px rgba(27,79,216,0.3)",
+                  }}
+                >
+                  لوحة التحكم ←
+                </a>
+              </>
             ) : (
               <>
                 <a

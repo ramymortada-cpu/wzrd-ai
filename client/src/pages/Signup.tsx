@@ -173,7 +173,7 @@ export default function Signup() {
               <select value={form.industry} onChange={(e) => set('industry', e.target.value)}
                 style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
                 <option value="">اختار مجالك (اختياري)</option>
-                {(INDUSTRIES as Array<{ value: string; labelAr: string }>).map((ind) => (
+                {(INDUSTRIES as unknown as Array<{ value: string; labelAr: string }>).map((ind) => (
                   <option key={ind.value} value={ind.value}>{ind.labelAr}</option>
                 ))}
               </select>
