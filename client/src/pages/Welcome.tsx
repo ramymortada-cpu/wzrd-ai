@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "wouter";
 import WzrdPublicHeader from "@/components/WzrdPublicHeader";
-import { trpc } from "@/lib/trpc";
-
 const COBALT = "#7058F8";
 const RING_R = 44;
 const RING_C = 2 * Math.PI * RING_R;
@@ -143,10 +141,23 @@ const FEATURES = [
 export default function Welcome() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
-  const subscribe = trpc.newsletter.subscribe.useMutation({ onSuccess: () => setSent(true) });
-  const onSubmit = (e: React.FormEvent) => {
+  const [submitting, setSubmitting] = useState(false);
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) subscribe.mutate({ email });
+    if (!email) return;
+    setSubmitting(true);
+    try {
+      await fetch("/api/newsletter/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      setSent(true);
+    } catch {
+      setSent(true);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -326,11 +337,11 @@ export default function Welcome() {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="بريدك الإلكتروني"
                       className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/30 outline-none focus:border-[#7058F8]/50 focus:ring-2 focus:ring-[#7058F8]/20"
-                      disabled={subscribe.isPending}
+                      disabled={submitting}
                     />
                     <button
                       type="submit"
-                      disabled={subscribe.isPending}
+                      disabled={submitting}
                       className="rounded-xl bg-[#7058F8] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#5a45d4] disabled:opacity-60"
                     >
                       أرسل لي الدليل
