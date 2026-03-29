@@ -46,12 +46,6 @@ export async function setupVite(app: Express, server: Server) {
   if (fs.existsSync(landingPath)) {
     app.use("/landing", express.static(landingPath));
 
-    app.get("/", (req, res, next) => {
-      const hasSession = (req.headers.cookie || "").includes("app_session_id=");
-      if (!hasSession) res.sendFile(path.resolve(landingPath, "index.html"));
-      else next();
-    });
-
     app.get("/api/public/site-config", (_req, res) => {
       try {
         const { getPublicSiteConfig } = require('../siteConfig');
@@ -111,12 +105,6 @@ export function serveStatic(app: Express) {
 
   if (fs.existsSync(activeLandingPath)) {
     app.use("/landing", express.static(activeLandingPath));
-
-    app.get("/", (req, res, next) => {
-      const hasSession = (req.headers.cookie || '').includes('app_session_id=');
-      if (!hasSession) res.sendFile(path.resolve(activeLandingPath, "index.html"));
-      else next();
-    });
 
     app.get("/api/public/site-config", (_req, res) => {
       try {
