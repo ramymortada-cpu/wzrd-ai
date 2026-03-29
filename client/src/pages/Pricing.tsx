@@ -60,15 +60,53 @@ type PromoResult = {
   discountFixedEGP: number | null;
 };
 
+const PLAN_FEATURES: Record<string, string[]> = {
+  single_report: [
+    'تقرير Brand Health Score كامل',
+    'تحليل هوية العلامة التجارية',
+    'خطة تحسين فورية',
+    'صالح ٣٠ يوم',
+  ],
+  bundle_6: [
+    '٦ تقارير متكاملة',
+    'Brand Health + Identity + Offer Logic',
+    'تقرير SEO + Presence Audit',
+    'خطة تنفيذ مرتبة بالأولوية',
+    'دعم WhatsApp مباشر',
+    'وفّر ٤٥% مقارنة بالتقارير الفردية',
+  ],
+  credits_500: [
+    '٥٠٠ كريدت — ~٢٥ أداة',
+    'كل أدوات التشخيص متاحة',
+    'استخدام مرن حسب احتياجك',
+    'صالحة ٦ أشهر',
+  ],
+  credits_1500: [
+    '١٥٠٠ كريدت — ~٧٥ أداة',
+    'الأوفر في السعر',
+    'كل أدوات التشخيص + التقارير',
+    'أولوية في الدعم',
+    'صالحة سنة كاملة',
+  ],
+};
+
+const PLAN_ICONS: Record<string, string> = {
+  single_report: '📄',
+  bundle_6: '🚀',
+  credits_500: '⚡',
+  credits_1500: '💎',
+};
+
 export default function Pricing() {
   const [, navigate] = useLocation();
-  const { t, locale } = useI18n();
+  const { locale } = useI18n();
   const [credits, setCredits] = useState<number | null>(null);
   const [plans, setPlans] = useState<PlanRow[]>(FALLBACK_PLANS);
   const [promoCode, setPromoCode] = useState('');
   const [promoPlanId, setPromoPlanId] = useState(FALLBACK_PLANS[0].id);
   const [promoResult, setPromoResult] = useState<PromoResult | null>(null);
   const [promoLoading, setPromoLoading] = useState(false);
+  const [purchasingId, setPurchasingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/public/site-config')
@@ -95,7 +133,7 @@ export default function Pricing() {
   const verifyPromo = async () => {
     const code = promoCode.trim();
     if (!code) {
-      setPromoResult({ valid: false, message: locale === 'ar' ? 'اكتب الكود الأول' : 'Enter a code', finalAmountEGP: planForPromo.price, originalAmountEGP: planForPromo.price, discountPercent: null, discountFixedEGP: null });
+      setPromoResult({ valid: false, message: 'اكتب الكود الأول', finalAmountEGP: planForPromo.price, originalAmountEGP: planForPromo.price, discountPercent: null, discountFixedEGP: null });
       return;
     }
     setPromoLoading(true);
@@ -104,9 +142,7 @@ export default function Pricing() {
       const res = await fetch('/api/trpc/premium.validatePromo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          json: { code, amountEGP: planForPromo.price },
-        }),
+        body: JSON.stringify({ json: { code, amountEGP: planForPromo.price } }),
       });
       const data = await res.json();
       const row = data?.result?.data?.json ?? data?.result?.data;
@@ -120,25 +156,23 @@ export default function Pricing() {
           discountFixedEGP: row.discountFixedEGP ?? null,
         });
       } else {
-        setPromoResult({ valid: false, message: locale === 'ar' ? 'رد غير متوقع' : 'Unexpected response', finalAmountEGP: planForPromo.price, originalAmountEGP: planForPromo.price, discountPercent: null, discountFixedEGP: null });
+        setPromoResult({ valid: false, message: 'رد غير متوقع', finalAmountEGP: planForPromo.price, originalAmountEGP: planForPromo.price, discountPercent: null, discountFixedEGP: null });
       }
     } catch {
-      setPromoResult({ valid: false, message: locale === 'ar' ? 'خطأ في الاتصال' : 'Network error', finalAmountEGP: planForPromo.price, originalAmountEGP: planForPromo.price, discountPercent: null, discountFixedEGP: null });
+      setPromoResult({ valid: false, message: 'خطأ في الاتصال', finalAmountEGP: planForPromo.price, originalAmountEGP: planForPromo.price, discountPercent: null, discountFixedEGP: null });
     } finally {
       setPromoLoading(false);
     }
   };
 
   const purchasePlan = async (planId: string) => {
+    setPurchasingId(planId);
     try {
       const res = await fetch('/api/trpc/credits.purchase', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          json: {
-            planId,
-            ...(promoCode.trim() ? { promoCode: promoCode.trim() } : {}),
-          },
+          json: { planId, ...(promoCode.trim() ? { promoCode: promoCode.trim() } : {}) },
         }),
       });
       const data = await res.json();
@@ -148,73 +182,81 @@ export default function Pricing() {
       } else {
         const msg = typeof result?.message === 'string' ? result.message : '';
         if (isPaymobGatewayConfigError(msg)) {
-          toast.info(
-            locale === 'ar'
-              ? 'بوابة الدفع تحت التحديث — يرجى المحاولة لاحقاً.'
-              : 'Payment gateway is initializing. Please try again later.',
-            { duration: 6000 }
-          );
+          toast.info('بوابة الدفع تحت التحديث — يرجى المحاولة لاحقاً.', { duration: 6000 });
         } else {
-          toast.error(msg || (locale === 'ar' ? 'تعذّر إتمام الدفع.' : 'Payment failed. Please try again.'));
+          toast.error(msg || 'تعذّر إتمام الدفع.');
         }
       }
     } catch {
-      toast.error(locale === 'ar' ? 'خطأ في الاتصال.' : 'Connection error. Please try again.');
+      toast.error('خطأ في الاتصال. حاول تاني.');
+    } finally {
+      setPurchasingId(null);
     }
   };
 
-  const getPlanFeatures = (plan: PlanRow) => {
-    const label = locale === 'ar' ? plan.label : plan.labelEn;
-    const desc = locale === 'ar' ? (plan.description || plan.descEn) : (plan.descEn || plan.description);
-    return [
-      `${label}`,
-      `${locale === 'ar' ? toArabicNumerals(plan.credits.toLocaleString()) : plan.credits.toLocaleString()} ${t('wzrd.credits')}`,
-      desc || (locale === 'ar' ? 'تقارير وتحليلات قابلة للتنفيذ' : 'Actionable reports and insights'),
+  const getPlanFeatures = (plan: PlanRow): string[] => {
+    return PLAN_FEATURES[plan.id] ?? [
+      locale === 'ar' ? plan.label : plan.labelEn,
+      `${locale === 'ar' ? toArabicNumerals(plan.credits.toLocaleString()) : plan.credits.toLocaleString()} كريدت`,
+      locale === 'ar' ? (plan.description || plan.descEn) : (plan.descEn || plan.description),
     ];
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50 py-16 px-6">
+    <div className="min-h-screen bg-[#0D0D1A] text-white" dir="rtl">
       <WzrdPublicHeader credits={credits} />
-      <div className="mx-auto max-w-5xl">
-        <p className="text-center font-mono text-xs text-zinc-600 uppercase tracking-[0.2em] mb-4">
-          // PRICING
-        </p>
-        <h1 className="text-center text-4xl font-bold tracking-tight mb-3">
-          اختار الخطة المناسبة
-        </h1>
-        <p className="text-center text-zinc-400 text-sm mb-12">
-          ابدأ مجاناً — ادفع بس لما تحتاج أكتر
-        </p>
 
-        <div className="text-center mb-14">
-          <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 text-transparent bg-clip-text bg-gradient-to-r from-zinc-900 via-primary to-cyan-500 dark:from-white dark:to-cyan-300">
-            {t('wzrd.buyMoreCredits')}
-          </h2>
-          <p className="text-zinc-600 dark:text-zinc-400 max-w-md mx-auto text-base leading-relaxed">{t('wzrd.keepUsingTools')}</p>
-        </div>
+      {/* ── Hero ── */}
+      <section className="relative overflow-hidden pt-24 pb-16 px-6">
+        {/* Glow blobs */}
+        <div className="pointer-events-none absolute -top-32 right-1/4 h-96 w-96 rounded-full bg-[#7058F8]/20 blur-[120px]" />
+        <div className="pointer-events-none absolute top-20 left-1/4 h-64 w-64 rounded-full bg-cyan-500/10 blur-[100px]" />
 
-        <div className="mb-10 rounded-2xl border border-zinc-800/50 bg-zinc-900/30 backdrop-blur-sm p-6 sm:p-8">
-          <p className="text-sm font-semibold text-zinc-200 mb-3">
-            {locale === 'ar' ? 'كود خصم (اختياري)' : 'Promo code (optional)'}
+        <div className="relative mx-auto max-w-3xl text-center">
+          <span className="mb-4 inline-block rounded-full border border-[#7058F8]/30 bg-[#7058F8]/10 px-4 py-1.5 text-xs font-semibold tracking-widest text-[#a08fff] uppercase">
+            الأسعار
+          </span>
+          <h1 className="mb-4 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
+            استثمار في نتيجة —{' '}
+            <span className="bg-gradient-to-l from-[#7058F8] to-cyan-400 bg-clip-text text-transparent">
+              مش مصروف على تجربة
+            </span>
+          </h1>
+          <p className="mx-auto max-w-xl text-base leading-relaxed text-white/60">
+            كل جنيه بتدفعه بيرجع لك في شكل وضوح — تعرف بالظبط إيه اللي بيوقف علامتك، وإيه الخطوة الجاية.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+
+          {/* Trust badges */}
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-white/40">
+            <span className="flex items-center gap-1.5"><span className="text-emerald-400">✓</span> بدون اشتراك شهري</span>
+            <span className="flex items-center gap-1.5"><span className="text-emerald-400">✓</span> ادفع مرة واحدة</span>
+            <span className="flex items-center gap-1.5"><span className="text-emerald-400">✓</span> نتائج فورية</span>
+            <span className="flex items-center gap-1.5"><span className="text-emerald-400">✓</span> دفع آمن عبر Paymob</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Promo Code ── */}
+      <section className="px-6 pb-8">
+        <div className="mx-auto max-w-2xl rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
+          <p className="mb-3 text-sm font-semibold text-white/80">عندك كود خصم؟</p>
+          <div className="flex flex-col gap-3 sm:flex-row">
             <input
               type="text"
               value={promoCode}
               onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoResult(null); }}
-              placeholder={locale === 'ar' ? 'WZZRD١٠' : 'CODE'}
-              className="flex-1 px-4 py-2.5 rounded-xl border border-zinc-700 bg-zinc-950 font-mono text-sm"
+              placeholder="WZZRD10"
+              className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 font-mono text-sm text-white placeholder-white/30 outline-none focus:border-[#7058F8]/50 focus:ring-2 focus:ring-[#7058F8]/20"
               maxLength={50}
             />
             <select
               value={promoPlanId}
               onChange={(e) => { setPromoPlanId(e.target.value); setPromoResult(null); }}
-              className="px-4 py-2.5 rounded-xl border border-zinc-700 bg-zinc-950 text-sm min-w-[180px]"
+              className="rounded-xl border border-white/10 bg-[#0D0D1A] px-4 py-2.5 text-sm text-white min-w-[180px]"
             >
               {plans.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {locale === 'ar' ? p.label : p.labelEn} — {p.price} EGP
+                  {locale === 'ar' ? p.label : p.labelEn} — {p.price} ج.م
                 </option>
               ))}
             </select>
@@ -222,96 +264,196 @@ export default function Pricing() {
               type="button"
               onClick={verifyPromo}
               disabled={promoLoading}
-              className="px-5 py-2.5 rounded-xl bg-zinc-100 text-zinc-900 text-sm font-bold hover:opacity-90 disabled:opacity-50"
+              className="rounded-xl bg-[#7058F8] px-6 py-2.5 text-sm font-bold text-white transition hover:bg-[#5a45d4] disabled:opacity-50"
             >
-              {promoLoading ? '…' : locale === 'ar' ? 'تحقق' : 'Verify'}
+              {promoLoading ? '...' : 'تحقق'}
             </button>
           </div>
           {promoResult && (
-            <p className={`mt-3 text-sm ${promoResult.valid ? 'text-green-400' : 'text-red-400'}`}>
+            <p className={`mt-3 text-sm font-medium ${promoResult.valid ? 'text-emerald-400' : 'text-red-400'}`}>
               {promoResult.valid
-                ? (locale === 'ar'
-                    ? `الكود صالح — السعر بعد الخصم: ${toArabicNumerals(String(promoResult.finalAmountEGP))} ج.م (كان ${toArabicNumerals(String(promoResult.originalAmountEGP))} ج.م)`
-                    : `Valid — ${promoResult.finalAmountEGP} EGP (was ${promoResult.originalAmountEGP} EGP)`)
-                : (promoResult.message || (locale === 'ar' ? 'الكود غير صالح' : 'Invalid code'))}
+                ? `✓ الكود صالح — السعر بعد الخصم: ${toArabicNumerals(String(promoResult.finalAmountEGP))} ج.م (كان ${toArabicNumerals(String(promoResult.originalAmountEGP))} ج.م)`
+                : `✗ ${promoResult.message || 'الكود غير صالح'}`}
             </p>
           )}
         </div>
+      </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-14 items-stretch">
-          {plans.map(plan => (
-            plan.popular ? (
-              <div key={plan.id} className="relative rounded-2xl p-[1px] bg-gradient-to-b from-purple-500/50 via-cyan-500/30 to-transparent md:scale-105">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-purple-500 to-cyan-500 px-4 py-1 text-xs font-bold text-white shadow-lg">
-                  الأكثر طلباً
-                </div>
-                <div className="rounded-2xl bg-zinc-900 p-8 flex flex-col gap-6 shadow-[0_0_40px_rgba(139,92,246,0.15)]">
-                  <h3 className="text-lg font-bold text-zinc-50">{locale === 'ar' ? plan.label : plan.labelEn}</h3>
+      {/* ── Plans Grid ── */}
+      <section className="px-6 pb-16">
+        <div className="mx-auto max-w-5xl grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2 items-stretch">
+          {plans.map((plan) => {
+            const isPopular = plan.popular;
+            const isPurchasing = purchasingId === plan.id;
+            const features = getPlanFeatures(plan);
+            const icon = PLAN_ICONS[plan.id] ?? '⚡';
+
+            return (
+              <div
+                key={plan.id}
+                className={`relative flex flex-col rounded-2xl p-px transition-transform hover:-translate-y-1 ${
+                  isPopular
+                    ? 'bg-gradient-to-b from-[#7058F8] via-cyan-500/50 to-transparent shadow-[0_0_60px_rgba(112,88,248,0.25)]'
+                    : 'bg-white/10'
+                }`}
+              >
+                {isPopular && (
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-[#7058F8] to-cyan-400 px-5 py-1 text-xs font-bold text-white shadow-lg whitespace-nowrap">
+                    🔥 الأكثر طلباً
+                  </div>
+                )}
+                <div className={`flex h-full flex-col gap-5 rounded-2xl p-7 ${isPopular ? 'bg-[#13132A]' : 'bg-[#0D0D1A]'}`}>
+                  {/* Plan header */}
+                  <div>
+                    <div className="mb-3 text-3xl">{icon}</div>
+                    <h3 className="text-lg font-bold text-white">
+                      {locale === 'ar' ? plan.label : plan.labelEn}
+                    </h3>
+                    <p className="mt-1 text-sm text-white/50">
+                      {locale === 'ar' ? (plan.description || plan.descEn) : (plan.descEn || plan.description)}
+                    </p>
+                  </div>
+
+                  {/* Price */}
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-bold text-white">
+                    <span className={`text-5xl font-extrabold tracking-tight ${isPopular ? 'text-white' : 'text-white/90'}`}>
                       {locale === 'ar' ? toArabicNumerals(plan.price.toLocaleString()) : plan.price.toLocaleString()}
                     </span>
-                    <span className="text-zinc-400 text-sm">جنيه</span>
+                    <span className="text-sm text-white/40">ج.م</span>
+                    <span className="mr-2 text-xs text-white/30">دفعة واحدة</span>
                   </div>
-                  <ul className="space-y-2 flex-1">
-                    {getPlanFeatures(plan).map((f, i) => (
-                      <li key={i} className="flex items-center gap-2 text-sm text-zinc-300">
-                        <span className="text-cyan-400">✓</span> {f}
+
+                  {/* Credits badge */}
+                  <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-[#7058F8]/30 bg-[#7058F8]/10 px-3 py-1 text-xs font-semibold text-[#a08fff]">
+                    ⚡ {locale === 'ar' ? toArabicNumerals(plan.credits.toLocaleString()) : plan.credits.toLocaleString()} كريدت
+                  </div>
+
+                  {/* Features */}
+                  <ul className="flex-1 space-y-2.5">
+                    {features.map((f, i) => (
+                      <li key={i} className="flex items-start gap-2.5 text-sm text-white/70">
+                        <span className={`mt-0.5 shrink-0 text-base ${isPopular ? 'text-[#7058F8]' : 'text-emerald-400'}`}>✓</span>
+                        <span>{f}</span>
                       </li>
                     ))}
                   </ul>
+
+                  {/* CTA */}
                   <button
                     type="button"
                     onClick={() => void purchasePlan(plan.id)}
-                    className="w-full rounded-full bg-gradient-to-r from-purple-500 to-cyan-500 py-3 text-sm font-bold text-white transition hover:opacity-90 hover:shadow-[0_0_20px_rgba(139,92,246,0.4)]"
+                    disabled={isPurchasing}
+                    className={`mt-auto w-full rounded-xl py-3.5 text-sm font-bold transition disabled:opacity-60 ${
+                      isPopular
+                        ? 'bg-gradient-to-l from-[#7058F8] to-cyan-500 text-white hover:opacity-90 hover:shadow-[0_0_24px_rgba(112,88,248,0.5)]'
+                        : 'border border-white/20 text-white hover:border-[#7058F8]/50 hover:bg-[#7058F8]/10'
+                    }`}
                   >
-                    اشتري دلوقتي
+                    {isPurchasing ? '...' : 'ابدأ دلوقتي'}
                   </button>
                 </div>
               </div>
-            ) : (
-              <div key={plan.id} className="rounded-2xl border border-zinc-800/50 bg-zinc-900/30 backdrop-blur-sm p-8 flex flex-col gap-6">
-                <h3 className="text-lg font-bold text-zinc-100">{locale === 'ar' ? plan.label : plan.labelEn}</h3>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-bold text-zinc-50">
-                    {locale === 'ar' ? toArabicNumerals(plan.price.toLocaleString()) : plan.price.toLocaleString()}
-                  </span>
-                  <span className="text-zinc-500 text-sm">جنيه</span>
-                </div>
-                <ul className="space-y-2 flex-1">
-                  {getPlanFeatures(plan).map((f, i) => (
-                    <li key={i} className="flex items-center gap-2 text-sm text-zinc-400">
-                      <span className="text-emerald-500">✓</span> {f}
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  type="button"
-                  onClick={() => void purchasePlan(plan.id)}
-                  className="w-full rounded-full border border-zinc-700 py-3 text-sm font-semibold text-zinc-300 transition hover:border-zinc-500 hover:text-zinc-100"
-                >
-                  اشتري دلوقتي
-                </button>
-              </div>
-            )
-          ))}
+            );
+          })}
         </div>
+      </section>
 
-        <div className="wzrd-glass rounded-3xl p-8 sm:p-10 text-center border-amber-200/35 dark:border-amber-500/25">
-          <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-3">{t('wzrd.diyAlternative')}</h3>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-6 max-w-md mx-auto" style={{ lineHeight: 1.7 }}>
-            {t('wzrd.letPrimoHandle')}
+      {/* ── Value Comparison ── */}
+      <section className="px-6 pb-16">
+        <div className="mx-auto max-w-3xl">
+          <h2 className="mb-8 text-center text-2xl font-bold text-white">
+            مقارنة — WZZRD AI vs. الوكالة التقليدية
+          </h2>
+          <div className="overflow-hidden rounded-2xl border border-white/10">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/10 bg-white/5">
+                  <th className="px-6 py-4 text-right font-semibold text-white/60"></th>
+                  <th className="px-6 py-4 text-center font-bold text-[#7058F8]">WZZRD AI</th>
+                  <th className="px-6 py-4 text-center font-semibold text-white/40">وكالة تقليدية</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {[
+                  ['التكلفة', 'من ٩٩ ج.م', '٥٠٠٠–٣٠٠٠٠ ج.م/شهر'],
+                  ['وقت التسليم', 'فوري — دقائق', '٢–٤ أسابيع'],
+                  ['الشفافية', 'تقرير مفصّل بالأرقام', 'ملخص عام بدون بيانات'],
+                  ['التحكم', 'أنت بتشغّل الأدوات', 'بتنتظر الوكالة'],
+                  ['التحديث', 'في أي وقت', 'بتدفع مرة تانية'],
+                  ['الـ AI', 'مدرّب على السوق المصري والخليجي', 'عام ومش مخصّص'],
+                ].map(([feature, wzrd, agency]) => (
+                  <tr key={feature} className="hover:bg-white/3 transition">
+                    <td className="px-6 py-4 font-medium text-white/70">{feature}</td>
+                    <td className="px-6 py-4 text-center font-semibold text-emerald-400">{wzrd}</td>
+                    <td className="px-6 py-4 text-center text-white/30">{agency}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAQ ── */}
+      <section className="px-6 pb-16">
+        <div className="mx-auto max-w-2xl">
+          <h2 className="mb-8 text-center text-2xl font-bold text-white">أسئلة شائعة</h2>
+          <div className="space-y-4">
+            {[
+              {
+                q: 'إيه الفرق بين الكريدت والتقرير؟',
+                a: 'الكريدت هو وحدة الاستخدام — كل أداة بتاكل عدد معين من الكريدت. التقرير هو ناتج الأداة — تقرير Brand Health مثلاً بياخد ١٠٠ كريدت.',
+              },
+              {
+                q: 'هل الكريدت بتنتهي؟',
+                a: 'الكريدت صالحة حسب الباقة — من ٦ أشهر لسنة كاملة. مفيش اشتراك شهري ومفيش تجديد تلقائي.',
+              },
+              {
+                q: 'هل الدفع آمن؟',
+                a: 'آه — بنستخدم Paymob، أكبر بوابة دفع في مصر. بياناتك مش بتوصلنا خالص.',
+              },
+              {
+                q: 'ممكن أسترد فلوسي؟',
+                a: 'لو استخدمت أقل من ١٠% من الكريدت خلال ٧ أيام، نقدر نرتب استرداد. تواصل معنا على WhatsApp.',
+              },
+            ].map(({ q, a }) => (
+              <details key={q} className="group rounded-xl border border-white/10 bg-white/5 p-5">
+                <summary className="cursor-pointer list-none font-semibold text-white/90 group-open:text-[#7058F8]">
+                  {q}
+                </summary>
+                <p className="mt-3 text-sm leading-relaxed text-white/60">{a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Enterprise CTA ── */}
+      <section className="px-6 pb-24">
+        <div className="mx-auto max-w-2xl rounded-2xl border border-[#7058F8]/20 bg-gradient-to-b from-[#7058F8]/10 to-transparent p-10 text-center">
+          <div className="mb-4 text-4xl">🏢</div>
+          <h3 className="mb-3 text-xl font-bold text-white">محتاج حل Enterprise؟</h3>
+          <p className="mb-6 text-sm leading-relaxed text-white/60">
+            لو عندك فريق أو وكالة أو شركة — عندنا باقات مخصوصة بـ multi-workspace وتقارير white-label وأولوية دعم.
           </p>
-          <div className="flex gap-3 justify-center">
-            <a href={waMeHref()} target="_blank" rel="noreferrer" className="px-6 py-3 rounded-xl bg-amber-500 text-zinc-950 font-bold text-sm hover:-translate-y-0.5 transition shadow-md">
-              {t('wzrd.bookClarityCall')}
+          <div className="flex flex-wrap justify-center gap-3">
+            <a
+              href={waMeHref()}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-xl bg-[#7058F8] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#5a45d4] hover:shadow-[0_0_20px_rgba(112,88,248,0.4)]"
+            >
+              تكلّم معنا على WhatsApp
             </a>
-            <button onClick={() => navigate('/landing/services.html')} className="px-6 py-3 rounded-xl border border-zinc-300 dark:border-zinc-700 text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:border-amber-500 transition">
-              {t('wzrd.viewServices')}
+            <button
+              onClick={() => navigate('/landing/services.html')}
+              className="rounded-xl border border-white/20 px-6 py-3 text-sm font-semibold text-white/70 transition hover:border-[#7058F8]/50 hover:text-white"
+            >
+              شوف الخدمات
             </button>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }
