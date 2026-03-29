@@ -226,14 +226,14 @@ function ScoreRing({ score }: { score: number }) {
 // ═══════════════════════════════════════
 function ToolSkeleton() {
   return (
-    <div className="min-h-screen bg-zinc-950 px-6 py-16 animate-pulse">
+    <div className="wzrd-public-page px-6 py-16 animate-pulse">
       <div className="mx-auto max-w-2xl space-y-6">
-        <div className="mx-auto h-32 w-32 rounded-full bg-zinc-800/60" />
-        <div className="mx-auto h-6 w-48 rounded-lg bg-zinc-800/60" />
+        <div className="mx-auto h-32 w-32 rounded-full bg-[#E5E7EB]" />
+        <div className="mx-auto h-6 w-48 rounded-lg bg-[#E5E7EB]" />
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-16 rounded-xl bg-zinc-800/40 border border-zinc-800/50" />
+          <div key={i} className="h-16 rounded-xl bg-[#F3F4F6] border border-[#E5E7EB]" />
         ))}
-        <div className="h-12 rounded-full bg-zinc-800/30" />
+        <div className="h-12 rounded-full bg-[#F3F4F6]" />
       </div>
     </div>
   );
@@ -383,9 +383,9 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
     const quickWins = Array.isArray(rep?.quickWins) ? (rep.quickWins as string[]) : [];
     const recommendation = rep?.recommendation as { phase?: string; reason?: string } | undefined;
     return (
-      <div className="wzrd-page-radial text-zinc-900 dark:text-white">
+      <div className="wzrd-public-page">
         <div className="mx-auto max-w-3xl px-6 py-16" dir="rtl">
-          <button onClick={() => navigate('/tools')} className="mb-8 text-xs text-zinc-500 transition hover:text-primary">
+          <button onClick={() => navigate('/tools')} className="mb-8 text-xs text-[#111827]0 transition hover:text-primary">
             رجوع للأدوات →
           </button>
           
@@ -411,7 +411,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
               {exec.pillarScores != null && typeof exec.pillarScores === 'object' ? (
                 <div className="grid grid-cols-5 gap-2 mb-4">
                   {Object.entries(exec.pillarScores as Record<string, unknown>).map(([k, v]) => (
-                    <div key={k} className="text-center p-2 rounded-lg bg-white dark:bg-zinc-800">
+                    <div key={k} className="text-center p-2 rounded-lg bg-white border border-[#F3F4F6]">
                       <p className="text-lg font-bold font-mono">{String(v)}</p>
                       <p className="text-[10px] text-gray-500">{k}</p>
                     </div>
@@ -426,7 +426,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
 
           {/* Pillars Deep Dive */}
           {pillarList.map((p, i) => (
-            <div key={i} className="p-5 rounded-xl border border-gray-200 dark:border-zinc-800 mb-4">
+            <div key={i} className="p-5 rounded-xl border border-gray-200 dark:border-[#E5E7EB] mb-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-bold text-base">{String(p.name ?? p.nameEn ?? "")}</h3>
                 <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${p.severity === 'critical' ? 'bg-red-100 text-red-600' : p.severity === 'major' ? 'bg-amber-100 text-amber-600' : 'bg-green-100 text-green-600'}`}>
@@ -440,7 +440,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
 
           {/* Priority Matrix */}
           {priorityMatrix ? (
-            <div className="p-5 rounded-xl border border-gray-200 dark:border-zinc-800 mb-8">
+            <div className="p-5 rounded-xl border border-gray-200 dark:border-[#E5E7EB] mb-8">
               <h2 className="text-lg font-bold mb-4">٣. خريطة الأولويات</h2>
               {(priorityMatrix.urgent?.length ?? 0) > 0 ? (
                 <div className="mb-3">
@@ -477,7 +477,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
 
           {/* Action Plan */}
           {actionPlan ? (
-            <div className="p-5 rounded-xl border border-gray-200 dark:border-zinc-800 mb-8">
+            <div className="p-5 rounded-xl border border-gray-200 dark:border-[#E5E7EB] mb-8">
               <h2 className="text-lg font-bold mb-4">٤. خطة العمل</h2>
               <div className="grid grid-cols-3 gap-3">
                 <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/10">
@@ -546,13 +546,13 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
   if (freePreview && !result) {
     const fp = freePreview;
     return (
-      <div className="relative min-h-screen overflow-hidden bg-zinc-950 text-white">
+      <div className="wzrd-public-page relative min-h-screen overflow-hidden">
         <div
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_-8%,rgba(99,102,241,0.2),transparent_52%),radial-gradient(ellipse_45%_35%_at_100%_100%,rgba(6,182,212,0.07),transparent_42%),radial-gradient(ellipse_40%_30%_at_0%_80%,rgba(192,132,252,0.06),transparent_45%)]"
           aria-hidden
         />
         <div className="relative z-10 mx-auto max-w-2xl px-6 py-16">
-          <button type="button" onClick={() => navigate('/tools')} className="mb-8 text-xs text-zinc-500 transition hover:text-amber-400">
+          <button type="button" onClick={() => navigate('/tools')} className="mb-8 text-xs text-[#111827]0 transition hover:text-amber-400">
             ← {isAr ? 'رجوع للأدوات' : 'Back to Tools'}
           </button>
 
@@ -560,19 +560,19 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
             <div className="wzrd-fade-in-stagger mx-auto inline-block rounded-3xl border border-white/10 bg-white/[0.04] px-8 py-6 backdrop-blur-xl">
               <ScoreRing score={fp.score} />
               <h2 className="text-2xl font-bold tracking-tight">{config.name}</h2>
-              <p className="mt-1 text-sm text-zinc-500">
+              <p className="mt-1 text-sm text-[#111827]0">
                 {fp.label} · {isAr ? 'معاينة مجانية' : 'Free preview'}
               </p>
             </div>
           </div>
 
           {fp.summary ? (
-            <p className="mb-6 text-center text-sm leading-relaxed text-zinc-300" dir={isAr ? 'rtl' : 'ltr'}>
+            <p className="mb-6 text-center text-sm leading-relaxed text-[#374151]" dir={isAr ? 'rtl' : 'ltr'}>
               {fp.summary}
             </p>
           ) : null}
 
-          <p className="mb-4 text-center text-xs font-semibold uppercase tracking-wider text-zinc-500">
+          <p className="mb-4 text-center text-xs font-semibold uppercase tracking-wider text-[#111827]0">
             {isAr ? 'عناوين المشاكل فقط — التفاصيل مقفولة' : 'Issue headlines only — details locked'}
           </p>
 
@@ -622,7 +622,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
                       ? `${fp.criticalCount} critical issues — unlock the fix & plan`
                       : `${fp.findings?.length ?? fp.problemTitles?.length ?? 0} focus areas — unlock details & action plan`)}
               </p>
-              <p className="mb-6 text-xs text-zinc-400">
+              <p className="mb-6 text-xs text-[#6B7280]">
                 {isAr ? 'يتضمن: شرح كل نقطة، مهام عملية، وتوصية مختصرة' : 'Includes: deep dives, action items, recommendation'}
               </p>
               <button
@@ -643,7 +643,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
               <a href="/login" className="mt-3 block text-center text-xs text-indigo-400 hover:underline">
                 {isAr ? 'مسجّل؟ سجّل الدخول لفتح التقرير' : 'Have an account? Log in to unlock'}
               </a>
-              <a href="/signup" className="mt-1 block text-center text-xs text-zinc-500 hover:text-zinc-300">
+              <a href="/signup" className="mt-1 block text-center text-xs text-[#111827]0 hover:text-[#374151]">
                 {isAr ? 'مش مسجّل؟ أنشئ حساباً واحصل على كريدت' : 'New here? Sign up for credits'}
               </a>
               {error ? <p className="mt-4 text-center text-sm text-red-400">{error}</p> : null}
@@ -657,7 +657,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
               setFormData({});
               setError('');
             }}
-            className="mt-8 w-full rounded-full border border-zinc-800 py-3 text-sm text-zinc-400 transition hover:border-indigo-500"
+            className="mt-8 w-full rounded-full border border-[#E5E7EB] py-3 text-sm text-[#6B7280] transition hover:border-indigo-500"
           >
             {isAr ? 'تعديل الإجابات' : 'Edit my answers'}
           </button>
@@ -669,10 +669,10 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
   // ═══ RESULT VIEW (after unlock / legacy tools) ═══
   if (result) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-zinc-50">
-        <div className="border-b border-zinc-800/50 bg-zinc-900/30 backdrop-blur-xl px-6 py-4 sticky top-0 z-10">
+      <div className="wzrd-public-page min-h-screen">
+        <div className="border-b border-[#E5E7EB] bg-white/90 backdrop-blur-xl px-6 py-4 sticky top-0 z-10">
           <div className="mx-auto max-w-3xl flex items-center justify-between">
-            <span className="font-mono text-xs text-zinc-500 tracking-widest uppercase">
+            <span className="font-mono text-xs text-[#111827]0 tracking-widest uppercase">
               WZZRD AI · Brand Report
             </span>
             <span className="font-mono text-xs text-zinc-600">
@@ -685,7 +685,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
           <div className="text-center space-y-3">
             <ScoreRing score={result.score} />
             <h1 className="text-2xl font-bold tracking-tight">{config.name}</h1>
-            <p className="text-sm text-zinc-500">{result.label}</p>
+            <p className="text-sm text-[#111827]0">{result.label}</p>
           </div>
 
           <div className="space-y-3">
@@ -695,7 +695,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
             {result.findings?.map((f, i) => (
               <div
                 key={i}
-                className="rounded-xl border border-zinc-800/50 bg-zinc-900/30 backdrop-blur-sm p-5 transition hover:border-zinc-700/50"
+                className="rounded-xl border border-[#E5E7EB]/50 bg-[#F9FAFB]/30 backdrop-blur-sm p-5 transition hover:border-[#E5E7EB]/50"
               >
                 <div className="flex items-start gap-3">
                   <span
@@ -704,9 +704,9 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
                     }`}
                   />
                   <div>
-                    <p className="font-semibold text-zinc-100">{f.title}</p>
+                    <p className="font-semibold text-[#111827]">{f.title}</p>
                     {f.detail && (
-                      <p className="mt-1 text-sm text-zinc-400 leading-relaxed whitespace-pre-line">{f.detail}</p>
+                      <p className="mt-1 text-sm text-[#6B7280] leading-relaxed whitespace-pre-line">{f.detail}</p>
                     )}
                   </div>
                 </div>
@@ -720,20 +720,20 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
                 // RECOMMENDATIONS
               </h2>
               {result.actionItems?.map((r, i) => (
-                <div key={i} className="rounded-xl border border-zinc-800/30 bg-zinc-900/20 p-5">
-                  <p className="text-sm text-zinc-300 leading-relaxed">{r.task}</p>
+                <div key={i} className="rounded-xl border border-[#E5E7EB]/30 bg-[#F9FAFB]/20 p-5">
+                  <p className="text-sm text-[#374151] leading-relaxed">{r.task}</p>
                 </div>
               ))}
               {result.recommendation ? (
-                <div className="rounded-xl border border-zinc-800/30 bg-zinc-900/20 p-5">
-                  <p className="text-sm text-zinc-300 leading-relaxed">{result.recommendation}</p>
+                <div className="rounded-xl border border-[#E5E7EB]/30 bg-[#F9FAFB]/20 p-5">
+                  <p className="text-sm text-[#374151] leading-relaxed">{result.recommendation}</p>
                 </div>
               ) : null}
             </div>
           ) : null}
 
           <div className="rounded-2xl border border-purple-500/20 bg-purple-500/5 p-6 text-center space-y-3">
-            <p className="text-sm text-zinc-400">جاهز تاخد الخطوة الجاية؟</p>
+            <p className="text-sm text-[#6B7280]">جاهز تاخد الخطوة الجاية؟</p>
             <a
               href={waMeQualifiedLeadHref({
                 leadName: user?.name,
@@ -754,7 +754,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
             <button
               type="button"
               onClick={() => navigate('/tools')}
-              className="flex-1 rounded-full border border-zinc-800/60 px-6 py-3 text-sm text-zinc-300 hover:border-zinc-700/60 hover:bg-zinc-900/20 transition"
+              className="flex-1 rounded-full border border-[#E5E7EB]/60 px-6 py-3 text-sm text-[#374151] hover:border-[#E5E7EB]/60 hover:bg-[#F9FAFB]/20 transition"
             >
               ← رجوع للأدوات
             </button>
@@ -764,7 +764,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
                 setResult(null);
                 setFormData({});
               }}
-              className="flex-1 rounded-full border border-zinc-800/60 px-6 py-3 text-sm text-zinc-300 hover:border-zinc-700/60 hover:bg-zinc-900/20 transition"
+              className="flex-1 rounded-full border border-[#E5E7EB]/60 px-6 py-3 text-sm text-[#374151] hover:border-[#E5E7EB]/60 hover:bg-[#F9FAFB]/20 transition"
             >
               حلل تاني ببيانات مختلفة
             </button>
@@ -776,11 +776,11 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
 
   // ═══ FORM VIEW ═══
   return (
-    <div className="wzrd-page-radial text-zinc-900 dark:text-white">
+    <div className="wzrd-public-page">
       <div className="mx-auto max-w-lg px-6 py-16">
         <button
           onClick={() => navigate('/tools')}
-          className="mb-8 text-xs text-zinc-500 transition hover:text-primary dark:text-zinc-400 dark:hover:text-amber-400"
+          className="mb-8 text-xs text-[#111827]0 transition hover:text-primary dark:text-[#6B7280] dark:hover:text-amber-400"
         >
           ← Back to Tools
         </button>
@@ -789,7 +789,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
           <span className="text-4xl">{config.icon}</span>
           <div>
             <h1 className="text-xl font-bold">{config.name}</h1>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            <p className="text-xs text-[#111827]0 dark:text-[#6B7280]">
               {config.paywallAfterFreePreview
                 ? (isAr
                     ? `${config.descriptionAr || config.description} · معاينة مجانية، ثم ~${config.cost} كريدت للتفاصيل`
@@ -803,14 +803,14 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
         {config.intro && (
           <div className="wzrd-glass mb-8 rounded-3xl p-5">
             <h2 className="mb-2 text-base font-bold">{config.intro.headline}</h2>
-            <p className="mb-4 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{config.intro.body}</p>
+            <p className="mb-4 text-sm leading-relaxed text-zinc-600 dark:text-[#6B7280]">{config.intro.body}</p>
             <div className="mb-3">
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">What it measures:</p>
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#6B7280] dark:text-[#111827]0">What it measures:</p>
               <div className="flex flex-wrap gap-1.5">
                 {config.intro.measures.map((m, i) => (
                   <span
                     key={i}
-                    className="rounded-full bg-zinc-100/90 px-2 py-0.5 text-[11px] text-zinc-600 dark:bg-zinc-800/80 dark:text-zinc-300"
+                    className="rounded-full bg-zinc-100/90 px-2 py-0.5 text-[11px] text-zinc-600 dark:bg-[#F3F4F6]/80 dark:text-[#374151]"
                   >
                     {m}
                   </span>
@@ -836,7 +836,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
               className="wzrd-fade-in-stagger"
               style={{ animationDelay: `${0.04 + fi * 0.05}s` }}
             >
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[#111827]0 dark:text-[#6B7280]">
                 {field.label}
               </label>
               {field.type === 'textarea' ? (
@@ -869,7 +869,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
                     checked={!!formData[field.name]}
                     onChange={e => updateField(field.name, e.target.checked)}
                   />
-                  <span className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{field.placeholder}</span>
+                  <span className="text-sm leading-relaxed text-zinc-600 dark:text-[#6B7280]">{field.placeholder}</span>
                 </label>
               ) : (
                 <input

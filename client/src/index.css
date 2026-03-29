@@ -577,6 +577,121 @@
     padding-top: 5.5rem;
   }
 
+  /* ═══════════════════════════════════════════════════════════════
+     WZRD PUBLIC DESIGN SYSTEM — single source of truth
+     Apply .wzrd-public-page to every public-facing page wrapper.
+     All tokens cascade from here — no more per-page dark overrides.
+  ═══════════════════════════════════════════════════════════════ */
+  .wzrd-public-page {
+    background: #FAFAF5;
+    min-height: 100vh;
+    font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
+    color: #111827;
+    /* Design tokens */
+    --wp-bg:           #FAFAF5;
+    --wp-bg-card:      #FFFFFF;
+    --wp-bg-muted:     #F3F4F6;
+    --wp-blue:         #1B4FD8;
+    --wp-blue-dark:    #1440B8;
+    --wp-blue-light:   #EEF2FF;
+    --wp-text:         #111827;
+    --wp-text-muted:   #6B7280;
+    --wp-text-light:   #9CA3AF;
+    --wp-border:       #E5E7EB;
+    --wp-border-blue:  rgba(27,79,216,0.18);
+    --wp-shadow-sm:    0 1px 3px rgba(0,0,0,0.07);
+    --wp-shadow-md:    0 4px 16px rgba(0,0,0,0.08);
+    --wp-shadow-lg:    0 8px 32px rgba(0,0,0,0.10);
+    --wp-radius-sm:    8px;
+    --wp-radius-md:    12px;
+    --wp-radius-lg:    16px;
+    --wp-radius-xl:    24px;
+  }
+
+  /* White card on cream background */
+  .wzrd-public-card {
+    background: var(--wp-bg-card, #FFFFFF);
+    border: 1px solid var(--wp-border, #E5E7EB);
+    border-radius: var(--wp-radius-lg, 16px);
+    box-shadow: var(--wp-shadow-sm);
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+  .wzrd-public-card:hover {
+    box-shadow: var(--wp-shadow-md);
+    transform: translateY(-2px);
+  }
+
+  /* Blue primary button */
+  .wzrd-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--wp-blue, #1B4FD8);
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-family: 'Cairo', sans-serif;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 2px 8px rgba(27,79,216,0.25);
+  }
+  .wzrd-btn-primary:hover {
+    background: var(--wp-blue-dark, #1440B8);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(27,79,216,0.35);
+  }
+
+  /* Ghost button */
+  .wzrd-btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    color: var(--wp-text, #111827);
+    border: 1.5px solid var(--wp-border, #E5E7EB);
+    border-radius: 8px;
+    font-weight: 700;
+    font-family: 'Cairo', sans-serif;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .wzrd-btn-ghost:hover {
+    border-color: var(--wp-blue, #1B4FD8);
+    color: var(--wp-blue, #1B4FD8);
+  }
+
+  /* Section label pill */
+  .wzrd-section-pill {
+    display: inline-block;
+    background: var(--wp-blue-light, #EEF2FF);
+    color: var(--wp-blue, #1B4FD8);
+    border: 1px solid rgba(27,79,216,0.15);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 4px 14px;
+  }
+
+  /* Input field */
+  .wzrd-public-input {
+    background: #FFFFFF;
+    border: 1.5px solid var(--wp-border, #E5E7EB);
+    border-radius: var(--wp-radius-sm, 8px);
+    color: var(--wp-text, #111827);
+    font-family: 'Cairo', sans-serif;
+    font-size: 14px;
+    padding: 10px 14px;
+    width: 100%;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+  }
+  .wzrd-public-input:focus {
+    border-color: var(--wp-blue, #1B4FD8);
+    box-shadow: 0 0 0 3px rgba(27,79,216,0.10);
+  }
+
   @keyframes wzrd-mesh-shift {
     0% {
       background-position: 0% 50%;

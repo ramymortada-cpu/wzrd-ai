@@ -19,30 +19,30 @@ export default function BlogPostPage() {
   const content = post ? (locale === "ar" ? post.contentAr : post.contentEn) : "";
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50">
+    <div className="wzrd-public-page min-h-screen">
       <WzrdPublicHeader credits={null} />
       <div className="wzrd-public-pt mx-auto max-w-3xl px-6 pb-20">
         <a
           href="/blog"
-          className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-zinc-100 transition mb-8"
+          className="inline-flex items-center gap-2 text-sm text-[#6B7280] hover:text-[#111827] transition mb-8"
         >
           ← {locale === "ar" ? "رجوع للمقالات" : "Back to blog"}
         </a>
 
         {postQuery.isLoading ? (
           <div className="space-y-4 animate-pulse">
-            <div className="h-8 w-3/4 rounded bg-zinc-800/60" />
-            <div className="h-4 w-1/3 rounded bg-zinc-800/40" />
-            <div className="h-4 w-full rounded bg-zinc-800/40" />
-            <div className="h-4 w-11/12 rounded bg-zinc-800/40" />
-            <div className="h-4 w-10/12 rounded bg-zinc-800/40" />
+            <div className="h-8 w-3/4 rounded bg-[#F3F4F6]/60" />
+            <div className="h-4 w-1/3 rounded bg-[#F3F4F6]/40" />
+            <div className="h-4 w-full rounded bg-[#F3F4F6]/40" />
+            <div className="h-4 w-11/12 rounded bg-[#F3F4F6]/40" />
+            <div className="h-4 w-10/12 rounded bg-[#F3F4F6]/40" />
           </div>
         ) : postQuery.error ? (
           <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 text-sm text-red-300">
             {locale === "ar" ? "المقال غير موجود أو غير منشور." : "Post not found or not published."}
           </div>
         ) : !post ? (
-          <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/30 p-6 text-sm text-zinc-300">
+          <div className="wzrd-public-card p-6 text-sm" style={{color: '#6B7280'}}>
             {locale === "ar" ? "لا يوجد محتوى." : "No content."}
           </div>
         ) : (
@@ -54,12 +54,12 @@ export default function BlogPostPage() {
               <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
                 {title}
               </h1>
-              <p className="text-sm text-zinc-500">
+              <p className="text-sm text-[#9CA3AF]">
                 {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString("ar-EG") : ""}
               </p>
             </header>
 
-            <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/30 backdrop-blur-sm p-6">
+            <div className="wzrd-public-card p-6">
               <article className="prose prose-invert max-w-none">
                 <ReactMarkdown>{content}</ReactMarkdown>
               </article>
