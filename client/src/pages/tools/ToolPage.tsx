@@ -1,4 +1,4 @@
-import React, { useState, useId } from 'react';
+import React, { useState, useId, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { waMeQualifiedLeadHref } from '@/lib/waContact';
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -157,26 +157,275 @@ function ScoreRing({ score }: { score: number }) {
   );
 }
 
-// ─── Loading Skeleton ─────────────────────────────────────────────────────────
+// ─── Tool Reviews Section ──────────────────────────────────────────────────────────
+interface ToolReview {
+  id: number;
+  toolId: string;
+  toolNameAr: string;
+  toolNameEn: string;
+  rating: number;
+  commentAr: string | null;
+  commentEn: string | null;
+  country: string | null;
+  countryFlag: string | null;
+  createdAt: string;
+}
+
+function ToolReviews({ toolId }: { toolId: string }) {
+  const { locale } = useI18n();
+  const isAr = locale === 'ar';
+  const [reviews, setReviews] = React.useState<ToolReview[]>([]);
+  const [loaded, setLoaded] = React.useState(false);
+
+  React.useEffect(() => {
+    const params = encodeURIComponent(JSON.stringify({ json: { toolId, limit: 6 } }));
+    fetch(`/api/trpc/reviews.listByTool?input=${params}`)
+      .then(r => r.json())
+      .then(data => {
+        const list = data?.result?.data?.json ?? data?.result?.data ?? [];
+        setReviews(Array.isArray(list) ? list : []);
+      })
+      .catch(() => {})
+      .finally(() => setLoaded(true));
+  }, [toolId]);
+
+  if (!loaded || reviews.length === 0) return null;
+
+  return (
+    <div className="mb-5 rounded-2xl border border-[#E5E7EB] bg-white p-5 shadow-sm">
+      {/* Header */}
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF]">
+            {isAr ? 'آراء مستخدمين هذه الأداة' : 'What users say about this tool'}
+          </p>
+          <div className="mt-1 flex items-center gap-1.5">
+            <div className="flex">
+              {[1,2,3,4,5].map(s => (
+                <span key={s} className="text-sm" style={{ color: '#F59E0B' }}>&#9733;</span>
+              ))}
+            </div>
+            <span className="text-xs font-semibold text-[#374151]">
+              {reviews.length} {isAr ? 'تقييم' : 'reviews'}
+            </span>
+          </div>
+        </div>
+        <div className="rounded-full bg-[#EEF2FF] px-3 py-1 text-xs font-bold text-[#1B4FD8]">
+          ✦ {isAr ? 'تقييمات حقيقية' : 'Verified'}
+        </div>
+      </div>
+
+      {/* Review Cards */}
+      <div className="space-y-3">
+        {reviews.map(review => {
+          const comment = isAr
+            ? (review.commentAr || review.commentEn || '')
+            : (review.commentEn || review.commentAr || '');
+          if (!comment) return null;
+          return (
+            <div
+              key={review.id}
+              className="rounded-xl border border-[#E5E7EB] bg-[#FAFAF5] p-4"
+            >
+              <div className="mb-2 flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  {/* Stars */}
+                  <div className="flex">
+                    {[1,2,3,4,5].map(s => (
+                      <span
+                        key={s}
+                        className="text-xs"
+                        style={{ color: s <= review.rating ? '#F59E0B' : '#E5E7EB' }}
+                      >&#9733;</span>
+                    ))}
+                  </div>
+                  {review.country && (
+                    <span className="text-xs text-[#6B7280]">{review.country}</span>
+                  )}
+                </div>
+                <span className="text-[10px] text-[#9CA3AF]">
+                  {new Date(review.createdAt).toLocaleDateString(isAr ? 'ar-EG' : 'en-US', { month: 'short', year: 'numeric' })}
+                </span>
+              </div>
+              <p className="text-sm leading-relaxed text-[#374151]">{comment}</p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── WZZRING Loading Animation ───────────────────────────────────────────────
+const WZZRING_STAGES_EN = [
+  { icon: '🔍', label: 'Scanning your inputs…' },
+  { icon: '🧠', label: 'Running AI diagnostics…' },
+  { icon: '📊', label: 'Mapping brand signals…' },
+  { icon: '⚡', label: 'Identifying critical gaps…' },
+  { icon: '✦', label: 'Generating your report…' },
+];
+const WZZRING_STAGES_AR = [
+  { icon: '🔍', label: 'جاري مسح المدخلات…' },
+  { icon: '🧠', label: 'تشغيل تشخيص الذكاء الاصطناعي…' },
+  { icon: '📊', label: 'رسم خريطة إشارات العلامة…' },
+  { icon: '⚡', label: 'تحديد الفجوات الحرجة…' },
+  { icon: '✦', label: 'إنشاء تقريرك…' },
+];
+
 function ToolSkeleton() {
   const { locale } = useI18n();
   const isAr = locale === 'ar';
+  const stages = isAr ? WZZRING_STAGES_AR : WZZRING_STAGES_EN;
+  const [activeStage, setActiveStage] = useState(0);
+  const [completedStages, setCompletedStages] = useState<number[]>([]);
+  const [dotCount, setDotCount] = useState(1);
+
+  // Cycle through stages every 4 seconds
+  useEffect(() => {
+    const stageTimer = setInterval(() => {
+      setActiveStage(prev => {
+        const next = prev < stages.length - 1 ? prev + 1 : prev;
+        setCompletedStages(c => c.includes(prev) ? c : [...c, prev]);
+        return next;
+      });
+    }, 4000);
+    return () => clearInterval(stageTimer);
+  }, [stages.length]);
+
+  // Animate dots
+  useEffect(() => {
+    const dotTimer = setInterval(() => {
+      setDotCount(d => (d % 3) + 1);
+    }, 500);
+    return () => clearInterval(dotTimer);
+  }, []);
+
   return (
     <div className="wzrd-public-page min-h-screen">
       <div className="mx-auto max-w-lg px-6 py-16">
-        <div className="mb-8 rounded-2xl border border-[#E5E7EB] bg-white p-8 text-center shadow-sm animate-pulse">
-          <div className="mx-auto mb-4 h-36 w-36 rounded-full bg-[#F3F4F6]" />
-          <div className="mx-auto mb-2 h-5 w-40 rounded-lg bg-[#F3F4F6]" />
-          <div className="mx-auto h-4 w-24 rounded-lg bg-[#F3F4F6]" />
+
+        {/* WZZRING Brand Header */}
+        <div className="mb-8 rounded-2xl border border-[#E5E7EB] bg-white p-8 text-center shadow-sm">
+          {/* Animated ring */}
+          <div className="relative mx-auto mb-6 flex h-28 w-28 items-center justify-center">
+            {/* Outer pulsing ring */}
+            <div
+              className="absolute inset-0 rounded-full"
+              style={{
+                background: '#EEF2FF',
+                border: '2px solid #1B4FD8',
+                animation: 'wzzring-pulse 2s ease-in-out infinite',
+              }}
+            />
+            {/* Spinning arc */}
+            <svg
+              className="absolute inset-0 h-full w-full"
+              viewBox="0 0 112 112"
+              style={{ animation: 'wzzring-spin 1.6s linear infinite' }}
+            >
+              <circle
+                cx="56" cy="56" r="50"
+                fill="none"
+                stroke="#1B4FD8"
+                strokeWidth="4"
+                strokeLinecap="round"
+                strokeDasharray="80 235"
+              />
+            </svg>
+            {/* Inner counter-spin arc */}
+            <svg
+              className="absolute inset-0 h-full w-full"
+              viewBox="0 0 112 112"
+              style={{ animation: 'wzzring-spin-reverse 2.4s linear infinite' }}
+            >
+              <circle
+                cx="56" cy="56" r="38"
+                fill="none"
+                stroke="#3B82F6"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeDasharray="40 200"
+                opacity="0.5"
+              />
+            </svg>
+            {/* Center icon */}
+            <span className="relative text-2xl" style={{ zIndex: 1 }}>
+              {stages[activeStage].icon}
+            </span>
+          </div>
+
+          {/* WZZRING wordmark */}
+          <div className="mb-1 text-xs font-black uppercase tracking-[0.25em] text-[#1B4FD8]">
+            WZZRING
+            <span style={{ letterSpacing: '0.05em' }}>
+              {'·'.repeat(dotCount)}
+            </span>
+          </div>
+          <p className="text-sm font-semibold text-[#111827]">
+            {stages[activeStage].label}
+          </p>
+          <p className="mt-1 text-xs text-[#9CA3AF]">
+            {isAr ? 'قد يستغرق حتى ٣٠ ثانية' : 'May take up to 30 seconds'}
+          </p>
         </div>
-        <div className="space-y-3">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="h-16 rounded-2xl bg-[#F3F4F6] border border-[#E5E7EB] animate-pulse" />
-          ))}
+
+        {/* Stage Progress */}
+        <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5 shadow-sm">
+          <p className="mb-4 text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF]">
+            {isAr ? 'مراحل التحليل' : 'Analysis Stages'}
+          </p>
+          <div className="space-y-2.5">
+            {stages.map((stage, i) => {
+              const isDone = completedStages.includes(i);
+              const isActive = i === activeStage;
+              const isPending = !isDone && !isActive;
+              return (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-500"
+                  style={{
+                    background: isActive ? '#EEF2FF' : isDone ? '#F0FDF4' : '#FAFAF5',
+                    border: isActive ? '1px solid #1B4FD8' : isDone ? '1px solid #BBF7D0' : '1px solid #E5E7EB',
+                    opacity: isPending ? 0.5 : 1,
+                  }}
+                >
+                  <span className="text-base">{stage.icon}</span>
+                  <span
+                    className="flex-1 text-xs font-medium"
+                    style={{ color: isActive ? '#1B4FD8' : isDone ? '#16A34A' : '#6B7280' }}
+                  >
+                    {stage.label}
+                  </span>
+                  {isDone && (
+                    <span className="text-xs font-bold text-[#16A34A]">✓</span>
+                  )}
+                  {isActive && (
+                    <span
+                      className="h-1.5 w-1.5 rounded-full bg-[#1B4FD8]"
+                      style={{ animation: 'wzzring-pulse 1s ease-in-out infinite' }}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
-        <p className="mt-8 text-center text-sm text-[#6B7280]">
-          {isAr ? 'جاري التحليل — قد يستغرق حتى ٣٠ ثانية…' : 'Analysing — may take up to 30 seconds…'}
-        </p>
+
+        {/* Keyframe styles */}
+        <style>{`
+          @keyframes wzzring-spin {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+          }
+          @keyframes wzzring-spin-reverse {
+            from { transform: rotate(360deg); }
+            to   { transform: rotate(0deg); }
+          }
+          @keyframes wzzring-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: 0.7; transform: scale(1.04); }
+          }
+        `}</style>
       </div>
     </div>
   );
@@ -873,6 +1122,9 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
             </p>
           </div>
         )}
+
+        {/* Tool Reviews — social proof */}
+        <ToolReviews toolId={config.id} />
 
         {/* Error */}
         {error && (
