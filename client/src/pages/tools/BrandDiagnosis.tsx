@@ -4,7 +4,7 @@ import { MARKET_OPTIONS, YEARS_IN_BUSINESS, TEAM_SIZE, MONTHLY_REVENUE, PREVIOUS
 
 export default function BrandDiagnosis() {
   return <ToolPage config={{
-    id: 'brand_diagnosis', name: 'Brand Diagnosis', nameAr: 'تشخيص البراند', icon: '🔬', cost: 20,
+    id: 'brand_diagnosis', name: 'Brand Diagnosis', nameAr: 'تشخيص البراند', icon: '🔬', cost: 200,
     endpoint: 'tools.brandDiagnosis',
     paywallAfterFreePreview: true,
     description: 'Overall brand health score with top issues identified',

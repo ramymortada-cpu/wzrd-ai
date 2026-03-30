@@ -4,7 +4,7 @@ import { LAUNCH_TYPE, TARGET_LAUNCH_DATE, HAS_GUIDELINES_SIMPLE, HAS_OFFER_STRUC
 
 export default function LaunchReadiness() {
   return <ToolPage config={{
-    id: 'launch_readiness', name: 'Launch Readiness', nameAr: 'جاهزية الإطلاق', icon: '🚀', cost: 30,
+    id: 'launch_readiness', name: 'Launch Readiness', nameAr: 'جاهزية الإطلاق', icon: '🚀', cost: 300,
     endpoint: 'tools.launchReadiness',
     paywallAfterFreePreview: true,
     freePreviewEndpoint: 'tools.freeLaunchReadinessDiagnosis',

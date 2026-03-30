@@ -4,7 +4,7 @@ import { HAS_LOGO, HAS_GUIDELINES_FULL } from '@/lib/formOptions';
 
 export default function IdentitySnapshot() {
   return <ToolPage config={{
-    id: 'identity_snapshot', name: 'Identity Snapshot', nameAr: 'لقطة الهوية', icon: '🪞', cost: 20,
+    id: 'identity_snapshot', name: 'Identity Snapshot', nameAr: 'لقطة الهوية', icon: '🪞', cost: 200,
     endpoint: 'tools.identitySnapshot',
     paywallAfterFreePreview: true,
     freePreviewEndpoint: 'tools.freeIdentitySnapshotDiagnosis',

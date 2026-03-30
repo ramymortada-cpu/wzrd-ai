@@ -158,24 +158,26 @@ export default function WzrdPublicHeader({ credits }: WzrdPublicHeaderProps = {}
               {isAr ? "EN" : "AR"}
             </button>
 
-            {/* Credits badge */}
-            {user && credits != null && (
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-                padding: "5px 12px",
-                borderRadius: 999,
-                background: "#EEF2FF",
-                border: "1px solid rgba(27,79,216,0.2)",
-                fontSize: 12,
-                fontWeight: 700,
-                color: BLUE,
-                whiteSpace: "nowrap",
-              }}>
-                ⚡ {credits} {isAr ? "كريدت" : "CR"}
-              </div>
-            )}
+            {/* Credits badge — always visible: 0 for guests, real balance for logged-in users */}
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              padding: "5px 12px",
+              borderRadius: 999,
+              background: user ? "#EEF2FF" : "#F3F4F6",
+              border: `1px solid ${user ? "rgba(27,79,216,0.2)" : "#E5E7EB"}`,
+              fontSize: 12,
+              fontWeight: 700,
+              color: user ? BLUE : "#9CA3AF",
+              whiteSpace: "nowrap",
+              cursor: user ? "default" : "pointer",
+            }}
+            onClick={() => { if (!user) navigate("/signup"); }}
+            title={user ? undefined : (isAr ? "سجّل للحصول على ٥٠٠ كريدت مجاني" : "Sign up for 500 free credits")}
+            >
+              ⚡ {user ? (credits ?? 0) : 0} {isAr ? "كريدت" : "CR"}
+            </div>
 
             {user ? (
               <a
