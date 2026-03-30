@@ -54,13 +54,13 @@ export default function BlogPostPage() {
               <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
                 {title}
               </h1>
-              <p className="text-sm text-[#9CA3AF]">
-                {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString("ar-EG") : ""}
+              <p className="text-sm text-[#6B7280]">
+                {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString(locale === 'ar' ? 'ar-EG' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : ""}
               </p>
             </header>
 
             <div className="wzrd-public-card p-6">
-              <article className="prose prose-invert max-w-none">
+              <article className="prose prose-sm max-w-none text-[#374151] prose-headings:text-[#111827] prose-a:text-[#1B4FD8]">
                 <ReactMarkdown>{content}</ReactMarkdown>
               </article>
             </div>

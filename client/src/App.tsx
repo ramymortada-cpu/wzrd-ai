@@ -60,6 +60,8 @@ const PresenceAuditPage = lazy(() => import("./pages/tools/PresenceAudit"));
 const IdentitySnapshotPage = lazy(() => import("./pages/tools/IdentitySnapshot"));
 const LaunchReadinessPage = lazy(() => import("./pages/tools/LaunchReadiness"));
 const PricingPage = lazy(() => import("./pages/Pricing"));
+const TermsOfUsePage = lazy(() => import("./pages/public/TermsOfUse"));
+const PrivacyPolicyPage = lazy(() => import("./pages/public/PrivacyPolicy"));
 const WzrdAdminPage = lazy(() => import("./pages/WzrdAdmin"));
 const ProfilePage = lazy(() => import("./pages/Profile"));
 const MyBrandPage = lazy(() => import("./pages/MyBrand"));
@@ -165,6 +167,8 @@ function App() {
                 <Route path="/tools/identity-snapshot">{() => <SuspenseWrapper><IdentitySnapshotPage /></SuspenseWrapper>}</Route>
                 <Route path="/tools/launch-readiness">{() => <SuspenseWrapper><LaunchReadinessPage /></SuspenseWrapper>}</Route>
                 <Route path="/pricing">{() => <SuspenseWrapper><PricingPage /></SuspenseWrapper>}</Route>
+                <Route path="/terms">{() => <SuspenseWrapper><TermsOfUsePage /></SuspenseWrapper>}</Route>
+                <Route path="/privacy">{() => <SuspenseWrapper><PrivacyPolicyPage /></SuspenseWrapper>}</Route>
                 <Route path="/my-brand">{() => <SuspenseWrapper><MyBrandPage /></SuspenseWrapper>}</Route>
                 <Route path="/copilot">{() => <SuspenseWrapper><CopilotPage /></SuspenseWrapper>}</Route>
                 <Route path="/tools/benchmark">{() => <SuspenseWrapper><CompetitiveBenchmarkPage /></SuspenseWrapper>}</Route>

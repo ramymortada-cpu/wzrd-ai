@@ -4,6 +4,7 @@ import { waMeQualifiedLeadHref } from '@/lib/waContact';
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useI18n } from '@/lib/i18n';
 
+// ─── Types ────────────────────────────────────────────────────────────────────
 export interface ToolField {
   name: string;
   label: string;
@@ -23,11 +24,8 @@ export interface ToolConfig {
   icon: string;
   cost: number;
   endpoint: string;
-  /** If true: first submit runs free AI preview (no credits), then user unlocks full prescription with credits */
   paywallAfterFreePreview?: boolean;
-  /** tRPC procedure path for free preview (default: tools.freeBrandDiagnosis) */
   freePreviewEndpoint?: string;
-  /** tRPC procedure path for paid unlock (default: tools.unlockBrandDiagnosis) */
   unlockEndpoint?: string;
   description: string;
   descriptionAr?: string;
@@ -73,7 +71,6 @@ interface ToolResult {
   creditsRemaining: number;
 }
 
-/** Free preview payload — brand uses findings+severity; other tools use summary + problemTitles */
 interface FreeToolPreview {
   score: number;
   label: string;
@@ -85,166 +82,111 @@ interface FreeToolPreview {
   problemTitles?: string[];
 }
 
-/** JSON from premium.generateReport (nested structure varies by tool) */
 interface PremiumReportPayload {
   creditsUsed?: number;
   creditsRemaining?: number;
   report?: Record<string, unknown>;
 }
 
-const severityColor = (s: string) =>
+// ─── Severity helpers ─────────────────────────────────────────────────────────
+const severityStyle = (s: string) =>
   s === 'high'
-    ? 'text-rose-200/90 border-rose-400/20 bg-rose-500/[0.06] shadow-[inset_3px_0_0_0_rgba(244,63,94,0.35)]'
+    ? { bg: '#FEF2F2', border: '#FECACA', dot: '#DC2626', text: '#DC2626', label: 'high' }
     : s === 'medium'
-      ? 'text-amber-100/90 border-amber-400/18 bg-amber-500/[0.06] shadow-[inset_3px_0_0_0_rgba(251,191,36,0.35)]'
-      : 'text-emerald-200/85 border-emerald-400/18 bg-emerald-500/[0.06] shadow-[inset_3px_0_0_0_rgba(52,211,153,0.35)]';
+      ? { bg: '#FFFBEB', border: '#FDE68A', dot: '#D97706', text: '#D97706', label: 'medium' }
+      : { bg: '#F0FDF4', border: '#BBF7D0', dot: '#16A34A', text: '#16A34A', label: 'low' };
 
+// ─── Score Ring ───────────────────────────────────────────────────────────────
 function ScoreRing({ score }: { score: number }) {
   const { locale } = useI18n();
   const isAr = locale === 'ar';
   const uid = useId().replace(/:/g, '');
   const r = 54;
-  const c = 2 * Math.PI * r;
+  const circumference = 2 * Math.PI * r;
   const pct = Math.min(100, Math.max(0, score)) / 100;
-  const dash = pct * c;
+  const dash = pct * circumference;
 
-  const { c1, c2, glowColor } =
+  const { c1, c2, ringBg, tierColor } =
     score >= 70
-      ? { c1: '#00F0FF', c2: '#A855F7', glowColor: 'rgba(0,240,255,0.3)' }
+      ? { c1: '#1B4FD8', c2: '#3B82F6', ringBg: '#EEF2FF', tierColor: '#1B4FD8' }
       : score >= 40
-        ? { c1: '#FBBF24', c2: '#FB923C', glowColor: 'rgba(251,191,36,0.3)' }
-        : { c1: '#F87171', c2: '#F472B6', glowColor: 'rgba(248,113,113,0.3)' };
+        ? { c1: '#D97706', c2: '#F59E0B', ringBg: '#FFFBEB', tierColor: '#D97706' }
+        : { c1: '#DC2626', c2: '#EF4444', ringBg: '#FEF2F2', tierColor: '#DC2626' };
 
-  const gid = `wzrd-sg-${uid}`;
-  const glowId = `${gid}-glow`;
-
-  const svgGlowFilter =
-    score >= 70
-      ? 'drop-shadow(0 0 12px rgba(16,185,129,0.6))'
-      : score >= 40
-        ? 'drop-shadow(0 0 12px rgba(245,158,11,0.6))'
-        : 'drop-shadow(0 0 12px rgba(239,68,68,0.6))';
+  const gradId = `sg-${uid}`;
 
   const tierLabel = isAr
-    ? score >= 70
-      ? '✦ علامة قوية'
-      : score >= 40
-        ? '⚡ تحتاج تطوير'
-        : '⚠ يحتاج تدخل عاجل'
-    : score >= 70
-      ? '✦ Strong brand'
-      : score >= 40
-        ? '⚡ Needs work'
-        : '⚠ Urgent attention';
+    ? score >= 70 ? '✦ علامة قوية' : score >= 40 ? '⚡ تحتاج تطوير' : '⚠ يحتاج تدخل عاجل'
+    : score >= 70 ? '✦ Strong brand' : score >= 40 ? '⚡ Needs work' : '⚠ Urgent attention';
 
   return (
-    <div className="relative mx-auto mb-4 flex flex-col items-center">
+    <div className="flex flex-col items-center">
       <div
-        className="pointer-events-none absolute rounded-full opacity-40 blur-2xl"
-        style={{
-          width: '140px',
-          height: '140px',
-          background: glowColor,
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-        }}
-      />
-
-      <div className="relative h-[8.5rem] w-[8.5rem]" aria-hidden>
-        <svg className="h-full w-full -rotate-90" viewBox="0 0 128 128" style={{ filter: svgGlowFilter }}>
+        className="relative flex h-36 w-36 items-center justify-center rounded-full"
+        style={{ background: ringBg, border: '1px solid #E5E7EB' }}
+      >
+        <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 128 128">
           <defs>
-            <linearGradient id={gid} x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor={c1} />
               <stop offset="100%" stopColor={c2} />
             </linearGradient>
-            <filter id={glowId}>
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
           </defs>
-
-          <circle cx="64" cy="64" r={r} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="8" />
-
+          <circle cx="64" cy="64" r={r} fill="none" stroke="#E5E7EB" strokeWidth="8" />
           <circle
-            cx="64"
-            cy="64"
-            r={r}
-            fill="none"
-            stroke={c1}
-            strokeWidth="8"
-            strokeOpacity="0.06"
-            strokeDasharray={`${c}`}
-          />
-
-          <circle
-            cx="64"
-            cy="64"
-            r={r}
-            fill="none"
-            stroke={`url(#${gid})`}
-            strokeWidth="8"
-            strokeLinecap="round"
-            strokeDasharray={`${dash} ${c}`}
-            filter={`url(#${glowId})`}
-            style={{
-              transition: 'stroke-dasharray 1.2s cubic-bezier(0.4, 0, 0.2, 1)',
-            }}
+            cx="64" cy="64" r={r} fill="none"
+            stroke={`url(#${gradId})`} strokeWidth="8" strokeLinecap="round"
+            strokeDasharray={`${dash} ${circumference}`}
+            style={{ transition: 'stroke-dasharray 1.2s cubic-bezier(0.4,0,0.2,1)' }}
           />
         </svg>
-
-        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-0.5">
-          <span
-            className="font-mono text-[2.6rem] font-bold tabular-nums leading-none"
-            style={{ color: c1, textShadow: `0 0 20px ${glowColor}` }}
-          >
-            {score}
-          </span>
-          <span className="text-[9px] font-semibold uppercase tracking-[0.25em] text-zinc-600">/ 100</span>
+        <div className="relative flex flex-col items-center">
+          <span className="text-3xl font-black" style={{ color: tierColor }}>{score}</span>
+          <span className="text-xs font-semibold text-[#9CA3AF]">/100</span>
         </div>
       </div>
-
-      <div
-        className="mt-3 rounded-full border px-3 py-1 text-xs font-semibold"
-        style={{
-          background: `${glowColor.replace('0.3', '0.08')}`,
-          borderColor: `${glowColor.replace('0.3', '0.3')}`,
-          color: c1,
-        }}
+      <span
+        className="mt-3 rounded-full px-4 py-1 text-xs font-bold"
+        style={{ background: ringBg, color: tierColor, border: `1px solid ${c1}40` }}
       >
         {tierLabel}
-      </div>
+      </span>
     </div>
   );
 }
 
-// ═══════════════════════════════════════
-// PROCESSING ANIMATION — shows analysis steps
-// ═══════════════════════════════════════
+// ─── Loading Skeleton ─────────────────────────────────────────────────────────
 function ToolSkeleton() {
+  const { locale } = useI18n();
+  const isAr = locale === 'ar';
   return (
-    <div className="wzrd-public-page px-6 py-16 animate-pulse">
-      <div className="mx-auto max-w-2xl space-y-6">
-        <div className="mx-auto h-32 w-32 rounded-full bg-[#E5E7EB]" />
-        <div className="mx-auto h-6 w-48 rounded-lg bg-[#E5E7EB]" />
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-16 rounded-xl bg-[#F3F4F6] border border-[#E5E7EB]" />
-        ))}
-        <div className="h-12 rounded-full bg-[#F3F4F6]" />
+    <div className="wzrd-public-page min-h-screen">
+      <div className="mx-auto max-w-lg px-6 py-16">
+        <div className="mb-8 rounded-2xl border border-[#E5E7EB] bg-white p-8 text-center shadow-sm animate-pulse">
+          <div className="mx-auto mb-4 h-36 w-36 rounded-full bg-[#F3F4F6]" />
+          <div className="mx-auto mb-2 h-5 w-40 rounded-lg bg-[#F3F4F6]" />
+          <div className="mx-auto h-4 w-24 rounded-lg bg-[#F3F4F6]" />
+        </div>
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-16 rounded-2xl bg-[#F3F4F6] border border-[#E5E7EB] animate-pulse" />
+          ))}
+        </div>
+        <p className="mt-8 text-center text-sm text-[#6B7280]">
+          {isAr ? 'جاري التحليل — قد يستغرق حتى ٣٠ ثانية…' : 'Analysing — may take up to 30 seconds…'}
+        </p>
       </div>
     </div>
   );
 }
 
-
+// ─── Main Component ───────────────────────────────────────────────────────────
 export default function ToolPage({ config }: { config: ToolConfig }) {
   const [, navigate] = useLocation();
   const { locale } = useI18n();
   const isAr = locale === 'ar';
   const { user } = useAuth();
+
   const [formData, setFormData] = useState<Record<string, string | boolean>>({});
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ToolResult | null>(null);
@@ -253,27 +195,24 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
   const [error, setError] = useState('');
   const [premiumReport, setPremiumReport] = useState<PremiumReportPayload | null>(null);
 
-  const updateField = (name: string, value: string | boolean) => {
+  const updateField = (name: string, value: string | boolean) =>
     setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  // Premium report upgrades + checklist sync intentionally omitted from V4 "Report View" result UI.
 
   const handleSubmit = async () => {
-    // Validate required fields
     for (const field of config.fields) {
       if (field.required && !formData[field.name]) {
-        setError(`Please fill in: ${field.label}`);
+        setError(
+          isAr
+            ? `من فضلك اكمل: ${field.labelAr || field.label}`
+            : `Please fill in: ${field.label}`
+        );
         return;
       }
     }
-
     setLoading(true);
     setError('');
     setFreePreview(null);
-
     const minDelay = new Promise(resolve => setTimeout(resolve, 8000));
-
     try {
       if (config.paywallAfterFreePreview) {
         const freePath = config.freePreviewEndpoint ?? 'tools.freeBrandDiagnosis';
@@ -288,13 +227,13 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
         const data = await res.json();
         if (data.error) {
           const msg = data.error.message || data.error.json?.message || '';
-          setError(typeof msg === 'string' ? msg : 'Preview failed. Try again.');
+          setError(typeof msg === 'string' ? msg : (isAr ? 'فشل المعاينة. حاول مجدداً.' : 'Preview failed. Try again.'));
         } else {
           const preview = data.result?.data?.json ?? data.result?.data;
           if (preview?.score !== undefined && preview?.unlockToken) {
             setFreePreview(preview as FreeToolPreview);
           } else {
-            setError('Unexpected response. Please try again.');
+            setError(isAr ? 'استجابة غير متوقعة. حاول مجدداً.' : 'Unexpected response. Please try again.');
           }
         }
       } else {
@@ -310,18 +249,18 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
         const data = await res.json();
         if (data.error) {
           const msg = data.error.message || data.error.json?.message || '';
-          setError(typeof msg === 'string' ? msg : 'Analysis failed. You may not have enough credits.');
+          setError(typeof msg === 'string' ? msg : (isAr ? 'فشل التحليل. تحقق من رصيدك.' : 'Analysis failed. Check your credits.'));
         } else {
           const toolResult = data.result?.data?.json ?? data.result?.data;
           if (toolResult?.score !== undefined) {
             setResult(toolResult);
           } else {
-            setError('Unexpected response format. Please try again.');
+            setError(isAr ? 'استجابة غير متوقعة. حاول مجدداً.' : 'Unexpected response. Please try again.');
           }
         }
       }
     } catch {
-      setError('Network error. Please try again.');
+      setError(isAr ? 'خطأ في الشبكة. حاول مجدداً.' : 'Network error. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -342,199 +281,206 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
       const data = await res.json();
       if (data.error) {
         const msg = data.error.json?.message || data.error.message || '';
-        setError(typeof msg === 'string' ? msg : 'Unlock failed.');
+        setError(typeof msg === 'string' ? msg : (isAr ? 'فشل الفتح.' : 'Unlock failed.'));
       } else {
         const toolResult = data.result?.data?.json ?? data.result?.data;
         if (toolResult?.score !== undefined) {
           setResult(toolResult as ToolResult);
           setFreePreview(null);
         } else {
-          setError('Unexpected response. Please try again.');
+          setError(isAr ? 'استجابة غير متوقعة. حاول مجدداً.' : 'Unexpected response. Please try again.');
         }
       }
     } catch {
-      setError('Network error. Please try again.');
+      setError(isAr ? 'خطأ في الشبكة. حاول مجدداً.' : 'Network error. Please try again.');
     } finally {
       setUnlocking(false);
     }
   };
 
-  // ═══ PROCESSING VIEW ═══
-  if (loading) {
-    return <ToolSkeleton />;
-  }
+  // ═══ LOADING ═══
+  if (loading) return <ToolSkeleton />;
 
-  // ═══ PREMIUM REPORT VIEW ═══
+  // ═══ PREMIUM REPORT ═══
   if (premiumReport) {
-    const r = premiumReport;
-    const rep = r.report;
-    const exec = rep?.executiveSummary as Record<string, unknown> | undefined;
-    const pillarList = Array.isArray(rep?.pillars) ? (rep.pillars as Record<string, unknown>[]) : [];
-    const priorityMatrix = rep?.priorityMatrix as {
-      urgent?: string[];
-      important?: string[];
-      improvement?: string[];
-    } | undefined;
-    const actionPlan = rep?.actionPlan as {
-      days30?: string[];
-      days60?: string[];
-      days90?: string[];
-    } | undefined;
-    const quickWins = Array.isArray(rep?.quickWins) ? (rep.quickWins as string[]) : [];
-    const recommendation = rep?.recommendation as { phase?: string; reason?: string } | undefined;
+    const rep = premiumReport.report ?? {};
+    const exec = rep.executiveSummary as Record<string, unknown> | undefined;
+    const pillarList = Array.isArray(rep.pillars) ? (rep.pillars as Record<string, unknown>[]) : [];
+    const priorityMatrix = rep.priorityMatrix as { urgent?: string[]; important?: string[]; improvement?: string[] } | undefined;
+    const actionPlan = rep.actionPlan as { days30?: string[]; days60?: string[]; days90?: string[] } | undefined;
+    const quickWins = Array.isArray(rep.quickWins) ? (rep.quickWins as string[]) : [];
+    const recommendation = rep.recommendation as { phase?: string; reason?: string } | undefined;
+
     return (
-      <div className="wzrd-public-page">
-        <div className="mx-auto max-w-3xl px-6 py-16" dir="rtl">
-          <button onClick={() => navigate('/tools')} className="mb-8 text-xs text-[#111827]0 transition hover:text-primary">
-            رجوع للأدوات →
+      <div className="wzrd-public-page min-h-screen">
+        <div className="mx-auto max-w-2xl px-6 py-16">
+          <button
+            type="button"
+            onClick={() => navigate('/tools')}
+            className="mb-8 flex items-center gap-2 text-sm font-medium text-[#6B7280] hover:text-[#1B4FD8] transition-colors"
+          >
+            {isAr ? '→ رجوع للأدوات' : '← Back to Tools'}
           </button>
-          
+
           {/* Header */}
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-bold mb-4">
-              ⭐ تقرير WZZRD AI Premium
+          <div className="mb-8 rounded-2xl border border-[#E5E7EB] bg-white p-6 text-center shadow-sm">
+            <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-[#EEF2FF] px-4 py-1.5 text-xs font-bold text-[#1B4FD8]">
+              ✦ {isAr ? 'التقرير الكامل' : 'Full Premium Report'}
             </div>
-            <h1 className="text-3xl font-bold mb-2">{config.nameAr || config.name}</h1>
-            <p className="text-sm text-gray-500">تقرير مفصّل — {r.creditsUsed} كريدت · {r.creditsRemaining} متبقي</p>
+            <h1 className="mt-3 text-2xl font-black text-[#111827]">
+              {isAr ? config.nameAr || config.name : config.name}
+            </h1>
+            {premiumReport.creditsUsed !== undefined && (
+              <p className="mt-1 text-xs text-[#9CA3AF]">
+                {isAr
+                  ? `${premiumReport.creditsUsed} كريدت · متبقي ${premiumReport.creditsRemaining}`
+                  : `${premiumReport.creditsUsed} credits used · ${premiumReport.creditsRemaining} remaining`}
+              </p>
+            )}
           </div>
 
-          {/* Executive Summary */}
-          {exec ? (
-            <div className="wzrd-glass mb-8 rounded-3xl border-indigo-200/60 p-6 dark:border-indigo-800/50">
-              <h2 className="text-lg font-bold mb-3">١. الملخص التنفيذي</h2>
-              <div className="flex items-center gap-4 mb-4">
-                <span className="text-4xl font-bold font-mono text-indigo-600">
-                  {String(exec.score ?? '')}
-                  <span className="text-lg text-gray-400">/١٠٠</span>
-                </span>
+          <div className="space-y-5">
+            {/* Executive Summary */}
+            {exec && (
+              <div className="wzrd-public-card p-6">
+                <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-[#6B7280]">
+                  {isAr ? '١. الملخص التنفيذي' : '1. Executive Summary'}
+                </h2>
+                {exec.pillarScores != null && typeof exec.pillarScores === 'object' && (
+                  <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    {Object.entries(exec.pillarScores as Record<string, unknown>).map(([k, v]) => (
+                      <div key={k} className="rounded-xl border border-[#E5E7EB] bg-[#FAFAF5] p-3 text-center">
+                        <div className="text-2xl font-black text-[#1B4FD8]">{String(v)}</div>
+                        <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF]">{k}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {exec.verdict != null && (
+                  <p className="text-sm leading-relaxed text-[#374151]">{String(exec.verdict as string)}</p>
+                )}
               </div>
-              {exec.pillarScores != null && typeof exec.pillarScores === 'object' ? (
-                <div className="grid grid-cols-5 gap-2 mb-4">
-                  {Object.entries(exec.pillarScores as Record<string, unknown>).map(([k, v]) => (
-                    <div key={k} className="text-center p-2 rounded-lg bg-white border border-[#F3F4F6]">
-                      <p className="text-lg font-bold font-mono">{String(v)}</p>
-                      <p className="text-[10px] text-gray-500">{k}</p>
+            )}
+
+            {/* Pillars */}
+            {pillarList.length > 0 && (
+              <div className="wzrd-public-card p-6">
+                <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-[#6B7280]">
+                  {isAr ? '٢. تحليل المحاور' : '2. Pillar Analysis'}
+                </h2>
+                <div className="space-y-3">
+                  {pillarList.map((p, i) => {
+                    const sev = String(p.severity ?? 'low');
+                    const s = severityStyle(sev === 'critical' ? 'high' : sev === 'major' ? 'medium' : 'low');
+                    return (
+                      <div key={i} className="rounded-xl border p-4" style={{ background: s.bg, borderColor: s.border }}>
+                        <div className="mb-2 flex items-center justify-between">
+                          <h3 className="font-semibold text-[#111827]">{String(p.name ?? p.nameEn ?? '')}</h3>
+                          <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ background: s.bg, color: s.text, border: `1px solid ${s.border}` }}>
+                            {String(p.score ?? '')}/100
+                          </span>
+                        </div>
+                        <p className="text-sm leading-relaxed text-[#374151] whitespace-pre-line">{String(p.analysis ?? '')}</p>
+                        {p.gap != null && (
+                          <p className="mt-2 rounded-lg bg-white/60 p-2 text-xs text-[#D97706]">
+                            {isAr ? 'الفجوة:' : 'Gap:'} {String(p.gap as string)}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Priority Matrix */}
+            {priorityMatrix && (
+              <div className="wzrd-public-card p-6">
+                <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-[#6B7280]">
+                  {isAr ? '٣. خريطة الأولويات' : '3. Priority Matrix'}
+                </h2>
+                <div className="space-y-3">
+                  {[
+                    { label: isAr ? '🔴 عاجل ومهم' : '🔴 Urgent & Important', items: priorityMatrix.urgent ?? [], bg: '#FEF2F2', border: '#FECACA', color: '#DC2626' },
+                    { label: isAr ? '🟡 مهم' : '🟡 Important', items: priorityMatrix.important ?? [], bg: '#FFFBEB', border: '#FDE68A', color: '#D97706' },
+                    { label: isAr ? '🟢 تحسين' : '🟢 Improvement', items: priorityMatrix.improvement ?? [], bg: '#F0FDF4', border: '#BBF7D0', color: '#16A34A' },
+                  ].filter(g => g.items.length > 0).map(({ label, items, bg, border, color }) => (
+                    <div key={label} className="rounded-xl border p-4" style={{ background: bg, borderColor: border }}>
+                      <h4 className="mb-2 text-xs font-bold" style={{ color }}>{label}</h4>
+                      {items.map((item, i) => (
+                        <p key={i} className="text-sm text-[#374151]">• {item}</p>
+                      ))}
                     </div>
                   ))}
                 </div>
-              ) : null}
-              {exec.verdict != null && String(exec.verdict).length > 0 ? (
-                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{String(exec.verdict)}</p>
-              ) : null}
-            </div>
-          ) : null}
-
-          {/* Pillars Deep Dive */}
-          {pillarList.map((p, i) => (
-            <div key={i} className="p-5 rounded-xl border border-gray-200 dark:border-[#E5E7EB] mb-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-bold text-base">{String(p.name ?? p.nameEn ?? "")}</h3>
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${p.severity === 'critical' ? 'bg-red-100 text-red-600' : p.severity === 'major' ? 'bg-amber-100 text-amber-600' : 'bg-green-100 text-green-600'}`}>
-                  {String(p.score ?? "")}/100 · {String(p.severity ?? "")}
-                </span>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-line">{String(p.analysis ?? "")}</p>
-              {p.gap ? <p className="text-xs text-amber-600 mt-2 p-2 rounded bg-amber-50 dark:bg-amber-900/10">الفجوة: {String(p.gap)}</p> : null}
-            </div>
-          ))}
+            )}
 
-          {/* Priority Matrix */}
-          {priorityMatrix ? (
-            <div className="p-5 rounded-xl border border-gray-200 dark:border-[#E5E7EB] mb-8">
-              <h2 className="text-lg font-bold mb-4">٣. خريطة الأولويات</h2>
-              {(priorityMatrix.urgent?.length ?? 0) > 0 ? (
-                <div className="mb-3">
-                  <h4 className="text-xs font-bold text-red-600 mb-1">🔴 عاجل ومهم</h4>
-                  {(priorityMatrix.urgent ?? []).map((item, i) => (
-                    <p key={i} className="text-sm text-gray-600 mr-4">
-                      • {item}
-                    </p>
-                  ))}
-                </div>
-              ) : null}
-              {(priorityMatrix.important?.length ?? 0) > 0 ? (
-                <div className="mb-3">
-                  <h4 className="text-xs font-bold text-amber-600 mb-1">🟠 مهم مش عاجل</h4>
-                  {(priorityMatrix.important ?? []).map((item, i) => (
-                    <p key={i} className="text-sm text-gray-600 mr-4">
-                      • {item}
-                    </p>
-                  ))}
-                </div>
-              ) : null}
-              {(priorityMatrix.improvement?.length ?? 0) > 0 ? (
-                <div>
-                  <h4 className="text-xs font-bold text-green-600 mb-1">🟡 تحسين</h4>
-                  {(priorityMatrix.improvement ?? []).map((item, i) => (
-                    <p key={i} className="text-sm text-gray-600 mr-4">
-                      • {item}
-                    </p>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-
-          {/* Action Plan */}
-          {actionPlan ? (
-            <div className="p-5 rounded-xl border border-gray-200 dark:border-[#E5E7EB] mb-8">
-              <h2 className="text-lg font-bold mb-4">٤. خطة العمل</h2>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/10">
-                  <h4 className="text-xs font-bold text-green-700 mb-2">٣٠ يوم</h4>
-                  {(actionPlan.days30 ?? []).map((a, i) => (
-                    <p key={i} className="text-xs text-gray-600 mb-1">
-                      • {a}
-                    </p>
-                  ))}
-                </div>
-                <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/10">
-                  <h4 className="text-xs font-bold text-amber-700 mb-2">٦٠ يوم</h4>
-                  {(actionPlan.days60 ?? []).map((a, i) => (
-                    <p key={i} className="text-xs text-gray-600 mb-1">
-                      • {a}
-                    </p>
-                  ))}
-                </div>
-                <div className="p-3 rounded-lg bg-indigo-50 dark:bg-indigo-900/10">
-                  <h4 className="text-xs font-bold text-indigo-700 mb-2">٩٠ يوم</h4>
-                  {(actionPlan.days90 ?? []).map((a, i) => (
-                    <p key={i} className="text-xs text-gray-600 mb-1">
-                      • {a}
-                    </p>
+            {/* Action Plan */}
+            {actionPlan && (
+              <div className="wzrd-public-card p-6">
+                <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-[#6B7280]">
+                  {isAr ? '٤. خطة العمل' : '4. Action Plan'}
+                </h2>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { label: isAr ? '٣٠ يوم' : '30 Days', items: actionPlan.days30 ?? [], color: '#16A34A', bg: '#F0FDF4', border: '#BBF7D0' },
+                    { label: isAr ? '٦٠ يوم' : '60 Days', items: actionPlan.days60 ?? [], color: '#D97706', bg: '#FFFBEB', border: '#FDE68A' },
+                    { label: isAr ? '٩٠ يوم' : '90 Days', items: actionPlan.days90 ?? [], color: '#1B4FD8', bg: '#EEF2FF', border: '#C7D2FE' },
+                  ].map(({ label, items, color, bg, border }) => (
+                    <div key={label} className="rounded-xl p-3" style={{ background: bg, border: `1px solid ${border}` }}>
+                      <h4 className="mb-2 text-xs font-bold" style={{ color }}>{label}</h4>
+                      {items.map((a, i) => (
+                        <p key={i} className="mb-1 text-xs text-[#374151]">• {a}</p>
+                      ))}
+                    </div>
                   ))}
                 </div>
               </div>
-            </div>
-          ) : null}
+            )}
 
-          {/* Quick Wins */}
-          {quickWins.length > 0 ? (
-            <div className="p-5 rounded-xl border-2 border-green-200 bg-green-50 dark:bg-green-900/10 dark:border-green-800 mb-8">
-              <h2 className="text-lg font-bold mb-3">٥. Quick Wins — ٣ حاجات تعملها النهاردة</h2>
-              {quickWins.map((w, i) => (
-                <div key={i} className="flex items-start gap-2 mb-2">
-                  <span className="text-green-600 font-bold">{i + 1}.</span>
-                  <p className="text-sm text-gray-700">{w}</p>
-                </div>
-              ))}
-            </div>
-          ) : null}
+            {/* Quick Wins */}
+            {quickWins.length > 0 && (
+              <div className="rounded-2xl border-2 border-[#BBF7D0] bg-[#F0FDF4] p-6">
+                <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-[#16A34A]">
+                  {isAr ? '٥. Quick Wins — ابدأ النهارده' : '5. Quick Wins — Start Today'}
+                </h2>
+                {quickWins.map((w, i) => (
+                  <div key={i} className="mb-3 flex items-start gap-3">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#16A34A] text-xs font-bold text-white">{i + 1}</span>
+                    <p className="text-sm leading-relaxed text-[#374151]">{w}</p>
+                  </div>
+                ))}
+              </div>
+            )}
 
-          {/* Recommendation */}
-          {recommendation ? (
-            <div className="p-5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white mb-8">
-              <h2 className="text-lg font-bold mb-2">٦. التوصية النهائية</h2>
-              <p className="text-xs font-bold bg-white/20 inline-block px-3 py-1 rounded-full mb-2">{recommendation.phase ?? ''}</p>
-              <p className="text-sm opacity-90 leading-relaxed">{recommendation.reason ?? ''}</p>
-              <a href="/services-info" className="inline-block mt-3 px-5 py-2 rounded-full bg-white text-indigo-600 text-sm font-bold hover:bg-gray-100 transition">تواصل مع Primo Marca ←</a>
-            </div>
-          ) : null}
+            {/* Final Recommendation */}
+            {recommendation && (
+              <div className="rounded-2xl bg-[#1B4FD8] p-6 text-white">
+                <h2 className="mb-2 text-sm font-bold uppercase tracking-wider opacity-70">
+                  {isAr ? '٦. التوصية النهائية' : '6. Final Recommendation'}
+                </h2>
+                {recommendation.phase && (
+                  <span className="mb-3 inline-block rounded-full bg-white/20 px-3 py-1 text-xs font-bold">
+                    {recommendation.phase}
+                  </span>
+                )}
+                <p className="text-sm leading-relaxed opacity-90">{recommendation.reason ?? ''}</p>
+                <a
+                  href="/services-info"
+                  className="mt-4 inline-block rounded-full bg-white px-5 py-2.5 text-sm font-bold text-[#1B4FD8] hover:bg-[#EEF2FF] transition"
+                >
+                  {isAr ? 'تواصل مع WZZRD AI ←' : 'Talk to WZZRD AI →'}
+                </a>
+              </div>
+            )}
 
-          {/* Actions */}
-          <div className="flex gap-3">
-            <button onClick={() => { setResult(null); setPremiumReport(null); setFormData({}); }} className="flex-1 py-3 rounded-full border border-gray-200 text-sm text-gray-500 hover:border-indigo-500 transition">
-              حلل تاني ببيانات مختلفة
+            <button
+              type="button"
+              onClick={() => { setResult(null); setPremiumReport(null); setFormData({}); }}
+              className="w-full rounded-full border border-[#E5E7EB] py-3 text-sm font-medium text-[#6B7280] hover:border-[#1B4FD8] hover:text-[#1B4FD8] transition"
+            >
+              {isAr ? 'حلل تاني ببيانات مختلفة' : 'Run a new analysis'}
             </button>
           </div>
         </div>
@@ -542,122 +488,123 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
     );
   }
 
-  // ═══ FREE PREVIEW + PAYWALL (brand diagnosis) ═══
+  // ═══ FREE PREVIEW + PAYWALL ═══
   if (freePreview && !result) {
     const fp = freePreview;
+    const issueCount = fp.findings?.length ?? fp.problemTitles?.length ?? 0;
+
     return (
-      <div className="wzrd-public-page relative min-h-screen overflow-hidden">
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_-8%,rgba(99,102,241,0.2),transparent_52%),radial-gradient(ellipse_45%_35%_at_100%_100%,rgba(6,182,212,0.07),transparent_42%),radial-gradient(ellipse_40%_30%_at_0%_80%,rgba(192,132,252,0.06),transparent_45%)]"
-          aria-hidden
-        />
-        <div className="relative z-10 mx-auto max-w-2xl px-6 py-16">
-          <button type="button" onClick={() => navigate('/tools')} className="mb-8 text-xs text-[#111827]0 transition hover:text-amber-400">
-            ← {isAr ? 'رجوع للأدوات' : 'Back to Tools'}
+      <div className="wzrd-public-page min-h-screen">
+        <div className="mx-auto max-w-lg px-6 py-16">
+          <button
+            type="button"
+            onClick={() => navigate('/tools')}
+            className="mb-8 flex items-center gap-2 text-sm font-medium text-[#6B7280] hover:text-[#1B4FD8] transition-colors"
+          >
+            {isAr ? '→ رجوع للأدوات' : '← Back to Tools'}
           </button>
 
-          <div className="mb-10 text-center">
-            <div className="wzrd-fade-in-stagger mx-auto inline-block rounded-3xl border border-white/10 bg-white/[0.04] px-8 py-6 backdrop-blur-xl">
-              <ScoreRing score={fp.score} />
-              <h2 className="text-2xl font-bold tracking-tight">{config.name}</h2>
-              <p className="mt-1 text-sm text-[#111827]0">
-                {fp.label} · {isAr ? 'معاينة مجانية' : 'Free preview'}
-              </p>
-            </div>
+          {/* Score Card */}
+          <div className="mb-6 rounded-2xl border border-[#E5E7EB] bg-white p-8 text-center shadow-sm">
+            <ScoreRing score={fp.score} />
+            <h2 className="mt-4 text-xl font-bold text-[#111827]">
+              {isAr ? config.nameAr || config.name : config.name}
+            </h2>
+            <p className="mt-1 text-sm text-[#6B7280]">
+              {fp.label} · {isAr ? 'معاينة مجانية' : 'Free preview'}
+            </p>
           </div>
 
-          {fp.summary ? (
-            <p className="mb-6 text-center text-sm leading-relaxed text-[#374151]" dir={isAr ? 'rtl' : 'ltr'}>
+          {/* Summary */}
+          {fp.summary && (
+            <p className="mb-5 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-sm leading-relaxed text-[#374151]">
               {fp.summary}
             </p>
-          ) : null}
+          )}
 
-          <p className="mb-4 text-center text-xs font-semibold uppercase tracking-wider text-[#111827]0">
+          {/* Issues — blurred details */}
+          <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[#9CA3AF]">
             {isAr ? 'عناوين المشاكل فقط — التفاصيل مقفولة' : 'Issue headlines only — details locked'}
           </p>
-
-          <div className="mb-8 space-y-3">
-            {(fp.findings && fp.findings.length > 0
-              ? fp.findings.map((f, i) => (
-                  <div
-                    key={i}
-                    className={`wzrd-fade-in-stagger rounded-2xl border p-4 backdrop-blur-xl ${severityColor(f.severity as Finding['severity'])}`}
-                    style={{ animationDelay: `${0.06 + i * 0.06}s` }}
-                  >
-                    <div className="mb-1 flex items-center gap-2">
-                      <span className="text-xs font-mono uppercase tracking-wider opacity-60">{f.severity}</span>
-                      <h4 className="text-sm font-bold">{f.title}</h4>
+          <div className="mb-6 space-y-2">
+            {fp.findings && fp.findings.length > 0
+              ? fp.findings.map((f, i) => {
+                  const s = severityStyle(f.severity);
+                  return (
+                    <div key={i} className="rounded-xl border p-4" style={{ background: s.bg, borderColor: s.border }}>
+                      <div className="mb-1 flex items-center gap-2">
+                        <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: s.dot }} />
+                        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: s.text }}>{f.severity}</span>
+                        <span className="text-sm font-semibold text-[#111827]">{f.title}</span>
+                      </div>
+                      <p className="select-none text-xs text-[#9CA3AF]" style={{ filter: 'blur(3px)' }} aria-hidden>
+                        {isAr ? 'الشرح والحلول متاحة بعد الفتح…' : 'Explanation & fixes unlock after purchase…'}
+                      </p>
                     </div>
-                    <p className="text-xs opacity-50 blur-[3px] select-none" aria-hidden>
-                      {isAr ? 'الشرح والحلول متاحة بعد الفتح…' : 'Explanation unlocks after purchase…'}
-                    </p>
-                  </div>
-                ))
-              : (fp.problemTitles ?? []).map((title, i) => (
-                  <div
-                    key={i}
-                    className={`wzrd-fade-in-stagger rounded-2xl border p-4 backdrop-blur-xl ${severityColor('medium')}`}
-                    style={{ animationDelay: `${0.06 + i * 0.06}s` }}
-                  >
-                    <h4 className="text-sm font-bold">{title}</h4>
-                    <p className="text-xs opacity-50 blur-[3px] select-none mt-1" aria-hidden>
-                      {isAr ? 'الشرح والحلول متاحة بعد الفتح…' : 'Explanation unlocks after purchase…'}
-                    </p>
-                  </div>
-                )))}
+                  );
+                })
+              : (fp.problemTitles ?? []).map((title, i) => {
+                  const s = severityStyle('medium');
+                  return (
+                    <div key={i} className="rounded-xl border p-4" style={{ background: s.bg, borderColor: s.border }}>
+                      <span className="text-sm font-semibold text-[#111827]">{title}</span>
+                      <p className="mt-1 select-none text-xs text-[#9CA3AF]" style={{ filter: 'blur(3px)' }} aria-hidden>
+                        {isAr ? 'الشرح والحلول متاحة بعد الفتح…' : 'Explanation & fixes unlock after purchase…'}
+                      </p>
+                    </div>
+                  );
+                })
+            }
           </div>
 
-          <div className="relative overflow-hidden rounded-3xl border border-amber-400/25 bg-gradient-to-br from-amber-950/40 via-zinc-950/90 to-violet-950/50 p-6 shadow-[0_0_40px_-10px_rgba(245,158,11,0.35)]">
-            <div
-              className="pointer-events-none absolute inset-0 animate-pulse bg-[linear-gradient(110deg,transparent_20%,rgba(255,255,255,0.05)_45%,transparent_70%)]"
-              aria-hidden
-            />
-            <div className="relative text-center">
-              <p className="mb-2 text-lg font-bold text-amber-100" dir={isAr ? 'rtl' : 'ltr'}>
-                {isAr
-                  ? (fp.criticalCount > 0
-                      ? `عندك ${fp.criticalCount} مشكلة حرجة — اكشف الحل والخطة`
-                      : `عندك ${fp.findings?.length ?? fp.problemTitles?.length ?? 0} نقاط رئيسية — اكشف التفاصيل وخطوات العمل`)
-                  : (fp.criticalCount > 0
-                      ? `${fp.criticalCount} critical issues — unlock the fix & plan`
-                      : `${fp.findings?.length ?? fp.problemTitles?.length ?? 0} focus areas — unlock details & action plan`)}
-              </p>
-              <p className="mb-6 text-xs text-[#6B7280]">
-                {isAr ? 'يتضمن: شرح كل نقطة، مهام عملية، وتوصية مختصرة' : 'Includes: deep dives, action items, recommendation'}
-              </p>
-              <button
-                type="button"
-                onClick={handleUnlockFullDiagnosis}
-                disabled={unlocking}
-                className="wzrd-shimmer-btn relative w-full overflow-hidden rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 py-4 text-sm font-bold text-zinc-950 shadow-lg shadow-amber-500/30 transition hover:brightness-110 disabled:opacity-50"
-              >
-                {unlocking ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-900/30 border-t-zinc-900" />
-                    {isAr ? 'جاري الفتح…' : 'Unlocking…'}
-                  </span>
-                ) : (
-                  (isAr ? `افتح التقرير الكامل — ${fp.unlockCost} كريدت` : `Unlock full report — ${fp.unlockCost} credits`)
-                )}
-              </button>
-              <a href="/login" className="mt-3 block text-center text-xs text-indigo-400 hover:underline">
-                {isAr ? 'مسجّل؟ سجّل الدخول لفتح التقرير' : 'Have an account? Log in to unlock'}
+          {/* Unlock CTA */}
+          <div className="rounded-2xl border border-[#FDE68A] bg-[#FFFBEB] p-6 text-center">
+            <p className="mb-2 text-base font-bold text-[#111827]">
+              {isAr
+                ? (fp.criticalCount > 0
+                    ? `عندك ${fp.criticalCount} مشكلة حرجة — اكشف الحل والخطة`
+                    : `عندك ${issueCount} نقاط رئيسية — اكشف التفاصيل وخطوات العمل`)
+                : (fp.criticalCount > 0
+                    ? `${fp.criticalCount} critical issues — unlock the fix & plan`
+                    : `${issueCount} focus areas — unlock details & action steps`)}
+            </p>
+            <p className="mb-5 text-xs text-[#6B7280]">
+              {isAr
+                ? 'يتضمن: شرح كل نقطة، مهام عملية، وتوصية مختصرة'
+                : 'Includes: deep dives, action items, and a recommendation'}
+            </p>
+            <button
+              type="button"
+              onClick={handleUnlockFullDiagnosis}
+              disabled={unlocking}
+              className="w-full rounded-full bg-[#1B4FD8] py-4 text-sm font-bold text-white shadow-md hover:bg-[#1440B8] disabled:opacity-50 transition"
+            >
+              {unlocking ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  {isAr ? 'جاري الفتح…' : 'Unlocking…'}
+                </span>
+              ) : (
+                isAr
+                  ? `افتح التقرير الكامل — ${fp.unlockCost} كريدت`
+                  : `Unlock full report — ${fp.unlockCost} credits`
+              )}
+            </button>
+            <div className="mt-3 flex justify-center gap-4">
+              <a href="/login" className="text-xs text-[#1B4FD8] hover:underline">
+                {isAr ? 'مسجّل؟ سجّل الدخول' : 'Have an account? Log in'}
               </a>
-              <a href="/signup" className="mt-1 block text-center text-xs text-[#111827]0 hover:text-[#374151]">
-                {isAr ? 'مش مسجّل؟ أنشئ حساباً واحصل على كريدت' : 'New here? Sign up for credits'}
+              <a href="/signup" className="text-xs text-[#6B7280] hover:text-[#1B4FD8]">
+                {isAr ? 'مش مسجّل؟ أنشئ حساباً' : 'New here? Sign up'}
               </a>
-              {error ? <p className="mt-4 text-center text-sm text-red-400">{error}</p> : null}
             </div>
+            {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
           </div>
 
           <button
             type="button"
-            onClick={() => {
-              setFreePreview(null);
-              setFormData({});
-              setError('');
-            }}
-            className="mt-8 w-full rounded-full border border-[#E5E7EB] py-3 text-sm text-[#6B7280] transition hover:border-indigo-500"
+            onClick={() => { setFreePreview(null); setFormData({}); setError(''); }}
+            className="mt-4 w-full rounded-full border border-[#E5E7EB] py-3 text-sm text-[#6B7280] hover:border-[#1B4FD8] hover:text-[#1B4FD8] transition"
           >
             {isAr ? 'تعديل الإجابات' : 'Edit my answers'}
           </button>
@@ -666,107 +613,141 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
     );
   }
 
-  // ═══ RESULT VIEW (after unlock / legacy tools) ═══
+  // ═══ RESULT VIEW ═══
   if (result) {
     return (
       <div className="wzrd-public-page min-h-screen">
-        <div className="border-b border-[#E5E7EB] bg-white/90 backdrop-blur-xl px-6 py-4 sticky top-0 z-10">
-          <div className="mx-auto max-w-3xl flex items-center justify-between">
-            <span className="font-mono text-xs text-[#111827]0 tracking-widest uppercase">
-              WZZRD AI · Brand Report
-            </span>
-            <span className="font-mono text-xs text-zinc-600">
-              {new Date().toLocaleDateString('ar-EG')}
-            </span>
-          </div>
-        </div>
+        <div className="mx-auto max-w-lg px-6 py-16">
+          <button
+            type="button"
+            onClick={() => navigate('/tools')}
+            className="mb-8 flex items-center gap-2 text-sm font-medium text-[#6B7280] hover:text-[#1B4FD8] transition-colors"
+          >
+            {isAr ? '→ رجوع للأدوات' : '← Back to Tools'}
+          </button>
 
-        <div className="mx-auto max-w-3xl px-6 py-12 space-y-10" dir="rtl">
-          <div className="text-center space-y-3">
+          {/* Score */}
+          <div className="mb-6 rounded-2xl border border-[#E5E7EB] bg-white p-8 text-center shadow-sm">
             <ScoreRing score={result.score} />
-            <h1 className="text-2xl font-bold tracking-tight">{config.name}</h1>
-            <p className="text-sm text-[#111827]0">{result.label}</p>
-          </div>
-
-          <div className="space-y-3">
-            <h2 className="font-mono text-xs text-zinc-600 uppercase tracking-[0.2em]">
-              // FINDINGS
+            <h2 className="mt-4 text-xl font-bold text-[#111827]">
+              {isAr ? config.nameAr || config.name : config.name}
             </h2>
-            {result.findings?.map((f, i) => (
-              <div
-                key={i}
-                className="rounded-xl border border-[#E5E7EB]/50 bg-[#F9FAFB]/30 backdrop-blur-sm p-5 transition hover:border-[#E5E7EB]/50"
-              >
-                <div className="flex items-start gap-3">
-                  <span
-                    className={`mt-1 h-2 w-2 rounded-full shrink-0 ${
-                      f.severity === 'high' ? 'bg-red-500' : f.severity === 'medium' ? 'bg-amber-500' : 'bg-emerald-500'
-                    }`}
-                  />
-                  <div>
-                    <p className="font-semibold text-[#111827]">{f.title}</p>
-                    {f.detail && (
-                      <p className="mt-1 text-sm text-[#6B7280] leading-relaxed whitespace-pre-line">{f.detail}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+            <p className="mt-1 text-sm text-[#6B7280]">{result.label}</p>
+            {result.creditsUsed !== undefined && (
+              <p className="mt-2 text-xs text-[#9CA3AF]">
+                {isAr
+                  ? `${result.creditsUsed} كريدت · متبقي ${result.creditsRemaining}`
+                  : `${result.creditsUsed} credits used · ${result.creditsRemaining} remaining`}
+              </p>
+            )}
           </div>
 
-          {(result.actionItems?.length ?? 0) > 0 || Boolean(result.recommendation) ? (
-            <div className="space-y-3">
-              <h2 className="font-mono text-xs text-zinc-600 uppercase tracking-[0.2em]">
-                // RECOMMENDATIONS
-              </h2>
-              {result.actionItems?.map((r, i) => (
-                <div key={i} className="rounded-xl border border-[#E5E7EB]/30 bg-[#F9FAFB]/20 p-5">
-                  <p className="text-sm text-[#374151] leading-relaxed">{r.task}</p>
+          {/* Findings */}
+          {result.findings?.length > 0 && (
+            <div className="mb-5 space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#9CA3AF]">
+                {isAr ? 'النتائج' : 'Findings'}
+              </h3>
+              {result.findings.map((f, i) => {
+                const s = severityStyle(f.severity);
+                return (
+                  <div key={i} className="rounded-xl border p-4" style={{ background: s.bg, borderColor: s.border }}>
+                    <div className="mb-2 flex items-start gap-3">
+                      <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full" style={{ background: s.dot }} />
+                      <div>
+                        <p className="font-semibold text-[#111827]">{f.title}</p>
+                        {f.detail && (
+                          <p className="mt-1 text-sm leading-relaxed text-[#6B7280] whitespace-pre-line">{f.detail}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Action Items */}
+          {(result.actionItems?.length ?? 0) > 0 && (
+            <div className="mb-5 space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#9CA3AF]">
+                {isAr ? 'خطوات العمل' : 'Action Items'}
+              </h3>
+              {result.actionItems!.map((a, i) => (
+                <div key={i} className="rounded-xl border border-[#E5E7EB] bg-white p-4">
+                  <p className="text-sm leading-relaxed text-[#374151]">{a.task}</p>
                 </div>
               ))}
-              {result.recommendation ? (
-                <div className="rounded-xl border border-[#E5E7EB]/30 bg-[#F9FAFB]/20 p-5">
-                  <p className="text-sm text-[#374151] leading-relaxed">{result.recommendation}</p>
-                </div>
-              ) : null}
             </div>
-          ) : null}
+          )}
 
-          <div className="rounded-2xl border border-purple-500/20 bg-purple-500/5 p-6 text-center space-y-3">
-            <p className="text-sm text-[#6B7280]">جاهز تاخد الخطوة الجاية؟</p>
+          {/* Recommendation */}
+          {result.recommendation && (
+            <div className="mb-5 rounded-xl border border-[#E5E7EB] bg-white p-4">
+              <p className="mb-1 text-xs font-bold uppercase tracking-wider text-[#9CA3AF]">
+                {isAr ? 'التوصية' : 'Recommendation'}
+              </p>
+              <p className="text-sm leading-relaxed text-[#374151]">{result.recommendation}</p>
+            </div>
+          )}
+
+          {/* Service Recommendation */}
+          {result.serviceRecommendation?.show && (
+            <div className="mb-5 rounded-2xl bg-[#1B4FD8] p-6 text-white">
+              <p className="mb-1 text-xs font-bold uppercase tracking-wider opacity-70">
+                {isAr ? 'توصية الخدمة' : 'Service Recommendation'}
+              </p>
+              <p className="mb-1 text-base font-bold">
+                {isAr ? result.serviceRecommendation.serviceAr : result.serviceRecommendation.service}
+              </p>
+              <p className="mb-4 text-sm opacity-80">
+                {isAr ? result.serviceRecommendation.reasonAr : result.serviceRecommendation.reason}
+              </p>
+              <a
+                href={result.serviceRecommendation.url}
+                className="inline-block rounded-full bg-white px-5 py-2.5 text-sm font-bold text-[#1B4FD8] hover:bg-[#EEF2FF] transition"
+              >
+                {isAr ? 'اعرف أكتر ←' : 'Learn more →'}
+              </a>
+            </div>
+          )}
+
+          {/* Talk to expert */}
+          <div className="mb-5 rounded-2xl border border-[#E5E7EB] bg-white p-5 text-center">
+            <p className="mb-3 text-sm text-[#6B7280]">
+              {isAr ? 'جاهز تاخد الخطوة الجاية؟' : 'Ready to take the next step?'}
+            </p>
             <a
               href={waMeQualifiedLeadHref({
                 leadName: user?.name,
                 brandName: user?.company,
-                diagnosisLabel: config.nameAr || config.name,
+                diagnosisLabel: isAr ? config.nameAr || config.name : config.name,
                 score: result.score,
                 topIssue: result.findings?.[0]?.title || null,
               })}
-              className="inline-flex items-center gap-2 rounded-full border border-purple-500/40 px-6 py-3 text-sm font-semibold text-purple-300 transition hover:bg-purple-500/10 hover:border-purple-400/60"
+              className="inline-flex items-center gap-2 rounded-full border border-[#1B4FD8] px-6 py-3 text-sm font-bold text-[#1B4FD8] hover:bg-[#EEF2FF] transition"
               target="_blank"
               rel="noopener noreferrer"
             >
-              تواصل مع خبير ←
+              {isAr ? 'تواصل مع خبير ←' : 'Talk to an expert →'}
             </a>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3">
+          {/* Actions */}
+          <div className="flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
               onClick={() => navigate('/tools')}
-              className="flex-1 rounded-full border border-[#E5E7EB]/60 px-6 py-3 text-sm text-[#374151] hover:border-[#E5E7EB]/60 hover:bg-[#F9FAFB]/20 transition"
+              className="flex-1 rounded-full border border-[#E5E7EB] py-3 text-sm text-[#6B7280] hover:border-[#1B4FD8] hover:text-[#1B4FD8] transition"
             >
-              ← رجوع للأدوات
+              {isAr ? '→ رجوع للأدوات' : '← Back to Tools'}
             </button>
             <button
               type="button"
-              onClick={() => {
-                setResult(null);
-                setFormData({});
-              }}
-              className="flex-1 rounded-full border border-[#E5E7EB]/60 px-6 py-3 text-sm text-[#374151] hover:border-[#E5E7EB]/60 hover:bg-[#F9FAFB]/20 transition"
+              onClick={() => { setResult(null); setFormData({}); }}
+              className="flex-1 rounded-full border border-[#E5E7EB] py-3 text-sm text-[#6B7280] hover:border-[#1B4FD8] hover:text-[#1B4FD8] transition"
             >
-              حلل تاني ببيانات مختلفة
+              {isAr ? 'حلل تاني' : 'New analysis'}
             </button>
           </div>
         </div>
@@ -776,107 +757,124 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
 
   // ═══ FORM VIEW ═══
   return (
-    <div className="wzrd-public-page">
+    <div className="wzrd-public-page min-h-screen">
       <div className="mx-auto max-w-lg px-6 py-16">
+        {/* Back */}
         <button
+          type="button"
           onClick={() => navigate('/tools')}
-          className="mb-8 text-xs text-[#111827]0 transition hover:text-primary dark:text-[#6B7280] dark:hover:text-amber-400"
+          className="mb-8 flex items-center gap-2 text-sm font-medium text-[#6B7280] hover:text-[#1B4FD8] transition-colors"
         >
-          ← Back to Tools
+          {isAr ? '→ رجوع للأدوات' : '← Back to Tools'}
         </button>
 
-        <div className="wzrd-glass mb-6 flex items-center gap-3 rounded-3xl p-4">
-          <span className="text-4xl">{config.icon}</span>
-          <div>
-            <h1 className="text-xl font-bold">{config.name}</h1>
-            <p className="text-xs text-[#111827]0 dark:text-[#6B7280]">
-              {config.paywallAfterFreePreview
-                ? (isAr
-                    ? `${config.descriptionAr || config.description} · معاينة مجانية، ثم ~${config.cost} كريدت للتفاصيل`
-                    : `${config.description} · Free preview, then ~${config.cost} credits for full unlock`)
-                : `${config.description} · ~${config.cost} credits`}
-            </p>
+        {/* Tool Header Card */}
+        <div className="mb-5 rounded-2xl border border-[#E5E7EB] bg-white p-5 shadow-sm">
+          <div className="flex items-center gap-4">
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#EEF2FF] text-3xl">
+              {config.icon}
+            </span>
+            <div>
+              <h1 className="text-lg font-bold text-[#111827]">
+                {isAr ? config.nameAr || config.name : config.name}
+              </h1>
+              <p className="text-xs leading-relaxed text-[#6B7280]">
+                {config.paywallAfterFreePreview
+                  ? (isAr
+                      ? `${config.descriptionAr || config.description} · معاينة مجانية، ثم ~${config.cost} كريدت`
+                      : `${config.description} · Free preview, then ~${config.cost} credits`)
+                  : (isAr
+                      ? `${config.descriptionAr || config.description} · ~${config.cost} كريدت`
+                      : `${config.description} · ~${config.cost} credits`)}
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Intro section — what this tool does */}
+        {/* Intro Card */}
         {config.intro && (
-          <div className="wzrd-glass mb-8 rounded-3xl p-5">
-            <h2 className="mb-2 text-base font-bold">{config.intro.headline}</h2>
-            <p className="mb-4 text-sm leading-relaxed text-zinc-600 dark:text-[#6B7280]">{config.intro.body}</p>
+          <div className="mb-5 rounded-2xl border border-[#E5E7EB] bg-white p-5">
+            <h2 className="mb-2 text-sm font-bold text-[#111827]">
+              {isAr ? config.intro.headlineAr || config.intro.headline : config.intro.headline}
+            </h2>
+            <p className="mb-4 text-sm leading-relaxed text-[#6B7280]">
+              {isAr ? config.intro.bodyAr || config.intro.body : config.intro.body}
+            </p>
             <div className="mb-3">
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#6B7280] dark:text-[#111827]0">What it measures:</p>
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF]">
+                {isAr ? 'بيقيس:' : 'What it measures:'}
+              </p>
               <div className="flex flex-wrap gap-1.5">
-                {config.intro.measures.map((m, i) => (
+                {(isAr ? config.intro.measuresAr || config.intro.measures : config.intro.measures).map((m, i) => (
                   <span
                     key={i}
-                    className="rounded-full bg-zinc-100/90 px-2 py-0.5 text-[11px] text-zinc-600 dark:bg-[#F3F4F6]/80 dark:text-[#374151]"
+                    className="rounded-full border border-[#E5E7EB] bg-[#F9FAFB] px-2.5 py-0.5 text-[11px] font-medium text-[#374151]"
                   >
                     {m}
                   </span>
                 ))}
               </div>
             </div>
-            <p className="text-xs leading-relaxed text-amber-700/90 dark:text-amber-300/90">
-              <span className="font-bold">Best for:</span> {config.intro.bestFor}
+            <p className="text-xs text-[#D97706]">
+              <span className="font-bold">{isAr ? 'الأنسب لـ:' : 'Best for:'}</span>{' '}
+              {isAr ? config.intro.bestForAr || config.intro.bestFor : config.intro.bestFor}
             </p>
           </div>
         )}
 
+        {/* Error */}
         {error && (
-          <div className="mb-4 rounded-xl border border-red-500/25 bg-red-500/10 p-3 text-sm text-red-600 dark:text-red-400">
+          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
             {error}
           </div>
         )}
 
-        <div className="wzrd-glass space-y-4 rounded-3xl p-6 sm:p-8">
-          {config.fields.map((field, fi) => (
-            <div
-              key={field.name}
-              className="wzrd-fade-in-stagger"
-              style={{ animationDelay: `${0.04 + fi * 0.05}s` }}
-            >
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[#111827]0 dark:text-[#6B7280]">
-                {field.label}
+        {/* Form Fields */}
+        <div className="space-y-4 rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
+          {config.fields.map((field) => (
+            <div key={field.name} className="space-y-1.5">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-[#374151]">
+                {isAr ? field.labelAr || field.label : field.label}
+                {field.required && <span className="ms-1 text-red-500">*</span>}
               </label>
               {field.type === 'textarea' ? (
                 <textarea
-                  placeholder={field.placeholder}
+                  placeholder={isAr ? field.placeholderAr || field.placeholder : field.placeholder}
                   maxLength={field.maxLength || 1000}
                   rows={3}
-                  className="wzrd-field-premium resize-none backdrop-blur-md"
+                  className="w-full resize-none rounded-xl border border-[#E5E7EB] bg-[#FAFAF5] px-4 py-3 text-sm text-[#111827] placeholder-[#9CA3AF] outline-none focus:border-[#1B4FD8] focus:ring-2 focus:ring-[#1B4FD8]/10 transition"
                   value={(formData[field.name] as string) || ''}
                   onChange={e => updateField(field.name, e.target.value)}
                 />
               ) : field.type === 'select' ? (
                 <select
-                  className="wzrd-field-premium backdrop-blur-md"
+                  className="w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAF5] px-4 py-3 text-sm text-[#111827] outline-none focus:border-[#1B4FD8] focus:ring-2 focus:ring-[#1B4FD8]/10 transition"
                   value={(formData[field.name] as string) || ''}
                   onChange={e => updateField(field.name, e.target.value)}
                 >
-                  <option value="">Select...</option>
+                  <option value="">{isAr ? 'اختر…' : 'Select…'}</option>
                   {field.options?.map(o => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
+                    <option key={o.value} value={o.value}>{o.label}</option>
                   ))}
                 </select>
               ) : field.type === 'checkbox' ? (
-                <label className="flex items-center gap-2">
+                <label className="flex cursor-pointer items-center gap-3">
                   <input
                     type="checkbox"
-                    className="accent-primary"
+                    className="h-4 w-4 rounded border-[#E5E7EB] accent-[#1B4FD8]"
                     checked={!!formData[field.name]}
                     onChange={e => updateField(field.name, e.target.checked)}
                   />
-                  <span className="text-sm leading-relaxed text-zinc-600 dark:text-[#6B7280]">{field.placeholder}</span>
+                  <span className="text-sm leading-relaxed text-[#374151]">
+                    {isAr ? field.placeholderAr || field.placeholder : field.placeholder}
+                  </span>
                 </label>
               ) : (
                 <input
                   type="text"
-                  placeholder={field.placeholder}
+                  placeholder={isAr ? field.placeholderAr || field.placeholder : field.placeholder}
                   maxLength={field.maxLength || 255}
-                  className="wzrd-field-premium backdrop-blur-md"
+                  className="w-full rounded-xl border border-[#E5E7EB] bg-[#FAFAF5] px-4 py-3 text-sm text-[#111827] placeholder-[#9CA3AF] outline-none focus:border-[#1B4FD8] focus:ring-2 focus:ring-[#1B4FD8]/10 transition"
                   value={(formData[field.name] as string) || ''}
                   onChange={e => updateField(field.name, e.target.value)}
                 />
@@ -885,15 +883,21 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
           ))}
         </div>
 
+        {/* Submit */}
         <button
+          type="button"
           onClick={handleSubmit}
           disabled={loading}
-          className="wzrd-shimmer-btn relative mt-6 w-full overflow-hidden rounded-full bg-gradient-to-r from-amber-500 to-amber-400 py-3.5 text-sm font-bold text-zinc-950 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-amber-500/25 disabled:opacity-50"
+          className="mt-5 w-full rounded-full bg-[#1B4FD8] py-4 text-sm font-bold text-white shadow-md hover:bg-[#1440B8] disabled:opacity-50 transition"
         >
           {config.paywallAfterFreePreview
             ? (isAr ? 'عرض النتيجة المجانية ←' : 'See free preview →')
-            : `تحليل — ${config.cost} كريدت`}
+            : (isAr ? `تحليل — ${config.cost} كريدت` : `Analyse — ${config.cost} credits`)}
         </button>
+
+        <p className="mt-3 text-center text-xs text-[#9CA3AF]">
+          {isAr ? 'بياناتك مشفرة ولا نشاركها مع أي طرف ثالث' : 'Your data is encrypted and never shared'}
+        </p>
       </div>
     </div>
   );

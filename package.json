@@ -18,7 +18,8 @@
     "test:diagnosis-contract": "tsx scripts/verify-diagnosis-tool-contract.ts",
     "test:smoke": "playwright test e2e/smoke.test.ts",
     "test:release": "pnpm check && pnpm build && pnpm test:smoke",
-    "db:push": "drizzle-kit generate && drizzle-kit migrate"
+    "db:push": "drizzle-kit generate && drizzle-kit migrate",
+    "seed:blogs": "tsx server/seed-blogs.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.693.0",
