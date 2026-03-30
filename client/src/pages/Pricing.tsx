@@ -60,7 +60,8 @@ type PromoResult = {
   discountFixedEGP: number | null;
 };
 
-const PLAN_FEATURES: Record<string, string[]> = {
+// ── Bilingual plan features ───────────────────────────────────────────────────
+const PLAN_FEATURES_AR: Record<string, string[]> = {
   single_report: [
     'تقرير Brand Health Score كامل',
     'تحليل هوية العلامة التجارية',
@@ -90,6 +91,36 @@ const PLAN_FEATURES: Record<string, string[]> = {
   ],
 };
 
+const PLAN_FEATURES_EN: Record<string, string[]> = {
+  single_report: [
+    'Full Brand Health Score report',
+    'Brand identity analysis',
+    'Instant improvement plan',
+    'Valid for 30 days',
+  ],
+  bundle_6: [
+    '6 comprehensive reports',
+    'Brand Health + Identity + Offer Logic',
+    'SEO report + Presence Audit',
+    'Prioritised execution roadmap',
+    'Direct WhatsApp support',
+    'Save 45% vs. individual reports',
+  ],
+  credits_500: [
+    '500 credits — ~25 tool runs',
+    'All diagnostic tools included',
+    'Flexible usage on demand',
+    'Valid for 6 months',
+  ],
+  credits_1500: [
+    '1,500 credits — ~75 tool runs',
+    'Best value per credit',
+    'All tools + premium reports',
+    'Priority support',
+    'Valid for a full year',
+  ],
+};
+
 const PLAN_ICONS: Record<string, string> = {
   single_report: '📄',
   bundle_6: '🚀',
@@ -100,6 +131,7 @@ const PLAN_ICONS: Record<string, string> = {
 export default function Pricing() {
   const [, navigate] = useLocation();
   const { locale } = useI18n();
+  const isAr = locale === 'ar';
   const [credits, setCredits] = useState<number | null>(null);
   const [plans, setPlans] = useState<PlanRow[]>(FALLBACK_PLANS);
   const [promoCode, setPromoCode] = useState('');
@@ -133,7 +165,7 @@ export default function Pricing() {
   const verifyPromo = async () => {
     const code = promoCode.trim();
     if (!code) {
-      setPromoResult({ valid: false, message: 'اكتب الكود الأول', finalAmountEGP: planForPromo.price, originalAmountEGP: planForPromo.price, discountPercent: null, discountFixedEGP: null });
+      setPromoResult({ valid: false, message: isAr ? 'اكتب الكود الأول' : 'Please enter a promo code', finalAmountEGP: planForPromo.price, originalAmountEGP: planForPromo.price, discountPercent: null, discountFixedEGP: null });
       return;
     }
     setPromoLoading(true);
@@ -156,10 +188,10 @@ export default function Pricing() {
           discountFixedEGP: row.discountFixedEGP ?? null,
         });
       } else {
-        setPromoResult({ valid: false, message: 'رد غير متوقع', finalAmountEGP: planForPromo.price, originalAmountEGP: planForPromo.price, discountPercent: null, discountFixedEGP: null });
+        setPromoResult({ valid: false, message: isAr ? 'رد غير متوقع' : 'Unexpected response', finalAmountEGP: planForPromo.price, originalAmountEGP: planForPromo.price, discountPercent: null, discountFixedEGP: null });
       }
     } catch {
-      setPromoResult({ valid: false, message: 'خطأ في الاتصال', finalAmountEGP: planForPromo.price, originalAmountEGP: planForPromo.price, discountPercent: null, discountFixedEGP: null });
+      setPromoResult({ valid: false, message: isAr ? 'خطأ في الاتصال' : 'Connection error', finalAmountEGP: planForPromo.price, originalAmountEGP: planForPromo.price, discountPercent: null, discountFixedEGP: null });
     } finally {
       setPromoLoading(false);
     }
@@ -182,34 +214,87 @@ export default function Pricing() {
       } else {
         const msg = typeof result?.message === 'string' ? result.message : '';
         if (isPaymobGatewayConfigError(msg)) {
-          toast.info('بوابة الدفع تحت التحديث — يرجى المحاولة لاحقاً.', { duration: 6000 });
+          toast.info(isAr ? 'بوابة الدفع تحت التحديث — يرجى المحاولة لاحقاً.' : 'Payment gateway is being updated — please try again later.', { duration: 6000 });
         } else {
-          toast.error(msg || 'تعذّر إتمام الدفع.');
+          toast.error(msg || (isAr ? 'تعذّر إتمام الدفع.' : 'Payment could not be completed.'));
         }
       }
     } catch {
-      toast.error('خطأ في الاتصال. حاول تاني.');
+      toast.error(isAr ? 'خطأ في الاتصال. حاول تاني.' : 'Connection error. Please try again.');
     } finally {
       setPurchasingId(null);
     }
   };
 
   const getPlanFeatures = (plan: PlanRow): string[] => {
-    return PLAN_FEATURES[plan.id] ?? [
-      locale === 'ar' ? plan.label : plan.labelEn,
-      `${locale === 'ar' ? toArabicNumerals(plan.credits.toLocaleString()) : plan.credits.toLocaleString()} كريدت`,
-      locale === 'ar' ? (plan.description || plan.descEn) : (plan.descEn || plan.description),
+    const featuresMap = isAr ? PLAN_FEATURES_AR : PLAN_FEATURES_EN;
+    return featuresMap[plan.id] ?? [
+      isAr ? plan.label : plan.labelEn,
+      `${isAr ? toArabicNumerals(plan.credits.toLocaleString()) : plan.credits.toLocaleString()} ${isAr ? 'كريدت' : 'credits'}`,
+      isAr ? (plan.description || plan.descEn) : (plan.descEn || plan.description),
     ];
   };
 
-  const isAr = locale === 'ar';
+  // ── Comparison table data ─────────────────────────────────────────────────
+  const comparisonRows = isAr ? [
+    ['التكلفة', 'من ٩٩ ج.م', '٥٠٠٠–٣٠٠٠٠ ج.م/شهر'],
+    ['وقت التسليم', 'فوري — دقائق', '٢–٤ أسابيع'],
+    ['الشفافية', 'تقرير مفصّل بالأرقام', 'ملخص عام بدون بيانات'],
+    ['التحكم', 'أنت بتشغّل الأدوات', 'بتنتظر الوكالة'],
+    ['التحديث', 'في أي وقت', 'بتدفع مرة تانية'],
+    ['الـ AI', 'مدرّب على السوق المصري والخليجي', 'عام ومش مخصّص'],
+  ] : [
+    ['Cost', 'From 99 EGP', '5,000–30,000 EGP/month'],
+    ['Delivery time', 'Instant — minutes', '2–4 weeks'],
+    ['Transparency', 'Detailed data-driven report', 'Vague summary, no data'],
+    ['Control', 'You run the tools', 'Waiting on the agency'],
+    ['Updates', 'Any time', 'Pay again'],
+    ['AI', 'Trained on Egyptian & Gulf markets', 'Generic, not tailored'],
+  ];
+
+  // ── FAQ data ──────────────────────────────────────────────────────────────
+  const faqItems = isAr ? [
+    {
+      q: 'إيه الفرق بين الكريدت والتقرير؟',
+      a: 'الكريدت هو وحدة الاستخدام — كل أداة بتاكل عدد معين من الكريدت. التقرير هو ناتج الأداة — تقرير Brand Health مثلاً بياخد ١٠٠ كريدت.',
+    },
+    {
+      q: 'هل الكريدت بتنتهي؟',
+      a: 'الكريدت صالحة حسب الباقة — من ٦ أشهر لسنة كاملة. مفيش اشتراك شهري ومفيش تجديد تلقائي.',
+    },
+    {
+      q: 'هل الدفع آمن؟',
+      a: 'آه — بنستخدم Paymob، أكبر بوابة دفع في مصر. بياناتك مش بتوصلنا خالص.',
+    },
+    {
+      q: 'ممكن أسترد فلوسي؟',
+      a: 'لو استخدمت أقل من ١٠% من الكريدت خلال ٧ أيام، نقدر نرتب استرداد. تواصل معنا على WhatsApp.',
+    },
+  ] : [
+    {
+      q: 'What is the difference between credits and a report?',
+      a: 'Credits are the usage unit — each tool consumes a set number of credits. A report is the output of a tool — for example, a Brand Health report costs 100 credits.',
+    },
+    {
+      q: 'Do credits expire?',
+      a: 'Credits are valid depending on the plan — from 6 months to a full year. There is no monthly subscription and no automatic renewal.',
+    },
+    {
+      q: 'Is payment secure?',
+      a: 'Yes — we use Paymob, the largest payment gateway in Egypt. Your card data never reaches us.',
+    },
+    {
+      q: 'Can I get a refund?',
+      a: 'If you have used less than 10% of your credits within 7 days, we can arrange a refund. Contact us on WhatsApp.',
+    },
+  ];
+
   return (
     <div className="wzrd-public-page">
       <WzrdPublicHeader credits={credits} />
 
       {/* ── Hero ── */}
       <section className="relative overflow-hidden pt-24 pb-16 px-6">
-        {/* Glow blobs */}
         <div className="pointer-events-none absolute -top-32 right-1/4 h-96 w-96 rounded-full bg-[#7058F8]/20 blur-[120px]" />
         <div className="pointer-events-none absolute top-20 left-1/4 h-64 w-64 rounded-full bg-cyan-500/10 blur-[100px]" />
 
@@ -218,21 +303,46 @@ export default function Pricing() {
             {isAr ? 'الأسعار' : 'Pricing'}
           </span>
           <h1 className="mb-4 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-            استثمار في نتيجة —{' '}
-            <span className="bg-gradient-to-l from-[#7058F8] to-cyan-400 bg-clip-text text-transparent">
-              مش مصروف على تجربة
-            </span>
+            {isAr ? (
+              <>
+                استثمار في نتيجة —{' '}
+                <span className="bg-gradient-to-l from-[#7058F8] to-cyan-400 bg-clip-text text-transparent">
+                  مش مصروف على تجربة
+                </span>
+              </>
+            ) : (
+              <>
+                Invest in results —{' '}
+                <span className="bg-gradient-to-r from-[#7058F8] to-cyan-400 bg-clip-text text-transparent">
+                  not in guesswork
+                </span>
+              </>
+            )}
           </h1>
           <p className="mx-auto max-w-xl text-base leading-relaxed" style={{color: '#6B7280'}}>
-            كل جنيه بتدفعه بيرجع لك في شكل وضوح — تعرف بالظبط إيه اللي بيوقف علامتك، وإيه الخطوة الجاية.
+            {isAr
+              ? 'كل جنيه بتدفعه بيرجع لك في شكل وضوح — تعرف بالظبط إيه اللي بيوقف علامتك، وإيه الخطوة الجاية.'
+              : 'Every pound you spend comes back as clarity — know exactly what is holding your brand back and what to do next.'}
           </p>
 
           {/* Trust badges */}
           <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs" style={{color: '#6B7280'}}>
-            <span className="flex items-center gap-1.5"><span className="text-emerald-400">✓</span> بدون اشتراك شهري</span>
-            <span className="flex items-center gap-1.5"><span className="text-emerald-400">✓</span> ادفع مرة واحدة</span>
-            <span className="flex items-center gap-1.5"><span className="text-emerald-400">✓</span> نتائج فورية</span>
-            <span className="flex items-center gap-1.5"><span className="text-emerald-400">✓</span> دفع آمن عبر Paymob</span>
+            <span className="flex items-center gap-1.5">
+              <span className="text-emerald-400">✓</span>
+              {isAr ? 'بدون اشتراك شهري' : 'No monthly subscription'}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="text-emerald-400">✓</span>
+              {isAr ? 'ادفع مرة واحدة' : 'Pay once'}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="text-emerald-400">✓</span>
+              {isAr ? 'نتائج فورية' : 'Instant results'}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="text-emerald-400">✓</span>
+              {isAr ? 'دفع آمن عبر Paymob' : 'Secure payment via Paymob'}
+            </span>
           </div>
         </div>
       </section>
@@ -240,7 +350,9 @@ export default function Pricing() {
       {/* ── Promo Code ── */}
       <section className="px-6 pb-8">
         <div className="wzrd-public-card mx-auto max-w-2xl p-6">
-          <p className="mb-3 text-sm font-semibold" style={{color: '#374151'}}>عندك كود خصم؟ {!isAr && <span style={{color: '#374151'}}>Have a promo code?</span>}</p>
+          <p className="mb-3 text-sm font-semibold" style={{color: '#374151'}}>
+            {isAr ? 'عندك كود خصم؟' : 'Have a promo code?'}
+          </p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <input
               type="text"
@@ -257,7 +369,7 @@ export default function Pricing() {
             >
               {plans.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {locale === 'ar' ? p.label : p.labelEn} — {p.price} ج.م
+                  {isAr ? p.label : p.labelEn} — {p.price} {isAr ? 'ج.م' : 'EGP'}
                 </option>
               ))}
             </select>
@@ -267,14 +379,16 @@ export default function Pricing() {
               disabled={promoLoading}
               className="wzrd-btn-primary px-6 py-2.5 text-sm"
             >
-              {promoLoading ? '...' : 'تحقق'}
+              {promoLoading ? '...' : (isAr ? 'تحقق' : 'Apply')}
             </button>
           </div>
           {promoResult && (
             <p className="mt-3 text-sm font-medium" style={{color: promoResult.valid ? '#16A34A' : '#DC2626'}}>
               {promoResult.valid
-                ? `✓ الكود صالح — السعر بعد الخصم: ${toArabicNumerals(String(promoResult.finalAmountEGP))} ج.م (كان ${toArabicNumerals(String(promoResult.originalAmountEGP))} ج.م)`
-                : `✗ ${promoResult.message || 'الكود غير صالح'}`}
+                ? isAr
+                  ? `✓ الكود صالح — السعر بعد الخصم: ${toArabicNumerals(String(promoResult.finalAmountEGP))} ج.م (كان ${toArabicNumerals(String(promoResult.originalAmountEGP))} ج.م)`
+                  : `✓ Code valid — price after discount: ${promoResult.finalAmountEGP} EGP (was ${promoResult.originalAmountEGP} EGP)`
+                : `✗ ${promoResult.message || (isAr ? 'الكود غير صالح' : 'Invalid code')}`}
             </p>
           )}
         </div>
@@ -292,11 +406,7 @@ export default function Pricing() {
             return (
               <div
                 key={plan.id}
-                className={`relative flex flex-col rounded-2xl p-px transition-transform hover:-translate-y-1 wzrd-public-card ${
-                  isPopular
-                    ? ''
-                    : ''
-                }`}
+                className="relative flex flex-col rounded-2xl p-px transition-transform hover:-translate-y-1 wzrd-public-card"
               >
                 {isPopular && (
                   <div style={{position: 'absolute', top: -12, right: isAr ? 'auto' : 20, left: isAr ? 20 : 'auto', background: '#F59E0B', color: '#fff', fontSize: 11, fontWeight: 800, padding: '4px 12px', borderRadius: 999}}>
@@ -308,25 +418,29 @@ export default function Pricing() {
                   <div>
                     <div className="mb-3 text-3xl">{icon}</div>
                     <h3 className="text-lg font-bold" style={{color: isPopular ? '#fff' : '#111827'}}>
-                      {locale === 'ar' ? plan.label : plan.labelEn}
+                      {isAr ? plan.label : plan.labelEn}
                     </h3>
                     <p className="mt-1 text-sm" style={{color: isPopular ? 'rgba(255,255,255,0.75)' : '#6B7280'}}>
-                      {locale === 'ar' ? (plan.description || plan.descEn) : (plan.descEn || plan.description)}
+                      {isAr ? (plan.description || plan.descEn) : (plan.descEn || plan.description)}
                     </p>
                   </div>
 
                   {/* Price */}
                   <div className="flex items-baseline gap-1">
                     <span className="text-5xl font-extrabold tracking-tight" style={{color: isPopular ? '#fff' : '#111827'}}>
-                      {locale === 'ar' ? toArabicNumerals(plan.price.toLocaleString()) : plan.price.toLocaleString()}
+                      {isAr ? toArabicNumerals(plan.price.toLocaleString()) : plan.price.toLocaleString()}
                     </span>
-                    <span className="text-sm" style={{color: isPopular ? 'rgba(255,255,255,0.7)' : '#9CA3AF'}}>ج.م</span>
-                    <span className="mr-2 text-xs" style={{color: isPopular ? 'rgba(255,255,255,0.6)' : '#9CA3AF'}}>{isAr ? 'دفعة واحدة' : 'one-time'}</span>
+                    <span className="text-sm" style={{color: isPopular ? 'rgba(255,255,255,0.7)' : '#9CA3AF'}}>
+                      {isAr ? 'ج.م' : 'EGP'}
+                    </span>
+                    <span className="mr-2 text-xs" style={{color: isPopular ? 'rgba(255,255,255,0.6)' : '#9CA3AF'}}>
+                      {isAr ? 'دفعة واحدة' : 'one-time'}
+                    </span>
                   </div>
 
                   {/* Credits badge */}
                   <div style={{display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 999, background: isPopular ? 'rgba(255,255,255,0.15)' : '#EEF2FF', fontSize: 12, fontWeight: 700, color: isPopular ? '#fff' : '#1B4FD8'}}>
-                    ⚡ {locale === 'ar' ? toArabicNumerals(plan.credits.toLocaleString()) : plan.credits.toLocaleString()} كريدت
+                    ⚡ {isAr ? toArabicNumerals(plan.credits.toLocaleString()) : plan.credits.toLocaleString()} {isAr ? 'كريدت' : 'credits'}
                   </div>
 
                   {/* Features */}
@@ -345,7 +459,7 @@ export default function Pricing() {
                     onClick={() => void purchasePlan(plan.id)}
                     disabled={isPurchasing}
                     className="mt-auto w-full rounded-xl py-3.5 text-sm font-bold transition"
-                    style={{background: isPopular ? '#fff' : '#1B4FD8', color: isPopular ? '#1B4FD8' : '#fff', border: isPopular ? 'none' : 'none', opacity: isPurchasing ? 0.6 : 1, cursor: isPurchasing ? 'not-allowed' : 'pointer', fontFamily: "'Cairo', sans-serif"}}
+                    style={{background: isPopular ? '#fff' : '#1B4FD8', color: isPopular ? '#1B4FD8' : '#fff', border: isPurchasing ? '2px solid transparent' : 'none', opacity: isPurchasing ? 0.7 : 1, cursor: isPurchasing ? 'wait' : 'pointer'}}
                   >
                     {isPurchasing ? '...' : (isAr ? 'ابدأ دلوقتي ←' : 'Get started →')}
                   </button>
@@ -368,18 +482,13 @@ export default function Pricing() {
                 <tr style={{background: '#F3F4F6', borderBottom: '1px solid #E5E7EB'}}>
                   <th style={{padding: '14px 20px', textAlign: isAr ? 'right' : 'left', color: '#6B7280', fontWeight: 600}}></th>
                   <th style={{padding: '14px 20px', textAlign: 'center', color: '#1B4FD8', fontWeight: 800}}>WZZRD AI</th>
-                  <th style={{padding: '14px 20px', textAlign: 'center', color: '#9CA3AF', fontWeight: 600}}>{isAr ? 'وكالة تقليدية' : 'Traditional Agency'}</th>
+                  <th style={{padding: '14px 20px', textAlign: 'center', color: '#9CA3AF', fontWeight: 600}}>
+                    {isAr ? 'وكالة تقليدية' : 'Traditional Agency'}
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {[
-                  ['التكلفة', 'من ٩٩ ج.م', '٥٠٠٠–٣٠٠٠٠ ج.م/شهر'],
-                  ['وقت التسليم', 'فوري — دقائق', '٢–٤ أسابيع'],
-                  ['الشفافية', 'تقرير مفصّل بالأرقام', 'ملخص عام بدون بيانات'],
-                  ['التحكم', 'أنت بتشغّل الأدوات', 'بتنتظر الوكالة'],
-                  ['التحديث', 'في أي وقت', 'بتدفع مرة تانية'],
-                  ['الـ AI', 'مدرّب على السوق المصري والخليجي', 'عام ومش مخصّص'],
-                ].map(([feature, wzrd, agency]) => (
+                {comparisonRows.map(([feature, wzrd, agency]) => (
                   <tr key={feature as string} style={{borderBottom: '1px solid #F3F4F6'}}>
                     <td style={{padding: '12px 20px', fontWeight: 600, color: '#374151'}}>{feature}</td>
                     <td style={{padding: '12px 20px', textAlign: 'center', fontWeight: 700, color: '#16A34A'}}>{wzrd}</td>
@@ -395,26 +504,11 @@ export default function Pricing() {
       {/* ── FAQ ── */}
       <section style={{padding: '48px 24px 64px'}}>
         <div style={{maxWidth: 680, margin: '0 auto'}}>
-          <h2 style={{textAlign: 'center', fontSize: 26, fontWeight: 800, color: '#111827', marginBottom: 32, fontFamily: "'Cairo', sans-serif"}}>{isAr ? 'أسئلة شائعة' : 'FAQ'}</h2>
+          <h2 style={{textAlign: 'center', fontSize: 26, fontWeight: 800, color: '#111827', marginBottom: 32, fontFamily: "'Cairo', sans-serif"}}>
+            {isAr ? 'أسئلة شائعة' : 'Frequently Asked Questions'}
+          </h2>
           <div style={{display: 'flex', flexDirection: 'column', gap: 12}}>
-            {[
-              {
-                q: 'إيه الفرق بين الكريدت والتقرير؟',
-                a: 'الكريدت هو وحدة الاستخدام — كل أداة بتاكل عدد معين من الكريدت. التقرير هو ناتج الأداة — تقرير Brand Health مثلاً بياخد ١٠٠ كريدت.',
-              },
-              {
-                q: 'هل الكريدت بتنتهي؟',
-                a: 'الكريدت صالحة حسب الباقة — من ٦ أشهر لسنة كاملة. مفيش اشتراك شهري ومفيش تجديد تلقائي.',
-              },
-              {
-                q: 'هل الدفع آمن؟',
-                a: 'آه — بنستخدم Paymob، أكبر بوابة دفع في مصر. بياناتك مش بتوصلنا خالص.',
-              },
-              {
-                q: 'ممكن أسترد فلوسي؟',
-                a: 'لو استخدمت أقل من ١٠% من الكريدت خلال ٧ أيام، نقدر نرتب استرداد. تواصل معنا على WhatsApp.',
-              },
-            ].map(({ q, a }) => (
+            {faqItems.map(({ q, a }) => (
               <details key={q} className="wzrd-public-card" style={{padding: '16px 20px'}}>
                 <summary style={{listStyle: 'none', fontWeight: 700, color: '#111827', fontSize: 15, cursor: 'pointer', fontFamily: "'Cairo', sans-serif"}}>{q}</summary>
                 <p style={{marginTop: 10, fontSize: 14, color: '#6B7280', lineHeight: 1.7}}>{a}</p>
@@ -428,11 +522,21 @@ export default function Pricing() {
       <section style={{padding: '0 24px 80px'}}>
         <div style={{maxWidth: 640, margin: '0 auto', background: 'linear-gradient(135deg, #EEF2FF 0%, #F0F9FF 100%)', border: '1px solid rgba(27,79,216,0.15)', borderRadius: 20, padding: '40px 32px', textAlign: 'center'}}>
           <div style={{fontSize: 40, marginBottom: 16}}>🏢</div>
-          <h3 style={{fontSize: 22, fontWeight: 800, color: '#111827', marginBottom: 10, fontFamily: "'Cairo', sans-serif"}}>{isAr ? 'محتاج حل Enterprise؟' : 'Need an Enterprise solution?'}</h3>
-          <p style={{fontSize: 14, color: '#6B7280', lineHeight: 1.7, marginBottom: 24}}>{isAr ? 'لو عندك فريق أو وكالة أو شركة — عندنا باقات مخصوصة بـ multi-workspace وتقارير white-label وأولوية دعم.' : 'If you have a team, agency, or company — we offer custom plans with multi-workspace, white-label reports, and priority support.'}</p>
+          <h3 style={{fontSize: 22, fontWeight: 800, color: '#111827', marginBottom: 10, fontFamily: "'Cairo', sans-serif"}}>
+            {isAr ? 'محتاج حل Enterprise؟' : 'Need an Enterprise solution?'}
+          </h3>
+          <p style={{fontSize: 14, color: '#6B7280', lineHeight: 1.7, marginBottom: 24}}>
+            {isAr
+              ? 'لو عندك فريق أو وكالة أو شركة — عندنا باقات مخصوصة بـ multi-workspace وتقارير white-label وأولوية دعم.'
+              : 'If you have a team, agency, or company — we offer custom plans with multi-workspace, white-label reports, and priority support.'}
+          </p>
           <div style={{display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 12}}>
-            <a href={waMeHref()} target="_blank" rel="noreferrer" className="wzrd-btn-primary" style={{padding: '12px 24px', fontSize: 14, borderRadius: 8, textDecoration: 'none'}}>{isAr ? 'تكلّم معنا على WhatsApp' : 'Chat on WhatsApp'}</a>
-            <button onClick={() => navigate('/landing/services.html')} className="wzrd-btn-ghost" style={{padding: '12px 24px', fontSize: 14}}>{isAr ? 'شوف الخدمات' : 'View services'}</button>
+            <a href={waMeHref()} target="_blank" rel="noreferrer" className="wzrd-btn-primary" style={{padding: '12px 24px', fontSize: 14, borderRadius: 8, textDecoration: 'none'}}>
+              {isAr ? 'تكلّم معنا على WhatsApp' : 'Chat on WhatsApp'}
+            </a>
+            <button onClick={() => navigate('/landing/services.html')} className="wzrd-btn-ghost" style={{padding: '12px 24px', fontSize: 14}}>
+              {isAr ? 'شوف الخدمات' : 'View services'}
+            </button>
           </div>
         </div>
       </section>

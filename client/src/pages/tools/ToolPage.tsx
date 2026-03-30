@@ -185,8 +185,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
   const [, navigate] = useLocation();
   const { locale } = useI18n();
   const isAr = locale === 'ar';
-  const { user } = useAuth();
-
+  const { user, loading: authLoading } = useAuth();
   const [formData, setFormData] = useState<Record<string, string | boolean>>({});
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ToolResult | null>(null);
@@ -194,11 +193,14 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
   const [unlocking, setUnlocking] = useState(false);
   const [error, setError] = useState('');
   const [premiumReport, setPremiumReport] = useState<PremiumReportPayload | null>(null);
-
   const updateField = (name: string, value: string | boolean) =>
     setFormData(prev => ({ ...prev, [name]: value }));
-
   const handleSubmit = async () => {
+    // ── Auth guard: must be logged in ──────────────────────────────────────────
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     for (const field of config.fields) {
       if (field.required && !formData[field.name]) {
         setError(
@@ -883,18 +885,51 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
           ))}
         </div>
 
-        {/* Submit */}
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={loading}
-          className="mt-5 w-full rounded-full bg-[#1B4FD8] py-4 text-sm font-bold text-white shadow-md hover:bg-[#1440B8] disabled:opacity-50 transition"
-        >
-          {config.paywallAfterFreePreview
-            ? (isAr ? 'عرض النتيجة المجانية ←' : 'See free preview →')
-            : (isAr ? `تحليل — ${config.cost} كريدت` : `Analyse — ${config.cost} credits`)}
-        </button>
-
+        {/* Submit / Auth Gate */}
+        {!authLoading && !user ? (
+          <div className="mt-5 rounded-2xl border border-[#FDE68A] bg-[#FFFBEB] p-5 text-center">
+            <p className="mb-1 text-sm font-bold text-[#111827]">
+              {isAr ? 'تسجيل الدخول مطلوب' : 'Login required'}
+            </p>
+            <p className="mb-4 text-xs text-[#6B7280]">
+              {isAr
+                ? 'لازم تسجّل دخول أو تعمل حساب عشان تستخدم الأدوات'
+                : 'You need an account to use the AI tools'}
+            </p>
+            <div className="flex gap-3">
+              <a
+                href="/login"
+                onClick={(e) => { e.preventDefault(); navigate('/login'); }}
+                className="flex-1 rounded-full border border-[#1B4FD8] py-3 text-sm font-bold text-[#1B4FD8] hover:bg-[#EEF2FF] transition text-center"
+              >
+                {isAr ? 'تسجيل الدخول' : 'Log in'}
+              </a>
+              <a
+                href="/signup"
+                onClick={(e) => { e.preventDefault(); navigate('/signup'); }}
+                className="flex-1 rounded-full bg-[#1B4FD8] py-3 text-sm font-bold text-white hover:bg-[#1440B8] transition text-center"
+              >
+                {isAr ? 'إنشاء حساب مجاني' : 'Create free account'}
+              </a>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={loading || authLoading}
+            className="mt-5 w-full rounded-full bg-[#1B4FD8] py-4 text-sm font-bold text-white shadow-md hover:bg-[#1440B8] disabled:opacity-50 transition"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                {isAr ? 'جاري التحليل…' : 'Analysing…'}
+              </span>
+            ) : config.paywallAfterFreePreview
+              ? (isAr ? 'عرض النتيجة المجانية ←' : 'See free preview →')
+              : (isAr ? `تحليل — ${config.cost} كريدت` : `Analyse — ${config.cost} credits`)}
+          </button>
+        )}
         <p className="mt-3 text-center text-xs text-[#9CA3AF]">
           {isAr ? 'بياناتك مشفرة ولا نشاركها مع أي طرف ثالث' : 'Your data is encrypted and never shared'}
         </p>

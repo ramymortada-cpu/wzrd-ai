@@ -4,7 +4,7 @@ import { TONE_OF_VOICE } from '@/lib/formOptions';
 
 export default function MessageCheck() {
   return <ToolPage config={{
-    id: 'message_check', name: 'Message Check', nameAr: 'فحص الرسالة', icon: '💬', cost: 20,
+    id: 'message_check', name: 'Message Check', nameAr: 'فحص الرسالة', icon: '💬', cost: 200,
     endpoint: 'tools.messageCheck',
     paywallAfterFreePreview: true,
     freePreviewEndpoint: 'tools.freeMessageCheckDiagnosis',

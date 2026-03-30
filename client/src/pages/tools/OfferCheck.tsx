@@ -4,7 +4,7 @@ import { NUMBER_OF_PACKAGES, PRICING_MODEL } from '@/lib/formOptions';
 
 export default function OfferCheck() {
   return <ToolPage config={{
-    id: 'offer_check', name: 'Offer Logic Check', nameAr: 'فحص منطق العرض', icon: '📦', cost: 25,
+    id: 'offer_check', name: 'Offer Logic Check', nameAr: 'فحص منطق العرض', icon: '📦', cost: 250,
     endpoint: 'tools.offerCheck',
     paywallAfterFreePreview: true,
     freePreviewEndpoint: 'tools.freeOfferCheckDiagnosis',

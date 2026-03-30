@@ -641,7 +641,7 @@ export const toolsRouter = router({
    * Brand Diagnosis — Step 1 (free): score + finding titles/severity only.
    * Full AI run is cached server-side; unlock with credits via unlockBrandDiagnosis.
    */
-  freeBrandDiagnosis: publicProcedure
+  freeBrandDiagnosis: protectedProcedure
     .input(brandDiagnosisInputSchema)
     .mutation(async ({ input }) => {
       if (!isToolEnabled('brand_diagnosis')) {
@@ -683,7 +683,7 @@ export const toolsRouter = router({
       }),
     ),
 
-  freeOfferCheckDiagnosis: publicProcedure
+  freeOfferCheckDiagnosis: protectedProcedure
     .input(offerCheckInputSchema)
     .mutation(async ({ input }) => {
       if (!isToolEnabled('offer_check')) {
@@ -715,7 +715,7 @@ export const toolsRouter = router({
       }),
     ),
 
-  freeMessageCheckDiagnosis: publicProcedure
+  freeMessageCheckDiagnosis: protectedProcedure
     .input(messageCheckInputSchema)
     .mutation(async ({ input }) => {
       if (!isToolEnabled('message_check')) {
@@ -747,7 +747,7 @@ export const toolsRouter = router({
       }),
     ),
 
-  freePresenceAuditDiagnosis: publicProcedure
+  freePresenceAuditDiagnosis: protectedProcedure
     .input(presenceAuditInputSchema)
     .mutation(async ({ input }) => {
       if (!isToolEnabled('presence_audit')) {
@@ -779,7 +779,7 @@ export const toolsRouter = router({
       }),
     ),
 
-  freeIdentitySnapshotDiagnosis: publicProcedure
+  freeIdentitySnapshotDiagnosis: protectedProcedure
     .input(identitySnapshotInputSchema)
     .mutation(async ({ input }) => {
       if (!isToolEnabled('identity_snapshot')) {
@@ -811,7 +811,7 @@ export const toolsRouter = router({
       }),
     ),
 
-  freeLaunchReadinessDiagnosis: publicProcedure
+  freeLaunchReadinessDiagnosis: protectedProcedure
     .input(launchReadinessInputSchema)
     .mutation(async ({ input }) => {
       if (!isToolEnabled('launch_readiness')) {

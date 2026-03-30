@@ -4,7 +4,7 @@ import { INSTAGRAM_FOLLOWERS, POSTING_FREQUENCY, AVG_RESPONSE_TIME, GOOGLE_BUSIN
 
 export default function PresenceAudit() {
   return <ToolPage config={{
-    id: 'presence_audit', name: 'Presence Audit', nameAr: 'فحص الحضور الرقمي', icon: '🌐', cost: 25,
+    id: 'presence_audit', name: 'Presence Audit', nameAr: 'فحص الحضور الرقمي', icon: '🌐', cost: 250,
     endpoint: 'tools.presenceAudit',
     paywallAfterFreePreview: true,
     freePreviewEndpoint: 'tools.freePresenceAuditDiagnosis',
