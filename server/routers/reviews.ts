@@ -81,6 +81,35 @@ export const reviewsRouter = router({
         .offset(offset);
     }),
 
+  /** Public: list approved reviews for a specific tool (social proof on tool page) */
+  listByTool: publicProcedure
+    .input(z.object({
+      toolId: z.string().min(1).max(64),
+      limit:  z.number().int().min(1).max(20).default(6),
+    }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      return db
+        .select({
+          id:          toolReviews.id,
+          toolId:      toolReviews.toolId,
+          toolNameAr:  toolReviews.toolNameAr,
+          toolNameEn:  toolReviews.toolNameEn,
+          rating:      toolReviews.rating,
+          commentAr:   toolReviews.commentAr,
+          commentEn:   toolReviews.commentEn,
+          country:     toolReviews.country,
+          countryFlag: toolReviews.countryFlag,
+          createdAt:   toolReviews.createdAt,
+        })
+        .from(toolReviews)
+        .where(and(eq(toolReviews.status, "approved"), eq(toolReviews.toolId, input.toolId)))
+        .orderBy(desc(toolReviews.createdAt))
+        .limit(input.limit);
+    }),
+
+
   // ── PROTECTED ──────────────────────────────────────────────────────────────
 
   /** Submit a review after completing a tool report */

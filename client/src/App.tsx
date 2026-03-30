@@ -62,6 +62,7 @@ const LaunchReadinessPage = lazy(() => import("./pages/tools/LaunchReadiness"));
 const PricingPage = lazy(() => import("./pages/Pricing"));
 const TermsOfUsePage = lazy(() => import("./pages/public/TermsOfUse"));
 const PrivacyPolicyPage = lazy(() => import("./pages/public/PrivacyPolicy"));
+const ReportsPage = lazy(() => import("./pages/public/Reports"));
 const WzrdAdminPage = lazy(() => import("./pages/WzrdAdmin"));
 const ProfilePage = lazy(() => import("./pages/Profile"));
 const MyBrandPage = lazy(() => import("./pages/MyBrand"));
@@ -169,6 +170,7 @@ function App() {
                 <Route path="/pricing">{() => <SuspenseWrapper><PricingPage /></SuspenseWrapper>}</Route>
                 <Route path="/terms">{() => <SuspenseWrapper><TermsOfUsePage /></SuspenseWrapper>}</Route>
                 <Route path="/privacy">{() => <SuspenseWrapper><PrivacyPolicyPage /></SuspenseWrapper>}</Route>
+                <Route path="/reports">{() => <SuspenseWrapper><ReportsPage /></SuspenseWrapper>}</Route>
                 <Route path="/my-brand">{() => <SuspenseWrapper><MyBrandPage /></SuspenseWrapper>}</Route>
                 <Route path="/copilot">{() => <SuspenseWrapper><CopilotPage /></SuspenseWrapper>}</Route>
                 <Route path="/tools/benchmark">{() => <SuspenseWrapper><CompetitiveBenchmarkPage /></SuspenseWrapper>}</Route>
