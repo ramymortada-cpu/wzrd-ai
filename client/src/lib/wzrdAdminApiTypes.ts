@@ -93,8 +93,38 @@ export type WzrdPromptRow = {
   systemPrompt: string;
 };
 
+export type WzrdHomepagePayload = {
+  // Hero
+  heroTitleAr?: string;
+  heroTitleEn?: string;
+  heroSubtitleAr?: string;
+  heroSubtitleEn?: string;
+  heroCtaAr?: string;
+  heroCtaEn?: string;
+  heroImageUrl?: string;
+  // Ad Banner
+  adBannerUrl?: string;
+  adBannerType?: string;
+  adBannerLink?: string;
+  // Founder
+  founderName?: string;
+  founderTitleAr?: string;
+  founderTitleEn?: string;
+  founderQuoteAr?: string;
+  founderQuoteEn?: string;
+  founderImageUrl?: string;
+  founderLinkedin?: string;
+  // Live Ticker
+  liveTickerAr?: string[];
+  liveTickerEn?: string[];
+  // Brand Logos
+  brandLogos?: string[];
+  // Misc
+  [key: string]: string | string[] | boolean | undefined;
+};
+
 export type WzrdSiteConfigPayload = {
-  homepage: Record<string, string>;
+  homepage: WzrdHomepagePayload;
   site: Record<string, string>;
   services: { services: WzrdSiteService[] };
   prompts?: WzrdPromptRow[];

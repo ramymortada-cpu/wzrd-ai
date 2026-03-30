@@ -149,10 +149,12 @@ const COUNTRIES = [
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function LiveTicker({ isAr }: { isAr: boolean }) {
+function LiveTicker({ isAr, cfg }: { isAr: boolean; cfg?: HomepageCfg }) {
   const [idx, setIdx]   = useState(0);
   const [phase, setPhase] = useState<'in'|'out'>('in');
-  const feed = isAr ? LIVE_AR : LIVE_EN;
+  const feed = isAr
+    ? (cfg?.liveTickerAr?.length ? cfg.liveTickerAr : LIVE_AR)
+    : (cfg?.liveTickerEn?.length ? cfg.liveTickerEn : LIVE_EN);
 
   useEffect(() => {
     const cycle = setInterval(() => {
@@ -194,7 +196,7 @@ function LiveTicker({ isAr }: { isAr: boolean }) {
   );
 }
 
-function BrandLogosStrip({ isAr }: { isAr: boolean }) {
+function BrandLogosStrip({ isAr, cfg }: { isAr: boolean; cfg?: HomepageCfg }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = ref.current; if (!el) return;
@@ -203,7 +205,8 @@ function BrandLogosStrip({ isAr }: { isAr: boolean }) {
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
   }, []);
-  const doubled = [...BRANDS, ...BRANDS];
+  const logos = cfg?.brandLogos?.length ? cfg.brandLogos : BRANDS;
+  const doubled = [...logos, ...logos];
   return (
     <div style={{ background:C.bgAlt, padding:"28px 0", overflow:"hidden", borderTop:`1px solid ${C.border}`, borderBottom:`1px solid ${C.border}` }}>
       <p style={{ textAlign:"center", fontSize:11, color:"#9CA3AF", fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:18, fontFamily:FONT }}>
@@ -566,6 +569,9 @@ interface HomepageCfg {
   founderQuoteAr?: string;
   founderImageUrl?: string;
   founderLinkedin?: string;
+  liveTickerAr?: string[];
+  liveTickerEn?: string[];
+  brandLogos?: string[];
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
@@ -603,7 +609,7 @@ export default function Welcome() {
       <WzrdPublicHeader />
 
       {/* ══ LIVE TICKER ══ */}
-      <LiveTicker isAr={isAr} />
+      <LiveTicker isAr={isAr} cfg={hpCfg} />
 
       {/* ══ HERO ══ */}
       <section style={{ padding:"72px 24px 56px", position:"relative", overflow:"hidden" }}>
@@ -768,7 +774,7 @@ export default function Welcome() {
       <LiveReviewsSection isAr={isAr} />
 
       {/* ══ BRAND LOGOS ══ */}
-      <BrandLogosStrip isAr={isAr} />
+      <BrandLogosStrip isAr={isAr} cfg={hpCfg} />
       {/* ══ REPORTS ══ */}
       <ReportsSection isAr={isAr} />
 

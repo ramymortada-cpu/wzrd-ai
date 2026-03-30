@@ -38,7 +38,7 @@ import type {
   WzrdWebhooksPage,
 } from '@/lib/wzrdAdminApiTypes';
 
-type Tab = 'overview' | 'users' | 'credits' | 'tools' | 'payments' | 'webhooks' | 'cms' | 'prompts' | 'pricing' | 'team' | 'agency' | 'config' | 'requests' | 'blog' | 'reviews';
+type Tab = 'overview' | 'users' | 'credits' | 'tools' | 'payments' | 'webhooks' | 'cms' | 'prompts' | 'pricing' | 'team' | 'agency' | 'config' | 'requests' | 'blog' | 'reviews' | 'reports';
 
 const FETCH_OPTS: RequestInit = { credentials: 'include' };
 
@@ -970,14 +970,84 @@ function CmsTab({ t, onSuccess, onError }: { t: T; onSuccess?: () => void; onErr
       <div className="mb-6 p-5 rounded-2xl border border-gray-200 bg-white">
         <h4 className="text-sm font-bold text-gray-600 mb-3">🏠 {t('الصفحة الرئيسية', 'Homepage')}</h4>
         <div className="grid grid-cols-2 gap-3 mb-3">
-          <Field label={t('عنوان الهيرو (EN)', 'Hero Title (EN)')} value={sc.homepage.heroTitle} onChange={v => setSc({...sc, homepage: {...sc.homepage, heroTitle: v}})} />
-          <Field label={t('عنوان الهيرو (AR)', 'Hero Title (AR)')} value={sc.homepage.heroTitleAr} onChange={v => setSc({...sc, homepage: {...sc.homepage, heroTitleAr: v}})} />
-          <Field label="Subtitle (EN)" value={sc.homepage.heroSubtitle} onChange={v => setSc({...sc, homepage: {...sc.homepage, heroSubtitle: v}})} />
-          <Field label="Subtitle (AR)" value={sc.homepage.heroSubtitleAr} onChange={v => setSc({...sc, homepage: {...sc.homepage, heroSubtitleAr: v}})} />
-          <Field label="CTA Text (EN)" value={sc.homepage.ctaText} onChange={v => setSc({...sc, homepage: {...sc.homepage, ctaText: v}})} />
-          <Field label="CTA Text (AR)" value={sc.homepage.ctaTextAr} onChange={v => setSc({...sc, homepage: {...sc.homepage, ctaTextAr: v}})} />
+          <Field label={t('عنوان الهيرو (EN)', 'Hero Title (EN)')} value={String(sc.homepage.heroTitle || '')} onChange={v => setSc({...sc, homepage: {...sc.homepage, heroTitle: v}})} />
+          <Field label={t('عنوان الهيرو (AR)', 'Hero Title (AR)')} value={String(sc.homepage.heroTitleAr || '')} onChange={v => setSc({...sc, homepage: {...sc.homepage, heroTitleAr: v}})} />
+          <Field label="Subtitle (EN)" value={String(sc.homepage.heroSubtitle || '')} onChange={v => setSc({...sc, homepage: {...sc.homepage, heroSubtitle: v}})} />
+          <Field label="Subtitle (AR)" value={String(sc.homepage.heroSubtitleAr || '')} onChange={v => setSc({...sc, homepage: {...sc.homepage, heroSubtitleAr: v}})} />
+          <Field label="CTA Text (EN)" value={String(sc.homepage.ctaText || '')} onChange={v => setSc({...sc, homepage: {...sc.homepage, ctaText: v}})} />
+          <Field label="CTA Text (AR)" value={String(sc.homepage.ctaTextAr || '')} onChange={v => setSc({...sc, homepage: {...sc.homepage, ctaTextAr: v}})} />
         </div>
-        <button onClick={saveHomepage} className="px-4 py-2 rounded-lg bg-indigo-500 text-white text-sm font-bold hover:bg-indigo-400 transition">{t('حفظ الرئيسية', 'Save Homepage')}</button>
+
+        {/* ── Hero 50/50 Image ── */}
+        <div className="mt-4 pt-4 border-t border-gray-100">
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">🖼️ {t('صورة الهيرو (50/50 split)', 'Hero Image (50/50 split)')}</p>
+          <p className="text-[11px] text-gray-400 mb-2">{t('ارفع رابط الصورة — لو فاضي الهيرو هيبقى centered', 'Paste image URL — leave empty for centered layout')}</p>
+          <Field label="Hero Image URL" value={String(sc.homepage.heroImageUrl || '')} onChange={v => setSc({...sc, homepage: {...sc.homepage, heroImageUrl: v}})} />
+        </div>
+
+        {/* ── Ad Banner ── */}
+        <div className="mt-4 pt-4 border-t border-gray-100">
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">📢 {t('البانر الإعلاني (وسط الصفحة)', 'Mid-page Ad Banner')}</p>
+          <div className="grid grid-cols-2 gap-3 mb-2">
+            <Field label="Banner URL (image/gif/video)" value={String(sc.homepage.adBannerUrl || '')} onChange={v => setSc({...sc, homepage: {...sc.homepage, adBannerUrl: v}})} />
+            <Field label="Banner Link (on click)" value={String(sc.homepage.adBannerLink || '')} onChange={v => setSc({...sc, homepage: {...sc.homepage, adBannerLink: v}})} />
+          </div>
+          <div className="flex items-center gap-4 mb-2">
+            <label className="text-[11px] text-gray-500 font-medium">{t('نوع الملف:', 'File type:')}</label>
+            {(['image','gif','video'] as const).map(type => (
+              <label key={type} className="flex items-center gap-1.5 cursor-pointer">
+                <input type="radio" name="adBannerType" checked={(sc.homepage.adBannerType || 'image') === type} onChange={() => setSc({...sc, homepage: {...sc.homepage, adBannerType: type}})} className="w-3.5 h-3.5" />
+                <span className="text-xs text-gray-700 capitalize">{type}</span>
+              </label>
+            ))}
+          </div>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={!!sc.homepage.adBannerEnabled} onChange={e => setSc({...sc, homepage: {...sc.homepage, adBannerEnabled: e.target.checked}})} className="w-4 h-4" />
+            <span className="text-sm text-gray-700">{t('تفعيل البانر', 'Enable banner')}</span>
+          </label>
+        </div>
+
+        {/* ── Founder Quote ── */}
+        <div className="mt-4 pt-4 border-t border-gray-100">
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">👤 {t('بطاقة المؤسس (آخر الصفحة)', 'Founder Quote Card (bottom of page)')}</p>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label={t('اسم المؤسس', 'Founder Name')} value={String(sc.homepage.founderName || '')} onChange={v => setSc({...sc, homepage: {...sc.homepage, founderName: v}})} />
+            <Field label="Founder Image URL" value={String(sc.homepage.founderImageUrl || '')} onChange={v => setSc({...sc, homepage: {...sc.homepage, founderImageUrl: v}})} />
+            <Field label="Title (EN)" value={String(sc.homepage.founderTitleEn || '')} onChange={v => setSc({...sc, homepage: {...sc.homepage, founderTitleEn: v}})} />
+            <Field label={t('المسمى (AR)', 'Title (AR)')} value={String(sc.homepage.founderTitleAr || '')} onChange={v => setSc({...sc, homepage: {...sc.homepage, founderTitleAr: v}})} />
+            <Field label="Quote (EN)" value={String(sc.homepage.founderQuoteEn || '')} onChange={v => setSc({...sc, homepage: {...sc.homepage, founderQuoteEn: v}})} />
+            <Field label={t('الاقتباس (AR)', 'Quote (AR)')} value={String(sc.homepage.founderQuoteAr || '')} onChange={v => setSc({...sc, homepage: {...sc.homepage, founderQuoteAr: v}})} />
+            <Field label="LinkedIn URL" value={String(sc.homepage.founderLinkedin || '')} onChange={v => setSc({...sc, homepage: {...sc.homepage, founderLinkedin: v}})} />
+          </div>
+        </div>
+
+        {/* ── Live Ticker ── */}
+        <div className="mt-4 pt-4 border-t border-gray-100">
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">📡 {t('شريط الأخبار المتحرك (Live Ticker)', 'Live Activity Ticker')}</p>
+          <p className="text-[11px] text-gray-400 mb-2">{t('كل سطر = رسالة واحدة — افصل بسطر جديد', 'Each line = one ticker message — separate with new line')}</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{t('رسائل عربي', 'Arabic Messages')}</label>
+              <textarea rows={5} value={(sc.homepage.liveTickerAr || []).join('\n')} onChange={e => setSc({...sc, homepage: {...sc.homepage, liveTickerAr: e.target.value.split('\n').filter(Boolean)}})}
+                className="w-full px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-indigo-500 resize-none" dir="rtl" />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{t('رسائل إنجليزي', 'English Messages')}</label>
+              <textarea rows={5} value={(sc.homepage.liveTickerEn || []).join('\n')} onChange={e => setSc({...sc, homepage: {...sc.homepage, liveTickerEn: e.target.value.split('\n').filter(Boolean)}})}
+                className="w-full px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
+            </div>
+          </div>
+        </div>
+
+        {/* ── Brand Logos ── */}
+        <div className="mt-4 pt-4 border-t border-gray-100">
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">🏢 {t('شريط الشركات (Brand Logos Strip)', 'Brand Logos Strip')}</p>
+          <p className="text-[11px] text-gray-400 mb-2">{t('أسماء الشركات مفصولة بفاصلة — كل اسم في سطر', 'Company names separated by new line — one per line')}</p>
+          <textarea rows={4} value={(sc.homepage.brandLogos || []).join('\n')} onChange={e => setSc({...sc, homepage: {...sc.homepage, brandLogos: e.target.value.split('\n').filter(Boolean)}})}
+            className="w-full px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
+        </div>
+
+        <button onClick={saveHomepage} className="mt-4 px-4 py-2 rounded-lg bg-indigo-500 text-white text-sm font-bold hover:bg-indigo-400 transition">{t('حفظ الرئيسية', 'Save Homepage')}</button>
       </div>
 
       {/* Site Settings */}
@@ -2330,10 +2400,150 @@ function ReviewsAdminTab({ t, onSuccess, onError }: { t: T; onSuccess?: (msg?: s
   );
 }
 
+
+/* ─────────────────────────── REPORTS ADMIN TAB ─────────────────────────── */
+const REPORT_CATEGORIES = [
+  { value: 'market_report',    labelAr: 'تقارير سوق',    labelEn: 'Market Reports' },
+  { value: 'brand_guide',      labelAr: 'كتيبات براند',  labelEn: 'Brand Guides' },
+  { value: 'marketing_guide',  labelAr: 'أدلة تسويق',   labelEn: 'Marketing Guides' },
+  { value: 'template',         labelAr: 'قوالب',         labelEn: 'Templates' },
+  { value: 'framework',        labelAr: 'أطر عمل',       labelEn: 'Frameworks' },
+  { value: 'other',            labelAr: 'أخرى',          labelEn: 'Other' },
+] as const;
+
+type ReportRow = {
+  id: number; slug: string; titleAr: string; titleEn: string;
+  descAr?: string | null; descEn?: string | null; category: string;
+  coverImage?: string | null; pdfUrl: string; isFree: number;
+  creditCost: number; published: number; downloadCount: number;
+  createdAt: string;
+};
+
+function ReportsAdminTab({ t }: { t: T }) {
+  const [rows, setRows] = useState<ReportRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<ReportRow | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [rToast, setRToast] = useState('');
+  const [form, setForm] = useState({
+    slug: '', titleAr: '', titleEn: '', descAr: '', descEn: '',
+    category: 'other', coverImage: '', pdfUrl: '',
+    isFree: true, creditCost: 0, published: false,
+  });
+
+  const load = () => {
+    setLoading(true);
+    api('reportsLib.adminList').then(d => { setRows((d as ReportRow[]) || []); setLoading(false); });
+  };
+  useEffect(load, []);
+
+  const resetForm = () => setForm({ slug: '', titleAr: '', titleEn: '', descAr: '', descEn: '', category: 'other', coverImage: '', pdfUrl: '', isFree: true, creditCost: 0, published: false });
+
+  const openEdit = (r: ReportRow) => {
+    setEditing(r); setCreating(false);
+    setForm({ slug: r.slug, titleAr: r.titleAr, titleEn: r.titleEn, descAr: r.descAr || '', descEn: r.descEn || '', category: r.category, coverImage: r.coverImage || '', pdfUrl: r.pdfUrl, isFree: !!r.isFree, creditCost: r.creditCost, published: !!r.published });
+  };
+
+  const save = async () => {
+    try {
+      if (editing) {
+        await apiMutation('reportsLib.adminUpdate', { id: editing.id, ...form });
+      } else {
+        await apiMutation('reportsLib.adminCreate', { ...form });
+      }
+      setRToast(t('تم الحفظ', 'Saved'));
+      setEditing(null); setCreating(false); resetForm(); load();
+    } catch { setRToast(t('خطأ في الحفظ', 'Save failed')); }
+  };
+
+  const del = async (id: number) => {
+    if (!confirm(t('هل أنت متأكد من الحذف؟', 'Delete this report?'))) return;
+    await apiMutation('reportsLib.adminDelete', { id });
+    load();
+  };
+
+  const F = form;
+  const showForm = creating || !!editing;
+
+  return (
+    <div className="space-y-6">
+      {rToast && <div className="fixed top-4 right-4 z-50 bg-green-600 text-white px-4 py-2 rounded-lg text-sm shadow-lg cursor-pointer" onClick={() => setRToast('')}>{rToast}</div>}
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-gray-900">{t('إدارة التقارير والكتيبات', 'Reports & Guides Management')}</h2>
+        <button onClick={() => { setCreating(true); setEditing(null); resetForm(); }} className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">+ {t('إضافة تقرير', 'Add Report')}</button>
+      </div>
+
+      {showForm && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+          <h3 className="font-semibold text-gray-900">{editing ? t('تعديل التقرير', 'Edit Report') : t('تقرير جديد', 'New Report')}</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label className="text-xs text-gray-500 mb-1 block">Slug (URL)</label><input value={F.slug} onChange={e => setForm({...F, slug: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="brand-guide-2026" /></div>
+            <div><label className="text-xs text-gray-500 mb-1 block">{t('التصنيف', 'Category')}</label>
+              <select value={F.category} onChange={e => setForm({...F, category: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+                {REPORT_CATEGORIES.map(c => <option key={c.value} value={c.value}>{t(c.labelAr, c.labelEn)}</option>)}
+              </select>
+            </div>
+            <div><label className="text-xs text-gray-500 mb-1 block">{t('العنوان (عربي)', 'Title (Arabic)')}</label><input value={F.titleAr} onChange={e => setForm({...F, titleAr: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" /></div>
+            <div><label className="text-xs text-gray-500 mb-1 block">{t('العنوان (إنجليزي)', 'Title (English)')}</label><input value={F.titleEn} onChange={e => setForm({...F, titleEn: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" /></div>
+            <div><label className="text-xs text-gray-500 mb-1 block">{t('الوصف (عربي)', 'Description (Arabic)')}</label><textarea rows={2} value={F.descAr} onChange={e => setForm({...F, descAr: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" /></div>
+            <div><label className="text-xs text-gray-500 mb-1 block">{t('الوصف (إنجليزي)', 'Description (English)')}</label><textarea rows={2} value={F.descEn} onChange={e => setForm({...F, descEn: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" /></div>
+            <div><label className="text-xs text-gray-500 mb-1 block">{t('رابط PDF', 'PDF URL')}</label><input value={F.pdfUrl} onChange={e => setForm({...F, pdfUrl: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="https://..." /></div>
+            <div><label className="text-xs text-gray-500 mb-1 block">{t('رابط صورة الغلاف', 'Cover Image URL')}</label><input value={F.coverImage} onChange={e => setForm({...F, coverImage: e.target.value})} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="https://..." /></div>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={F.isFree} onChange={e => setForm({...F, isFree: e.target.checked, creditCost: e.target.checked ? 0 : F.creditCost})} className="w-4 h-4" />
+                <span className="text-sm text-gray-700">{t('مجاني', 'Free')}</span>
+              </label>
+              {!F.isFree && <div className="flex-1"><label className="text-xs text-gray-500 mb-1 block">{t('التكلفة (كريدت)', 'Cost (Credits)')}</label><input type="number" min={0} value={F.creditCost} onChange={e => setForm({...F, creditCost: parseInt(e.target.value) || 0})} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" /></div>}
+            </div>
+            <div className="flex items-center gap-2">
+              <input type="checkbox" checked={F.published} onChange={e => setForm({...F, published: e.target.checked})} className="w-4 h-4" />
+              <span className="text-sm text-gray-700">{t('منشور', 'Published')}</span>
+            </div>
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button onClick={save} className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">{t('حفظ', 'Save')}</button>
+            <button onClick={() => { setEditing(null); setCreating(false); resetForm(); }} className="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200">{t('إلغاء', 'Cancel')}</button>
+          </div>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="text-center py-12 text-gray-400">{t('جاري التحميل...', 'Loading...')}</div>
+      ) : rows.length === 0 ? (
+        <div className="text-center py-12 text-gray-400">{t('لا توجد تقارير بعد. أضف أول تقرير!', 'No reports yet. Add your first report!')}</div>
+      ) : (
+        <div className="space-y-3">
+          {rows.map(r => (
+            <div key={r.id} className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
+              {r.coverImage && <img src={r.coverImage} alt={r.titleEn} className="w-12 h-16 object-cover rounded-lg border border-gray-100 shrink-0" />}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-semibold text-gray-900 text-sm">{r.titleAr}</span>
+                  <span className="text-xs text-gray-400">/ {r.titleEn}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{r.published ? t('منشور', 'Published') : t('مسودة', 'Draft')}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.isFree ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>{r.isFree ? t('مجاني', 'Free') : `${r.creditCost} CR`}</span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1 truncate">{r.descEn || r.descAr}</p>
+                <p className="text-xs text-gray-400 mt-0.5">📥 {r.downloadCount} {t('تحميل', 'downloads')} · {r.category.replace(/_/g, ' ')}</p>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <button onClick={() => openEdit(r)} className="px-3 py-1.5 text-xs bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100">{t('تعديل', 'Edit')}</button>
+                <button onClick={() => del(r.id)} className="px-3 py-1.5 text-xs bg-red-50 text-red-600 rounded-lg hover:bg-red-100">{t('حذف', 'Delete')}</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const TABS: Array<{ id: Tab; labelAr: string; labelEn: string; icon: string }> = [
   { id: 'overview', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: '📊' },
   { id: 'blog', labelAr: 'المدونة', labelEn: 'Blog', icon: '✍️' },
   { id: 'reviews', labelAr: 'التقييمات', labelEn: 'Reviews', icon: '⭐' },
+  { id: 'reports', labelAr: 'التقارير', labelEn: 'Reports', icon: '📚' },
   { id: 'cms', labelAr: 'المحتوى', labelEn: 'CMS', icon: '📝' },
   { id: 'agency', labelAr: 'الوكالة', labelEn: 'Agency', icon: '🏢' },
   { id: 'requests', labelAr: 'طلبات العملاء', labelEn: 'Client Requests', icon: '📋' },
@@ -2477,6 +2687,7 @@ export default function WzrdAdmin() {
             {tab === 'requests' && <RequestsAdminTab t={t} />}
             {tab === 'blog' && <BlogAdminTab t={t} />}
             {tab === 'reviews' && <ReviewsAdminTab t={t} onSuccess={(m) => showToast(m || t('تم', 'Done'))} onError={(m) => showToast(m, 'error')} />}
+            {tab === 'reports' && <ReportsAdminTab t={t} />}
           </div>
         </main>
       </div>

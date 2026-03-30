@@ -24,6 +24,11 @@ export interface HomepageConfig {
   adBannerUrl?: string;
   adBannerType?: 'image' | 'gif' | 'video';
   adBannerLink?: string;
+  // Live Ticker items (editable from Admin — each item is one line of activity feed)
+  liveTickerAr?: string[];
+  liveTickerEn?: string[];
+  // Brand logos strip (editable from Admin — company names for the scrolling strip)
+  brandLogos?: string[];
   // Founder quote section
   founderName?: string;
   founderTitleEn?: string;
