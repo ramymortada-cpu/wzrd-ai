@@ -1,8 +1,10 @@
-import { useState, useId } from 'react';
+import React, { useState, useId } from 'react';
 import { useLocation } from 'wouter';
 import { waMeQualifiedLeadHref } from '@/lib/waContact';
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useI18n } from '@/lib/i18n';
+import ReviewModal from '@/components/ReviewModal';
+import ShareReportPanel from '@/components/ShareReportPanel';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface ToolField {
@@ -193,6 +195,8 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
   const [unlocking, setUnlocking] = useState(false);
   const [error, setError] = useState('');
   const [premiumReport, setPremiumReport] = useState<PremiumReportPayload | null>(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const updateField = (name: string, value: string | boolean) =>
     setFormData(prev => ({ ...prev, [name]: value }));
   const handleSubmit = async () => {
@@ -352,7 +356,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
                   <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
                     {Object.entries(exec.pillarScores as Record<string, unknown>).map(([k, v]) => (
                       <div key={k} className="rounded-xl border border-[#E5E7EB] bg-[#FAFAF5] p-3 text-center">
-                        <div className="text-2xl font-black text-[#1B4FD8]">{String(v)}</div>
+                        <div className="text-2xl font-black text-[#1B4FD8]">{v as React.ReactNode}</div>
                         <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF]">{k}</div>
                       </div>
                     ))}
@@ -377,7 +381,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
                     return (
                       <div key={i} className="rounded-xl border p-4" style={{ background: s.bg, borderColor: s.border }}>
                         <div className="mb-2 flex items-center justify-between">
-                          <h3 className="font-semibold text-[#111827]">{String(p.name ?? p.nameEn ?? '')}</h3>
+                          <h3 className="font-semibold text-[#111827]">{String(p.name ?? p.nameEn ?? '') as unknown as React.ReactNode}</h3>
                           <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ background: s.bg, color: s.text, border: `1px solid ${s.border}` }}>
                             {String(p.score ?? '')}/100
                           </span>
@@ -714,6 +718,38 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
             </div>
           )}
 
+          {/* Share Report Panel */}
+          <div className="mb-5">
+            <ShareReportPanel
+              toolNameAr={config.nameAr || config.name}
+              toolNameEn={config.name}
+              score={result.score}
+              scoreLabelAr={result.label}
+              scoreLabelEn={result.label}
+            />
+          </div>
+
+          {/* Review CTA — only if not yet submitted */}
+          {!reviewSubmitted && (
+            <div className="mb-5 rounded-2xl border border-[#BBF7D0] bg-[#F0FDF4] p-5 text-center">
+              <p className="mb-1 text-sm font-bold text-[#111827]">
+                {isAr ? '⭐ شاركنا رأيك واحصل على ١٠٠ كريدت مجاناً' : '⭐ Share your feedback and get 100 free credits'}
+              </p>
+              <p className="mb-4 text-xs text-[#6B7280]">
+                {isAr
+                  ? 'تقييمك بيساعدنا نتحسن — وبيظهر على الصفحة الرئيسية بعد المراجعة'
+                  : 'Your review helps us improve — and may appear on our homepage after moderation'}
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowReviewModal(true)}
+                className="rounded-full bg-[#059669] px-6 py-2.5 text-sm font-bold text-white hover:bg-[#047857] transition"
+              >
+                {isAr ? 'قيّم التقرير ← ١٠٠ كريدت' : 'Rate this report ← 100 credits'}
+              </button>
+            </div>
+          )}
+
           {/* Talk to expert */}
           <div className="mb-5 rounded-2xl border border-[#E5E7EB] bg-white p-5 text-center">
             <p className="mb-3 text-sm text-[#6B7280]">
@@ -752,6 +788,20 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
               {isAr ? 'حلل تاني' : 'New analysis'}
             </button>
           </div>
+
+          {/* Review Modal */}
+          {showReviewModal && (
+            <ReviewModal
+              toolId={config.id}
+              toolNameAr={config.nameAr || config.name}
+              toolNameEn={config.name}
+              onClose={() => setShowReviewModal(false)}
+              onSuccess={() => {
+                setShowReviewModal(false);
+                setReviewSubmitted(true);
+              }}
+            />
+          )}
         </div>
       </div>
     );

@@ -17,6 +17,21 @@ export interface HomepageConfig {
   heroSubtitle: string; heroSubtitleAr: string;
   ctaText: string; ctaTextAr: string;
   ctaUrl: string; showSignupForm: boolean;
+  // Hero 50/50 split image (optional — if empty, centered layout is used)
+  heroImageUrl?: string;
+  // Mid-page ad banner (image / GIF / video)
+  adBannerEnabled?: boolean;
+  adBannerUrl?: string;
+  adBannerType?: 'image' | 'gif' | 'video';
+  adBannerLink?: string;
+  // Founder quote section
+  founderName?: string;
+  founderTitleEn?: string;
+  founderTitleAr?: string;
+  founderQuoteEn?: string;
+  founderQuoteAr?: string;
+  founderImageUrl?: string;
+  founderLinkedin?: string;
 }
 
 export interface ServiceItem {
