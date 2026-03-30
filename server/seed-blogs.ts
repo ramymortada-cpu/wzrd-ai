@@ -364,8 +364,8 @@ async function seed() {
         publishedAt: new Date(),
       });
       console.log(`Inserted: ${blog.slug}`);
-    } catch (e: any) {
-      if (e.code === 'ER_DUP_ENTRY') {
+    } catch (e: unknown) {
+      if ((e as NodeJS.ErrnoException & { code?: string }).code === 'ER_DUP_ENTRY') {
         console.log(`Skipped (already exists): ${blog.slug}`);
       } else {
         console.error(`Error inserting ${blog.slug}:`, e);
