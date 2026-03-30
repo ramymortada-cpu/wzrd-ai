@@ -347,6 +347,104 @@ Don't risk months of effort. Before you hit "publish," use the **[Launch Readine
     seoDescAr: "تعرف على أهم الأخطاء التي يجب تجنبها قبل إطلاق منتجك الجديد لضمان نجاحه.",
     seoDescEn: "Learn about the most important mistakes to avoid before launching your new product to ensure its success.",
     readingTimeMin: 4,
+  },
+  {
+    slug: "quick-diagnosis-guide",
+    titleAr: "٥ أسئلة تكشف لك صحة براندك في أقل من دقيقة",
+    titleEn: "5 Questions to Reveal Your Brand's Health in Under a Minute",
+    excerptAr: "ليس لديك وقت للتحليلات المعقدة؟ اكتشف كيف يمكنك تقييم صحة علامتك التجارية بسرعة واتخاذ قرارات فورية.",
+    excerptEn: "No time for complex analytics? Discover how you can quickly assess your brand's health and make instant decisions.",
+    contentAr: `
+## الوقت هو أثمن مواردك
+
+كمؤسس أو مدير تسويق، أنت مشغول دائماً. ليس لديك أسابيع لانتظار تقارير معقدة من وكالات التسويق لتعرف ما إذا كان براندك يسير في الاتجاه الصحيح.
+
+### لماذا تحتاج إلى تقييم سريع؟
+في عالم الأعمال السريع، التأخير في اكتشاف المشاكل يعني خسارة العملاء والمبيعات. تحتاج إلى مؤشرات سريعة تدلك على مكامن الخلل.
+
+### ٥ أسئلة أساسية:
+1. هل يستطيع العميل فهم ما تبيعه في أول ٣ ثوانٍ من زيارة موقعك؟
+2. هل سعرك يعكس القيمة الحقيقية لمنتجك؟
+3. هل تبدو هويتك البصرية احترافية مقارنة بمنافسيك؟
+4. هل رسالتك التسويقية موجهة للعميل أم تتحدث عن نفسك فقط؟
+5. هل من السهل على العميل إتمام عملية الشراء؟
+
+### احصل على إجابات فورية
+لا تضيع وقتك في التخمين. استخدم أداة **[التشخيص السريع](/tools/quick)** من WZZRD AI. أجب عن ٥ أسئلة فقط، واحصل على تقييم فوري لصحة براندك مع أهم خطوة يجب عليك اتخاذها اليوم.
+    `,
+    contentEn: `
+## Time is Your Most Valuable Resource
+
+As a founder or marketing manager, you are always busy. You don't have weeks to wait for complex reports from marketing agencies to know if your brand is on the right track.
+
+### Why Do You Need a Quick Assessment?
+In the fast-paced business world, delaying the discovery of problems means losing customers and sales. You need quick indicators to point out the flaws.
+
+### 5 Essential Questions:
+1. Can the customer understand what you sell in the first 3 seconds of visiting your website?
+2. Does your price reflect the true value of your product?
+3. Does your visual identity look professional compared to your competitors?
+4. Is your marketing message directed at the customer or just talking about yourself?
+5. Is it easy for the customer to complete a purchase?
+
+### Get Instant Answers
+Don't waste time guessing. Use the **[Quick Diagnosis](/tools/quick)** tool from WZZRD AI. Answer just 5 questions, and get an instant assessment of your brand's health along with the most important step you need to take today.
+    `,
+    category: "Strategy",
+    tags: "diagnosis, quick, health",
+    published: 1,
+    seoTitleAr: "تقييم سريع لصحة علامتك التجارية | WZZRD AI",
+    seoTitleEn: "Quick Assessment of Your Brand's Health | WZZRD AI",
+    seoDescAr: "اكتشف كيف يمكنك تقييم صحة براندك في أقل من دقيقة باستخدام ٥ أسئلة أساسية.",
+    seoDescEn: "Discover how you can assess your brand's health in under a minute using 5 essential questions.",
+    readingTimeMin: 2,
+  },
+  {
+    slug: "competitive-benchmark-guide",
+    titleAr: "كيف تتفوق على منافسيك حتى لو كانت ميزانيتهم أكبر؟",
+    titleEn: "How to Outsmart Your Competitors Even if They Have a Bigger Budget?",
+    excerptAr: "المنافسة شرسة، لكن الفوز لا يعتمد دائماً على الميزانية الأكبر. تعلم كيف تحلل منافسيك وتجد ثغراتهم لتتفوق عليهم.",
+    excerptEn: "Competition is fierce, but winning doesn't always depend on the biggest budget. Learn how to analyze your competitors and find their gaps to outsmart them.",
+    contentAr: `
+## الميزانية ليست كل شيء
+
+الكثير من الشركات الناشئة تخشى المنافسة مع الحيتان الكبيرة في السوق. يعتقدون أن الميزانية التسويقية الضخمة هي السلاح الوحيد للفوز. لكن الحقيقة مختلفة تماماً.
+
+### الذكاء يتفوق على المال
+الشركات الكبيرة بطيئة، وغالباً ما تفقد التواصل الشخصي مع العملاء. هنا تكمن فرصتك. من خلال التحليل الدقيق، يمكنك اكتشاف نقاط ضعفهم واستغلالها لصالحك.
+
+### كيف تحلل منافسيك؟
+1. **الرسالة التسويقية:** ما هو الوعد الذي يقدمونه؟ وكيف يمكنك تقديم وعد أفضل أو أكثر تحديداً؟
+2. **تجربة العميل:** اقرأ مراجعات عملائهم السلبية. ما الذي يشتكون منه؟ اجعل هذا نقطة قوتك.
+3. **التسعير والعروض:** هل يبيعون منتجات فقط أم يقدمون حلولاً متكاملة؟
+
+### اعرف موقعك في السوق
+لتتفوق على منافسيك، يجب أن تعرف أولاً أين تقف مقارنة بهم. استخدم أداة **[المقارنة بالمنافسين](/tools/benchmark)** من WZZRD AI. ستقوم الأداة بتحليل براندك مقابل منافسيك المباشرين، وتكشف لك عن الميزة التنافسية التي يجب أن تركز عليها لتستحوذ على حصتك من السوق.
+    `,
+    contentEn: `
+## Budget Isn't Everything
+
+Many startups fear competing with the big whales in the market. They believe that a massive marketing budget is the only weapon to win. But the truth is quite different.
+
+### Smarts Beat Money
+Big companies are slow, and they often lose personal touch with customers. Here lies your opportunity. Through careful analysis, you can discover their weaknesses and exploit them to your advantage.
+
+### How to Analyze Your Competitors?
+1. **Marketing Message:** What promise are they making? And how can you make a better or more specific promise?
+2. **Customer Experience:** Read their negative customer reviews. What are they complaining about? Make this your strength.
+3. **Pricing and Offers:** Are they just selling products or offering complete solutions?
+
+### Know Your Position in the Market
+To outsmart your competitors, you must first know where you stand compared to them. Use the **[Competitive Benchmark](/tools/benchmark)** tool from WZZRD AI. The tool will analyze your brand against your direct competitors, revealing the competitive advantage you should focus on to capture your market share.
+    `,
+    category: "Market Research",
+    tags: "competitors, benchmark, strategy",
+    published: 1,
+    seoTitleAr: "كيف تحلل منافسيك وتتفوق عليهم | WZZRD AI",
+    seoTitleEn: "How to Analyze Your Competitors and Outsmart Them | WZZRD AI",
+    seoDescAr: "تعلم استراتيجيات تحليل المنافسين وكيفية إيجاد ميزتك التنافسية للتفوق في السوق.",
+    seoDescEn: "Learn competitor analysis strategies and how to find your competitive advantage to win in the market.",
+    readingTimeMin: 3,
   }
 ];
 

@@ -41,6 +41,7 @@ import { workspacesRouter } from "./workspaces";
 import { contractsRouter } from "./contracts";
 import { invoicesRouter } from "./invoices";
 import { blogRouter } from "./blog";
+import { reviewsRouter } from "./reviews";
 
 export const appRouter = router({
   system: systemRouter,
@@ -62,6 +63,7 @@ export const appRouter = router({
   brandTwin: brandTwinRouter,
   leads: leadsRouter,
   blog: blogRouter,
+  reviews: reviewsRouter,
   onboarding: onboardingRouter,
   feedback: feedbackRouter,
   analytics: analyticsRouter,

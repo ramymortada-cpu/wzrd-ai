@@ -38,7 +38,7 @@ import type {
   WzrdWebhooksPage,
 } from '@/lib/wzrdAdminApiTypes';
 
-type Tab = 'overview' | 'users' | 'credits' | 'tools' | 'payments' | 'webhooks' | 'cms' | 'prompts' | 'pricing' | 'team' | 'agency' | 'config' | 'requests' | 'blog';
+type Tab = 'overview' | 'users' | 'credits' | 'tools' | 'payments' | 'webhooks' | 'cms' | 'prompts' | 'pricing' | 'team' | 'agency' | 'config' | 'requests' | 'blog' | 'reviews';
 
 const FETCH_OPTS: RequestInit = { credentials: 'include' };
 
@@ -2160,9 +2160,180 @@ function BlogAdminTab({ t }: { t: T }) {
   );
 }
 
+// ═══════════════════════════════════════
+// REVIEWS ADMIN TAB
+// ═══════════════════════════════════════
+interface ToolReview {
+  id: number;
+  toolId: string;
+  userId: number;
+  rating: number;
+  comment: string;
+  country: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+  userName?: string;
+}
+
+function ReviewsAdminTab({ t, onSuccess, onError }: { t: T; onSuccess?: (msg?: string) => void; onError?: (msg: string) => void }) {
+  const [reviews, setReviews] = useState<ToolReview[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending');
+  const [actionLoading, setActionLoading] = useState<number | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const data = await api('reviews.adminList', { status: filter === 'all' ? undefined : filter });
+    setReviews((data as ToolReview[] | null) ?? []);
+    setLoading(false);
+  }, [filter]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleApprove = async (id: number) => {
+    setActionLoading(id);
+    const res = await apiMutation('reviews.approve', { reviewId: id });
+    setActionLoading(null);
+    if (res) {
+      onSuccess?.(t('تم الموافقة على التقييم', 'Review approved'));
+      load();
+    } else {
+      onError?.(t('فشل التنفيذ', 'Action failed'));
+    }
+  };
+
+  const handleReject = async (id: number) => {
+    setActionLoading(id);
+    const res = await apiMutation('reviews.reject', { reviewId: id });
+    setActionLoading(null);
+    if (res) {
+      onSuccess?.(t('تم الرفض', 'Review rejected'));
+      load();
+    } else {
+      onError?.(t('فشل التنفيذ', 'Action failed'));
+    }
+  };
+
+  const STARS = [1, 2, 3, 4, 5];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">{t('إدارة التقييمات', 'Review Moderation')}</h2>
+          <p className="text-sm text-gray-500 mt-1">{t('راجع واعتمد أو ارفض تقييمات العملاء قبل عرضها على الصفحة الرئيسية', 'Review and approve or reject customer reviews before they appear on the homepage')}</p>
+        </div>
+        <button onClick={load} className="text-xs text-indigo-600 hover:text-indigo-500">{t('تحديث', 'Refresh')}</button>
+      </div>
+
+      {/* Filter tabs */}
+      <div className="flex gap-2 flex-wrap">
+        {(['pending', 'approved', 'rejected', 'all'] as const).map(f => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`px-4 py-1.5 rounded-full text-xs font-bold border transition ${
+              filter === f
+                ? 'bg-indigo-600 text-white border-indigo-600'
+                : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-400'
+            }`}
+          >
+            {f === 'pending' ? t('بينتظر المراجعة', 'Pending')
+              : f === 'approved' ? t('معتمد', 'Approved')
+              : f === 'rejected' ? t('مرفوض', 'Rejected')
+              : t('الكل', 'All')}
+          </button>
+        ))}
+      </div>
+
+      {loading ? <LoadingSkeleton /> : reviews.length === 0 ? (
+        <EmptyState icon="⭐" message={t('لا توجد تقييمات في هذه الحالة', 'No reviews in this status')} />
+      ) : (
+        <div className="space-y-4">
+          {reviews.map(review => (
+            <div key={review.id} className={`p-5 rounded-xl border shadow-sm ${
+              review.status === 'pending' ? 'border-amber-200 bg-amber-50/30'
+              : review.status === 'approved' ? 'border-green-200 bg-green-50/30'
+              : 'border-red-200 bg-red-50/30'
+            }`}>
+              <div className="flex items-start justify-between gap-4 flex-wrap">
+                <div className="flex-1 min-w-0">
+                  {/* Stars */}
+                  <div className="flex gap-0.5 mb-2">
+                    {STARS.map(s => (
+                      <span key={s} className={`text-lg ${s <= review.rating ? 'text-amber-400' : 'text-gray-200'}`}>★</span>
+                    ))}
+                    <span className="ml-2 text-xs text-gray-500 self-center">{review.rating}/5</span>
+                  </div>
+                  {/* Comment */}
+                  <p className="text-sm text-gray-800 leading-relaxed mb-2">“{review.comment}”</p>
+                  {/* Meta */}
+                  <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+                    <span>🛠️ {review.toolId.replace(/_/g, ' ')}</span>
+                    {review.country && <span>🌍 {review.country}</span>}
+                    {review.userName && <span>👤 {review.userName}</span>}
+                    <span>📅 {new Date(review.createdAt).toLocaleDateString()}</span>
+                    <span className={`font-bold ${
+                      review.status === 'pending' ? 'text-amber-600'
+                      : review.status === 'approved' ? 'text-green-600'
+                      : 'text-red-600'
+                    }`}>
+                      {review.status === 'pending' ? t('بينتظر', 'Pending')
+                        : review.status === 'approved' ? t('معتمد', 'Approved')
+                        : t('مرفوض', 'Rejected')}
+                    </span>
+                  </div>
+                </div>
+                {/* Actions */}
+                {review.status === 'pending' && (
+                  <div className="flex gap-2 shrink-0">
+                    <button
+                      onClick={() => handleApprove(review.id)}
+                      disabled={actionLoading === review.id}
+                      className="px-4 py-2 rounded-lg bg-green-600 text-white text-xs font-bold hover:bg-green-700 disabled:opacity-50 transition"
+                    >
+                      {actionLoading === review.id ? '...' : t('اعتمد ✔', 'Approve ✔')}
+                    </button>
+                    <button
+                      onClick={() => handleReject(review.id)}
+                      disabled={actionLoading === review.id}
+                      className="px-4 py-2 rounded-lg bg-red-100 text-red-700 text-xs font-bold hover:bg-red-200 disabled:opacity-50 transition"
+                    >
+                      {actionLoading === review.id ? '...' : t('ارفض ✘', 'Reject ✘')}
+                    </button>
+                  </div>
+                )}
+                {review.status === 'approved' && (
+                  <button
+                    onClick={() => handleReject(review.id)}
+                    disabled={actionLoading === review.id}
+                    className="px-3 py-1.5 rounded-lg bg-red-100 text-red-700 text-xs font-bold hover:bg-red-200 disabled:opacity-50 transition"
+                  >
+                    {t('سحب الاعتماد', 'Revoke')}
+                  </button>
+                )}
+                {review.status === 'rejected' && (
+                  <button
+                    onClick={() => handleApprove(review.id)}
+                    disabled={actionLoading === review.id}
+                    className="px-3 py-1.5 rounded-lg bg-green-100 text-green-700 text-xs font-bold hover:bg-green-200 disabled:opacity-50 transition"
+                  >
+                    {t('إعادة اعتماد', 'Re-approve')}
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const TABS: Array<{ id: Tab; labelAr: string; labelEn: string; icon: string }> = [
   { id: 'overview', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: '📊' },
   { id: 'blog', labelAr: 'المدونة', labelEn: 'Blog', icon: '✍️' },
+  { id: 'reviews', labelAr: 'التقييمات', labelEn: 'Reviews', icon: '⭐' },
   { id: 'cms', labelAr: 'المحتوى', labelEn: 'CMS', icon: '📝' },
   { id: 'agency', labelAr: 'الوكالة', labelEn: 'Agency', icon: '🏢' },
   { id: 'requests', labelAr: 'طلبات العملاء', labelEn: 'Client Requests', icon: '📋' },
@@ -2305,6 +2476,7 @@ export default function WzrdAdmin() {
             {tab === 'config' && <ConfigTab t={t} />}
             {tab === 'requests' && <RequestsAdminTab t={t} />}
             {tab === 'blog' && <BlogAdminTab t={t} />}
+            {tab === 'reviews' && <ReviewsAdminTab t={t} onSuccess={(m) => showToast(m || t('تم', 'Done'))} onError={(m) => showToast(m, 'error')} />}
           </div>
         </main>
       </div>

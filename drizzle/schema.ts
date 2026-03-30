@@ -1119,3 +1119,27 @@ export const inviteTokens = mysqlTable("invite_tokens", {
 
 export type InviteToken = typeof inviteTokens.$inferSelect;
 export type InsertInviteToken = typeof inviteTokens.$inferInsert;
+
+/**
+ * Tool Reviews table — stores user reviews submitted after completing a tool report.
+ * Reviews require admin approval before appearing publicly on the homepage.
+ * Approved reviewers receive 100 bonus credits (tracked via creditedAt).
+ */
+export const toolReviews = mysqlTable("tool_reviews", {
+  id:          int("id").autoincrement().primaryKey(),
+  userId:      int("userId").notNull(),
+  toolId:      varchar("toolId", { length: 64 }).notNull(),
+  toolNameAr:  varchar("toolNameAr", { length: 120 }).notNull(),
+  toolNameEn:  varchar("toolNameEn", { length: 120 }).notNull(),
+  rating:      int("rating").notNull(),
+  commentAr:   text("commentAr"),
+  commentEn:   text("commentEn"),
+  country:     varchar("country", { length: 64 }),
+  countryFlag: varchar("countryFlag", { length: 8 }),
+  status:      mysqlEnum("status", ["pending", "approved", "rejected"]).default("pending").notNull(),
+  creditedAt:  timestamp("creditedAt"),
+  createdAt:   timestamp("createdAt").defaultNow().notNull(),
+  updatedAt:   timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type ToolReview = typeof toolReviews.$inferSelect;
+export type InsertToolReview = typeof toolReviews.$inferInsert;
