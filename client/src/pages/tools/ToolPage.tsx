@@ -356,8 +356,8 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
                     ))}
                   </div>
                 )}
-                {exec.verdict && (
-                  <p className="text-sm leading-relaxed text-[#374151]">{String(exec.verdict)}</p>
+                {exec.verdict != null && (
+                  <p className="text-sm leading-relaxed text-[#374151]">{String(exec.verdict as string)}</p>
                 )}
               </div>
             )}
@@ -381,9 +381,9 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
                           </span>
                         </div>
                         <p className="text-sm leading-relaxed text-[#374151] whitespace-pre-line">{String(p.analysis ?? '')}</p>
-                        {p.gap && (
+                        {p.gap != null && (
                           <p className="mt-2 rounded-lg bg-white/60 p-2 text-xs text-[#D97706]">
-                            {isAr ? 'الفجوة:' : 'Gap:'} {String(p.gap)}
+                            {isAr ? 'الفجوة:' : 'Gap:'} {String(p.gap as string)}
                           </p>
                         )}
                       </div>
