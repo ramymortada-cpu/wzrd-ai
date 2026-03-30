@@ -155,7 +155,7 @@ export default function WzrdPublicHeader({ credits }: WzrdPublicHeaderProps = {}
                 b.style.color = "#374151";
               }}
             >
-              {isAr ? "EN" : "عر"}
+              {isAr ? "EN" : "AR"}
             </button>
 
             {/* Credits badge */}
