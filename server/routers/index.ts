@@ -42,6 +42,7 @@ import { contractsRouter } from "./contracts";
 import { invoicesRouter } from "./invoices";
 import { blogRouter } from "./blog";
 import { reviewsRouter } from "./reviews";
+import { reportsLibRouter } from "./reportsLib";
 
 export const appRouter = router({
   system: systemRouter,
@@ -64,6 +65,7 @@ export const appRouter = router({
   leads: leadsRouter,
   blog: blogRouter,
   reviews: reviewsRouter,
+  reportsLib: reportsLibRouter,
   onboarding: onboardingRouter,
   feedback: feedbackRouter,
   analytics: analyticsRouter,

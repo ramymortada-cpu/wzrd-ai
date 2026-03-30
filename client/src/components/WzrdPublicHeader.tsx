@@ -25,10 +25,11 @@ const BG     = "rgba(250,250,248,0.97)";
 const BORDER = "#E8E3DC";
 
 const NAV_LINKS = [
-  { ar: "الرئيسية", en: "Home",    href: "/" },
-  { ar: "الأدوات",  en: "Tools",   href: "/tools" },
-  { ar: "الأسعار",  en: "Pricing", href: "/pricing" },
-  { ar: "المدونة",  en: "Blog",    href: "/blog" },
+  { ar: "الرئيسية",  en: "Home",    href: "/" },
+  { ar: "الأدوات",   en: "Tools",   href: "/tools" },
+  { ar: "التقارير",  en: "Reports", href: "/reports" },
+  { ar: "الأسعار",   en: "Pricing", href: "/pricing" },
+  { ar: "المدونة",   en: "Blog",    href: "/blog" },
 ];
 
 interface WzrdPublicHeaderProps {

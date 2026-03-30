@@ -1143,3 +1143,47 @@ export const toolReviews = mysqlTable("tool_reviews", {
 });
 export type ToolReview = typeof toolReviews.$inferSelect;
 export type InsertToolReview = typeof toolReviews.$inferInsert;
+
+/**
+ * Reports / Knowledge Library — PDFs uploaded by admin.
+ * Free reports: downloadable without credits.
+ * Paid reports: require credits deduction before download URL is revealed.
+ */
+export const reports = mysqlTable("reports", {
+  id:            int("id").autoincrement().primaryKey(),
+  slug:          varchar("slug", { length: 255 }).notNull().unique(),
+  titleAr:       varchar("title_ar", { length: 500 }).notNull(),
+  titleEn:       varchar("title_en", { length: 500 }).notNull(),
+  descAr:        text("desc_ar"),
+  descEn:        text("desc_en"),
+  category:      mysqlEnum("category", [
+    "market_report",
+    "brand_guide",
+    "marketing_guide",
+    "template",
+    "framework",
+    "other",
+  ]).notNull().default("other"),
+  coverImage:    varchar("cover_image", { length: 1000 }),
+  pdfUrl:        varchar("pdf_url", { length: 1000 }).notNull(),
+  isFree:        int("is_free").notNull().default(1),
+  creditCost:    int("credit_cost").notNull().default(0),
+  downloadCount: int("download_count").notNull().default(0),
+  published:     int("published").notNull().default(0),
+  createdAt:     timestamp("created_at").defaultNow().notNull(),
+  updatedAt:     timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+export type Report = typeof reports.$inferSelect;
+export type InsertReport = typeof reports.$inferInsert;
+
+/**
+ * Report Downloads — tracks which users downloaded which paid reports.
+ * Prevents double-charging for the same report.
+ */
+export const reportDownloads = mysqlTable("report_downloads", {
+  id:        int("id").autoincrement().primaryKey(),
+  userId:    int("user_id").notNull(),
+  reportId:  int("report_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+export type ReportDownload = typeof reportDownloads.$inferSelect;
