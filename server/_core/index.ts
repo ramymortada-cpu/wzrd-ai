@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
+import { spawn } from "child_process";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
@@ -158,6 +159,19 @@ async function startServer() {
   // Bind to 0.0.0.0 for Railway/Docker — required for external health checks
   server.listen(port, "0.0.0.0", () => {
     logger.info({ port }, `Server running on http://0.0.0.0:${port}/`);
+
+    // === BLOG SEED (fire-and-forget, runs after server is up) ===
+    // Spawned detached so Railway's health check passes before seeding begins.
+    try {
+      const seeder = spawn('node', ['scripts/seed-blogs-safe.mjs'], {
+        detached: true,
+        stdio: 'inherit',
+      });
+      seeder.unref();
+      logger.info('Blog seed script spawned in background');
+    } catch (err) {
+      logger.warn({ err }, 'Failed to spawn blog seed script — skipping');
+    }
 
     // === POST-STARTUP TASKS (non-blocking) ===
     setTimeout(async () => {
