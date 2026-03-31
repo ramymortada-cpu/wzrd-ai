@@ -161,17 +161,19 @@ async function startServer() {
     logger.info({ port }, `Server running on http://0.0.0.0:${port}/`);
 
     // === BLOG SEED (fire-and-forget, runs after server is up) ===
-    // Spawned detached so Railway's health check passes before seeding begins.
-    try {
-      const seeder = spawn('node', ['scripts/seed-blogs-safe.mjs'], {
-        detached: true,
-        stdio: 'inherit',
-      });
-      seeder.unref();
-      logger.info('Blog seed script spawned in background');
-    } catch (err) {
-      logger.warn({ err }, 'Failed to spawn blog seed script — skipping');
-    }
+    // Delayed 5 seconds to ensure database migrations complete before seeding.
+    setTimeout(() => {
+      try {
+        const seeder = spawn('node', ['scripts/seed-blogs-safe.mjs'], {
+          detached: true,
+          stdio: 'inherit',
+        });
+        seeder.unref();
+        logger.info('Blog seed script spawned in background');
+      } catch (err) {
+        logger.warn({ err }, 'Failed to spawn blog seed script — skipping');
+      }
+    }, 5000); // 5 second delay
 
     // === POST-STARTUP TASKS (non-blocking) ===
     setTimeout(async () => {
