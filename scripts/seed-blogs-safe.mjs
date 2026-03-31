@@ -1,10 +1,9 @@
 /**
- * Safe blog seeder — runs at deploy time without process.exit().
- * Inserts blog posts if the table exists; silently skips if table
- * is missing or posts already exist. Never crashes the start chain.
+ * Safe blog seeder — spawned by the server after startup.
+ * Waits for the blog_posts table to exist (retry up to 10 times, 3s apart),
+ * then inserts seed posts. Skips duplicates. Never crashes.
  *
- * Usage (called automatically from package.json "start"):
- *   node scripts/seed-blogs-safe.mjs
+ * Called from server/_core/index.ts via child_process.spawn.
  */
 import mysql from "mysql2/promise";
 import { config as loadDotenv } from "dotenv";
@@ -13,9 +12,12 @@ loadDotenv();
 
 const DATABASE_URL = process.env.DATABASE_URL?.trim();
 if (!DATABASE_URL) {
-  console.log("[seed-blogs] No DATABASE_URL — skipping blog seed.");
+  console.log("[seed-blogs] No DATABASE_URL — skipping.");
   process.exit(0);
 }
+
+const MAX_RETRIES = 10;
+const RETRY_INTERVAL_MS = 3000; // 3 seconds between retries
 
 const blogs = [
   {
@@ -75,20 +77,39 @@ const blogs = [
   },
 ];
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function waitForTable(conn) {
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    const [tables] = await conn.query(
+      "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'blog_posts'"
+    );
+    if (Array.isArray(tables) && tables.length > 0) {
+      console.log(`[seed-blogs] blog_posts table found (attempt ${attempt}/${MAX_RETRIES}).`);
+      return true;
+    }
+    console.log(`[seed-blogs] blog_posts table not found yet (attempt ${attempt}/${MAX_RETRIES}). Retrying in ${RETRY_INTERVAL_MS / 1000}s...`);
+    await sleep(RETRY_INTERVAL_MS);
+  }
+  return false;
+}
+
 async function run() {
   let conn;
   try {
     conn = await mysql.createConnection(DATABASE_URL);
 
-    // Check if table exists first
-    const [tables] = await conn.query(
-      "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'blog_posts'"
-    );
-    if (!Array.isArray(tables) || tables.length === 0) {
-      console.log("[seed-blogs] blog_posts table not found — skipping. It will be created by drizzle-kit push.");
+    // Wait for the table to be created by drizzle-kit push
+    const tableExists = await waitForTable(conn);
+    if (!tableExists) {
+      console.log(`[seed-blogs] blog_posts table not found after ${MAX_RETRIES} retries (${MAX_RETRIES * RETRY_INTERVAL_MS / 1000}s). Skipping seed — will retry on next deploy.`);
       return;
     }
 
+    let inserted = 0;
+    let skipped = 0;
     for (const blog of blogs) {
       try {
         await conn.query(
@@ -107,15 +128,17 @@ async function run() {
           ]
         );
         console.log(`[seed-blogs] Inserted: ${blog.slug}`);
+        inserted++;
       } catch (e) {
         if (e.code === "ER_DUP_ENTRY") {
           console.log(`[seed-blogs] Skipped (exists): ${blog.slug}`);
+          skipped++;
         } else {
           console.error(`[seed-blogs] Error inserting ${blog.slug}:`, e.message);
         }
       }
     }
-    console.log("[seed-blogs] Done.");
+    console.log(`[seed-blogs] Done. Inserted: ${inserted}, Skipped: ${skipped}.`);
   } catch (err) {
     console.error("[seed-blogs] Could not connect to DB — skipping:", err.message);
   } finally {
