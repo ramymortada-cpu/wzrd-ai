@@ -7,7 +7,7 @@
     "dev": "NODE_ENV=development tsx watch server/_core/index.ts",
     "build": "vite build && esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "postbuild": "rm -rf dist/public/landing && cp -r client/public/landing dist/public",
-    "start": "npx drizzle-kit push --force && node scripts/seed-blogs-safe.mjs && NODE_ENV=production node dist/index.js",
+    "start": "npx drizzle-kit push --force && NODE_ENV=production node dist/index.js",
     "check": "tsc --noEmit",
     "lint": "eslint 'server/**/*.ts' 'client/src/**/*.{ts,tsx}' --max-warnings 0",
     "db:migrate:sql": "node scripts/run-drizzle-mysql-migrations.mjs",
