@@ -32,6 +32,7 @@ const FILES = [
   '0017_service_requests.sql',
   '0018_credit_transaction_enum.sql',
   '0019_paymob_processed_transactions.sql',
+  '0022_blog_posts.sql',
   '0025_invite_tokens.sql',
 ];
 
@@ -46,6 +47,7 @@ const EXPECT = new Set([
   'request_updates',
   'request_files',
   'paymob_processed_transactions',
+  'blog_posts',
   'invite_tokens',
 ]);
 
