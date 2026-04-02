@@ -39,6 +39,28 @@ import { eq, desc } from "drizzle-orm";
 import { fireEmailTrigger } from "../emailTrigger";
 import { getRedis } from "../_core/redis";
 
+/** Clamp benchmark pillar scores (module-level fn so callers pass a narrowed array, not `parsed.companies` twice). */
+function clampBenchmarkCompanyRows(
+  rows: Array<{
+    name?: string;
+    totalScore?: number;
+    pillars?: Record<string, unknown>;
+    strengths?: string[];
+    weaknesses?: string[];
+  }>,
+) {
+  return rows.map((c) => ({
+    ...c,
+    totalScore: Math.max(0, Math.min(100, c.totalScore || 50)),
+    pillars: Object.fromEntries(
+      Object.entries(c.pillars || {}).map(([k, v]) => [
+        k,
+        Math.max(0, Math.min(100, (typeof v === 'number' ? v : Number(v)) || 50)),
+      ]),
+    ),
+  }));
+}
+
 /**
  * Save diagnosis result to history (non-blocking).
  * If save fails, the tool result is still shown — we just lose the history entry.
@@ -1122,21 +1144,17 @@ Respond ONLY in this JSON format:
           logger.warn({ textLength: text.length }, 'Benchmark JSON parse failed — used fallback');
         }
 
-        // Clamp all scores
-        if (parsed.companies) {
-          parsed.companies = parsed.companies.map((c) => ({
-            ...c,
-            totalScore: Math.max(0, Math.min(100, c.totalScore || 50)),
-            pillars: Object.fromEntries(
-              Object.entries(c.pillars || {}).map(([k, v]) => [k, Math.max(0, Math.min(100, (typeof v === 'number' ? v : Number(v)) || 50))])
-            ),
-          }));
+        const companiesClamp = parsed.companies;
+        if (companiesClamp) {
+          // Assertion: truthy check does not narrow for nested generic calls in TS 5.9 here; body is unreachable while benchmark throws early.
+          parsed.companies = clampBenchmarkCompanyRows(companiesClamp as BenchmarkCompanyRow[]);
         }
 
-        // Save to history
-        const yourCompany = parsed.companies?.[0];
+        // Save to history — optional element access avoids duplicate reads on `parsed.companies`
+        const yourCompany: BenchmarkCompanyRow | undefined = parsed.companies?.[0];
         if (yourCompany) {
-          const score = yourCompany.totalScore ?? 50;
+          const row = yourCompany as BenchmarkCompanyRow;
+          const score = row.totalScore ?? 50;
           saveDiagnosisHistory(ctx.user!.id, 'competitive_benchmark', {
             score,
             label: scoreLabel(score),
