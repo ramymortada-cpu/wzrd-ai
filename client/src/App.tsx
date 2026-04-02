@@ -1,4 +1,5 @@
-import { lazy, Suspense, useMemo } from 'react';
+import { lazy, Suspense, useEffect, useMemo } from 'react';
+import posthog from 'posthog-js';
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
@@ -137,6 +138,16 @@ function DashboardRouter() {
   );
 }
 
+function PostHogPageViews() {
+  const [location] = useLocation();
+  useEffect(() => {
+    if (import.meta.env.VITE_POSTHOG_KEY) {
+      posthog.capture("$pageview", { path: window.location.pathname });
+    }
+  }, [location]);
+  return null;
+}
+
 function PremiumShellLayout({ children }: { children: React.ReactNode }) {
   const [loc] = useLocation();
   const useShell = useMemo(() => WZZRD_PREMIUM_SHELL_RE.test(loc), [loc]);
@@ -151,6 +162,7 @@ function App() {
         <ThemeProvider defaultTheme="dark" switchable>
           <TooltipProvider>
             <PremiumShellLayout>
+              <PostHogPageViews />
               <Toaster />
               <QuickSearch />
               <Switch>

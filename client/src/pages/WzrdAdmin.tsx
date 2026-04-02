@@ -269,6 +269,7 @@ function OverviewTab({ t, onSuccess, onError }: { t: T; onSuccess?: (msg?: strin
           {[
             { href: '/my-brand', icon: '📈', label: t('صحة البراند', 'Brand Health') },
             { href: '/copilot', icon: '🧙‍♂️', label: t('المستشار', 'Copilot') },
+            { href: '/tools/benchmark', icon: '📊', label: t('مقارنة', 'Benchmark') },
             { href: '/tools/quick', icon: '⚡', label: t('سريع', 'Quick') },
             { href: '/pricing', icon: '💰', label: t('الأسعار', 'Pricing') },
             { href: '/seo/brand-diagnosis', icon: '🔍', label: t('SEO', 'SEO') },

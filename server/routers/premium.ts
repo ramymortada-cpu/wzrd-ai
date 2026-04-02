@@ -17,7 +17,7 @@ import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { logger } from "../_core/logger";
 import { invokeClaude } from "../_core/llmProviders";
-import { scrapeWebsite, buildWebsiteContext } from "../researchEngine";
+import { scrapeWebsite, buildWebsiteContext, fetchLighthouseScores } from "../researchEngine";
 import { getDb } from "../db/index";
 import { users, creditTransactions } from "../../drizzle/schema";
 import { eq, sql } from "drizzle-orm";
@@ -97,6 +97,7 @@ IMPORTANT RULES:
 - IF WEBSITE DATA IS PROVIDED: Use it as primary evidence for Visual Identity, Customer Journey, and Messaging analysis. Quote specific elements (headlines, descriptions, navigation structure) from the scraped data.
 - IF WEBSITE DATA IS MISSING OR PARTIAL: Do NOT invent or hallucinate website content. Explicitly state in your analysis: "لم نتمكن من تحليل الموقع الإلكتروني — التقييم مبني على البيانات المقدمة فقط". Adjust your confidence level accordingly and note which pillars have limited evidence.
 - IF WEBSITE DATA QUALITY IS "partial": Acknowledge that only limited website data was available and note which aspects could not be fully assessed.
+- IF LIGHTHOUSE DATA IS PROVIDED: Include a "Technical Health" section. Highlight any scores below 70 as areas needing immediate attention. Relate scores to user experience (e.g., low Performance = slow loading = lost customers).
 - Use Egyptian Arabic (مصري) — professional but accessible
 - Format with clear headings and bullet points
 - Technical terms in English are fine, explanations in Arabic
@@ -213,20 +214,35 @@ export const premiumRouter = router({
         }
       }
 
-      // 2.5 Scrape website if provided
+      // 2.5 Scrape website + Lighthouse (parallel) if URL provided
       let scrapedData = null;
+      let lighthouseData = null;
       const websiteUrl = typeof input.formData.website === 'string' ? input.formData.website.trim() : '';
       if (websiteUrl) {
         try {
-          scrapedData = await scrapeWebsite(websiteUrl);
+          const [scrapeResult, lhResult] = await Promise.all([
+            scrapeWebsite(websiteUrl),
+            fetchLighthouseScores(websiteUrl),
+          ]);
+          scrapedData = scrapeResult;
+          lighthouseData = lhResult;
         } catch (err) {
-          logger.warn({ url: websiteUrl, err }, '[Premium] Website scrape failed');
+          logger.warn({ url: websiteUrl, err }, '[Premium] Website scrape or Lighthouse failed');
         }
       }
 
       if (scrapedData && scrapedData.quality !== 'failed') {
         // Allocate 2500 tokens (~10,000 chars) for website context
         userPrompt += '\n' + buildWebsiteContext(scrapedData, 2500) + '\n';
+
+        if (lighthouseData) {
+          userPrompt += `\n--- LIGHTHOUSE TECHNICAL SCORES ---\n`;
+          userPrompt += `Performance: ${lighthouseData.performance}/100\n`;
+          userPrompt += `Accessibility: ${lighthouseData.accessibility}/100\n`;
+          userPrompt += `Best Practices: ${lighthouseData.bestPractices}/100\n`;
+          userPrompt += `SEO: ${lighthouseData.seo}/100\n`;
+          userPrompt += `--- END LIGHTHOUSE DATA ---\n`;
+        }
       } else if (websiteUrl) {
         userPrompt += `\nNote: The provided website (${websiteUrl}) could not be accessed. Base your analysis ONLY on the user-provided form data above. Do NOT invent or hallucinate website content.\n`;
       }

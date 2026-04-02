@@ -38,6 +38,7 @@ import { diagnosisHistory, userChecklists } from "../../drizzle/schema";
 import { eq, desc } from "drizzle-orm";
 import { fireEmailTrigger } from "../emailTrigger";
 import { getRedis } from "../_core/redis";
+import { scrapeWebsite, buildWebsiteContext } from "../researchEngine";
 
 /** Clamp benchmark pillar scores (module-level fn so callers pass a narrowed array, not `parsed.companies` twice). */
 function clampBenchmarkCompanyRows(
@@ -647,6 +648,12 @@ export const toolsRouter = router({
         inputs: ['companyName', 'industry', 'launchType', 'targetLaunchDate', 'hasGuidelines', 'hasOfferStructure', 'hasWebsite', 'hasContentPlan', 'marketingBudget', 'teamCapacity', 'biggestConcern', 'successMetric'],
         guideUrl: '/guides/offer-logic', guideTitle: 'Offer Logic 101',
         serviceUrl: '/services-info#takeoff', serviceTitle: 'Business Takeoff' },
+      { id: 'competitive_benchmark', name: 'Competitive Benchmark', nameAr: 'مقارنة المنافسين', icon: '📊', color: '#1B4FD8', cost: 40,
+        desc: 'Compare your brand against up to 3 competitors using real scraped website data.',
+        descAr: 'قارن براندك بحد ٣ منافسين باستخدام بيانات حقيقية من المواقع.',
+        inputs: ['companyName', 'companyUrl', 'competitors', 'industry', 'socialLinks'],
+        guideUrl: '/guides/brand-health', guideTitle: 'Brand Health Audit',
+        serviceUrl: '/services-info#audit', serviceTitle: 'Full Health Check' },
     ],
   })),
 
@@ -1041,31 +1048,62 @@ export const toolsRouter = router({
   competitiveBenchmark: protectedProcedure
     .input(z.object({
       companyName: z.string().min(1).max(255),
-      competitors: z.array(z.string().min(1).max(255)).min(1).max(3),
+      companyUrl: z.preprocess(
+        (v) => (v === '' || v === null || v === undefined ? undefined : String(v).trim()),
+        z.string().url().optional(),
+      ),
+      competitors: z.array(z.object({
+        name: z.string().min(1).max(255),
+        url: z.preprocess(
+          (v) => (v === '' || v === null || v === undefined ? undefined : String(v).trim()),
+          z.string().url().optional(),
+        ),
+      })).min(1).max(3),
       industry: z.string().min(1).max(100),
       socialLinks: z.string().max(1000).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      throw new Error('أداة تحليل المنافسين تحت التحديث حالياً. ستكون متاحة قريباً.');
-      // Validate: company != competitor
       const lowerCompany = input.companyName.toLowerCase().trim();
       for (const comp of input.competitors) {
-        if (comp.toLowerCase().trim() === lowerCompany) {
+        if (comp.name.toLowerCase().trim() === lowerCompany) {
           throw new Error('متقدرش تقارن الشركة بنفسها — دخل منافس مختلف.');
         }
       }
 
-      // Deduct 40 credits
       const deduction = await deductCredits(ctx.user!.id, 'competitive_benchmark');
       if (!deduction.success) {
         throw new Error(deduction.error || 'مفيش كريدت كافي. محتاج ٤٠ كريدت.');
       }
 
-      const allCompanies = [input.companyName, ...input.competitors];
-      const benchmarkPrompt = `You are WZZRD AI Competitive Benchmark Engine. Analyze and compare these ${allCompanies.length} brands in the "${input.industry}" industry:
+      const scrapeBlock = async (label: string, name: string, url: string | undefined): Promise<string> => {
+        if (!url?.trim()) return '';
+        try {
+          const scraped = await scrapeWebsite(url.trim());
+          if (scraped && scraped.quality !== 'failed') {
+            return `\n--- ${label}: ${name} WEBSITE DATA ---\n${buildWebsiteContext(scraped, 1500)}`;
+          }
+        } catch (err) {
+          logger.warn({ err, url, name }, '[Benchmark] Scrape failed for company');
+        }
+        return '';
+      };
 
-${allCompanies.map((c, i) => `${i + 1}. ${c}`).join('\n')}
+      const scrapeBlocks = await Promise.all([
+        scrapeBlock('MAIN', input.companyName, input.companyUrl),
+        ...input.competitors.map((c) => scrapeBlock('COMPETITOR', c.name, c.url)),
+      ]);
+      const scrapedContext = scrapeBlocks.join('');
+
+      const allCompanyNames = [input.companyName, ...input.competitors.map((c) => c.name)];
+
+      const benchmarkPrompt = `You are WZZRD AI Competitive Benchmark Engine. Analyze and compare these ${allCompanyNames.length} brands in the "${input.industry}" industry:
+${allCompanyNames.map((c, i) => `${i + 1}. ${c}`).join('\n')}
 ${input.socialLinks ? `\nSocial links: ${input.socialLinks}` : ''}
+
+Here is the scraped website data for these companies (if available):
+${scrapedContext.trim() ? scrapedContext : 'No website data was scraped. Rely only on verifiable general knowledge; do not invent specific on-site claims for any brand.'}
+
+When scraped data exists for a company, base your pillar scores and strengths/weaknesses primarily on that content. When it does not, say so briefly and score conservatively.
 
 For EACH company, score 0-100 on these 5 pillars:
 1. Positioning (clarity + differentiation)
@@ -1131,7 +1169,7 @@ Respond ONLY in this JSON format:
         } catch {
           // Fallback
           parsed = {
-            companies: allCompanies.map((c) => ({
+            companies: allCompanyNames.map((c) => ({
               name: c,
               totalScore: 50 + Math.floor(Math.random() * 30),
               pillars: { positioning: 50, messaging: 50, offer: 50, identity: 50, journey: 50 },
@@ -1146,7 +1184,6 @@ Respond ONLY in this JSON format:
 
         const companiesClamp = parsed.companies;
         if (companiesClamp) {
-          // Assertion: truthy check does not narrow for nested generic calls in TS 5.9 here; body is unreachable while benchmark throws early.
           parsed.companies = clampBenchmarkCompanyRows(companiesClamp as BenchmarkCompanyRow[]);
         }
 

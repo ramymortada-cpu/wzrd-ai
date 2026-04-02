@@ -878,3 +878,38 @@ export function buildWebsiteContext(scrapedData: ScrapedPage, maxTokens: number 
 
   return context;
 }
+
+/**
+ * Fetches Lighthouse scores from Google PageSpeed Insights API.
+ * No API key required for basic usage (rate limited).
+ */
+export async function fetchLighthouseScores(url: string) {
+  try {
+    const apiUrl =
+      `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}` +
+      '&strategy=desktop&category=performance&category=accessibility&category=best-practices&category=seo';
+
+    const response = await fetch(apiUrl, { signal: AbortSignal.timeout(30000) });
+    if (!response.ok) {
+      logger.warn({ url, status: response.status }, '[Lighthouse] API request failed');
+      return null;
+    }
+
+    const data = (await response.json()) as {
+      lighthouseResult?: { categories?: Record<string, { score?: number | null }> };
+    };
+    const categories = data.lighthouseResult?.categories;
+
+    if (!categories) return null;
+
+    return {
+      performance: Math.round((categories.performance?.score ?? 0) * 100),
+      accessibility: Math.round((categories.accessibility?.score ?? 0) * 100),
+      bestPractices: Math.round((categories['best-practices']?.score ?? 0) * 100),
+      seo: Math.round((categories.seo?.score ?? 0) * 100),
+    };
+  } catch (error) {
+    logger.error({ url, error }, '[Lighthouse] Fetch failed');
+    return null;
+  }
+}
