@@ -98,7 +98,7 @@ export interface ResearchReport {
 // 1. GOOGLE SEARCH (via Forge API proxy or direct fetch)
 // ═══════════════════════════════════════════════════════════════════════════
 
-export async function searchGoogle(query: string, numResults: number = 10): Promise<SearchResult[]> {
+export async function searchGoogle(query: string, _numResults: number = 10): Promise<SearchResult[]> {
   try {
     // TODO: Implement real Google Custom Search API here
     // For now, we return empty array to prevent hallucinations
@@ -305,7 +305,7 @@ function parseHTML(url: string, html: string): ScrapedPage {
 // 3. ACADEMIC SEARCH
 // ═══════════════════════════════════════════════════════════════════════════
 
-export async function searchAcademic(query: string, numResults: number = 5): Promise<AcademicResult[]> {
+export async function searchAcademic(query: string, _numResults: number = 5): Promise<AcademicResult[]> {
   try {
     // TODO: Implement real Academic Search API (e.g., Semantic Scholar, Crossref)
     // For now, we return empty array to prevent hallucinations
