@@ -23,8 +23,20 @@ RUN pnpm run build
 # Stage 3: Production
 FROM node:20-alpine AS runner
 WORKDIR /app
-
 ENV NODE_ENV=production
+
+# Install Chromium for Puppeteer
+RUN apk add --no-cache \
+  chromium \
+  nss \
+  freetype \
+  harfbuzz \
+  ca-certificates \
+  ttf-freefont
+
+# Tell Puppeteer to skip downloading Chromium (we installed it via apk)
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Copy only what's needed (landing lives in dist/public/landing via postbuild)
 COPY --from=builder /app/dist ./dist

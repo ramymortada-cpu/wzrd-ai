@@ -16,9 +16,16 @@
  * Cost: $0 — uses free APIs and built-in scraping
  */
 
+import { Semaphore } from 'async-mutex';
+import puppeteer from 'puppeteer';
+
 import { resilientLLM } from './_core/llmRouter';
 import { logger } from './_core/logger';
 import { validateScrapingUrl } from './_core/urlSanitizer';
+
+// Limit concurrent Puppeteer instances to prevent OOM crashes
+const MAX_BROWSERS = 2;
+const browserSemaphore = new Semaphore(MAX_BROWSERS);
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -184,6 +191,61 @@ export async function scrapeWebsite(url: string): Promise<ScrapedPage | null> {
       if (attempt === 0) continue; // Retry once on network errors
       break;
     }
+  }
+
+  // Layer 1.5: Puppeteer fallback for SPAs (if fetch failed or returned minimal content)
+  try {
+    logger.debug({ url }, 'Attempting Puppeteer fallback for SPA rendering');
+
+    const [, release] = await browserSemaphore.acquire();
+
+    try {
+      const browser = await puppeteer.launch({
+        headless: true,
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+          '--single-process',
+        ],
+      });
+
+      try {
+        const page = await browser.newPage();
+
+        await page.setRequestInterception(true);
+        page.on('request', (req) => {
+          const type = req.resourceType();
+          if (['image', 'font', 'media', 'stylesheet'].includes(type)) {
+            void req.abort();
+          } else {
+            void req.continue();
+          }
+        });
+
+        await page.setUserAgent(userAgents[0]);
+
+        await page.goto(url, { waitUntil: 'networkidle2', timeout: 15000 });
+
+        const html = await page.content();
+
+        if (html.length > 500) {
+          logger.info({ url }, 'Scrape succeeded via Puppeteer fallback');
+          const parsed = parseHTML(url, html);
+          parsed.quality = parsed.content.length > 500 ? 'full' : 'partial';
+          return parsed;
+        }
+      } finally {
+        await browser.close();
+      }
+    } finally {
+      release();
+    }
+  } catch (err) {
+    logger.debug({ url, err: err instanceof Error ? err.message : String(err) }, 'Puppeteer fallback failed');
+    // Continue to Layer 2 (Google Cache)
   }
 
   // Layer 2: Try Google Cache
@@ -764,6 +826,55 @@ export function formatResearchForContext(report: ResearchReport): string {
   }
 
   context += `*Research based on ${report.totalSources} sources across ${report.searchQueries.length} search queries.*\n`;
+
+  return context;
+}
+
+/**
+ * Intelligently builds a context string from scraped website data,
+ * prioritizing metadata and headings, then filling the remaining
+ * token budget with body content.
+ *
+ * @param scrapedData The parsed website data
+ * @param maxTokens The maximum number of tokens allowed (approx 4 chars/token)
+ * @returns A formatted string ready for the LLM prompt
+ */
+export function buildWebsiteContext(scrapedData: ScrapedPage, maxTokens: number = 2000): string {
+  if (scrapedData.quality === 'failed') {
+    return `[Website content unavailable — scraping failed]`;
+  }
+
+  // 1 token ≈ 4 characters (conservative estimate for English/Arabic mix)
+  const maxChars = maxTokens * 4;
+
+  let context = `--- SCRAPED WEBSITE DATA (quality: ${scrapedData.quality}) ---\n`;
+  context += `URL: ${scrapedData.url}\n`;
+  context += `Title: ${scrapedData.title}\n`;
+  context += `Description: ${scrapedData.description}\n\n`;
+
+  // Always include headings (they provide structural context)
+  if (scrapedData.headings && scrapedData.headings.length > 0) {
+    context += `## Site Structure (Headings):\n`;
+    context += scrapedData.headings.slice(0, 15).map((h) => `- ${h}`).join('\n') + '\n\n';
+  }
+
+  // Calculate remaining character budget
+  const currentLength = context.length;
+  const remainingChars = Math.max(0, maxChars - currentLength - 100);
+
+  // Add body content up to the remaining budget
+  if (scrapedData.content && remainingChars > 0) {
+    context += `## Main Content:\n`;
+    const cleanContent = scrapedData.content.replace(/\s+/g, ' ').trim();
+
+    if (cleanContent.length > remainingChars) {
+      context += cleanContent.substring(0, remainingChars) + '... [Content truncated to fit context window]';
+    } else {
+      context += cleanContent;
+    }
+  }
+
+  context += `\n--- END WEBSITE DATA ---\n`;
 
   return context;
 }
