@@ -17,7 +17,7 @@ import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { logger } from "../_core/logger";
 import { invokeClaude } from "../_core/llmProviders";
-import { scrapeWebsite } from "../researchEngine";
+import { scrapeWebsite, buildWebsiteContext } from "../researchEngine";
 import { getDb } from "../db/index";
 import { users, creditTransactions } from "../../drizzle/schema";
 import { eq, sql } from "drizzle-orm";
@@ -225,12 +225,8 @@ export const premiumRouter = router({
       }
 
       if (scrapedData && scrapedData.quality !== 'failed') {
-        userPrompt += `\n--- SCRAPED WEBSITE DATA (quality: ${scrapedData.quality}) ---\n`;
-        userPrompt += `Title: ${scrapedData.title}\n`;
-        userPrompt += `Description: ${scrapedData.description}\n`;
-        userPrompt += `Headings: ${scrapedData.headings.join(' | ')}\n`;
-        userPrompt += `Content: ${scrapedData.content.substring(0, 3000)}\n`;
-        userPrompt += `--- END WEBSITE DATA ---\n`;
+        // Allocate 2500 tokens (~10,000 chars) for website context
+        userPrompt += '\n' + buildWebsiteContext(scrapedData, 2500) + '\n';
       } else if (websiteUrl) {
         userPrompt += `\nNote: The provided website (${websiteUrl}) could not be accessed. Base your analysis ONLY on the user-provided form data above. Do NOT invent or hallucinate website content.\n`;
       }

@@ -15,6 +15,7 @@ import { csrfProtection, setCsrfToken } from "./csrf";
 import { mountMessagingWebhooks } from "../messagingIntegration";
 import { installProcessErrorHandlers, expressErrorHandler } from "./errorHandler";
 import { initSentry } from "./sentry";
+import { startDataRetentionScheduler } from "./dataRetention";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -237,6 +238,13 @@ async function startServer() {
         startNewsletterScheduler();
       } catch {
         /* newsletter optional */
+      }
+
+      // Start data retention cleanup scheduler
+      try {
+        startDataRetentionScheduler();
+      } catch (err) {
+        logger.warn({ err }, 'Data retention scheduler failed to start');
       }
 
       try {
