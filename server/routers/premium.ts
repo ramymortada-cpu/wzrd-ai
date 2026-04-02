@@ -17,6 +17,7 @@ import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { logger } from "../_core/logger";
 import { invokeClaude } from "../_core/llmProviders";
+import { scrapeWebsite } from "../researchEngine";
 import { getDb } from "../db/index";
 import { users, creditTransactions } from "../../drizzle/schema";
 import { eq, sql } from "drizzle-orm";
@@ -93,6 +94,9 @@ IMPORTANT RULES:
 - Write 2000-3000 words minimum
 - Be brutally honest — no fluff
 - Every finding must reference specific data from the user's input
+- IF WEBSITE DATA IS PROVIDED: Use it as primary evidence for Visual Identity, Customer Journey, and Messaging analysis. Quote specific elements (headlines, descriptions, navigation structure) from the scraped data.
+- IF WEBSITE DATA IS MISSING OR PARTIAL: Do NOT invent or hallucinate website content. Explicitly state in your analysis: "لم نتمكن من تحليل الموقع الإلكتروني — التقييم مبني على البيانات المقدمة فقط". Adjust your confidence level accordingly and note which pillars have limited evidence.
+- IF WEBSITE DATA QUALITY IS "partial": Acknowledge that only limited website data was available and note which aspects could not be fully assessed.
 - Use Egyptian Arabic (مصري) — professional but accessible
 - Format with clear headings and bullet points
 - Technical terms in English are fine, explanations in Arabic
@@ -162,6 +166,21 @@ export const premiumRouter = router({
       return mapPromoToClient(v);
     }),
 
+  /** Pre-flight check: can we scrape this URL? */
+  preFlightCheck: publicProcedure
+    .input(z.object({ url: z.string().min(1).max(2000) }))
+    .mutation(async ({ input }) => {
+      try {
+        const result = await scrapeWebsite(input.url);
+        if (!result || result.quality === 'failed') {
+          return { accessible: false, quality: 'failed' as const };
+        }
+        return { accessible: true, quality: result.quality };
+      } catch {
+        return { accessible: false, quality: 'failed' as const };
+      }
+    }),
+
   /** Get premium pricing (public — show on landing/tools) — synced to admin credit plans */
   pricing: publicProcedure.query(() => getPremiumPrices()),
 
@@ -192,6 +211,28 @@ export const premiumRouter = router({
         if (value && typeof value === 'string' && value.trim()) {
           userPrompt += `${key}: ${value}\n`;
         }
+      }
+
+      // 2.5 Scrape website if provided
+      let scrapedData = null;
+      const websiteUrl = typeof input.formData.website === 'string' ? input.formData.website.trim() : '';
+      if (websiteUrl) {
+        try {
+          scrapedData = await scrapeWebsite(websiteUrl);
+        } catch (err) {
+          logger.warn({ url: websiteUrl, err }, '[Premium] Website scrape failed');
+        }
+      }
+
+      if (scrapedData && scrapedData.quality !== 'failed') {
+        userPrompt += `\n--- SCRAPED WEBSITE DATA (quality: ${scrapedData.quality}) ---\n`;
+        userPrompt += `Title: ${scrapedData.title}\n`;
+        userPrompt += `Description: ${scrapedData.description}\n`;
+        userPrompt += `Headings: ${scrapedData.headings.join(' | ')}\n`;
+        userPrompt += `Content: ${scrapedData.content.substring(0, 3000)}\n`;
+        userPrompt += `--- END WEBSITE DATA ---\n`;
+      } else if (websiteUrl) {
+        userPrompt += `\nNote: The provided website (${websiteUrl}) could not be accessed. Base your analysis ONLY on the user-provided form data above. Do NOT invent or hallucinate website content.\n`;
       }
 
       // 3. Call Claude

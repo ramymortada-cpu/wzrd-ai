@@ -18,6 +18,7 @@
 
 import { resilientLLM } from './_core/llmRouter';
 import { logger } from './_core/logger';
+import { validateScrapingUrl } from './_core/urlSanitizer';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -38,6 +39,7 @@ export interface ScrapedPage {
   headings: string[];
   links: string[];
   scrapedAt: number;
+  quality: 'full' | 'partial' | 'failed';
 }
 
 export interface AcademicResult {
@@ -96,83 +98,14 @@ export interface ResearchReport {
 // 1. GOOGLE SEARCH (via Forge API proxy or direct fetch)
 // ═══════════════════════════════════════════════════════════════════════════
 
-/**
- * Search Google using the built-in Forge API data search endpoint.
- * Falls back to a lightweight HTML scraping approach if the API is unavailable.
- */
 export async function searchGoogle(query: string, numResults: number = 10): Promise<SearchResult[]> {
   try {
-    // Use LLM knowledge for search (no external search API dependency)
-    // For real web search, add Google Custom Search API key in env:
-    // GOOGLE_SEARCH_API_KEY + GOOGLE_SEARCH_CX
-    return await searchViaLLM(query, numResults);
+    // TODO: Implement real Google Custom Search API here
+    // For now, we return empty array to prevent hallucinations
+    logger.warn({ query }, '[ResearchEngine] Google search called but no API configured. Returning empty.');
+    return [];
   } catch (error) {
-    console.warn('[ResearchEngine] Google search failed, using LLM fallback:', error);
-    return await searchViaLLM(query, numResults);
-  }
-}
-
-/**
- * Fallback: Use the built-in LLM to generate research-quality information
- * when direct search APIs are unavailable. The LLM has training data
- * that includes market information, company data, and industry knowledge.
- */
-async function searchViaLLM(query: string, numResults: number): Promise<SearchResult[]> {
-  try {
-    const response = await resilientLLM({
-      messages: [
-        {
-          role: 'system',
-          content: `You are a research assistant. Given a search query, provide ${numResults} relevant, factual results as if from a web search. Each result should have a title, a realistic URL, and a factual snippet. Focus on real companies, real data, and real market information. Return ONLY valid JSON array.`
-        },
-        {
-          role: 'user',
-          content: `Search query: "${query}"\n\nReturn a JSON array of ${numResults} search results. Each object must have: title, url, snippet. Be factual and specific.`
-        }
-      ],
-      response_format: {
-        type: 'json_schema',
-        json_schema: {
-          name: 'search_results',
-          strict: true,
-          schema: {
-            type: 'object',
-            properties: {
-              results: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    title: { type: 'string' },
-                    url: { type: 'string' },
-                    snippet: { type: 'string' },
-                  },
-                  required: ['title', 'url', 'snippet'],
-                  additionalProperties: false,
-                },
-              },
-            },
-            required: ['results'],
-            additionalProperties: false,
-          },
-        },
-      },
-    }, { context: 'research' });
-
-    const content = typeof response.choices[0]?.message?.content === 'string'
-      ? response.choices[0].message.content : '{"results":[]}';
-    const parsed = JSON.parse(content) as { results?: unknown[] };
-    const rawList = Array.isArray(parsed.results) ? parsed.results : [];
-    return rawList.map((r: unknown): SearchResult => {
-      const o = typeof r === "object" && r !== null && !Array.isArray(r) ? (r as Record<string, unknown>) : {};
-      return {
-        title: String(o.title ?? ""),
-        url: String(o.url ?? ""),
-        snippet: String(o.snippet ?? ""),
-        source: "llm_research",
-      };
-    });
-  } catch {
+    logger.error({ query, error }, '[ResearchEngine] Google search failed');
     return [];
   }
 }
@@ -186,6 +119,14 @@ async function searchViaLLM(query: string, numResults: number): Promise<SearchRe
  * Uses a lightweight fetch + HTML parsing approach.
  */
 export async function scrapeWebsite(url: string): Promise<ScrapedPage | null> {
+  // SSRF Protection — block internal/private URLs
+  const urlCheck = validateScrapingUrl(url);
+  if (!urlCheck.valid) {
+    logger.warn({ url, error: urlCheck.error }, '[Scraper] Blocked suspicious URL (SSRF protection)');
+    return null;
+  }
+  url = urlCheck.url; // Use sanitized URL from here on
+
   // Layer 1: Try with rotating user agents + retry
   const userAgents = [
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
@@ -217,7 +158,9 @@ export async function scrapeWebsite(url: string): Promise<ScrapedPage | null> {
       if (response.ok) {
         const html = await response.text();
         if (html.length > 200) {
-          return parseHTML(url, html);
+          const parsed = parseHTML(url, html);
+          parsed.quality = parsed.content.length > 500 ? 'full' : 'partial';
+          return parsed;
         }
       }
 
@@ -261,7 +204,9 @@ export async function scrapeWebsite(url: string): Promise<ScrapedPage | null> {
       const html = await response.text();
       if (html.length > 200) {
         logger.info({ url }, 'Scrape succeeded via Google Cache fallback');
-        return parseHTML(url, html);
+        const parsed = parseHTML(url, html);
+        parsed.quality = parsed.content.length > 500 ? 'full' : 'partial';
+        return parsed;
       }
     }
   } catch {
@@ -282,6 +227,7 @@ export async function scrapeWebsite(url: string): Promise<ScrapedPage | null> {
       headings: [],
       links: [],
       scrapedAt: Date.now(),
+      quality: 'failed',
     };
   } catch {
     return null;
@@ -351,6 +297,7 @@ function parseHTML(url: string, html: string): ScrapedPage {
     headings: headings.slice(0, 20),
     links: links.slice(0, 20),
     scrapedAt: Date.now(),
+    quality: 'full' as const,
   };
 }
 
@@ -358,65 +305,14 @@ function parseHTML(url: string, html: string): ScrapedPage {
 // 3. ACADEMIC SEARCH
 // ═══════════════════════════════════════════════════════════════════════════
 
-/**
- * Search for academic papers and research studies.
- * Uses LLM knowledge as primary source (contains vast academic knowledge).
- */
 export async function searchAcademic(query: string, numResults: number = 5): Promise<AcademicResult[]> {
   try {
-    const response = await resilientLLM({
-      messages: [
-        {
-          role: 'system',
-          content: `You are an academic research assistant specializing in branding, marketing, business strategy, and consumer behavior. Given a research query, provide ${numResults} relevant academic papers, studies, or authoritative reports. Each must be a REAL, published work with accurate details. Focus on:
-- Brand positioning and strategy research
-- Consumer behavior studies relevant to the query
-- Market analysis and industry reports
-- Business model and competitive strategy papers
-Return ONLY valid JSON.`
-        },
-        {
-          role: 'user',
-          content: `Research query: "${query}"\n\nReturn a JSON array of ${numResults} academic results. Each object must have: title, authors, year, snippet (brief summary of findings), url (DOI or publisher URL), source (journal/publisher name).`
-        }
-      ],
-      response_format: {
-        type: 'json_schema',
-        json_schema: {
-          name: 'academic_results',
-          strict: true,
-          schema: {
-            type: 'object',
-            properties: {
-              results: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    title: { type: 'string' },
-                    authors: { type: 'string' },
-                    year: { type: 'string' },
-                    snippet: { type: 'string' },
-                    url: { type: 'string' },
-                    source: { type: 'string' },
-                  },
-                  required: ['title', 'authors', 'year', 'snippet', 'url', 'source'],
-                  additionalProperties: false,
-                },
-              },
-            },
-            required: ['results'],
-            additionalProperties: false,
-          },
-        },
-      },
-    }, { context: 'research' });
-
-    const content = typeof response.choices[0]?.message?.content === 'string'
-      ? response.choices[0].message.content : '{"results":[]}';
-    const parsed = JSON.parse(content);
-    return parsed.results || [];
-  } catch {
+    // TODO: Implement real Academic Search API (e.g., Semantic Scholar, Crossref)
+    // For now, we return empty array to prevent hallucinations
+    logger.warn({ query }, '[ResearchEngine] Academic search called but no API configured. Returning empty.');
+    return [];
+  } catch (error) {
+    logger.error({ query, error }, '[ResearchEngine] Academic search failed');
     return [];
   }
 }

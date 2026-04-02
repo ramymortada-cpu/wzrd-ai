@@ -1024,6 +1024,7 @@ export const toolsRouter = router({
       socialLinks: z.string().max(1000).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
+      throw new Error('أداة تحليل المنافسين تحت التحديث حالياً. ستكون متاحة قريباً.');
       // Validate: company != competitor
       const lowerCompany = input.companyName.toLowerCase().trim();
       for (const comp of input.competitors) {

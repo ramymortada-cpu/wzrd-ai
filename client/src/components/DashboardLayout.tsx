@@ -88,7 +88,7 @@ const NAV_FINANCE: SidebarNavItem[] = [
 
 const NAV_AI_TOOLS: SidebarNavItem[] = [
   { icon: Sparkles, labelKey: "nav.ai", label: "AI Copilot", labelAr: "AI Copilot", path: "/ai", requiresCommandCenter: true },
-  { icon: Heart, labelKey: "nav.brandTwin", label: "Brand Twin", labelAr: "Brand Twin", path: "/brand-twin", requiresCommandCenter: true },
+  { icon: Heart, labelKey: "nav.brandTwin", label: "Brand Health Score", labelAr: "مؤشر صحة البراند", path: "/brand-twin", requiresCommandCenter: true },
   { icon: Brain, labelKey: "nav.research", label: "Research", labelAr: "Research", path: "/research", requiresCommandCenter: true },
   { icon: BookOpen, labelKey: "nav.playbooks", label: "Playbooks", labelAr: "Playbooks", path: "/playbooks" },
 ];

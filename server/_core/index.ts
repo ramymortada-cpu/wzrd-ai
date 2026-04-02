@@ -14,6 +14,7 @@ import { rateLimiters } from "./rateLimit";
 import { csrfProtection, setCsrfToken } from "./csrf";
 import { mountMessagingWebhooks } from "../messagingIntegration";
 import { installProcessErrorHandlers, expressErrorHandler } from "./errorHandler";
+import { initSentry } from "./sentry";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -35,7 +36,10 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 }
 
 async function startServer() {
-  // Install global error handlers FIRST
+  // Initialize Sentry FIRST
+  initSentry();
+
+  // Install global error handlers
   installProcessErrorHandlers();
 
   const app = express();
