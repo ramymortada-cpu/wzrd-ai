@@ -16,6 +16,7 @@ import type { Request, Response, NextFunction } from "express";
 
 import { TRPCError } from '@trpc/server';
 import { logger } from './logger';
+import { Sentry } from './sentry';
 
 // ============ tRPC ERROR FORMATTER ============
 
@@ -68,6 +69,7 @@ export function formatTRPCError(error: TRPCError, path?: string) {
 export function installProcessErrorHandlers() {
   // Uncaught exceptions — something really broke
   process.on('uncaughtException', (err: Error) => {
+    Sentry.captureException(err);
     logger.fatal({
       err: err.message,
       stack: err.stack,
@@ -80,6 +82,7 @@ export function installProcessErrorHandlers() {
 
   // Unhandled promise rejections — async error without catch
   process.on('unhandledRejection', (reason: unknown) => {
+    Sentry.captureException(reason);
     const message = reason instanceof Error ? reason.message : String(reason);
     const stack = reason instanceof Error ? reason.stack : undefined;
 
@@ -118,6 +121,7 @@ export function installProcessErrorHandlers() {
  * Catches any errors that slip through tRPC.
  */
 export function expressErrorHandler(err: Error, req: Request, res: Response, next: NextFunction) {
+  Sentry.captureException(err);
   logger.error({
     err: err.message,
     stack: err.stack,

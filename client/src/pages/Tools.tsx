@@ -37,7 +37,6 @@ const FALLBACK_TOOLS: ToolInfo[] = [
   { id: 'presence_audit', name: 'Presence Audit', nameAr: 'فحص الحضور', desc: 'Cross-channel digital presence check — website, social, search.', descAr: 'فحص الحضور الرقمي عبر القنوات — موقع، سوشيال، بحث.', icon: '🌐', color: '#DC2626', cost: 250, route: '/tools/presence-audit' },
   { id: 'identity_snapshot', name: 'Identity Snapshot', nameAr: 'لقطة الهوية', desc: 'Does your brand personality match your target audience?', descAr: 'شخصية البراند بتاعتك بتتوافق مع جمهورك المستهدف؟', icon: '🪞', color: '#7C3AED', cost: 200, route: '/tools/identity-snapshot' },
   { id: 'launch_readiness', name: 'Launch Readiness', nameAr: 'جاهزية الإطلاق', desc: 'How ready are you to go to market? Get a readiness score.', descAr: 'أد إيه أنت جاهز تنزل السوق؟ احصل على نتيجة الجاهزية.', icon: '🚀', color: '#D97706', cost: 300, route: '/tools/launch-readiness', tag: 'New', tagAr: 'جديد' },
-  { id: 'competitive_benchmark', name: 'Competitive Benchmark', nameAr: 'مقارنة بالمنافسين', desc: 'Compare your brand against competitors and find your edge.', descAr: 'قارن البراند بتاعك بالمنافسين وابحث عن ميزتك.', icon: '📊', color: '#7C3AED', cost: 400, route: '/tools/benchmark', tag: 'Advanced', tagAr: 'متقدم' },
 ];
 
 export default function Tools() {
@@ -66,12 +65,14 @@ export default function Tools() {
         const meta = d.result?.data?.json?.tools ?? d.result?.data?.tools;
         if (meta?.length) {
           setTools(
-            meta.map((t: ToolInfo & { id: string }) => ({
-              ...t,
-              // Multiply API cost by 10 to match new display values
-              cost: (Number(t.cost) || 0) * 10,
-              route: ROUTE_MAP[t.id] || `/tools/${t.id.replace(/_/g, '-')}`,
-            }))
+            meta
+              .filter((t: { id: string }) => t.id !== 'competitive_benchmark')
+              .map((t: ToolInfo & { id: string }) => ({
+                ...t,
+                // Multiply API cost by 10 to match new display values
+                cost: (Number(t.cost) || 0) * 10,
+                route: ROUTE_MAP[t.id] || `/tools/${t.id.replace(/_/g, '-')}`,
+              }))
           );
         }
       })

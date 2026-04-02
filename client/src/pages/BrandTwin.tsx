@@ -188,7 +188,7 @@ export default function BrandTwin() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Brain className="w-7 h-7 text-primary" />
-            {isRtl ? "التوأم الرقمي للعلامة التجارية" : "Brand Digital Twin"}
+            {isRtl ? "مؤشر صحة البراند" : "Brand Health Score"}
           </h1>
           <p className="text-muted-foreground mt-1">
             {isRtl ? "مراقبة وتقييم صحة العلامة التجارية عبر 7 أبعاد" : "Monitor and evaluate brand health across 7 dimensions"}
