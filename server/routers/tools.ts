@@ -39,6 +39,7 @@ import { eq, desc } from "drizzle-orm";
 import { fireEmailTrigger } from "../emailTrigger";
 import { getRedis } from "../_core/redis";
 import { scrapeWebsite, buildWebsiteContext } from "../researchEngine";
+import { getSemanticKnowledge } from "../vectorSearch";
 
 /** Clamp benchmark pillar scores (module-level fn so callers pass a narrowed array, not `parsed.companies` twice). */
 function clampBenchmarkCompanyRows(
@@ -349,10 +350,21 @@ async function callDiagnosisModel(
 ): Promise<string> {
   const adminPrompt = getToolSystemPrompt(toolId);
   const systemPrompt = adminPrompt || defaultSystemPrompt;
+
+  let augmentedUser = userPrompt;
+  try {
+    const rag = await getSemanticKnowledge(userPrompt.slice(0, 3000), { tokenBudget: 2500 });
+    if (rag) {
+      augmentedUser = userPrompt + "\n\n--- RELEVANT KNOWLEDGE BASE (RAG) ---\n" + rag;
+    }
+  } catch (err) {
+    logger.warn({ err, toolId }, "[Tools] Semantic knowledge (RAG) failed");
+  }
+
   const response = await resilientLLM({
     messages: [
       { role: 'system', content: systemPrompt + '\n\nRespond ONLY with valid JSON. No markdown, no backticks.' },
-      { role: 'user', content: userPrompt },
+      { role: 'user', content: augmentedUser },
     ],
   }, { context: 'diagnosis' });
   return response.choices[0]?.message?.content as string;
