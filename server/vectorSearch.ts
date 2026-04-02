@@ -417,7 +417,7 @@ export async function indexKnowledgeBase(): Promise<{ indexed: number; duration:
     const entries = await getKnowledgeEntries();
     const newStore: EmbeddingEntry[] = [];
 
-    async function indexWithOpenAI(): Promise<boolean> {
+    const indexWithOpenAI = async (): Promise<boolean> => {
       for (const entry of entries) {
         const textToEmbed = buildEmbedText(entry);
         let vector = parseStoredOpenAIEmbedding(entry.embedding);
@@ -450,9 +450,9 @@ export async function indexKnowledgeBase(): Promise<{ indexed: number; duration:
         });
       }
       return true;
-    }
+    };
 
-    function indexWithSimple(): void {
+    const indexWithSimple = (): void => {
       newStore.length = 0;
       for (const entry of entries) {
         const textToEmbed = buildEmbedText(entry);
@@ -469,8 +469,7 @@ export async function indexKnowledgeBase(): Promise<{ indexed: number; duration:
           contentPreview: entry.content?.substring(0, 200) || '',
         });
       }
-    }
-
+    };
     const wantOpenAI = Boolean(getOpenAIClient());
     let usedOpenAI = false;
     if (wantOpenAI && entries.length > 0) {
