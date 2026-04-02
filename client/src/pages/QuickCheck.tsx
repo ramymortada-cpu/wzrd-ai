@@ -1,4 +1,5 @@
 import { useState } from "react";
+import posthog from "posthog-js";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -65,7 +66,10 @@ export default function QuickCheckPage() {
     .slice(0, 80);
 
   const submitMutation = trpc.leads.submitQuickCheck.useMutation({
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
+      if (import.meta.env.VITE_POSTHOG_KEY) {
+        posthog.capture("quick_check_submitted", { industry: variables.industry });
+      }
       setResult(data);
       setStep("results");
     },

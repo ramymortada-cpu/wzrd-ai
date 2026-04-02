@@ -408,7 +408,15 @@ export const knowledgeEntries = mysqlTable("knowledge_entries", {
   clientId: int("clientId"),
   projectId: int("projectId"),
   // Source tracking
-  source: mysqlEnum("source", ["manual", "research_import", "ai_generated", "conversation_extract"]).default("manual").notNull(),
+  source: mysqlEnum("source", [
+    "manual",
+    "research_import",
+    "ai_generated",
+    "conversation_extract",
+    "migration_static",
+  ])
+    .default("manual")
+    .notNull(),
   sourceId: int("sourceId"),
   // Tags as JSON array
   tags: json("tags"),

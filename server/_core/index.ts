@@ -189,6 +189,14 @@ async function startServer() {
         logger.warn({ err }, 'Site config DB load failed — using defaults');
       }
 
+      // Migrate static knowledge to DB (idempotent — safe to re-run)
+      try {
+        const { migrateStaticKnowledge } = await import('../knowledgeMigration');
+        await migrateStaticKnowledge();
+      } catch (err) {
+        logger.warn({ err }, '[Startup] Knowledge migration failed — non-critical, continuing');
+      }
+
       try {
         // Auto-index knowledge base for semantic search
         const { indexKnowledgeBase } = await import('../vectorSearch');

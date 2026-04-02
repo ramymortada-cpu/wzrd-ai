@@ -1,4 +1,5 @@
 import React, { useState, useId, useEffect } from 'react';
+import posthog from 'posthog-js';
 import { useLocation } from 'wouter';
 import { waMeQualifiedLeadHref } from '@/lib/waContact';
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -540,6 +541,9 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
       } else {
         const toolResult = data.result?.data?.json ?? data.result?.data;
         if (toolResult?.score !== undefined) {
+          if (import.meta.env.VITE_POSTHOG_KEY) {
+            posthog.capture("premium_report_purchased", { toolId: config.id, source: "unlock_credits" });
+          }
           setResult(toolResult as ToolResult);
           setFreePreview(null);
         } else {

@@ -1,3 +1,4 @@
+import posthog from "posthog-js";
 import { trpc } from "@/lib/trpc";
 import { UNAUTHED_ERR_MSG } from '@shared/const';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -8,6 +9,15 @@ import App from "./App";
 import { getLoginUrl } from "./const";
 import { WorkspaceProvider } from "./contexts/WorkspaceContext";
 import "./index.css";
+
+if (import.meta.env.VITE_POSTHOG_KEY) {
+  posthog.init(import.meta.env.VITE_POSTHOG_KEY, {
+    api_host: import.meta.env.VITE_POSTHOG_HOST || "https://us.i.posthog.com",
+    loaded: (ph) => {
+      if (import.meta.env.DEV) ph.debug();
+    },
+  });
+}
 
 const queryClient = new QueryClient();
 
