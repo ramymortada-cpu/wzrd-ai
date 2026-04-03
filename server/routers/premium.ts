@@ -203,6 +203,18 @@ export const premiumRouter = router({
         return { success: false, error: deduction.error };
       }
 
+      const bestEffortPremiumRefund = async () => {
+        try {
+          const { addCredits } = await import('../db');
+          await addCredits(
+            userId,
+            premiumCredits,
+            'refund',
+            `Refund — premium report failed (${input.toolId})`,
+          );
+        } catch { /* best effort refund */ }
+      };
+
       // 2. Build user prompt from form data
       let userPrompt = `أجب بالعربي المصري.\n\n`;
       userPrompt += `Tool: ${input.toolId}\n`;
@@ -295,7 +307,8 @@ export const premiumRouter = router({
             report = JSON.parse(match[0]) as Record<string, unknown>;
           } else {
             logger.error({ textLength: text.length }, '[Premium] Failed to parse Claude response');
-            return { success: false, error: 'فشل في إنشاء التقرير. يرجى المحاولة مرة أخرى.' };
+            await bestEffortPremiumRefund();
+            return { success: false, error: 'فشل في إنشاء التقرير. يرجى المحاولة مرة أخرى. الكريدت اترجعت.' };
           }
         }
 
@@ -319,9 +332,10 @@ export const premiumRouter = router({
         };
 
       } catch (err: unknown) {
+        await bestEffortPremiumRefund();
         const msg = err instanceof Error ? err.message : String(err);
         logger.error({ err: msg, userId }, '[Premium] Claude call failed');
-        return { success: false, error: 'خطأ في الـ AI. تأكد إن الـ Claude API key مفعّل.' };
+        return { success: false, error: 'خطأ في الـ AI. الكريدت اترجعت — حاول تاني لاحقاً.' };
       }
     }),
 
