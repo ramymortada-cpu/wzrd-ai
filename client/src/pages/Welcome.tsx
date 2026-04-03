@@ -66,6 +66,12 @@ const TOOL_DEFS = [
     arStat: "٧٢٪ من الإطلاقات الجديدة تفشل في الشهر الأول بسبب أخطاء يمكن تفاديها", enStat: "72% of new launches fail in the first month due to avoidable mistakes",
   },
   {
+    id: "design-health", icon: "🎨", cost: 300, popular: false, route: "/tools/design-health",
+    tagK: "pub.tool.brand.tag", nameK: "pub.tool.design.name", descK: "pub.tool.design.desc", ctaK: "pub.tool.design.cta",
+    arProblem: "تصميم موقعك بيطرد الزوار قبل ما يقرأوا كلمة", enProblem: "Your website design is driving visitors away before they read a word",
+    arStat: "٧٥٪ من المستخدمين يحكمون على مصداقيتك من تصميم موقعك فقط", enStat: "75% of users judge your credibility based on website design alone",
+  },
+  {
     id: "quick", icon: "⚡", cost: 200, popular: false, route: "/tools/quick",
     tagK: "pub.tool.brand.tag", nameK: "pub.tool.quick.name", descK: "pub.tool.quick.desc", ctaK: "pub.tool.quick.cta",
     arProblem: "مش عارف من فين تبدأ؟ ابدأ هنا", enProblem: "Not sure where to start? Start here",
@@ -137,7 +143,7 @@ const STAT_KEYS = [
   { arVal:"+٥٠٠", enVal:"500+", labelK:"pub.stats.diag",   subK:"pub.stats.diagSub" },
   { arVal:"٩٣٪",  enVal:"93%",  labelK:"pub.stats.saving", subK:"pub.stats.savingSub" },
   { arVal:"٣٠ث",  enVal:"30s",  labelK:"pub.stats.time",   subK:"pub.stats.timeSub" },
-  { arVal:"٨",    enVal:"8",    labelK:"pub.stats.tools",  subK:"pub.stats.toolsSub" },
+  { arVal:"٩",    enVal:"9",    labelK:"pub.stats.tools",  subK:"pub.stats.toolsSub" },
 ];
 const COUNTRIES = [
   { flag:"🇪🇬", ar:"مصر",      en:"Egypt" },

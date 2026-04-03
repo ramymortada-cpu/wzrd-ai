@@ -484,6 +484,10 @@ const translations: Record<Locale, Record<string, string>> = {
     "pub.tool.launch.name": "Launch Readiness",
     "pub.tool.launch.desc": "How ready are you really to enter the market? Run this tool before any marketing spend.",
     "pub.tool.launch.cta": "Save thousands from wrong spending",
+    "pub.tool.design.tag": "Your website is leaking trust",
+    "pub.tool.design.name": "Design Health Check",
+    "pub.tool.design.desc": "AI vision scans your website and finds the design flaws that silently kill your credibility.",
+    "pub.tool.design.cta": "Find the design flaws killing your brand",
 
     // How it works
     "pub.how.badge": "How it works",
@@ -1092,6 +1096,10 @@ const translations: Record<Locale, Record<string, string>> = {
     "pub.tool.launch.name": "جاهزية الإطلاق",
     "pub.tool.launch.desc": "أد إيه أنت فعلاً جاهز تنزل السوق؟ شغّل الأداة دي قبل أي إنفاق على ماركتينج.",
     "pub.tool.launch.cta": "وفّر آلاف الجنيهات من الإنفاق الخاطئ",
+    "pub.tool.design.tag": "موقعك بيسرّب ثقة العملاء",
+    "pub.tool.design.name": "فحص صحة التصميم",
+    "pub.tool.design.desc": "الذكاء الاصطناعي بيفحص موقعك بصرياً ويكتشف عيوب التصميم اللي بتقتل مصداقيتك بدون ما تحس.",
+    "pub.tool.design.cta": "اكتشف عيوب التصميم اللي بتضر ببراندك",
 
     // How it works
     "pub.how.badge": "إزاي بيشتغل",
