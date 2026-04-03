@@ -8,3 +8,14 @@ export const WZRD_DIAGNOSIS_TOOL_COSTS: Record<string, number> = {
   launch_readiness: 30,
   design_health: 30,
 };
+
+/** Human-readable English names for diagnosis tools (emails, automation metadata) */
+export const WZRD_DIAGNOSIS_TOOL_NAMES: Record<string, string> = {
+  brand_diagnosis: 'Brand Diagnosis',
+  offer_check: 'Offer Logic Check',
+  message_check: 'Message Check',
+  presence_audit: 'Presence Audit',
+  identity_snapshot: 'Identity Snapshot',
+  launch_readiness: 'Launch Readiness',
+  design_health: 'Design Health Check',
+};
