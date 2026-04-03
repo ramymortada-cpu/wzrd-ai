@@ -4,6 +4,7 @@ import { useLocation } from 'wouter';
 import { waMeQualifiedLeadHref } from '@/lib/waContact';
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useI18n } from '@/lib/i18n';
+import { trpc } from '@/lib/trpc';
 import ReviewModal from '@/components/ReviewModal';
 import ShareReportPanel from '@/components/ShareReportPanel';
 
@@ -459,6 +460,53 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
   const [premiumReport, setPremiumReport] = useState<PremiumReportPayload | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const pdfMutation = trpc.reportPdf.generateHtml.useMutation();
+  const premiumPdfMutation = trpc.reportPdf.generatePremiumHtml.useMutation();
+
+  const handleDownloadPdf = async () => {
+    if (!result) return;
+    try {
+      const res = await pdfMutation.mutateAsync({
+        toolName: config.name,
+        toolNameAr: config.nameAr || config.name,
+        score: result.score,
+        label: result.label,
+        findings: result.findings,
+        actionItems: result.actionItems,
+        recommendation: result.recommendation,
+      });
+      if (res.html) {
+        const win = window.open('', '_blank');
+        if (win) {
+          win.document.write(res.html);
+          win.document.close();
+        }
+      }
+    } catch (err) {
+      console.error('PDF generation failed', err);
+    }
+  };
+
+  const handleDownloadPremiumPdf = async () => {
+    if (!premiumReport?.report) return;
+    try {
+      const res = await premiumPdfMutation.mutateAsync({
+        toolName: config.name,
+        toolNameAr: config.nameAr || config.name,
+        report: premiumReport.report as Record<string, unknown>,
+      });
+      if (res.html) {
+        const win = window.open('', '_blank');
+        if (win) {
+          win.document.write(res.html);
+          win.document.close();
+        }
+      }
+    } catch (err) {
+      console.error('Premium PDF generation failed', err);
+    }
+  };
+
   const updateField = (name: string, value: string | boolean) =>
     setFormData(prev => ({ ...prev, [name]: value }));
   const handleSubmit = async () => {
@@ -765,13 +813,25 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
               </div>
             )}
 
-            <button
-              type="button"
-              onClick={() => { setResult(null); setPremiumReport(null); setFormData({}); }}
-              className="w-full rounded-full border border-[#E5E7EB] py-3 text-sm font-medium text-[#6B7280] hover:border-[#1B4FD8] hover:text-[#1B4FD8] transition"
-            >
-              {isAr ? 'حلل تاني ببيانات مختلفة' : 'Run a new analysis'}
-            </button>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => void handleDownloadPremiumPdf()}
+                disabled={premiumPdfMutation.isPending}
+                className="flex-1 rounded-full bg-[#1B4FD8] py-3 text-sm font-bold text-white hover:bg-[#1440B8] disabled:opacity-50 transition"
+              >
+                {premiumPdfMutation.isPending
+                  ? (isAr ? 'جاري التجهيز...' : 'Preparing...')
+                  : (isAr ? '⬇ حمّل التقرير (PDF)' : '⬇ Download PDF')}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setResult(null); setPremiumReport(null); setFormData({}); }}
+                className="flex-1 rounded-full border border-[#E5E7EB] py-3 text-sm font-medium text-[#6B7280] hover:border-[#1B4FD8] hover:text-[#1B4FD8] transition"
+              >
+                {isAr ? 'حلل تاني ببيانات مختلفة' : 'Run a new analysis'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1071,10 +1131,13 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
           <div className="flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
-              onClick={() => navigate('/tools')}
-              className="flex-1 rounded-full border border-[#E5E7EB] py-3 text-sm text-[#6B7280] hover:border-[#1B4FD8] hover:text-[#1B4FD8] transition"
+              onClick={() => void handleDownloadPdf()}
+              disabled={pdfMutation.isPending}
+              className="flex-1 rounded-full bg-[#1B4FD8] py-3 text-sm font-bold text-white hover:bg-[#1440B8] disabled:opacity-50 transition"
             >
-              {isAr ? '→ رجوع للأدوات' : '← Back to Tools'}
+              {pdfMutation.isPending
+                ? (isAr ? 'جاري التجهيز...' : 'Preparing...')
+                : (isAr ? '⬇ حمّل النتيجة (PDF)' : '⬇ Download PDF')}
             </button>
             <button
               type="button"
