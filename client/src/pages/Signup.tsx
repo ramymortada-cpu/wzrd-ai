@@ -10,6 +10,7 @@ import posthog from 'posthog-js';
 import { toErrorString } from '@/lib/errorUtils';
 import { INDUSTRIES } from '@/lib/industries';
 import { useI18n } from '@/lib/i18n';
+import SEO from '@/components/SEO';
 
 const C = {
   bg:          "#FAFAF5",
@@ -110,6 +111,15 @@ export default function Signup() {
 
   return (
     <div style={{ minHeight: "100vh", background: C.bg, fontFamily: isAr ? FONT : "'Inter','Segoe UI',sans-serif", display: "flex", flexDirection: "column" }}>
+      <SEO
+        title="Sign Up — Free Brand Diagnosis"
+        titleAr="إنشاء حساب — تشخيص مجاني لبراندك"
+        description="Create your free WZZRD AI account and get 100 credits to diagnose your brand with AI."
+        descriptionAr="أنشئ حسابك المجاني في WZZRD AI واحصل على 100 كريدت لتشخيص براندك بالذكاء الاصطناعي."
+        path="/signup"
+        locale={locale}
+        noindex
+      />
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 

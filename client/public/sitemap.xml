@@ -4,7 +4,7 @@
 
   <url>
     <loc>https://www.wzzrdai.com/</loc>
-    <lastmod>2026-03-29</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="ar" href="https://www.wzzrdai.com/" />
@@ -13,77 +13,105 @@
 
   <url>
     <loc>https://www.wzzrdai.com/tools</loc>
-    <lastmod>2026-03-29</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
     <loc>https://www.wzzrdai.com/tools/brand-diagnosis</loc>
-    <lastmod>2026-03-29</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://www.wzzrdai.com/tools/offer-logic-check</loc>
-    <lastmod>2026-03-29</lastmod>
+    <loc>https://www.wzzrdai.com/tools/offer-check</loc>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://www.wzzrdai.com/tools/message-check</loc>
-    <lastmod>2026-03-29</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://www.wzzrdai.com/tools/digital-presence-check</loc>
-    <lastmod>2026-03-29</lastmod>
+    <loc>https://www.wzzrdai.com/tools/presence-audit</loc>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://www.wzzrdai.com/tools/identity-snapshot</loc>
-    <lastmod>2026-03-29</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://www.wzzrdai.com/tools/launch-readiness</loc>
-    <lastmod>2026-03-29</lastmod>
+    <lastmod>2026-04-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.wzzrdai.com/tools/design-health</loc>
+    <lastmod>2026-04-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.wzzrdai.com/tools/benchmark</loc>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://www.wzzrdai.com/pricing</loc>
-    <lastmod>2026-03-29</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://www.wzzrdai.com/blog</loc>
-    <lastmod>2026-03-29</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://www.wzzrdai.com/login</loc>
-    <lastmod>2026-03-29</lastmod>
+    <loc>https://www.wzzrdai.com/reports</loc>
+    <lastmod>2026-04-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://www.wzzrdai.com/privacy</loc>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>yearly</changefreq>
-    <priority>0.4</priority>
+    <priority>0.3</priority>
+  </url>
+
+  <url>
+    <loc>https://www.wzzrdai.com/terms</loc>
+    <lastmod>2026-04-04</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
   </url>
 
   <url>
     <loc>https://www.wzzrdai.com/signup</loc>
-    <lastmod>2026-03-29</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>

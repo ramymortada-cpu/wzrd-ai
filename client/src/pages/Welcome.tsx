@@ -8,6 +8,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import WzrdPublicHeader from "@/components/WzrdPublicHeader";
 import { useI18n } from "@/lib/i18n";
+import SEO from "@/components/SEO";
 
 const C = {
   bg:         "#FAFAF5",
@@ -609,6 +610,14 @@ export default function Welcome() {
 
   return (
     <div style={{ fontFamily:FONT, background:C.bg, minHeight:"100vh", direction: isAr ? "rtl" : "ltr" }}>
+      <SEO
+        title="AI Brand Diagnosis — Fix Your Brand in 30 Seconds"
+        titleAr="تشخيص علامتك التجارية بالذكاء الاصطناعي"
+        description="9 AI-powered diagnostic tools for Arab founders. Get an instant report on your brand problems and solutions in 30 seconds."
+        descriptionAr="9 أدوات تشخيص بالذكاء الاصطناعي للمؤسسين العرب. اعرف مشكلة براندك في 30 ثانية — تقرير فوري بالمشاكل والحلول."
+        path="/"
+        locale={locale}
+      />
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 

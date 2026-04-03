@@ -10,6 +10,7 @@ import posthog from 'posthog-js';
 import { toErrorString } from '@/lib/errorUtils';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { useI18n } from '@/lib/i18n';
+import SEO from '@/components/SEO';
 
 const C = {
   bg:          "#FAFAF5",
@@ -96,6 +97,15 @@ export default function Login() {
 
   return (
     <div style={{ minHeight: "100vh", background: C.bg, fontFamily: isAr ? FONT : "'Inter','Segoe UI',sans-serif", display: "flex", flexDirection: "column" }}>
+      <SEO
+        title="Log In"
+        titleAr="تسجيل الدخول"
+        description="Log in to WZZRD AI to access your brand diagnostics, reports, and AI copilot."
+        descriptionAr="سجّل دخولك للوصول لتشخيصات براندك وتقاريرك والمستشار الذكي."
+        path="/login"
+        locale={locale}
+        noindex
+      />
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 

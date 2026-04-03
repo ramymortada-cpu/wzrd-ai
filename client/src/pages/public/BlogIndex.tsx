@@ -1,5 +1,6 @@
 import { trpc } from "@/lib/trpc";
 import { useI18n } from "@/lib/i18n";
+import SEO from "@/components/SEO";
 import WzrdPublicHeader from "@/components/WzrdPublicHeader";
 
 export default function BlogIndexPage() {
@@ -8,6 +9,14 @@ export default function BlogIndexPage() {
 
   return (
     <div className="wzrd-public-page min-h-screen">
+      <SEO
+        title="Blog — Brand Building Insights"
+        titleAr="مدوّنة WZZRD AI — مقالات بناء البراند"
+        description="Expert articles on brand building, marketing strategy, and AI-powered business growth for Arab founders."
+        descriptionAr="مقالات متخصصة في بناء البراند واستراتيجيات التسويق والنمو بالذكاء الاصطناعي للمؤسسين العرب."
+        path="/blog"
+        locale={locale}
+      />
       <WzrdPublicHeader credits={null} />
       <div className="wzrd-public-pt mx-auto max-w-5xl px-6 pb-20">
         <div className="mb-10 text-center">

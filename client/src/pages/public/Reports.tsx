@@ -14,6 +14,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'wouter';
 import WzrdPublicHeader from '@/components/WzrdPublicHeader';
 import { useI18n } from '@/lib/i18n';
+import SEO from '@/components/SEO';
 import { useAuth } from '@/_core/hooks/useAuth';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -285,6 +286,14 @@ export default function Reports() {
   // ─── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="wzrd-public-page min-h-screen" dir={isAr ? 'rtl' : 'ltr'}>
+      <SEO
+        title="Reports & Resources Library"
+        titleAr="مكتبة التقارير والموارد"
+        description="Free and premium reports, guides, and templates for brand building and marketing in the Arab market."
+        descriptionAr="تقارير وأدلة وقوالب مجانية ومدفوعة لبناء البراند والتسويق في السوق العربي."
+        path="/reports"
+        locale={locale}
+      />
       <WzrdPublicHeader credits={credits} />
 
       {/* ── Hero ── */}
