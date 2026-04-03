@@ -27,6 +27,12 @@ import { validateScrapingUrl } from './_core/urlSanitizer';
 const MAX_BROWSERS = 2;
 const browserSemaphore = new Semaphore(MAX_BROWSERS);
 
+const PUPPETEER_USER_AGENTS = [
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.3 Safari/605.1.15',
+  'Mozilla/5.0 (compatible; WzrdAI/1.0; +https://wzzrdai.com)',
+];
+
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES
 // ═══════════════════════════════════════════════════════════════════════════
@@ -292,6 +298,53 @@ export async function scrapeWebsite(url: string): Promise<ScrapedPage | null> {
       quality: 'failed',
     };
   } catch {
+    return null;
+  }
+}
+
+/**
+ * Full-page viewport screenshot for vision models — does NOT block images/fonts (unlike scrapeWebsite Puppeteer fallback).
+ */
+export async function captureScreenshot(rawUrl: string): Promise<string | null> {
+  const urlCheck = validateScrapingUrl(rawUrl.trim());
+  if (!urlCheck.valid) {
+    logger.warn({ url: rawUrl, error: urlCheck.error }, '[Screenshot] URL validation failed');
+    return null;
+  }
+  const url = urlCheck.url;
+
+  try {
+    logger.debug({ url }, 'Attempting to capture screenshot via Puppeteer');
+    const [, release] = await browserSemaphore.acquire();
+    try {
+      const browser = await puppeteer.launch({
+        headless: true,
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+          '--single-process',
+        ],
+      });
+      try {
+        const page = await browser.newPage();
+        await page.setViewport({ width: 1920, height: 1080 });
+        await page.setUserAgent(PUPPETEER_USER_AGENTS[0]);
+        await page.goto(url, { waitUntil: 'networkidle2', timeout: 20_000 });
+        const shot = await page.screenshot({ type: 'png', encoding: 'base64', fullPage: false });
+        const b64 = typeof shot === 'string' ? shot : Buffer.from(shot).toString('base64');
+        logger.info({ url }, 'Screenshot captured successfully');
+        return b64;
+      } finally {
+        await browser.close();
+      }
+    } finally {
+      release();
+    }
+  } catch (err) {
+    logger.error({ url, err: err instanceof Error ? err.message : String(err) }, 'Screenshot capture failed');
     return null;
   }
 }

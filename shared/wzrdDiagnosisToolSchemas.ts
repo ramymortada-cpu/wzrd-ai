@@ -89,9 +89,16 @@ export const launchReadinessInputSchema = z.object({
   successMetric: opt(1000),
 });
 
+export const designHealthInputSchema = z.object({
+  companyName: req(255),
+  industry: req(100),
+  website: req(500),
+});
+
 export type BrandDiagnosisInput = z.infer<typeof brandDiagnosisInputSchema>;
 export type OfferCheckInput = z.infer<typeof offerCheckInputSchema>;
 export type MessageCheckInput = z.infer<typeof messageCheckInputSchema>;
 export type PresenceAuditInput = z.infer<typeof presenceAuditInputSchema>;
 export type IdentitySnapshotInput = z.infer<typeof identitySnapshotInputSchema>;
 export type LaunchReadinessInput = z.infer<typeof launchReadinessInputSchema>;
+export type DesignHealthInput = z.infer<typeof designHealthInputSchema>;
