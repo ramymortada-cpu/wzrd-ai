@@ -13,6 +13,7 @@ import { eq, desc, sql, and } from "drizzle-orm";
 import { users, creditTransactions, type CreditTransaction } from "../../drizzle/schema";
 import { getDb } from "./index";
 import { WZRD_DIAGNOSIS_TOOL_COSTS } from "@shared/wzrdDiagnosisToolCosts";
+import { fireEmailTrigger } from "../emailTrigger";
 
 // ════════════════════════════════════════════
 // TOOL CREDIT COSTS
@@ -191,6 +192,11 @@ export async function deductCredits(
       reason: `Used ${toolName} (-${cost} credits)`,
       metadata: metadata ? JSON.stringify(metadata) : null,
     });
+
+    // Cost of cheapest diagnosis tool — warn when balance can’t cover another run
+    if (newBalance < 20) {
+      fireEmailTrigger('credits_low', userId, { credits: newBalance }).catch(() => {});
+    }
 
     return { success: true, newBalance, cost };
   } catch {
