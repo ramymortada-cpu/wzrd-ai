@@ -4,8 +4,9 @@
  * Templates:
  * 1. Welcome — after signup (100 credits activated)
  * 2. Tool Result — after running any AI tool
- * 3. PDF Guide — after downloading a guide
- * 4. Weekly Tip — newsletter content
+ * 3. Premium Report — after purchasing a full premium report
+ * 4. PDF Guide — after downloading a guide
+ * 5. Weekly Tip — newsletter content
  */
 
 import { logger } from './_core/logger';
@@ -253,6 +254,44 @@ export async function sendToolResultEmail(
     to,
     subject: `Your ${toolName} Score: ${score}/100 — ${label}`,
     html: wrapEmail(body, `${toolName}: ${score}/100. ${recommendation}`),
+  });
+}
+
+/**
+ * Premium Report email — sent after purchasing a full report
+ */
+export async function sendPremiumReportEmail(
+  to: string,
+  name: string,
+  toolName: string,
+  score: number
+): Promise<boolean> {
+  const appUrl = process.env.APP_URL || 'http://localhost:3000';
+  const scoreColor = score >= 70 ? '#44ddc9' : score >= 40 ? '#c8a24e' : '#ff5f57';
+
+  const body = `
+<h1 style="${STYLE.h1}">Your Premium Report is Ready ✦</h1>
+<p style="${STYLE.p}">Hi ${name || 'there'},</p>
+<p style="${STYLE.p}">Your full Premium Report for <strong style="${STYLE.accent}">${toolName}</strong> has been generated successfully.</p>
+<div style="${STYLE.score}color:${scoreColor};">${score}<span style="font-size:18px;color:#64647a;">/100</span></div>
+<p style="${STYLE.p}">This comprehensive report includes:</p>
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+  <tr><td style="${STYLE.finding}"><strong style="${STYLE.findingTitle}">📊 Detailed Pillar Analysis</strong> <span style="${STYLE.findingDetail}">— deep dive into every aspect</span></td></tr>
+  <tr><td style="${STYLE.finding}"><strong style="${STYLE.findingTitle}">🎯 Priority Matrix</strong> <span style="${STYLE.findingDetail}">— what to fix first</span></td></tr>
+  <tr><td style="${STYLE.finding}"><strong style="${STYLE.findingTitle}">📅 30/60/90 Day Action Plan</strong> <span style="${STYLE.findingDetail}">— step-by-step roadmap</span></td></tr>
+  <tr><td style="${STYLE.finding}"><strong style="${STYLE.findingTitle}">⚡ Quick Wins</strong> <span style="${STYLE.findingDetail}">— things you can fix today</span></td></tr>
+</table>
+<p style="text-align:center;padding-top:20px;">
+  <a href="${appUrl}/tools" style="${STYLE.cta}">View Your Premium Report →</a>
+</p>
+<p style="font-size:12px;color:#64647a;line-height:1.6;text-align:center;margin-top:20px;">
+  Note: You can download your report as a PDF directly from the results page.
+</p>`;
+
+  return sendEmail({
+    to,
+    subject: `✦ Your Premium Report is Ready: ${toolName}`,
+    html: wrapEmail(body, `Your full Premium Report for ${toolName} is ready to view.`),
   });
 }
 

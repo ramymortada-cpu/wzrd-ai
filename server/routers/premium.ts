@@ -24,6 +24,18 @@ import { users, creditTransactions } from "../../drizzle/schema";
 import { eq, sql } from "drizzle-orm";
 import { validatePromoCode, type PromoValidation } from "../db/promoCodes";
 import { getPremiumPrices, getPremiumReportCreditCost } from "../siteConfig";
+import { sendPremiumReportEmail } from "../wzrdEmails";
+import { fireEmailTrigger } from "../emailTrigger";
+
+const TOOL_DISPLAY_NAME: Record<string, string> = {
+  brand_diagnosis: 'Brand Diagnosis',
+  offer_check: 'Offer Logic Check',
+  message_check: 'Message Check',
+  presence_audit: 'Presence Audit',
+  identity_snapshot: 'Identity Snapshot',
+  launch_readiness: 'Launch Readiness',
+  design_health: 'Design Health Check',
+};
 
 function mapPromoToClient(v: PromoValidation) {
   return {
@@ -322,6 +334,17 @@ export const premiumRouter = router({
 
         const execSummary = report.executiveSummary as { score?: number } | undefined;
         logger.info({ userId, toolId: input.toolId, score: execSummary?.score }, '[Premium] Report generated');
+
+        const display = TOOL_DISPLAY_NAME[input.toolId] ?? input.toolId;
+        const userEmail = ctx.user?.email;
+        const userName = ctx.user?.name || '';
+        const scoreForEmail = execSummary?.score ?? input.freeScore ?? 0;
+
+        if (userEmail) {
+          sendPremiumReportEmail(userEmail, userName, display, scoreForEmail).catch(() => {});
+        }
+
+        fireEmailTrigger('premium_purchase', userId, { toolName: display, score: scoreForEmail }).catch(() => {});
 
         return {
           success: true,
