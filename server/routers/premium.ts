@@ -26,16 +26,7 @@ import { validatePromoCode, type PromoValidation } from "../db/promoCodes";
 import { getPremiumPrices, getPremiumReportCreditCost } from "../siteConfig";
 import { sendPremiumReportEmail } from "../wzrdEmails";
 import { fireEmailTrigger } from "../emailTrigger";
-
-const TOOL_DISPLAY_NAME: Record<string, string> = {
-  brand_diagnosis: 'Brand Diagnosis',
-  offer_check: 'Offer Logic Check',
-  message_check: 'Message Check',
-  presence_audit: 'Presence Audit',
-  identity_snapshot: 'Identity Snapshot',
-  launch_readiness: 'Launch Readiness',
-  design_health: 'Design Health Check',
-};
+import { WZRD_DIAGNOSIS_TOOL_NAMES } from "@shared/wzrdDiagnosisToolCosts";
 
 function mapPromoToClient(v: PromoValidation) {
   return {
@@ -146,14 +137,20 @@ async function deductPremiumCredits(userId: number, amount: number, tool: string
 
   // Log transaction
   const [balanceRow] = await db.select({ credits: users.credits }).from(users).where(eq(users.id, userId));
+  const newBalance = balanceRow?.credits ?? 0;
+
   await db.insert(creditTransactions).values({
     userId,
     amount: -amount,
-    balance: balanceRow?.credits || 0,
+    balance: newBalance,
     type: 'tool_usage',
     toolName: `premium_${tool}`,
     reason: 'Premium full report',
   });
+
+  if (newBalance < 20) {
+    fireEmailTrigger('credits_low', userId, { credits: newBalance }).catch(() => {});
+  }
 
   return { success: true };
 }
@@ -335,7 +332,7 @@ export const premiumRouter = router({
         const execSummary = report.executiveSummary as { score?: number } | undefined;
         logger.info({ userId, toolId: input.toolId, score: execSummary?.score }, '[Premium] Report generated');
 
-        const display = TOOL_DISPLAY_NAME[input.toolId] ?? input.toolId;
+        const display = WZRD_DIAGNOSIS_TOOL_NAMES[input.toolId] ?? input.toolId;
         const userEmail = ctx.user?.email;
         const userName = ctx.user?.name || '';
         const scoreForEmail = execSummary?.score ?? input.freeScore ?? 0;

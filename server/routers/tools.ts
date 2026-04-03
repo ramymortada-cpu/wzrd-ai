@@ -29,6 +29,7 @@ import {
   launchReadinessInputSchema,
   designHealthInputSchema,
 } from "@shared/wzrdDiagnosisToolSchemas";
+import { WZRD_DIAGNOSIS_TOOL_NAMES } from "@shared/wzrdDiagnosisToolCosts";
 import { logger } from "../_core/logger";
 import { resilientLLM } from "../_core/llmRouter";
 import { deductCredits, getUserCredits, TOOL_COSTS, getDb, toggleChecklistItemForUser } from "../db";
@@ -229,16 +230,6 @@ async function clearToolDiagUnlockPending(token: string): Promise<void> {
   toolDiagUnlockPending.delete(token);
 }
 
-const TOOL_DISPLAY_NAME: Record<string, string> = {
-  brand_diagnosis: 'Brand Diagnosis',
-  offer_check: 'Offer Logic Check',
-  message_check: 'Message Check',
-  presence_audit: 'Presence Audit',
-  identity_snapshot: 'Identity Snapshot',
-  launch_readiness: 'Launch Readiness',
-  design_health: 'Design Health Check',
-};
-
 async function unlockDiagnosisFromPending(
   ctx: { user: { id: number; email?: string | null } },
   unlockToken: string,
@@ -267,7 +258,7 @@ async function unlockDiagnosisFromPending(
     creditsRemaining: deduction.newBalance ?? 0,
   };
 
-  const display = TOOL_DISPLAY_NAME[toolId] ?? toolId;
+  const display = WZRD_DIAGNOSIS_TOOL_NAMES[toolId] ?? toolId;
   saveDiagnosisHistory(ctx.user!.id, toolId, result).catch((err) => {
     logger.error({ err, userId: ctx.user!.id, tool: toolId }, 'Failed to save diagnosis history after unlock');
   });
