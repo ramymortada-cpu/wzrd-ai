@@ -18,6 +18,7 @@ import { z } from "zod";
 import { logger } from "../_core/logger";
 import { invokeClaude } from "../_core/llmProviders";
 import { scrapeWebsite, buildWebsiteContext, fetchLighthouseScores } from "../researchEngine";
+import { getSemanticKnowledge } from "../vectorSearch";
 import { getDb } from "../db/index";
 import { users, creditTransactions } from "../../drizzle/schema";
 import { eq, sql } from "drizzle-orm";
@@ -245,6 +246,29 @@ export const premiumRouter = router({
         }
       } else if (websiteUrl) {
         userPrompt += `\nNote: The provided website (${websiteUrl}) could not be accessed. Base your analysis ONLY on the user-provided form data above. Do NOT invent or hallucinate website content.\n`;
+      }
+
+      try {
+        const industryHint =
+          typeof input.formData.industry === "string" && input.formData.industry.trim()
+            ? input.formData.industry.trim()
+            : typeof input.formData.sector === "string" && input.formData.sector.trim()
+              ? input.formData.sector.trim()
+              : undefined;
+        const marketHint =
+          typeof input.formData.market === "string" && input.formData.market.trim()
+            ? input.formData.market.trim()
+            : undefined;
+        const rag = await getSemanticKnowledge(userPrompt.slice(0, 4000), {
+          industry: industryHint,
+          market: marketHint,
+          tokenBudget: 2500,
+        });
+        if (rag) {
+          userPrompt += "\n\n--- RELEVANT KNOWLEDGE BASE (RAG) ---\n" + rag + "\n";
+        }
+      } catch (err) {
+        logger.warn({ err }, "[Premium] Semantic knowledge (RAG) failed");
       }
 
       // 3. Call Claude

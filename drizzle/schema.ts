@@ -420,6 +420,8 @@ export const knowledgeEntries = mysqlTable("knowledge_entries", {
   sourceId: int("sourceId"),
   // Tags as JSON array
   tags: json("tags"),
+  /** OpenAI text-embedding-3-small vector (1536 dims), persisted for RAG */
+  embedding: json("embedding"),
   // Status
   isActive: int("isActive").default(1).notNull(),
   deletedAt: timestamp("deletedAt"),

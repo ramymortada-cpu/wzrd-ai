@@ -20,8 +20,62 @@
  * We build Option A+C now — swap to pgvector later without code changes.
  */
 
+import OpenAI from 'openai';
 import { logger } from './_core/logger';
-import { getKnowledgeEntries } from './db';
+import { getKnowledgeEntries, updateKnowledgeEntry } from './db';
+
+const OPENAI_EMBEDDING_MODEL = 'text-embedding-3-small';
+/** Default output size for text-embedding-3-small (no dimensions param). */
+const OPENAI_EMBEDDING_DIM = 1536;
+const MAX_EMBED_INPUT_CHARS = 12000;
+
+let _openaiClient: OpenAI | null | undefined;
+
+function getOpenAIClient(): OpenAI | null {
+  const key = process.env.OPENAI_API_KEY?.trim();
+  if (!key) return null;
+  if (_openaiClient === undefined) {
+    try {
+      _openaiClient = new OpenAI({ apiKey: key });
+    } catch (err) {
+      logger.error({ err }, 'OpenAI client init failed');
+      _openaiClient = null;
+    }
+  }
+  return _openaiClient;
+}
+
+function parseStoredOpenAIEmbedding(raw: unknown): number[] | null {
+  if (!Array.isArray(raw) || raw.length !== OPENAI_EMBEDDING_DIM) return null;
+  const out: number[] = new Array(OPENAI_EMBEDDING_DIM);
+  for (let i = 0; i < OPENAI_EMBEDDING_DIM; i++) {
+    const n = raw[i];
+    if (typeof n !== 'number' || !Number.isFinite(n)) return null;
+    out[i] = n;
+  }
+  return out;
+}
+
+/**
+ * OpenAI embedding for query or knowledge text. Returns null if no API key or API error.
+ */
+export async function generateOpenAIEmbedding(text: string): Promise<number[] | null> {
+  const client = getOpenAIClient();
+  if (!client) return null;
+  const input = text.slice(0, MAX_EMBED_INPUT_CHARS);
+  try {
+    const response = await client.embeddings.create({
+      model: OPENAI_EMBEDDING_MODEL,
+      input,
+    });
+    const emb = response.data[0]?.embedding;
+    if (!Array.isArray(emb) || emb.length === 0) return null;
+    return emb;
+  } catch (err) {
+    logger.error({ err }, 'OpenAI embedding API failed');
+    return null;
+  }
+}
 
 // ════════════════════════════════════════════
 // TYPES
@@ -127,6 +181,14 @@ function conceptOverlap(a: string[], b: string[]): number {
 let vectorStore: EmbeddingEntry[] = [];
 let lastIndexTime = 0;
 const REINDEX_INTERVAL = 30 * 60 * 1000; // Re-index every 30 minutes
+
+/** Last successful index used OpenAI vectors vs TF-IDF fallback */
+let indexEmbeddingMode: 'openai' | 'simple' = 'simple';
+
+function buildEmbedText(entry: { title: string; content: string | null; tags: unknown }): string {
+  const tagStr = Array.isArray(entry.tags) ? (entry.tags as string[]).join(' ') : '';
+  return `${entry.title} ${entry.content?.substring(0, 500) || ''} ${tagStr}`;
+}
 
 /**
  * Generate a HYBRID embedding using expanded vocabulary + concept extraction.
@@ -325,16 +387,19 @@ function generateSimpleEmbedding(text: string): number[] {
   return vector.map(v => v / magnitude);
 }
 
-/**
- * Cosine similarity between two vectors.
- */
+/** Cosine similarity (handles non–unit-length vectors). */
 function cosineSimilarity(a: number[], b: number[]): number {
-  if (a.length !== b.length) return 0;
+  if (a.length !== b.length || a.length === 0) return 0;
   let dot = 0;
+  let na = 0;
+  let nb = 0;
   for (let i = 0; i < a.length; i++) {
     dot += a[i] * b[i];
+    na += a[i] * a[i];
+    nb += b[i] * b[i];
   }
-  return dot; // Vectors are already normalized
+  const denom = Math.sqrt(na) * Math.sqrt(nb);
+  return denom > 0 ? dot / denom : 0;
 }
 
 // ════════════════════════════════════════════
@@ -352,28 +417,79 @@ export async function indexKnowledgeBase(): Promise<{ indexed: number; duration:
     const entries = await getKnowledgeEntries();
     const newStore: EmbeddingEntry[] = [];
 
-    for (const entry of entries) {
-      const textToEmbed = `${entry.title} ${entry.content?.substring(0, 500) || ''} ${(entry.tags as string[] || []).join(' ')}`;
-      const vector = generateSimpleEmbedding(textToEmbed);
-      const concepts = extractConcepts(textToEmbed);
+    const indexWithOpenAI = async (): Promise<boolean> => {
+      for (const entry of entries) {
+        const textToEmbed = buildEmbedText(entry);
+        let vector = parseStoredOpenAIEmbedding(entry.embedding);
+        if (!vector) {
+          const emb = await generateOpenAIEmbedding(textToEmbed);
+          if (!emb) {
+            logger.warn({ entryId: entry.id }, 'OpenAI embedding failed; falling back to TF-IDF for this index run');
+            return false;
+          }
+          if (emb.length !== OPENAI_EMBEDDING_DIM) {
+            logger.warn(
+              { entryId: entry.id, dims: emb.length, expected: OPENAI_EMBEDDING_DIM },
+              'Unexpected embedding dimensions; falling back to TF-IDF',
+            );
+            return false;
+          }
+          vector = emb;
+          await updateKnowledgeEntry(entry.id, { embedding: emb });
+        }
+        const concepts = extractConcepts(textToEmbed);
+        newStore.push({
+          id: entry.id,
+          title: entry.title,
+          category: entry.category,
+          industry: entry.industry || undefined,
+          market: entry.market || undefined,
+          vector,
+          concepts,
+          contentPreview: entry.content?.substring(0, 200) || '',
+        });
+      }
+      return true;
+    };
 
-      newStore.push({
-        id: entry.id,
-        title: entry.title,
-        category: entry.category,
-        industry: entry.industry || undefined,
-        market: entry.market || undefined,
-        vector,
-        concepts,
-        contentPreview: entry.content?.substring(0, 200) || '',
-      });
+    const indexWithSimple = (): void => {
+      newStore.length = 0;
+      for (const entry of entries) {
+        const textToEmbed = buildEmbedText(entry);
+        const vector = generateSimpleEmbedding(textToEmbed);
+        const concepts = extractConcepts(textToEmbed);
+        newStore.push({
+          id: entry.id,
+          title: entry.title,
+          category: entry.category,
+          industry: entry.industry || undefined,
+          market: entry.market || undefined,
+          vector,
+          concepts,
+          contentPreview: entry.content?.substring(0, 200) || '',
+        });
+      }
+    };
+    const wantOpenAI = Boolean(getOpenAIClient());
+    let usedOpenAI = false;
+    if (wantOpenAI && entries.length > 0) {
+      usedOpenAI = await indexWithOpenAI();
+    }
+    if (!usedOpenAI) {
+      indexWithSimple();
+      indexEmbeddingMode = 'simple';
+    } else {
+      indexEmbeddingMode = 'openai';
     }
 
     vectorStore = newStore;
     lastIndexTime = Date.now();
     const duration = Date.now() - start;
 
-    logger.info({ indexed: newStore.length, durationMs: duration }, 'Knowledge base indexed for semantic search');
+    logger.info(
+      { indexed: newStore.length, durationMs: duration, mode: indexEmbeddingMode },
+      'Knowledge base indexed for semantic search',
+    );
     return { indexed: newStore.length, duration };
   } catch (err) {
     logger.error({ err }, 'Knowledge indexing failed');
@@ -416,49 +532,73 @@ export async function semanticSearch(
 
   if (vectorStore.length === 0) return [];
 
-  const queryVector = generateSimpleEmbedding(query);
-  const queryConcepts = extractConcepts(query);
   const limit = options?.limit || 5;
-  const minSimilarity = options?.minSimilarity || 0.15;
+  const defaultMin = indexEmbeddingMode === 'openai' ? 0.32 : 0.15;
+  const minSimilarity = options?.minSimilarity ?? defaultMin;
 
-  // HYBRID SCORING: 40% keyword vector + 60% concept overlap
-  let candidates = vectorStore.map(entry => {
-    const keywordScore = cosineSimilarity(queryVector, entry.vector);
-    const conceptScore = conceptOverlap(queryConcepts, entry.concepts);
-    const hybridScore = (keywordScore * 0.4) + (conceptScore * 0.6);
-    
-    return {
+  let candidates: Array<{
+    id: number;
+    title: string;
+    category: string;
+    contentPreview: string;
+    similarity: number;
+    industry?: string;
+    market?: string;
+  }>;
+
+  if (indexEmbeddingMode === 'openai') {
+    const queryVector = await generateOpenAIEmbedding(query);
+    if (!queryVector) {
+      logger.warn('Query embedding failed (OpenAI); returning no semantic matches');
+      return [];
+    }
+    candidates = vectorStore.map((entry) => ({
       id: entry.id,
       title: entry.title,
       category: entry.category,
       contentPreview: entry.contentPreview,
-      similarity: hybridScore,
+      similarity: cosineSimilarity(queryVector, entry.vector),
       industry: entry.industry,
       market: entry.market,
-    };
-  });
+    }));
+  } else {
+    const queryVector = generateSimpleEmbedding(query);
+    const queryConcepts = extractConcepts(query);
+    candidates = vectorStore.map((entry) => {
+      const keywordScore = cosineSimilarity(queryVector, entry.vector);
+      const conceptScore = conceptOverlap(queryConcepts, entry.concepts);
+      const hybridScore = keywordScore * 0.4 + conceptScore * 0.6;
+      return {
+        id: entry.id,
+        title: entry.title,
+        category: entry.category,
+        contentPreview: entry.contentPreview,
+        similarity: hybridScore,
+        industry: entry.industry,
+        market: entry.market,
+      };
+    });
+  }
 
-  // Apply filters
   if (options?.category) {
-    candidates = candidates.filter(c => c.category === options.category);
+    candidates = candidates.filter((c) => c.category === options.category);
   }
   if (options?.industry) {
-    // Boost matching industry rather than filter (might miss cross-industry insights)
-    candidates = candidates.map(c => ({
+    candidates = candidates.map((c) => ({
       ...c,
-      similarity: c.similarity + (c.industry?.toLowerCase().includes(options.industry!.toLowerCase()) ? 0.15 : 0),
+      similarity:
+        c.similarity + (c.industry?.toLowerCase().includes(options.industry!.toLowerCase()) ? 0.15 : 0),
     }));
   }
   if (options?.market) {
-    candidates = candidates.map(c => ({
+    candidates = candidates.map((c) => ({
       ...c,
       similarity: c.similarity + (c.market === options.market ? 0.1 : 0),
     }));
   }
 
-  // Sort by similarity and return top N
   return candidates
-    .filter(c => c.similarity >= minSimilarity)
+    .filter((c) => c.similarity >= minSimilarity)
     .sort((a, b) => b.similarity - a.similarity)
     .slice(0, limit)
     .map(({ industry: _industry, market: _market, ...rest }) => rest);
@@ -508,7 +648,8 @@ export function getIndexStats() {
   return {
     entriesIndexed: vectorStore.length,
     lastIndexTime: lastIndexTime ? new Date(lastIndexTime).toISOString() : null,
-    vocabularySize: 200,
+    vocabularySize: indexEmbeddingMode === 'openai' ? OPENAI_EMBEDDING_DIM : 320,
+    embeddingMode: indexEmbeddingMode,
     isStale: Date.now() - lastIndexTime > REINDEX_INTERVAL,
   };
 }
