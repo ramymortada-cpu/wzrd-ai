@@ -6,6 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
+import posthog from 'posthog-js';
 import { toErrorString } from '@/lib/errorUtils';
 import { INDUSTRIES } from '@/lib/industries';
 import { useI18n } from '@/lib/i18n';
@@ -66,6 +67,19 @@ export default function Signup() {
       }
       const result = data?.result?.data?.json ?? data?.result?.data;
       if (result?.success) {
+        if (import.meta.env.VITE_POSTHOG_KEY && result.user?.id) {
+          posthog.identify(String(result.user.id), {
+            email: form.email,
+            name: form.name,
+            industry: form.industry || undefined,
+            company: form.company || undefined,
+          });
+          posthog.capture('user_signed_up', {
+            method: 'email',
+            industry: form.industry || undefined,
+            hasReferral: Boolean(refCode),
+          });
+        }
         if (refCode && result.user?.id) {
           fetch('/api/trpc/referral.applyReferral', {
             method: 'POST',

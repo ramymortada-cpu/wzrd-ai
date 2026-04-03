@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
+import posthog from 'posthog-js';
 import WzrdPublicHeader from '@/components/WzrdPublicHeader';
 import { useI18n } from '@/lib/i18n';
 import { waMeHref } from '@/lib/waContact';
@@ -217,7 +218,13 @@ export default function Tools() {
               <button
                 key={tool.id}
                 type="button"
-                onClick={() => canAfford && navigate(tool.route)}
+                onClick={() => {
+                  if (!canAfford) return;
+                  if (import.meta.env.VITE_POSTHOG_KEY) {
+                    posthog.capture('tool_selected', { toolId: tool.id, toolName: tool.name });
+                  }
+                  navigate(tool.route);
+                }}
                 disabled={!canAfford}
                 className={`group relative rounded-2xl border bg-white p-6 text-start shadow-sm transition-all duration-200 ${
                   canAfford

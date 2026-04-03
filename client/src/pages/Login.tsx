@@ -6,6 +6,7 @@
 
 import { useState } from 'react';
 import { useLocation } from 'wouter';
+import posthog from 'posthog-js';
 import { toErrorString } from '@/lib/errorUtils';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { useI18n } from '@/lib/i18n';
@@ -75,6 +76,13 @@ export default function Login() {
       const data = await res.json();
       const result = data?.result?.data?.json ?? data?.result?.data;
       if (result?.success) {
+        if (import.meta.env.VITE_POSTHOG_KEY) {
+          posthog.identify(String(result.user?.id ?? email), {
+            email,
+            ...(result.user?.name ? { name: result.user.name } : {}),
+          });
+          posthog.capture('user_logged_in', { method: 'magic_link' });
+        }
         navigate('/tools');
       } else {
         setError(toErrorString(result?.message, 'الكود غلط أو انتهى.'));
