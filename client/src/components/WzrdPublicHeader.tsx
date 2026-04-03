@@ -15,7 +15,7 @@
  *   ✓ Active page highlight
  */
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
@@ -39,6 +39,28 @@ interface WzrdPublicHeaderProps {
 export default function WzrdPublicHeader({ credits }: WzrdPublicHeaderProps = {}) {
   const [location, navigate] = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close user menu on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const USER_MENU_LINKS = [
+    { ar: 'الأدوات', en: 'Tools', href: '/tools', icon: '⚔️' },
+    { ar: 'المستشار الذكي', en: 'Copilot', href: '/copilot', icon: '🤖' },
+    { ar: 'صحة البراند', en: 'My Brand', href: '/my-brand', icon: '📊' },
+    { ar: 'تقاريري', en: 'My Reports', href: '/my-reports', icon: '📄' },
+    { ar: 'طلباتي', en: 'My Requests', href: '/my-requests', icon: '📩' },
+    { ar: 'الملف الشخصي', en: 'Profile', href: '/profile', icon: '👤' },
+  ];
   const { user } = useAuth();
   const { locale, toggleLocale } = useI18n();
   const isAr = locale === "ar";
@@ -175,28 +197,95 @@ export default function WzrdPublicHeader({ credits }: WzrdPublicHeaderProps = {}
               cursor: user ? "default" : "pointer",
             }}
             onClick={() => { if (!user) navigate("/signup"); }}
-            title={user ? undefined : (isAr ? "سجّل للحصول على ٥٠٠ كريدت مجاني" : "Sign up for 500 free credits")}
+            title={user ? undefined : (isAr ? "سجّل للحصول على ١٠٠ كريدت مجاني" : "Sign up for 100 free credits")}
             >
               ⚡ {user ? (credits ?? 0) : 0} {isAr ? "كريدت" : "CR"}
             </div>
 
             {user ? (
-              <a
-                href="/tools"
-                onClick={(e) => { e.preventDefault(); navigate("/tools"); }}
-                style={{
-                  padding: "9px 20px",
-                  borderRadius: 8,
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: "#fff",
-                  background: BLUE,
-                  textDecoration: "none",
-                  boxShadow: "0 2px 8px rgba(27,79,216,0.3)",
-                }}
-              >
-              {isAr ? "← لوحة التحكم" : "Dashboard →"}
-                </a>
+              <div ref={userMenuRef} style={{ position: 'relative' }}>
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  style={{
+                    padding: '9px 20px',
+                    borderRadius: 8,
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: '#fff',
+                    background: BLUE,
+                    border: 'none',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(27,79,216,0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}
+                >
+                  {isAr ? '← لوحة التحكم' : 'Dashboard →'}
+                  <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" style={{ transform: userMenuOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {userMenuOpen && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 8px)',
+                    [isAr ? 'left' : 'right']: 0,
+                    background: '#fff',
+                    border: `1px solid ${BORDER}`,
+                    borderRadius: 12,
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+                    minWidth: 200,
+                    padding: '8px 0',
+                    zIndex: 200,
+                  }}>
+                    {USER_MENU_LINKS.map((link) => (
+                      <a
+                        key={link.href}
+                        href={link.href}
+                        onClick={(e) => { e.preventDefault(); navigate(link.href); setUserMenuOpen(false); }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 10,
+                          padding: '10px 16px',
+                          fontSize: 14,
+                          fontWeight: isActive(link.href) ? 700 : 500,
+                          color: isActive(link.href) ? BLUE : '#374151',
+                          background: isActive(link.href) ? '#EEF2FF' : 'transparent',
+                          textDecoration: 'none',
+                          transition: 'background 0.15s',
+                        }}
+                        onMouseEnter={(e) => { if (!isActive(link.href)) (e.currentTarget as HTMLAnchorElement).style.background = '#F9FAFB'; }}
+                        onMouseLeave={(e) => { if (!isActive(link.href)) (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'; }}
+                      >
+                        <span style={{ fontSize: 16 }}>{link.icon}</span>
+                        <span>{isAr ? link.ar : link.en}</span>
+                      </a>
+                    ))}
+                    <div style={{ borderTop: `1px solid ${BORDER}`, margin: '4px 0' }} />
+                    <a
+                      href="/api/auth/logout"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        padding: '10px 16px',
+                        fontSize: 14,
+                        fontWeight: 500,
+                        color: '#DC2626',
+                        textDecoration: 'none',
+                        transition: 'background 0.15s',
+                      }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = '#FEF2F2'; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'; }}
+                    >
+                      <span style={{ fontSize: 16 }}>❌</span>
+                      <span>{isAr ? 'تسجيل الخروج' : 'Log out'}</span>
+                    </a>
+                  </div>
+                )}
+              </div>
             ) : (
               <>
                 <a
@@ -306,15 +395,39 @@ export default function WzrdPublicHeader({ credits }: WzrdPublicHeaderProps = {}
               {isAr ? "🌐 Switch to English" : "🌐 التبديل للعربية"}
             </button>
 
-            <div style={{ borderTop: `1px solid ${BORDER}`, marginTop: 12, paddingTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ borderTop: `1px solid ${BORDER}`, marginTop: 12, paddingTop: 12, display: "flex", flexDirection: "column", gap: 4 }}>
               {user ? (
-                <a
-                  href="/tools"
-                  onClick={(e) => { e.preventDefault(); navigate("/tools"); setMenuOpen(false); }}
-                  style={{ padding: "12px 16px", borderRadius: 8, fontSize: 15, fontWeight: 700, color: "#fff", background: BLUE, textDecoration: "none", textAlign: "center" }}
-                >
-                  {isAr ? "← لوحة التحكم" : "Dashboard →"}
-                </a>
+                <>
+                  {USER_MENU_LINKS.map((link) => (
+                    <a
+                      key={link.href}
+                      href={link.href}
+                      onClick={(e) => { e.preventDefault(); navigate(link.href); setMenuOpen(false); }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        padding: '12px 16px',
+                        borderRadius: 8,
+                        fontSize: 15,
+                        fontWeight: isActive(link.href) ? 700 : 500,
+                        color: isActive(link.href) ? BLUE : '#374151',
+                        background: isActive(link.href) ? '#EEF2FF' : 'transparent',
+                        textDecoration: 'none',
+                      }}
+                    >
+                      <span>{link.icon}</span>
+                      <span>{isAr ? link.ar : link.en}</span>
+                    </a>
+                  ))}
+                  <a
+                    href="/api/auth/logout"
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 8, fontSize: 15, fontWeight: 500, color: '#DC2626', textDecoration: 'none', marginTop: 4 }}
+                  >
+                    <span>❌</span>
+                    <span>{isAr ? 'تسجيل الخروج' : 'Log out'}</span>
+                  </a>
+                </>
               ) : (
                 <>
                   <a
