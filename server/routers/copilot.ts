@@ -19,7 +19,7 @@ import { z } from "zod";
 import { logger } from "../_core/logger";
 import { resilientLLM } from "../_core/llmRouter";
 import { getDb, deductCredits, getUserCredits } from "../db";
-import { copilotMessages } from "../../drizzle/schema";
+import { copilotMessages, userChecklists } from "../../drizzle/schema";
 import { eq, desc, sql } from "drizzle-orm";
 import {
   buildBrandContext,
@@ -257,5 +257,143 @@ export const copilotRouter = router({
         };
       }
       return { suggestions };
+    }),
+
+  /** Generate a structured 5-step action plan from the user's diagnosis data */
+  generatePlan: protectedProcedure
+    .input(z.object({
+      sessionId: z.string().min(1).max(50),
+      clientId: z.number().int().positive().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const userId = ctx.user!.id;
+      const userRole = ctx.user!.role;
+
+      // Rate limit
+      const lastTime = lastMessageTime.get(userId) || 0;
+      const now = Date.now();
+      if (now - lastTime < RATE_LIMIT_MS) {
+        throw new Error('استنى شوية قبل ما تبعت تاني — ٣ ثواني بين كل رسالة.');
+      }
+      lastMessageTime.set(userId, now);
+
+      // Check credits (10 per plan — more expensive than chat)
+      const balance = await getUserCredits(userId);
+      if (balance < 10) {
+        throw new Error(`مفيش كريدت كافي. محتاج ١٠ كريدت — عندك ${balance}. اشتري كريدت من صفحة التسعير.`);
+      }
+
+      const db = await getDb();
+      if (!db) throw new Error('Database unavailable');
+
+      const twinClientId = await resolveTwinClientIdForCopilot(db, userId, userRole, input.clientId);
+      const deduction = await deductCredits(userId, 'copilot_plan');
+      if (!deduction.success) {
+        throw new Error(deduction.error || 'مفيش كريدت كافي');
+      }
+
+      try {
+        const contextStr = await buildBrandContext(userId, db, twinClientId);
+
+        const planPrompt = `بناءً على الـ context الكامل بتاع البراند ده، اعملي خطة عمل مهيكلة من ٥ خطوات.
+
+كل خطوة لازم تشمل:
+1. **عنوان الخطوة** (جملة واحدة)
+2. **ليه مهمة** (جملة واحدة تربطها بنتيجة التشخيص)
+3. **إزاي تنفذها** (٢-٣ نقاط عملية)
+4. **مستوى الصعوبة** (سهل / متوسط / صعب)
+5. **الوقت المتوقع** (مثلاً: ساعة، يوم، أسبوع)
+
+رتّب الخطوات من الأسهل والأسرع تأثيراً للأصعب.
+ركّز على الحاجات اللي ممكن يعملها بنفسه بدون إيجنسي.
+لو في تنبيهات حرجة في الـ context — الأولوية ليها.
+
+الرد لازم يكون JSON array بالشكل ده:
+[
+  {
+    "task": "عنوان الخطوة",
+    "why": "ليه مهمة",
+    "howTo": ["خطوة ١", "خطوة ٢", "خطوة ٣"],
+    "difficulty": "سهل",
+    "timeEstimate": "ساعة"
+  }
+]
+
+رد بـ JSON فقط — بدون أي كلام قبله أو بعده.`;
+
+        const messages: Array<{ role: 'system' | 'user'; content: string }> = [
+          { role: 'system', content: `${COPILOT_SYSTEM}\n\n--- CONTEXT ---\n${contextStr}` },
+          { role: 'user', content: planPrompt },
+        ];
+
+        const response = await resilientLLM({ messages }, { context: 'copilot_plan' });
+        const aiResponse = response.choices[0]?.message?.content as string;
+
+        // Parse the JSON response
+        let planSteps: Array<{ task: string; why: string; howTo: string[]; difficulty: string; timeEstimate: string }>;
+        try {
+          // Strip markdown code fences if present
+          const cleaned = aiResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+          planSteps = JSON.parse(cleaned);
+        } catch {
+          logger.warn({ aiResponse }, 'Failed to parse plan JSON — returning raw');
+          throw new Error('الـ AI مرجعش خطة مهيكلة. حاول تاني.');
+        }
+
+        // Save as checklist items
+        const checklistItems = planSteps.map((step, i) => ({
+          id: i,
+          task: step.task,
+          difficulty: step.difficulty,
+          howTo: step.howTo,
+          why: step.why,
+          timeEstimate: step.timeEstimate,
+          completed: false,
+          completedAt: null,
+        }));
+
+        await db.insert(userChecklists).values({
+          userId,
+          diagnosisId: 0, // plan-generated, not tied to a specific diagnosis
+          items: checklistItems,
+          completedCount: 0,
+          totalCount: checklistItems.length,
+        }).catch((err: unknown) => logger.warn({ err }, 'Failed to save plan checklist'));
+
+        // Save to copilot history
+        const planSummary = planSteps.map((s, i) => `${i + 1}. ${s.task} (${s.difficulty} — ${s.timeEstimate})`).join('\n');
+        await Promise.all([
+          db.insert(copilotMessages).values({
+            userId,
+            sessionId: input.sessionId,
+            role: 'user',
+            content: '/plan — اعملي خطة عمل',
+            tokensUsed: 0,
+          }),
+          db.insert(copilotMessages).values({
+            userId,
+            sessionId: input.sessionId,
+            role: 'assistant',
+            content: `خطة العمل بتاعتك:\n${planSummary}\n\nالخطة اتحفظت في صفحة My Brand. ابدأ من الخطوة الأولى!`,
+            tokensUsed: response.usage?.total_tokens || 0,
+          }),
+        ]).catch(err => logger.warn({ err }, 'Failed to save plan messages'));
+
+        return {
+          plan: planSteps,
+          creditsUsed: 10,
+          creditsRemaining: deduction.newBalance ?? 0,
+        };
+      } catch (err: unknown) {
+        // Refund on failure
+        try {
+          const { addCredits } = await import('../db');
+          await addCredits(userId, 10, 'copilot_plan_refund', 'Refund — plan generation failed');
+        } catch { /* best effort */ }
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.includes('كريدت') || msg.includes('استنى') || msg.includes('مهيكلة')) throw err;
+        logger.error({ err, userId }, 'Copilot plan generation failed');
+        throw new Error('حصل مشكلة في توليد الخطة — حاول تاني. الكريدت اترجعت.');
+      }
     }),
 });
