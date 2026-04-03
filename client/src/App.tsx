@@ -60,6 +60,7 @@ const MessageCheckPage = lazy(() => import("./pages/tools/MessageCheck"));
 const PresenceAuditPage = lazy(() => import("./pages/tools/PresenceAudit"));
 const IdentitySnapshotPage = lazy(() => import("./pages/tools/IdentitySnapshot"));
 const LaunchReadinessPage = lazy(() => import("./pages/tools/LaunchReadiness"));
+const DesignHealthPage = lazy(() => import("./pages/tools/DesignHealth"));
 const PricingPage = lazy(() => import("./pages/Pricing"));
 const TermsOfUsePage = lazy(() => import("./pages/public/TermsOfUse"));
 const PrivacyPolicyPage = lazy(() => import("./pages/public/PrivacyPolicy"));
@@ -179,6 +180,7 @@ function App() {
                 <Route path="/tools/presence-audit">{() => <SuspenseWrapper><PresenceAuditPage /></SuspenseWrapper>}</Route>
                 <Route path="/tools/identity-snapshot">{() => <SuspenseWrapper><IdentitySnapshotPage /></SuspenseWrapper>}</Route>
                 <Route path="/tools/launch-readiness">{() => <SuspenseWrapper><LaunchReadinessPage /></SuspenseWrapper>}</Route>
+                <Route path="/tools/design-health">{() => <SuspenseWrapper><DesignHealthPage /></SuspenseWrapper>}</Route>
                 <Route path="/pricing">{() => <SuspenseWrapper><PricingPage /></SuspenseWrapper>}</Route>
                 <Route path="/terms">{() => <SuspenseWrapper><TermsOfUsePage /></SuspenseWrapper>}</Route>
                 <Route path="/privacy">{() => <SuspenseWrapper><PrivacyPolicyPage /></SuspenseWrapper>}</Route>

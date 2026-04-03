@@ -31,7 +31,7 @@ const MAX_EMBED_INPUT_CHARS = 12000;
 
 let _openaiClient: OpenAI | null | undefined;
 
-function getOpenAIClient(): OpenAI | null {
+export function getOpenAIClient(): OpenAI | null {
   const key = process.env.OPENAI_API_KEY?.trim();
   if (!key) return null;
   if (_openaiClient === undefined) {

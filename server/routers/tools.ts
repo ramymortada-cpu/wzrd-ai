@@ -27,6 +27,7 @@ import {
   presenceAuditInputSchema,
   identitySnapshotInputSchema,
   launchReadinessInputSchema,
+  designHealthInputSchema,
 } from "@shared/wzrdDiagnosisToolSchemas";
 import { logger } from "../_core/logger";
 import { resilientLLM } from "../_core/llmRouter";
@@ -38,8 +39,8 @@ import { diagnosisHistory, userChecklists } from "../../drizzle/schema";
 import { eq, desc } from "drizzle-orm";
 import { fireEmailTrigger } from "../emailTrigger";
 import { getRedis } from "../_core/redis";
-import { scrapeWebsite, buildWebsiteContext } from "../researchEngine";
-import { getSemanticKnowledge } from "../vectorSearch";
+import { scrapeWebsite, buildWebsiteContext, captureScreenshot } from "../researchEngine";
+import { getSemanticKnowledge, getOpenAIClient } from "../vectorSearch";
 
 /** Clamp benchmark pillar scores (module-level fn so callers pass a narrowed array, not `parsed.companies` twice). */
 function clampBenchmarkCompanyRows(
@@ -235,6 +236,7 @@ const TOOL_DISPLAY_NAME: Record<string, string> = {
   presence_audit: 'Presence Audit',
   identity_snapshot: 'Identity Snapshot',
   launch_readiness: 'Launch Readiness',
+  design_health: 'Design Health Check',
 };
 
 async function unlockDiagnosisFromPending(
@@ -370,6 +372,43 @@ async function callDiagnosisModel(
   return response.choices[0]?.message?.content as string;
 }
 
+async function callVisionModel(
+  _toolId: string,
+  systemPrompt: string,
+  userPrompt: string,
+  base64Image: string,
+): Promise<string> {
+  const openai = getOpenAIClient();
+  if (!openai) {
+    throw new Error('OpenAI API key not configured for Vision model');
+  }
+
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o',
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: `${systemPrompt}\n\n${userPrompt}\n\nRespond ONLY with valid JSON. No markdown, no backticks.`,
+          },
+          {
+            type: 'image_url',
+            image_url: {
+              url: `data:image/png;base64,${base64Image}`,
+              detail: 'high',
+            },
+          },
+        ],
+      },
+    ],
+    max_tokens: 1500,
+  });
+
+  return response.choices[0]?.message?.content || '{}';
+}
+
 function getServiceRecommendation(toolName: string, score: number): ToolResult['serviceRecommendation'] {
   // Only show service recommendation for scores below 70
   if (score >= 70) return null;
@@ -381,6 +420,7 @@ function getServiceRecommendation(toolName: string, score: number): ToolResult['
     presence_audit: { tier: 'AUDIT', service: 'Full Health Check', serviceAr: 'فحص صحة شامل', url: '/services-info#audit' },
     identity_snapshot: { tier: 'BUILD', service: 'Brand Identity', serviceAr: 'هوية البراند', url: '/services-info#build' },
     launch_readiness: { tier: 'TAKEOFF', service: 'Business Takeoff', serviceAr: 'باكدج الإقلاع', url: '/services-info#takeoff' },
+    design_health: { tier: 'BUILD', service: 'Brand Identity', serviceAr: 'هوية البراند', url: '/services-info#build' },
   };
 
   const svc = map[toolName];
@@ -672,6 +712,12 @@ export const toolsRouter = router({
         inputs: ['companyName', 'industry', 'launchType', 'targetLaunchDate', 'hasGuidelines', 'hasOfferStructure', 'hasWebsite', 'hasContentPlan', 'marketingBudget', 'teamCapacity', 'biggestConcern', 'successMetric'],
         guideUrl: '/guides/offer-logic', guideTitle: 'Offer Logic 101',
         serviceUrl: '/services-info#takeoff', serviceTitle: 'Business Takeoff' },
+      { id: 'design_health', name: 'Design Health Check', nameAr: 'فحص صحة التصميم', icon: '🎨', color: '#ec4899', cost: 30,
+        desc: 'Visual audit of your website using AI vision. Checks color harmony, hierarchy, and clutter.',
+        descAr: 'فحص بصري لموقعك باستخدام الذكاء الاصطناعي. يراجع تناسق الألوان، التسلسل الهرمي، والزحمة.',
+        inputs: ['companyName', 'industry', 'website'],
+        guideUrl: '/guides/brand-identity', guideTitle: 'Brand Identity Guide',
+        serviceUrl: '/services-info#build', serviceTitle: 'Brand Identity' },
       { id: 'competitive_benchmark', name: 'Competitive Benchmark', nameAr: 'مقارنة المنافسين', icon: '📊', color: '#1B4FD8', cost: 40,
         desc: 'Compare your brand against up to 3 competitors using real scraped website data.',
         descAr: 'قارن براندك بحد ٣ منافسين باستخدام بيانات حقيقية من المواقع.',
@@ -733,6 +779,57 @@ export const toolsRouter = router({
         type: 'guide',
         title: 'How to Audit Your Brand Health',
         url: '/guides/brand-health',
+      }),
+    ),
+
+  freeDesignHealthDiagnosis: protectedProcedure
+    .input(designHealthInputSchema)
+    .mutation(async ({ input }) => {
+      if (!isToolEnabled('design_health')) {
+        throw new Error('هذه الأداة معطّلة مؤقتاً. يرجى المحاولة لاحقاً.');
+      }
+      pruneExpiredUnlockTokens();
+
+      const base64Image = await captureScreenshot(input.website);
+      if (!base64Image) {
+        throw new Error('فشل في التقاط صورة للموقع. تأكد من صحة الرابط (يجب أن يبدأ بـ https://).');
+      }
+
+      const userPrompt = `Company: ${input.companyName}\nIndustry: ${input.industry}\nWebsite: ${input.website}\n\nAnalyze this website screenshot. Focus ONLY on Color Harmony, Visual Hierarchy, and Whitespace & Clutter.`;
+      const text = await callVisionModel('design_health', TOOL_SYSTEM, userPrompt, base64Image);
+      const body = parseDiagnosisAiResponse(text, 'design_health');
+
+      const unlockToken = randomUUID();
+      await storeToolDiagUnlockPending(unlockToken, {
+        toolId: 'design_health',
+        score: body.score,
+        findings: body.findings,
+        actionItems: body.actionItems,
+        recommendation: body.recommendation,
+      });
+
+      const criticalCount = body.findings.filter((f) => f.severity === 'high').length;
+      const unlockCost = TOOL_COSTS.design_health ?? 30;
+
+      logger.info({ tool: 'design_health', phase: 'free_preview', score: body.score }, 'Design Health free preview generated');
+
+      return {
+        score: body.score,
+        label: scoreLabel(body.score),
+        findings: body.findings.map((f) => ({ title: f.title, severity: f.severity })),
+        criticalCount,
+        unlockToken,
+        unlockCost,
+      };
+    }),
+
+  unlockDesignHealth: protectedProcedure
+    .input(z.object({ unlockToken: z.string().uuid() }))
+    .mutation(({ input, ctx }) =>
+      unlockDiagnosisFromPending(ctx, input.unlockToken, 'design_health', {
+        type: 'guide',
+        title: 'Brand Identity Guide',
+        url: '/guides/brand-identity',
       }),
     ),
 

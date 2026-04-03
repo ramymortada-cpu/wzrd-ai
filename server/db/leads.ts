@@ -79,6 +79,7 @@ const TOOL_LABEL: Record<string, string> = {
   presence_audit: "Presence Audit",
   identity_snapshot: "Identity Snapshot",
   launch_readiness: "Launch Readiness",
+  design_health: "Design Health Check",
   competitive_benchmark: "Competitive Benchmark",
 };
 

@@ -6,4 +6,5 @@ export const WZRD_DIAGNOSIS_TOOL_COSTS: Record<string, number> = {
   presence_audit: 25,
   identity_snapshot: 20,
   launch_readiness: 30,
+  design_health: 30,
 };
