@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import posthog from 'posthog-js';
 import { useI18n } from '@/lib/i18n';
 import WzrdPublicHeader from '@/components/WzrdPublicHeader';
 
@@ -158,6 +159,9 @@ export default function Copilot() {
       if (result?.response) {
         const aiMsg: Message = { id: Date.now() + 1, role: 'assistant', content: result.response };
         setMessages(prev => [...prev, aiMsg]);
+        if (import.meta.env.VITE_POSTHOG_KEY) {
+          posthog.capture('copilot_message_sent');
+        }
         setCredits(result.creditsRemaining ?? credits);
         fetch('/api/trpc/copilot.mySessions', { credentials: 'include' })
           .then(r => r.json())

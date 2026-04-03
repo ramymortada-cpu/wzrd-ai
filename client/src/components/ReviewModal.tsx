@@ -6,6 +6,7 @@
  * Fully bilingual (AR/EN).
  */
 import { useState } from "react";
+import posthog from "posthog-js";
 import { trpc } from "@/lib/trpc";
 import { useI18n } from "@/lib/i18n";
 
@@ -73,9 +74,15 @@ export default function ReviewModal({
   const [creditsAwarded, setCreditsAwarded] = useState(0);
 
   const submitMutation = trpc.reviews.submit.useMutation({
-    onSuccess: (data) => {
+    onSuccess: (data, vars) => {
       setCreditsAwarded(data.creditsAwarded);
       setStep("success");
+      if (import.meta.env.VITE_POSTHOG_KEY) {
+        posthog.capture("review_submitted", {
+          rating: vars.rating,
+          toolId,
+        });
+      }
       if (onSuccess) onSuccess(data.creditsAwarded);
     },
     onError: (_err) => {

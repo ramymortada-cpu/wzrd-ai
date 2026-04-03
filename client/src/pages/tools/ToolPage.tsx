@@ -99,6 +99,18 @@ const severityStyle = (s: string) =>
       ? { bg: '#FFFBEB', border: '#FDE68A', dot: '#D97706', text: '#D97706', label: 'medium' }
       : { bg: '#F0FDF4', border: '#BBF7D0', dot: '#16A34A', text: '#16A34A', label: 'low' };
 
+/** Backend credit / balance errors (AR + EN) — show a pricing CTA in the UI. */
+function looksLikeInsufficientCredits(message: string): boolean {
+  const m = message.toLowerCase();
+  return (
+    m.includes('credit') ||
+    m.includes('credits') ||
+    m.includes('كريدت') ||
+    m.includes('رصيد') ||
+    m.includes('insufficient')
+  );
+}
+
 // ─── Score Ring ───────────────────────────────────────────────────────────────
 function ScoreRing({ score }: { score: number }) {
   const { locale } = useI18n();
@@ -468,6 +480,9 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
     setLoading(true);
     setError('');
     setFreePreview(null);
+    if (import.meta.env.VITE_POSTHOG_KEY) {
+      posthog.capture('tool_execution_started', { toolId: config.id });
+    }
     const minDelay = new Promise(resolve => setTimeout(resolve, 8000));
     try {
       if (config.paywallAfterFreePreview) {
@@ -488,6 +503,12 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
           const preview = data.result?.data?.json ?? data.result?.data;
           if (preview?.score !== undefined && preview?.unlockToken) {
             setFreePreview(preview as FreeToolPreview);
+            if (import.meta.env.VITE_POSTHOG_KEY) {
+              posthog.capture('free_preview_shown', {
+                toolId: config.id,
+                score: (preview as FreeToolPreview).score,
+              });
+            }
           } else {
             setError(isAr ? 'استجابة غير متوقعة. حاول مجدداً.' : 'Unexpected response. Please try again.');
           }
@@ -510,12 +531,22 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
           const toolResult = data.result?.data?.json ?? data.result?.data;
           if (toolResult?.score !== undefined) {
             setResult(toolResult);
+            if (import.meta.env.VITE_POSTHOG_KEY) {
+              posthog.capture('tool_execution_completed', {
+                toolId: config.id,
+                score: toolResult.score,
+                creditsUsed: toolResult.creditsUsed,
+              });
+            }
           } else {
             setError(isAr ? 'استجابة غير متوقعة. حاول مجدداً.' : 'Unexpected response. Please try again.');
           }
         }
       }
     } catch {
+      if (import.meta.env.VITE_POSTHOG_KEY) {
+        posthog.capture('tool_execution_failed', { toolId: config.id });
+      }
       setError(isAr ? 'خطأ في الشبكة. حاول مجدداً.' : 'Network error. Please try again.');
     } finally {
       setLoading(false);
@@ -857,7 +888,19 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
                 {isAr ? 'مش مسجّل؟ أنشئ حساباً' : 'New here? Sign up'}
               </a>
             </div>
-            {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+            {error && (
+              <div className="mt-4 text-sm text-red-600">
+                <p>{error}</p>
+                {looksLikeInsufficientCredits(error) && (
+                  <a
+                    href="/pricing"
+                    className="mt-2 inline-block font-semibold text-[#1B4FD8] hover:underline"
+                  >
+                    {isAr ? 'اشترِ كريدت أو شوف الباقات ←' : 'Buy credits or view plans →'}
+                  </a>
+                )}
+              </div>
+            )}
           </div>
 
           <button
@@ -1133,7 +1176,15 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
         {/* Error */}
         {error && (
           <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-            {error}
+            <p>{error}</p>
+            {looksLikeInsufficientCredits(error) && (
+              <a
+                href="/pricing"
+                className="mt-2 inline-block text-sm font-semibold text-[#1B4FD8] hover:underline"
+              >
+                {isAr ? 'اشترِ كريدت أو شوف الباقات ←' : 'Buy credits or view plans →'}
+              </a>
+            )}
           </div>
         )}
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
+import posthog from 'posthog-js';
 import WzrdPublicHeader from '@/components/WzrdPublicHeader';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { useI18n } from '@/lib/i18n';
@@ -115,6 +116,9 @@ export default function CompetitiveBenchmark() {
     setLoading(true);
     setError('');
     setResult(null);
+    if (import.meta.env.VITE_POSTHOG_KEY) {
+      posthog.capture('competitive_benchmark_started');
+    }
     try {
       const res = await fetch('/api/trpc/tools.competitiveBenchmark', {
         method: 'POST',
@@ -131,6 +135,9 @@ export default function CompetitiveBenchmark() {
       const out = (data.result?.data?.json ?? data.result?.data) as BenchmarkResult;
       if (out?.companies?.length) {
         setResult(out);
+        if (import.meta.env.VITE_POSTHOG_KEY) {
+          posthog.capture('competitive_benchmark_completed');
+        }
         if (typeof out.creditsRemaining === 'number') setCredits(out.creditsRemaining);
       } else {
         setError(isAr ? 'استجابة غير متوقعة' : 'Unexpected response');

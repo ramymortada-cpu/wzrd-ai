@@ -1,6 +1,7 @@
 import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { TRPCClientError } from "@trpc/client";
+import posthog from "posthog-js";
 import { useCallback, useEffect, useMemo } from "react";
 
 type UseAuthOptions = {
@@ -46,6 +47,14 @@ export function useAuth(options?: UseAuthOptions) {
       "manus-runtime-user-info",
       JSON.stringify(meQuery.data)
     );
+    if (import.meta.env.VITE_POSTHOG_KEY && meQuery.data?.id) {
+      const u = meQuery.data;
+      posthog.identify(String(u.id), {
+        email: u.email || undefined,
+        name: u.name || undefined,
+        credits: typeof u.credits === "number" ? u.credits : undefined,
+      });
+    }
     return {
       user: meQuery.data ?? null,
       loading: meQuery.isLoading || logoutMutation.isPending,

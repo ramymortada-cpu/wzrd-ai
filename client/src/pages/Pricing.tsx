@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'wouter';
+import posthog from 'posthog-js';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
 import WzrdPublicHeader from '@/components/WzrdPublicHeader';
@@ -210,6 +211,12 @@ export default function Pricing() {
       const data = await res.json();
       const result = data?.result?.data?.json;
       if (result?.success && result?.redirectUrl) {
+        if (import.meta.env.VITE_POSTHOG_KEY) {
+          posthog.capture('credits_purchase_initiated', {
+            planId,
+            hasPromo: Boolean(promoCode.trim()),
+          });
+        }
         window.location.href = result.redirectUrl;
       } else {
         const msg = typeof result?.message === 'string' ? result.message : '';
