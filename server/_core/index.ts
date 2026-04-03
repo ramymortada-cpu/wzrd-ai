@@ -88,6 +88,8 @@ async function startServer() {
   app.use('/api/trpc/tools.unlockIdentitySnapshot', rateLimiters.toolUsage);
   app.use('/api/trpc/tools.freeLaunchReadinessDiagnosis', rateLimiters.ai);
   app.use('/api/trpc/tools.unlockLaunchReadiness', rateLimiters.toolUsage);
+  app.use('/api/trpc/tools.freeDesignHealthDiagnosis', rateLimiters.ai);
+  app.use('/api/trpc/tools.unlockDesignHealth', rateLimiters.toolUsage);
   app.use('/api/trpc/tools.freeQuickDiagnosis', rateLimiters.quickCheck);
   app.use('/api/trpc/copilot.chat', rateLimiters.ai);
   // Signup (3 per hour — prevents spam accounts)

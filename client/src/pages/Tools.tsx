@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import posthog from 'posthog-js';
 import WzrdPublicHeader from '@/components/WzrdPublicHeader';
 import { useI18n } from '@/lib/i18n';
+import SEO from '@/components/SEO';
 import { waMeHref } from '@/lib/waContact';
 
 interface ToolInfo {
@@ -95,6 +96,14 @@ export default function Tools() {
 
   return (
     <div className="wzrd-public-page min-h-screen">
+      <SEO
+        title="AI Brand Diagnostic Tools"
+        titleAr="أدوات تشخيص البراند بالذكاء الاصطناعي"
+        description="9 specialized AI tools to diagnose your brand health, messaging, offers, identity, and more. Get instant results."
+        descriptionAr="9 أدوات ذكاء اصطناعي متخصصة لتشخيص صحة براندك ورسائلك وعروضك وهويتك. نتايج فورية."
+        path="/tools"
+        locale={locale}
+      />
       <WzrdPublicHeader credits={credits} />
 
       <div className="mx-auto max-w-5xl px-6 pb-20 pt-24">

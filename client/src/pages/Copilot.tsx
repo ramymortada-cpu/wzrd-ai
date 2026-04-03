@@ -39,6 +39,7 @@ export default function Copilot() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [planLoading, setPlanLoading] = useState(false);
   const [credits, setCredits] = useState<number | null>(null);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [error, setError] = useState('');
@@ -188,6 +189,54 @@ export default function Copilot() {
       sendMessage();
     }
   };
+
+  const generatePlan = useCallback(async () => {
+    if (planLoading || loading) return;
+    setPlanLoading(true);
+    setError('');
+
+    const userMsg: Message = { id: Date.now(), role: 'user', content: isAr ? '/plan — اعملي خطة عمل' : '/plan — Generate action plan' };
+    setMessages(prev => [...prev, userMsg]);
+
+    try {
+      const payload: { sessionId: string; clientId?: number } = { sessionId };
+      if (selectedClientId != null) payload.clientId = selectedClientId;
+
+      const res = await fetch('/api/trpc/copilot.generatePlan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ json: payload }),
+      });
+
+      const d = await res.json();
+      const result = d.result?.data?.json ?? d.result?.data;
+
+      if (result?.plan) {
+        const planText = result.plan.map((s: { task: string; why: string; howTo: string[]; difficulty: string; timeEstimate: string }, i: number) =>
+          `**${i + 1}. ${s.task}**\n${s.why}\n${s.howTo.map((h: string) => `  • ${h}`).join('\n')}\n⏱ ${s.timeEstimate} | 📊 ${s.difficulty}`
+        ).join('\n\n');
+        const aiMsg: Message = {
+          id: Date.now() + 1,
+          role: 'assistant',
+          content: `${isAr ? '🎯 خطة العمل بتاعتك:' : '🎯 Your Action Plan:'}\n\n${planText}\n\n${isAr ? '✅ الخطة اتحفظت في صفحة My Brand. ابدأ من الخطوة الأولى!' : '✅ Plan saved to My Brand page. Start with step 1!'}`,
+        };
+        setMessages(prev => [...prev, aiMsg]);
+        setCredits(result.creditsRemaining ?? credits);
+        if (import.meta.env.VITE_POSTHOG_KEY) {
+          posthog.capture('copilot_plan_generated');
+        }
+      } else {
+        const errMsg = d.error?.json?.message || d.error?.message || (isAr ? 'حصل مشكلة — حاول تاني.' : 'Something went wrong — try again.');
+        setError(errMsg);
+      }
+    } catch {
+      setError(isAr ? 'مشكلة في الاتصال — حاول تاني.' : 'Connection error — please try again.');
+    } finally {
+      setPlanLoading(false);
+      inputRef.current?.focus();
+    }
+  }, [planLoading, loading, sessionId, credits, isAr, selectedClientId]);
 
   const userBubbleSide = isAr ? 'justify-start' : 'justify-end';
   const aiBubbleSide = isAr ? 'justify-end' : 'justify-start';
@@ -419,6 +468,7 @@ export default function Copilot() {
           {messages.length > 0 && messages.length < 6 && (
             <div className="mb-2 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
               {[
+               isAr ? '🎯 اعملي خطة عمل' : '🎯 Action Plan',
                 isAr ? 'اكتبلي bio' : 'Write a bio',
                 isAr ? 'اقترحلي tagline' : 'Suggest tagline',
                 isAr ? 'إزاي أسعّر؟' : 'Pricing help',
@@ -426,11 +476,15 @@ export default function Copilot() {
                 <button
                   key={i}
                   type="button"
-                  onClick={() => sendMessage(q)}
-                  disabled={loading}
-                  className="flex-shrink-0 rounded-full border border-zinc-200/80 bg-white/70 px-3 py-1.5 text-xs text-zinc-600 transition hover:border-primary/30 dark:border-zinc-700 dark:bg-zinc-900/60 dark:text-zinc-300 disabled:opacity-50"
+                  onClick={() => q.includes('🎯') ? generatePlan() : sendMessage(q)}
+                  disabled={loading || planLoading}
+                  className={`flex-shrink-0 rounded-full border px-3 py-1.5 text-xs transition disabled:opacity-50 ${
+                    q.includes('🎯')
+                      ? 'border-primary/40 bg-primary/10 text-primary font-semibold hover:bg-primary/20 dark:border-primary/30 dark:text-primary'
+                      : 'border-zinc-200/80 bg-white/70 text-zinc-600 hover:border-primary/30 dark:border-zinc-700 dark:bg-zinc-900/60 dark:text-zinc-300'
+                  }`}
                 >
-                  {q}
+                  {planLoading && q.includes('🎯') ? (isAr ? '⏳ جاري التوليد...' : '⏳ Generating...') : q}
                 </button>
               ))}
             </div>
@@ -459,7 +513,7 @@ export default function Copilot() {
             </button>
           </div>
           <p className="mt-2 text-center text-xs text-zinc-500 dark:text-zinc-400">
-            {isAr ? '٥ كريدت لكل رسالة' : '5 credits per message'}
+            {isAr ? '٥ كريدت لكل رسالة | ١٠ كريدت لخطة العمل' : '5 credits/message | 10 credits/action plan'}
           </p>
         </div>
       </div>

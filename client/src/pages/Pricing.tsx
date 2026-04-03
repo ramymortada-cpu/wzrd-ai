@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import posthog from 'posthog-js';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
+import SEO from '@/components/SEO';
 import WzrdPublicHeader from '@/components/WzrdPublicHeader';
 import { toArabicNumerals } from '@/lib/formatUtils';
 import { waMeHref } from '@/lib/waContact';
@@ -298,6 +299,14 @@ export default function Pricing() {
 
   return (
     <div className="wzrd-public-page">
+      <SEO
+        title="Pricing — AI Brand Diagnosis Credits"
+        titleAr="الأسعار — كريدتات تشخيص البراند"
+        description="Get credits to unlock premium AI brand diagnostics. Plans starting from 99 EGP. No subscription required."
+        descriptionAr="احصل على كريدتات لفتح تشخيصات البراند الاحترافية. باقات تبدأ من 99 جنيه. بدون اشتراك."
+        path="/pricing"
+        locale={locale}
+      />
       <WzrdPublicHeader credits={credits} />
 
       {/* ── Hero ── */}

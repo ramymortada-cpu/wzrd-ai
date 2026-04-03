@@ -15,7 +15,7 @@ import QuickSearch from "./components/QuickSearch";
 
 /** Public WZZRD funnel + tools; Command Center (/dashboard, etc.) stays on default app chrome. */
 const WZZRD_PREMIUM_SHELL_RE = new RegExp(
-  "^/(?:signup|login|pricing|my-brand|copilot|wzrd-admin|admin|panel|profile|settings|my-requests|quick-check|tools|portal|proposal-view)(?:/|$)"
+  "^/(?:signup|login|pricing|my-brand|copilot|wzrd-admin|admin|panel|profile|settings|my-requests|my-reports|referrals|quick-check|tools|portal|proposal-view)(?:/|$)"
 );
 
 // ============ LAZY-LOADED PAGES ============
@@ -72,6 +72,8 @@ const CopilotPage = lazy(() => import("./pages/Copilot"));
 const CompetitiveBenchmarkPage = lazy(() => import("./pages/CompetitiveBenchmark"));
 const QuickDiagnosisPage = lazy(() => import("./pages/QuickDiagnosis"));
 const MyRequestsPage = lazy(() => import("./pages/MyRequests"));
+const MyReportsPage = lazy(() => import("./pages/MyReports"));
+const ReferralsPage = lazy(() => import("./pages/Referrals"));
 const SettingsPage = lazy(() => import("./pages/Settings"));
 const ContractsPage = lazy(() => import("./pages/Contracts"));
 const InvitePage = lazy(() => import("./pages/Invite"));
@@ -190,6 +192,8 @@ function App() {
                 <Route path="/tools/benchmark">{() => <SuspenseWrapper><CompetitiveBenchmarkPage /></SuspenseWrapper>}</Route>
                 <Route path="/tools/quick">{() => <SuspenseWrapper><QuickDiagnosisPage /></SuspenseWrapper>}</Route>
                 <Route path="/my-requests">{() => <SuspenseWrapper><MyRequestsPage /></SuspenseWrapper>}</Route>
+                <Route path="/my-reports">{() => <SuspenseWrapper><MyReportsPage /></SuspenseWrapper>}</Route>
+                <Route path="/referrals">{() => <SuspenseWrapper><ReferralsPage /></SuspenseWrapper>}</Route>
                 <Route path="/admin">{() => <SuspenseWrapper><WzrdAdminPage /></SuspenseWrapper>}</Route>
                 <Route path="/panel">{() => <SuspenseWrapper><WzrdAdminPage /></SuspenseWrapper>}</Route>
                 <Route path="/wzrd-admin">{() => <SuspenseWrapper><WzrdAdminPage /></SuspenseWrapper>}</Route>

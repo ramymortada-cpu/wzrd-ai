@@ -10,9 +10,12 @@
 
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "../_core/cookies";
-import { publicProcedure, router } from "../_core/trpc";
+import { publicProcedure, protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { logger } from "../_core/logger";
+import { getDb } from "../_core/db";
+import { users, diagnosisHistory, creditHistory, userChecklists, premiumReports, serviceRequests, copilotMessages } from "@db/schema";
+import { eq } from "drizzle-orm";
 import { fireEmailTrigger } from "../emailTrigger";
 import { createPublicUser, getUserByEmail } from "../db";
 import { addCredits, SIGNUP_BONUS } from "../db";
@@ -203,4 +206,70 @@ export const authRouter = router({
     ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
     return { success: true } as const;
   }),
+
+  /** GDPR: Export all user data as JSON */
+  exportData: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db || !ctx.user) throw new Error('Not authenticated');
+    const userId = ctx.user.id;
+
+    const [userData] = await db.select().from(users).where(eq(users.id, userId));
+    const diagnoses = await db.select().from(diagnosisHistory).where(eq(diagnosisHistory.userId, userId));
+    const credits = await db.select().from(creditHistory).where(eq(creditHistory.userId, userId));
+    const checklists = await db.select().from(userChecklists).where(eq(userChecklists.userId, userId));
+
+    // Try premium reports and service requests (may not exist yet)
+    let reports: unknown[] = [];
+    let requests: unknown[] = [];
+    let conversations: unknown[] = [];
+    try { reports = await db.select().from(premiumReports).where(eq(premiumReports.userId, userId)); } catch {}
+    try { requests = await db.select().from(serviceRequests).where(eq(serviceRequests.userId, userId)); } catch {}
+    try { conversations = await db.select().from(copilotMessages).where(eq(copilotMessages.userId, userId)); } catch {}
+
+    // Remove sensitive fields
+    const { openId: _o, ...safeUser } = userData || {} as Record<string, unknown>;
+
+    return {
+      exportedAt: new Date().toISOString(),
+      user: safeUser,
+      diagnoses,
+      creditHistory: credits,
+      checklists,
+      premiumReports: reports,
+      serviceRequests: requests,
+      copilotMessages: conversations,
+    };
+  }),
+
+  /** GDPR: Delete account and all associated data */
+  deleteAccount: protectedProcedure
+    .input(z.object({ confirmEmail: z.string().email() }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db || !ctx.user) throw new Error('Not authenticated');
+      const userId = ctx.user.id;
+
+      // Verify email matches
+      if (input.confirmEmail !== ctx.user.email) {
+        throw new Error('Email does not match your account');
+      }
+
+      logger.info(`[GDPR] User ${userId} (${ctx.user.email}) requested account deletion`);
+
+      // Delete all user data in order (child tables first)
+      try { await db.delete(premiumReports).where(eq(premiumReports.userId, userId)); } catch {}
+      try { await db.delete(copilotMessages).where(eq(copilotMessages.userId, userId)); } catch {}
+      try { await db.delete(serviceRequests).where(eq(serviceRequests.userId, userId)); } catch {}
+      await db.delete(userChecklists).where(eq(userChecklists.userId, userId));
+      await db.delete(creditHistory).where(eq(creditHistory.userId, userId));
+      await db.delete(diagnosisHistory).where(eq(diagnosisHistory.userId, userId));
+      await db.delete(users).where(eq(users.id, userId));
+
+      // Clear session
+      const cookieOptions = getSessionCookieOptions(ctx.req);
+      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+
+      logger.info(`[GDPR] User ${userId} account deleted successfully`);
+      return { success: true, message: 'Account deleted successfully' };
+    }),
 });

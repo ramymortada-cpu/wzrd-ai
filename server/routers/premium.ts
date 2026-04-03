@@ -20,8 +20,8 @@ import { invokeClaude } from "../_core/llmProviders";
 import { scrapeWebsite, buildWebsiteContext, fetchLighthouseScores } from "../researchEngine";
 import { getSemanticKnowledge } from "../vectorSearch";
 import { getDb } from "../db/index";
-import { users, creditTransactions } from "../../drizzle/schema";
-import { eq, sql } from "drizzle-orm";
+import { users, creditTransactions, premiumReports } from "../../drizzle/schema";
+import { eq, sql, desc } from "drizzle-orm";
 import { validatePromoCode, type PromoValidation } from "../db/promoCodes";
 import { getPremiumPrices, getPremiumReportCreditCost } from "../siteConfig";
 import { sendPremiumReportEmail } from "../wzrdEmails";
@@ -343,9 +343,31 @@ export const premiumRouter = router({
 
         fireEmailTrigger('premium_purchase', userId, { toolName: display, score: scoreForEmail }).catch(() => {});
 
+        // 5. Persist premium report to DB
+        let savedReportId: number | null = null;
+        if (db) {
+          try {
+            const insertResult = await db.insert(premiumReports).values({
+              userId,
+              toolId: input.toolId,
+              freeScore: input.freeScore ?? null,
+              report: report,
+              creditsUsed: premiumCredits,
+            });
+            savedReportId = (insertResult as unknown as [{ insertId: number }])?.[0]?.insertId
+              ?? (insertResult as unknown as { insertId: number })?.insertId
+              ?? null;
+            logger.info({ userId, reportId: savedReportId }, '[Premium] Report persisted to DB');
+          } catch (persistErr) {
+            // Non-fatal — the user still gets the report, just not saved
+            logger.error({ err: persistErr }, '[Premium] Failed to persist report to DB');
+          }
+        }
+
         return {
           success: true,
           report,
+          reportId: savedReportId,
           creditsUsed: premiumCredits,
           creditsRemaining: remaining,
           model: 'Claude',
@@ -368,4 +390,48 @@ export const premiumRouter = router({
       prices: getPremiumPrices(),
     };
   }),
+
+  /** Get all premium reports for the logged-in user */
+  getMyReports: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.user!.id;
+    const db = await getDb();
+    if (!db) return [];
+    const rows = await db
+      .select()
+      .from(premiumReports)
+      .where(eq(premiumReports.userId, userId))
+      .orderBy(desc(premiumReports.createdAt));
+    return rows.map((r) => ({
+      id: r.id,
+      toolId: r.toolId,
+      toolName: WZRD_DIAGNOSIS_TOOL_NAMES[r.toolId] ?? r.toolId,
+      freeScore: r.freeScore,
+      report: r.report as Record<string, unknown>,
+      creditsUsed: r.creditsUsed,
+      createdAt: r.createdAt.toISOString(),
+    }));
+  }),
+
+  /** Get a single premium report by ID (must belong to the user) */
+  getReport: protectedProcedure
+    .input(z.object({ reportId: z.number() }))
+    .query(async ({ input, ctx }) => {
+      const userId = ctx.user!.id;
+      const db = await getDb();
+      if (!db) return null;
+      const [row] = await db
+        .select()
+        .from(premiumReports)
+        .where(sql`${premiumReports.id} = ${input.reportId} AND ${premiumReports.userId} = ${userId}`);
+      if (!row) return null;
+      return {
+        id: row.id,
+        toolId: row.toolId,
+        toolName: WZRD_DIAGNOSIS_TOOL_NAMES[row.toolId] ?? row.toolId,
+        freeScore: row.freeScore,
+        report: row.report as Record<string, unknown>,
+        creditsUsed: row.creditsUsed,
+        createdAt: row.createdAt.toISOString(),
+      };
+    }),
 });

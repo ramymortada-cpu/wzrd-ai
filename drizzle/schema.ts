@@ -1197,3 +1197,20 @@ export const reportDownloads = mysqlTable("report_downloads", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 export type ReportDownload = typeof reportDownloads.$inferSelect;
+
+/**
+ * Premium Reports — stores full Claude-generated premium reports.
+ * Links to diagnosis_history so users can revisit their premium reports.
+ */
+export const premiumReports = mysqlTable("premium_reports", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id").notNull(),
+  toolId: varchar("tool_id", { length: 50 }).notNull(),
+  diagnosisHistoryId: int("diagnosis_history_id"),
+  freeScore: int("free_score"),
+  report: json("report").notNull(),
+  creditsUsed: int("credits_used").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+export type PremiumReport = typeof premiumReports.$inferSelect;
+export type NewPremiumReport = typeof premiumReports.$inferInsert;

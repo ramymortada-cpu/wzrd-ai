@@ -458,10 +458,49 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
   const [unlocking, setUnlocking] = useState(false);
   const [error, setError] = useState('');
   const [premiumReport, setPremiumReport] = useState<PremiumReportPayload | null>(null);
+  const [generatingPremium, setGeneratingPremium] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const pdfMutation = trpc.reportPdf.generateHtml.useMutation();
   const premiumPdfMutation = trpc.reportPdf.generatePremiumHtml.useMutation();
+  const premiumStatusQuery = trpc.premium.status.useQuery(undefined, { staleTime: 60_000 });
+
+  const handleGeneratePremiumReport = async () => {
+    if (generatingPremium || !result) return;
+    setGeneratingPremium(true);
+    setError('');
+    try {
+      const res = await fetch('/api/trpc/premium.generateReport', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ json: {
+          toolId: config.id,
+          formData: formData as Record<string, unknown>,
+          freeScore: result.score,
+        }}),
+      });
+      const data = await res.json();
+      const payload = data.result?.data?.json ?? data.result?.data;
+      if (payload?.success && payload.report) {
+        if (import.meta.env.VITE_POSTHOG_KEY) {
+          posthog.capture('premium_report_generated', { toolId: config.id, score: result.score });
+        }
+        setPremiumReport({
+          report: payload.report,
+          creditsUsed: payload.creditsUsed,
+          creditsRemaining: payload.creditsRemaining,
+        });
+      } else {
+        const errMsg = payload?.error || (isAr ? '\u0641\u0634\u0644 \u0641\u064a \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u062a\u0642\u0631\u064a\u0631.' : 'Failed to generate report.');
+        setError(errMsg);
+      }
+    } catch {
+      setError(isAr ? '\u062e\u0637\u0623 \u0641\u064a \u0627\u0644\u0634\u0628\u0643\u0629. \u062d\u0627\u0648\u0644 \u0645\u062c\u062f\u062f\u0627\u064b.' : 'Network error. Please try again.');
+    } finally {
+      setGeneratingPremium(false);
+    }
+  };
 
   const handleDownloadPdf = async () => {
     if (!result) return;
@@ -1071,6 +1110,53 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
               >
                 {isAr ? 'اعرف أكتر ←' : 'Learn more →'}
               </a>
+            </div>
+          )}
+
+          {/* Premium Report CTA */}
+          {premiumStatusQuery.data?.claudeAvailable && !premiumReport && (
+            <div className="mb-5 rounded-2xl border-2 border-[#7C3AED] bg-gradient-to-br from-[#F5F3FF] to-[#EDE9FE] p-6 text-center">
+              <div className="mb-2 text-2xl">\u2726</div>
+              <p className="mb-1 text-base font-bold text-[#111827]">
+                {isAr ? '\u0627\u062d\u0635\u0644 \u0639\u0644\u0649 \u0627\u0644\u062a\u0642\u0631\u064a\u0631 \u0627\u0644\u0627\u062d\u062a\u0631\u0627\u0641\u064a \u0627\u0644\u0643\u0627\u0645\u0644' : 'Get the Full Premium Report'}
+              </p>
+              <p className="mb-1 text-sm text-[#6B7280]">
+                {isAr
+                  ? '\u062a\u062d\u0644\u064a\u0644 \u0645\u0639\u0645\u0651\u0642 \u0628\u0627\u0644\u0640 AI \u0644\u0643\u0644 \u0645\u062d\u0648\u0631 \u2014 \u062e\u0637\u0629 \u0639\u0645\u0644 30/60/90 \u064a\u0648\u0645 \u2014 \u0623\u0648\u0644\u0648\u064a\u0627\u062a \u0648\u0627\u0636\u062d\u0629'
+                  : 'Deep AI analysis per pillar \u2014 30/60/90 day action plan \u2014 clear priorities'}
+              </p>
+              <p className="mb-4 text-xs text-[#9CA3AF]">
+                {isAr
+                  ? `${premiumStatusQuery.data?.prices?.single_report?.credits ?? 100} \u0643\u0631\u064a\u062f\u062a \u00b7 \u062a\u0642\u0631\u064a\u0631 \u0645\u0646 2000+ \u0643\u0644\u0645\u0629 \u0628\u0627\u0644\u0640 Claude AI`
+                  : `${premiumStatusQuery.data?.prices?.single_report?.credits ?? 100} credits \u00b7 2000+ word report by Claude AI`}
+              </p>
+              <button
+                type="button"
+                onClick={handleGeneratePremiumReport}
+                disabled={generatingPremium}
+                className="w-full rounded-full bg-[#7C3AED] py-4 text-sm font-bold text-white shadow-md hover:bg-[#6D28D9] disabled:opacity-50 transition"
+              >
+                {generatingPremium ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    {isAr ? 'WZZRING... \u062c\u0627\u0631\u064a \u0627\u0644\u062a\u062d\u0644\u064a\u0644 \u0627\u0644\u0639\u0645\u064a\u0642' : 'WZZRING... Deep analysis in progress'}
+                  </span>
+                ) : (
+                  isAr
+                    ? `\u2726 \u0627\u062d\u0635\u0644 \u0639\u0644\u0649 \u0627\u0644\u062a\u0642\u0631\u064a\u0631 \u0627\u0644\u0627\u062d\u062a\u0631\u0627\u0641\u064a \u2014 ${premiumStatusQuery.data?.prices?.single_report?.credits ?? 100} \u0643\u0631\u064a\u062f\u062a`
+                    : `\u2726 Get Premium Report \u2014 ${premiumStatusQuery.data?.prices?.single_report?.credits ?? 100} credits`
+                )}
+              </button>
+              {error && (
+                <div className="mt-3 text-sm text-red-600">
+                  <p>{error}</p>
+                  {looksLikeInsufficientCredits(error) && (
+                    <a href="/pricing" className="mt-1 inline-block font-semibold text-[#7C3AED] hover:underline">
+                      {isAr ? '\u0627\u0634\u062a\u0631\u0650 \u0643\u0631\u064a\u062f\u062a \u2190' : 'Buy credits \u2192'}
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

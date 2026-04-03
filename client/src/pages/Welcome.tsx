@@ -8,6 +8,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import WzrdPublicHeader from "@/components/WzrdPublicHeader";
 import { useI18n } from "@/lib/i18n";
+import SEO from "@/components/SEO";
 
 const C = {
   bg:         "#FAFAF5",
@@ -64,6 +65,12 @@ const TOOL_DEFS = [
     tagK: "pub.tool.launch.tag", nameK: "pub.tool.launch.name", descK: "pub.tool.launch.desc", ctaK: "pub.tool.launch.cta",
     arProblem: "إطلاقك القادم قد يفشل بدون تشخيص مسبق", enProblem: "Your next launch may fail without a prior diagnosis",
     arStat: "٧٢٪ من الإطلاقات الجديدة تفشل في الشهر الأول بسبب أخطاء يمكن تفاديها", enStat: "72% of new launches fail in the first month due to avoidable mistakes",
+  },
+  {
+    id: "design-health", icon: "🎨", cost: 300, popular: false, route: "/tools/design-health",
+    tagK: "pub.tool.brand.tag", nameK: "pub.tool.design.name", descK: "pub.tool.design.desc", ctaK: "pub.tool.design.cta",
+    arProblem: "تصميم موقعك بيطرد الزوار قبل ما يقرأوا كلمة", enProblem: "Your website design is driving visitors away before they read a word",
+    arStat: "٧٥٪ من المستخدمين يحكمون على مصداقيتك من تصميم موقعك فقط", enStat: "75% of users judge your credibility based on website design alone",
   },
   {
     id: "quick", icon: "⚡", cost: 200, popular: false, route: "/tools/quick",
@@ -137,7 +144,7 @@ const STAT_KEYS = [
   { arVal:"+٥٠٠", enVal:"500+", labelK:"pub.stats.diag",   subK:"pub.stats.diagSub" },
   { arVal:"٩٣٪",  enVal:"93%",  labelK:"pub.stats.saving", subK:"pub.stats.savingSub" },
   { arVal:"٣٠ث",  enVal:"30s",  labelK:"pub.stats.time",   subK:"pub.stats.timeSub" },
-  { arVal:"٨",    enVal:"8",    labelK:"pub.stats.tools",  subK:"pub.stats.toolsSub" },
+  { arVal:"٩",    enVal:"9",    labelK:"pub.stats.tools",  subK:"pub.stats.toolsSub" },
 ];
 const COUNTRIES = [
   { flag:"🇪🇬", ar:"مصر",      en:"Egypt" },
@@ -603,6 +610,14 @@ export default function Welcome() {
 
   return (
     <div style={{ fontFamily:FONT, background:C.bg, minHeight:"100vh", direction: isAr ? "rtl" : "ltr" }}>
+      <SEO
+        title="AI Brand Diagnosis — Fix Your Brand in 30 Seconds"
+        titleAr="تشخيص علامتك التجارية بالذكاء الاصطناعي"
+        description="9 AI-powered diagnostic tools for Arab founders. Get an instant report on your brand problems and solutions in 30 seconds."
+        descriptionAr="9 أدوات تشخيص بالذكاء الاصطناعي للمؤسسين العرب. اعرف مشكلة براندك في 30 ثانية — تقرير فوري بالمشاكل والحلول."
+        path="/"
+        locale={locale}
+      />
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
