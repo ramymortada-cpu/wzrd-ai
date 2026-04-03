@@ -428,42 +428,54 @@ async function runToolAI(
     throw new Error(deduction.error || 'Insufficient credits');
   }
 
-  const text = await callDiagnosisModel(toolId, defaultSystemPrompt, userPrompt);
-  const parsedBody = parseDiagnosisAiResponse(text, toolId);
+  try {
+    const text = await callDiagnosisModel(toolId, defaultSystemPrompt, userPrompt);
+    const parsedBody = parseDiagnosisAiResponse(text, toolId);
 
-  const result: ToolResult = {
-    score: parsedBody.score,
-    label: scoreLabel(parsedBody.score),
-    findings: parsedBody.findings,
-    actionItems: parsedBody.actionItems,
-    recommendation: parsedBody.recommendation,
-    nextStep: { type: 'guide', title: 'Learn more', url: '/guides/brand-health' },
-    serviceRecommendation: getServiceRecommendation(toolId, parsedBody.score),
-    creditsUsed: deduction.cost,
-    creditsRemaining: deduction.newBalance ?? 0,
-  };
+    const result: ToolResult = {
+      score: parsedBody.score,
+      label: scoreLabel(parsedBody.score),
+      findings: parsedBody.findings,
+      actionItems: parsedBody.actionItems,
+      recommendation: parsedBody.recommendation,
+      nextStep: { type: 'guide', title: 'Learn more', url: '/guides/brand-health' },
+      serviceRecommendation: getServiceRecommendation(toolId, parsedBody.score),
+      creditsUsed: deduction.cost,
+      creditsRemaining: deduction.newBalance ?? 0,
+    };
 
-  // 4. Save to diagnosis_history (non-blocking — don't fail the tool if save fails)
-  saveDiagnosisHistory(userId, toolId, result).catch(err => {
-    logger.error({ err, userId, toolId }, 'Failed to save diagnosis history — result still shown to user');
-  });
+    // 4. Save to diagnosis_history (non-blocking — don't fail the tool if save fails)
+    saveDiagnosisHistory(userId, toolId, result).catch(err => {
+      logger.error({ err, userId, toolId }, 'Failed to save diagnosis history — result still shown to user');
+    });
 
-  // 4b. Fire email automation triggers (non-blocking)
-  fireEmailTrigger('first_tool_run', userId, { score: parsedBody.score, toolName: toolDisplayName }).catch(() => {});
-  if (parsedBody.score < 40) {
-    fireEmailTrigger('low_score', userId, { score: parsedBody.score, toolName: toolDisplayName }).catch(() => {});
+    // 4b. Fire email automation triggers (non-blocking)
+    fireEmailTrigger('first_tool_run', userId, { score: parsedBody.score, toolName: toolDisplayName }).catch(() => {});
+    if (parsedBody.score < 40) {
+      fireEmailTrigger('low_score', userId, { score: parsedBody.score, toolName: toolDisplayName }).catch(() => {});
+    }
+
+    // 5. Send result email (non-blocking)
+    if (userEmail) {
+      sendToolResultEmail(
+        userEmail, '', toolDisplayName, result.score,
+        result.findings.map(f => ({ title: f.title, detail: f.detail })),
+        result.recommendation, result.nextStep.url
+      ).catch(() => {});
+    }
+
+    return result;
+  } catch (err: unknown) {
+    try {
+      const { addCredits } = await import('../db');
+      await addCredits(userId, deduction.cost, 'refund', `Refund — ${toolId} diagnosis AI failed`);
+    } catch { /* best effort refund */ }
+
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes('كريدت') || msg.includes('استنى')) throw err;
+    logger.error({ err, userId, toolId }, 'Tool AI failed after deduction');
+    throw new Error('حصل مشكلة — حاول تاني. الكريدت اترجعت.');
   }
-
-  // 5. Send result email (non-blocking)
-  if (userEmail) {
-    sendToolResultEmail(
-      userEmail, '', toolDisplayName, result.score,
-      result.findings.map(f => ({ title: f.title, detail: f.detail })),
-      result.recommendation, result.nextStep.url
-    ).catch(() => {});
-  }
-
-  return result;
 }
 
 // ════════════════════════════════════════════
@@ -1227,8 +1239,13 @@ Respond ONLY in this JSON format:
           creditsRemaining: deduction.newBalance ?? 0,
         };
       } catch (err: unknown) {
+        try {
+          const { addCredits } = await import('../db');
+          await addCredits(ctx.user!.id, deduction.cost, 'refund', 'Refund — competitive benchmark AI failed');
+        } catch { /* best effort refund */ }
+
         logger.error({ err }, 'Competitive benchmark failed');
-        throw new Error('حصل مشكلة في التحليل — حاول تاني.');
+        throw new Error('حصل مشكلة في التحليل — حاول تاني. الكريدت اترجعت.');
       }
     }),
 
