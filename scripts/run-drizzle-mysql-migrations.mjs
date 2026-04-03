@@ -34,6 +34,7 @@ const FILES = [
   '0019_paymob_processed_transactions.sql',
   '0022_blog_posts.sql',
   '0025_invite_tokens.sql',
+  '0027_knowledge_entries_embedding.sql',
 ];
 
 /** Tables we expect after 0015–0017 (0018 alters enum, 0019 Paymob idempotency). */
