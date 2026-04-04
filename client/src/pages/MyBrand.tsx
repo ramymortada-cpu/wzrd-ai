@@ -40,6 +40,62 @@ interface Checklist {
   createdAt: string;
 }
 
+interface BrandProfileData {
+  companyName?: string | null;
+  industry?: string | null;
+  market?: string | null;
+  website?: string | null;
+  socialMedia?: string | null;
+  yearsInBusiness?: string | null;
+  teamSize?: string | null;
+  monthlyRevenue?: string | null;
+  currentPositioning?: string | null;
+  targetAudience?: string | null;
+  biggestChallenge?: string | null;
+  brandPersonality?: string | null;
+  desiredPerception?: string | null;
+  currentGap?: string | null;
+  competitors?: string | null;
+  tagline?: string | null;
+  elevatorPitch?: string | null;
+  websiteHeadline?: string | null;
+  instagramBio?: string | null;
+  linkedinAbout?: string | null;
+  toneOfVoice?: string | null;
+  keyDifferentiator?: string | null;
+  customerQuote?: string | null;
+  brandColors?: string | null;
+  hasLogo?: string | null;
+  hasGuidelines?: string | null;
+  currentPackages?: string | null;
+  numberOfPackages?: string | null;
+  pricingModel?: string | null;
+  cheapestPrice?: string | null;
+  highestPrice?: string | null;
+  commonObjections?: string | null;
+  competitorPricing?: string | null;
+  instagramHandle?: string | null;
+  instagramFollowers?: string | null;
+  otherPlatforms?: string | null;
+  postingFrequency?: string | null;
+  contentType?: string | null;
+  inquiryMethod?: string | null;
+  avgResponseTime?: string | null;
+  googleBusiness?: string | null;
+  launchType?: string | null;
+  targetLaunchDate?: string | null;
+  hasOfferStructure?: string | null;
+  hasWebsite?: string | null;
+  hasContentPlan?: string | null;
+  marketingBudget?: string | null;
+  teamCapacity?: string | null;
+  biggestConcern?: string | null;
+  successMetric?: string | null;
+  totalDiagnosesRun?: number;
+  lastToolUsed?: string | null;
+  updatedAt?: string;
+}
+
 function BrandHealthEmptyIllustration({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
@@ -62,6 +118,254 @@ function BrandHealthEmptyIllustration({ className }: { className?: string }) {
   );
 }
 
+/* ─── Brand Profile Section ─── */
+
+interface ProfileSectionProps {
+  title: string;
+  icon: string;
+  fields: Array<{ label: string; value: string | null | undefined }>;
+  isAr: boolean;
+}
+
+function ProfileSection({ title, icon, fields, isAr }: ProfileSectionProps) {
+  const [open, setOpen] = useState(false);
+  const populated = fields.filter((f) => f.value && f.value.trim());
+  if (populated.length === 0) return null;
+
+  return (
+    <div className="border-b border-zinc-200/50 last:border-b-0 dark:border-zinc-700/50">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30"
+      >
+        <span className="text-lg">{icon}</span>
+        <span className="flex-1 text-sm font-semibold text-zinc-800 dark:text-zinc-200">{title}</span>
+        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+          {populated.length}/{fields.length}
+        </span>
+        <svg
+          className={`h-4 w-4 text-zinc-400 transition-transform ${open ? 'rotate-180' : ''}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && (
+        <div className="space-y-2 px-4 pb-4" dir={isAr ? 'rtl' : 'ltr'}>
+          {populated.map((f, i) => (
+            <div key={i} className="flex gap-2 text-sm">
+              <span className="min-w-[100px] flex-shrink-0 font-medium text-zinc-500 dark:text-zinc-400">
+                {f.label}
+              </span>
+              <span className="text-zinc-800 dark:text-zinc-200">{f.value}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BrandProfileCard({ profile, isAr }: { profile: BrandProfileData; isAr: boolean }) {
+  const sections = useMemo(() => {
+    const s = [
+      {
+        title: isAr ? 'الهوية الأساسية' : 'Core Identity',
+        icon: '🏢',
+        fields: [
+          { label: isAr ? 'الشركة' : 'Company', value: profile.companyName },
+          { label: isAr ? 'الصناعة' : 'Industry', value: profile.industry },
+          { label: isAr ? 'السوق' : 'Market', value: profile.market },
+          { label: isAr ? 'الموقع' : 'Website', value: profile.website },
+          { label: isAr ? 'السوشيال' : 'Social', value: profile.socialMedia },
+          { label: isAr ? 'سنوات' : 'Years', value: profile.yearsInBusiness },
+          { label: isAr ? 'الفريق' : 'Team', value: profile.teamSize },
+          { label: isAr ? 'الإيراد' : 'Revenue', value: profile.monthlyRevenue },
+        ],
+      },
+      {
+        title: isAr ? 'التموضع والجمهور' : 'Positioning & Audience',
+        icon: '🎯',
+        fields: [
+          { label: isAr ? 'التموضع' : 'Positioning', value: profile.currentPositioning },
+          { label: isAr ? 'الجمهور' : 'Audience', value: profile.targetAudience },
+          { label: isAr ? 'التحدي' : 'Challenge', value: profile.biggestChallenge },
+          { label: isAr ? 'الشخصية' : 'Personality', value: profile.brandPersonality },
+          { label: isAr ? 'الصورة المرغوبة' : 'Desired Image', value: profile.desiredPerception },
+          { label: isAr ? 'الفجوة' : 'Gap', value: profile.currentGap },
+          { label: isAr ? 'المنافسين' : 'Competitors', value: profile.competitors },
+        ],
+      },
+      {
+        title: isAr ? 'الرسائل والمحتوى' : 'Messaging & Content',
+        icon: '💬',
+        fields: [
+          { label: isAr ? 'التاجلاين' : 'Tagline', value: profile.tagline },
+          { label: 'Elevator Pitch', value: profile.elevatorPitch },
+          { label: isAr ? 'عنوان الموقع' : 'Headline', value: profile.websiteHeadline },
+          { label: isAr ? 'بايو إنستجرام' : 'IG Bio', value: profile.instagramBio },
+          { label: 'LinkedIn About', value: profile.linkedinAbout },
+          { label: isAr ? 'نبرة الصوت' : 'Tone', value: profile.toneOfVoice },
+          { label: isAr ? 'الميزة التنافسية' : 'Differentiator', value: profile.keyDifferentiator },
+          { label: isAr ? 'اقتباس عميل' : 'Testimonial', value: profile.customerQuote },
+        ],
+      },
+      {
+        title: isAr ? 'الهوية البصرية' : 'Visual Identity',
+        icon: '🎨',
+        fields: [
+          { label: isAr ? 'الألوان' : 'Colors', value: profile.brandColors },
+          { label: isAr ? 'لوجو' : 'Logo', value: profile.hasLogo },
+          { label: isAr ? 'دليل بصري' : 'Guidelines', value: profile.hasGuidelines },
+        ],
+      },
+      {
+        title: isAr ? 'العرض والتسعير' : 'Offer & Pricing',
+        icon: '💰',
+        fields: [
+          { label: isAr ? 'الباقات' : 'Packages', value: profile.currentPackages },
+          { label: isAr ? 'عدد الباقات' : '# Packages', value: profile.numberOfPackages },
+          { label: isAr ? 'نموذج التسعير' : 'Pricing Model', value: profile.pricingModel },
+          { label: isAr ? 'أقل سعر' : 'Lowest', value: profile.cheapestPrice },
+          { label: isAr ? 'أعلى سعر' : 'Highest', value: profile.highestPrice },
+          { label: isAr ? 'الاعتراضات' : 'Objections', value: profile.commonObjections },
+          { label: isAr ? 'أسعار المنافسين' : 'Competitor $', value: profile.competitorPricing },
+        ],
+      },
+      {
+        title: isAr ? 'الحضور الرقمي' : 'Digital Presence',
+        icon: '📱',
+        fields: [
+          { label: 'Instagram', value: profile.instagramHandle },
+          { label: isAr ? 'المتابعين' : 'Followers', value: profile.instagramFollowers },
+          { label: isAr ? 'منصات أخرى' : 'Platforms', value: profile.otherPlatforms },
+          { label: isAr ? 'تكرار النشر' : 'Frequency', value: profile.postingFrequency },
+          { label: isAr ? 'نوع المحتوى' : 'Content', value: profile.contentType },
+          { label: isAr ? 'الاستفسارات' : 'Inquiries', value: profile.inquiryMethod },
+          { label: isAr ? 'وقت الرد' : 'Response', value: profile.avgResponseTime },
+          { label: 'Google Business', value: profile.googleBusiness },
+        ],
+      },
+      {
+        title: isAr ? 'جاهزية الإطلاق' : 'Launch Readiness',
+        icon: '🚀',
+        fields: [
+          { label: isAr ? 'نوع الإطلاق' : 'Type', value: profile.launchType },
+          { label: isAr ? 'التاريخ' : 'Date', value: profile.targetLaunchDate },
+          { label: isAr ? 'هيكل عرض' : 'Offer Ready', value: profile.hasOfferStructure },
+          { label: isAr ? 'موقع جاهز' : 'Website Ready', value: profile.hasWebsite },
+          { label: isAr ? 'خطة محتوى' : 'Content Plan', value: profile.hasContentPlan },
+          { label: isAr ? 'الميزانية' : 'Budget', value: profile.marketingBudget },
+          { label: isAr ? 'الفريق' : 'Team', value: profile.teamCapacity },
+          { label: isAr ? 'أكبر قلق' : 'Concern', value: profile.biggestConcern },
+          { label: isAr ? 'مقياس النجاح' : 'Success', value: profile.successMetric },
+        ],
+      },
+    ];
+    return s;
+  }, [profile, isAr]);
+
+  // Calculate completeness
+  const allFields = sections.flatMap((s) => s.fields);
+  const filledCount = allFields.filter((f) => f.value && f.value.trim()).length;
+  const totalFields = allFields.length;
+  const completeness = Math.round((filledCount / totalFields) * 100);
+
+  const sectionsWithData = sections.filter(
+    (s) => s.fields.some((f) => f.value && f.value.trim()),
+  );
+
+  if (filledCount === 0) return null;
+
+  return (
+    <div className="wzrd-glass mb-4 overflow-hidden rounded-3xl">
+      {/* Header */}
+      <div className="border-b border-zinc-200/50 p-5 dark:border-zinc-700/50">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-base font-bold text-zinc-900 dark:text-white">
+              {isAr ? 'ملف البراند' : 'Brand Profile'}
+            </h3>
+            <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+              {isAr
+                ? `بيانات متراكمة من ${profile.totalDiagnosesRun || 0} تشخيص`
+                : `Accumulated from ${profile.totalDiagnosesRun || 0} diagnoses`}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="relative h-10 w-10">
+              <svg className="h-10 w-10 -rotate-90" viewBox="0 0 36 36">
+                <circle
+                  cx="18"
+                  cy="18"
+                  r="15.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="text-zinc-200 dark:text-zinc-700"
+                />
+                <circle
+                  cx="18"
+                  cy="18"
+                  r="15.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeDasharray={`${completeness} ${100 - completeness}`}
+                  strokeLinecap="round"
+                  className="text-primary"
+                />
+              </svg>
+              <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-zinc-700 dark:text-zinc-300">
+                {completeness}%
+              </span>
+            </div>
+          </div>
+        </div>
+        {/* Completeness bar */}
+        <div className="mt-3 flex items-center gap-2">
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-zinc-200/80 dark:bg-zinc-700/80">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-primary to-cyan-500 transition-all duration-700"
+              style={{ width: `${completeness}%` }}
+            />
+          </div>
+          <span className="text-xs tabular-nums text-zinc-500">
+            {filledCount}/{totalFields}
+          </span>
+        </div>
+      </div>
+
+      {/* Sections */}
+      <div className="divide-y divide-zinc-200/50 dark:divide-zinc-700/50">
+        {sectionsWithData.map((section) => (
+          <ProfileSection
+            key={section.title}
+            title={section.title}
+            icon={section.icon}
+            fields={section.fields}
+            isAr={isAr}
+          />
+        ))}
+      </div>
+
+      {/* Footer hint */}
+      {completeness < 80 && (
+        <div className="border-t border-zinc-200/50 px-4 py-3 text-center dark:border-zinc-700/50">
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            {isAr
+              ? 'شغّل أدوات تشخيص أكتر عشان تملا الملف — كل أداة بتضيف بيانات جديدة.'
+              : 'Run more diagnosis tools to fill your profile — each tool adds new data.'}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function MyBrand() {
   const [, navigate] = useLocation();
   const { locale } = useI18n();
@@ -70,11 +374,12 @@ export default function MyBrand() {
   const [history, setHistory] = useState<DiagnosisEntry[]>([]);
   const [trend, setTrend] = useState<string>('new');
   const [checklists, setChecklists] = useState<Checklist[]>([]);
+  const [brandProfile, setBrandProfile] = useState<BrandProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedDiagnosis, setSelectedDiagnosis] = useState<DiagnosisEntry | null>(null);
 
-  // Fetch history + checklists
+  // Fetch history + checklists + brand profile
   useEffect(() => {
     setLoading(true);
     Promise.all([
@@ -87,6 +392,10 @@ export default function MyBrand() {
         const data = d.result?.data?.json ?? d.result?.data ?? [];
         setChecklists(Array.isArray(data) ? data : []);
       }),
+      fetch('/api/trpc/brandProfile.getMyProfile').then(r => r.json()).then(d => {
+        const data = d.result?.data?.json ?? d.result?.data ?? null;
+        setBrandProfile(data);
+      }).catch(() => { /* brand profile not available yet — silent */ }),
     ])
       .catch(() => setError(isAr ? 'حصل مشكلة في التحميل — حاول تاني.' : 'Failed to load — please try again.'))
       .finally(() => setLoading(false));
@@ -233,7 +542,7 @@ export default function MyBrand() {
                 )}
               </div>
               {/* Score Bar */}
-              <div className="mt-4 h-3 overflow-hidden rounded-full bg-zinc-200/80 dark:bg-zinc-800/80">
+              <div className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-zinc-200/80 dark:bg-zinc-700/80">
                 <div
                   className="h-full rounded-full transition-all duration-700"
                   style={{
@@ -249,6 +558,9 @@ export default function MyBrand() {
                 <span>{isAr ? 'قوي' : 'Strong'}</span>
               </div>
             </div>
+
+            {/* ═══ BRAND PROFILE CARD ═══ */}
+            {brandProfile && <BrandProfileCard profile={brandProfile} isAr={isAr} />}
 
             {/* Stats + score trend chart */}
             {chartData.length > 0 && (
@@ -460,7 +772,7 @@ export default function MyBrand() {
                           <button
                             key={idx}
                             onClick={() => toggleItem(cl.id, idx)}
-                            className={`flex w-full items-start gap-3 rounded-xl p-3 text-left transition ${item.completed ? 'bg-emerald-500/10' : 'bg-zinc-100/60 hover:bg-zinc-200/50 dark:bg-zinc-800/40 dark:hover:bg-zinc-800/70'}`}
+                            className={`flex w-full items-start gap-3 rounded-xl p-3 text-left transition ${item.completed ? 'bg-emerald-500/10' : 'bg-zinc-100/60 hover:bg-zinc-200/50 dark:bg-zinc-800/40 dark:hover:bg-zinc-700/50'}`}
                             style={{ minHeight: '48px' }}
                           >
                             <div
