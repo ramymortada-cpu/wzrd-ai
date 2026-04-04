@@ -3,13 +3,57 @@
  * This is the "Brand Twin Memory" — every diagnosis upserts data here,
  * and the Copilot + Execution tools read from here.
  */
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { router, protectedProcedure } from "../_core/trpc";
 import { getDb } from "../db/index";
-import { brandProfiles } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { brandProfiles, users, diagnosisHistory } from "../../drizzle/schema";
+import { eq, sql } from "drizzle-orm";
 import { logger } from "../_core/logger";
 import { autoExtractBrandData } from "../brandAutoExtract";
+
+const TOTAL_BRAND_PROFILE_SLOTS = 55;
+const TOOL_HISTORY_SLOT_BUDGET = TOTAL_BRAND_PROFILE_SLOTS - 11;
+const DISTINCT_TOOLS_FOR_FULL_HISTORY_SLOTS = 6;
+
+function valueFilled(v: unknown): boolean {
+  return v !== null && v !== undefined && String(v).trim().length > 0;
+}
+
+function countCoreProfileSlots(
+  bp: typeof brandProfiles.$inferSelect | undefined,
+  displayName: string | null,
+): number {
+  let n = 0;
+  if (valueFilled(displayName)) n++;
+  if (!bp) return n;
+  const keys = [
+    "companyName",
+    "industry",
+    "market",
+    "website",
+    "tagline",
+    "elevatorPitch",
+    "toneOfVoice",
+    "targetAudience",
+    "brandPersonality",
+    "brandColors",
+  ] as const;
+  for (const k of keys) {
+    if (valueFilled(bp[k])) n++;
+  }
+  return n;
+}
+
+function computeCompleteness55(coreFilled: number, distinctToolCount: number): { filledSlots55: number; completeness55: number } {
+  const toolFilled = Math.min(
+    TOOL_HISTORY_SLOT_BUDGET,
+    Math.round((distinctToolCount / DISTINCT_TOOLS_FOR_FULL_HISTORY_SLOTS) * TOOL_HISTORY_SLOT_BUDGET),
+  );
+  const filledSlots55 = Math.min(TOTAL_BRAND_PROFILE_SLOTS, coreFilled + toolFilled);
+  const completeness55 = Math.round((filledSlots55 / TOTAL_BRAND_PROFILE_SLOTS) * 100);
+  return { filledSlots55, completeness55 };
+}
 
 /** Field mapping: tool formData key → brand_profiles column */
 const FIELD_MAP: Record<string, string> = {
@@ -104,20 +148,17 @@ export async function upsertBrandProfile(
       .limit(1);
 
     if (existing.length > 0) {
-      // Update: merge new data into existing profile
       await db
         .update(brandProfiles)
         .set({
           ...updates,
           lastToolUsed: toolId,
-          totalDiagnosesRun: existing[0].id, // Will be incremented via SQL below
           updatedAt: new Date(),
         })
         .where(eq(brandProfiles.userId, userId));
 
-      // Increment totalDiagnosesRun atomically
       await db.execute(
-        `UPDATE brand_profiles SET total_diagnoses_run = total_diagnoses_run + 1 WHERE user_id = ${userId}`,
+        sql`UPDATE brand_profiles SET total_diagnoses_run = total_diagnoses_run + 1 WHERE user_id = ${userId}`,
       );
     } else {
       // Insert new profile
@@ -157,76 +198,128 @@ export async function getBrandProfileForContext(
 }
 
 export const brandProfileRouter = router({
-  /** Get the current user's brand profile */
+  /** Get the current user's brand profile (+ displayName, completeness55 for nudges) */
   getMyProfile: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
-    if (!db) return null;
+    if (!db) {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+    }
 
-    const rows = await db
-      .select()
-      .from(brandProfiles)
-      .where(eq(brandProfiles.userId, ctx.user!.id))
-      .limit(1);
+    const userId = ctx.user!.id;
+    const [u] = await db.select({ name: users.name }).from(users).where(eq(users.id, userId)).limit(1);
+    const [bp] = await db.select().from(brandProfiles).where(eq(brandProfiles.userId, userId)).limit(1);
 
-    return rows[0] ?? null;
+    let distinctToolCount = 0;
+    try {
+      const [distRow] = await db
+        .select({
+          c: sql<number>`count(distinct ${diagnosisHistory.toolId})`.mapWith(Number),
+        })
+        .from(diagnosisHistory)
+        .where(eq(diagnosisHistory.userId, userId));
+      distinctToolCount = Number(distRow?.c ?? 0);
+    } catch {
+      distinctToolCount = 0;
+    }
+
+    const displayName = u?.name ?? null;
+    const coreFilled = countCoreProfileSlots(bp, displayName);
+    const { filledSlots55, completeness55 } = computeCompleteness55(coreFilled, distinctToolCount);
+
+    return {
+      ...(bp ?? {}),
+      displayName,
+      completeness55,
+      filledSlots55,
+    };
   }),
 
-  /** Manually update brand profile fields */
+  /** Manually update brand profile fields (merged into brand_profiles) */
   updateProfile: protectedProcedure
     .input(
-      z.object({
-        companyName: z.string().max(255).optional(),
-        industry: z.string().max(100).optional(),
-        website: z.string().max(500).optional(),
-        tagline: z.string().max(500).optional(),
-        elevatorPitch: z.string().max(2000).optional(),
-        toneOfVoice: z.string().max(50).optional(),
-        targetAudience: z.string().max(2000).optional(),
-        brandPersonality: z.string().max(2000).optional(),
-        brandColors: z.string().max(200).optional(),
-      }),
+      z
+        .object({
+          companyName: z.string().max(255).optional(),
+          company: z.string().max(255).optional(),
+          industry: z.string().max(100).optional(),
+          market: z.string().max(50).optional(),
+          website: z.string().max(500).optional(),
+          tagline: z.string().max(500).optional(),
+          elevatorPitch: z.string().max(8000).optional(),
+          toneOfVoice: z.string().max(50).optional(),
+          targetAudience: z.string().max(8000).optional(),
+          brandPersonality: z.string().max(8000).optional(),
+          brandColors: z.string().max(200).optional(),
+        })
+        .transform((raw) => {
+          const companyName = raw.companyName?.trim() || raw.company?.trim();
+          return {
+            companyName: companyName || undefined,
+            industry: raw.industry?.trim() || undefined,
+            market: raw.market?.trim() || undefined,
+            website: raw.website?.trim() || undefined,
+            tagline: raw.tagline?.trim() || undefined,
+            elevatorPitch: raw.elevatorPitch?.trim() || undefined,
+            toneOfVoice: raw.toneOfVoice?.trim() || undefined,
+            targetAudience: raw.targetAudience?.trim() || undefined,
+            brandPersonality: raw.brandPersonality?.trim() || undefined,
+            brandColors: raw.brandColors?.trim() || undefined,
+          };
+        }),
     )
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
-      if (!db) throw new Error("Database unavailable");
+      if (!db) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      }
 
       const updates: Record<string, unknown> = {};
       for (const [key, val] of Object.entries(input)) {
-        if (typeof val === "string" && val.trim().length > 0) {
-          updates[key] = val.trim();
+        if (typeof val === "string" && val.length > 0) {
+          updates[key] = val;
         }
       }
 
       if (Object.keys(updates).length === 0) {
-        throw new Error("No fields to update");
+        throw new TRPCError({ code: "BAD_REQUEST", message: "No fields to update" });
       }
 
+      const userId = ctx.user!.id;
       const existing = await db
         .select({ id: brandProfiles.id })
         .from(brandProfiles)
-        .where(eq(brandProfiles.userId, ctx.user!.id))
+        .where(eq(brandProfiles.userId, userId))
         .limit(1);
 
       if (existing.length > 0) {
         await db
           .update(brandProfiles)
           .set({ ...updates, updatedAt: new Date() })
-          .where(eq(brandProfiles.userId, ctx.user!.id));
+          .where(eq(brandProfiles.userId, userId));
       } else {
         await db.insert(brandProfiles).values({
-          userId: ctx.user!.id,
+          userId,
           ...updates,
         } as typeof brandProfiles.$inferInsert);
       }
 
-      return { success: true };
+      return { success: true as const };
     }),
 
   /** Auto-extract brand data from a URL */
   autoExtract: protectedProcedure
     .input(
       z.object({
-        url: z.string().url().max(500),
+        url: z
+          .string()
+          .min(1)
+          .max(2000)
+          .transform((s) => {
+            const t = s.trim();
+            if (!/^https?:\/\//i.test(t)) return `https://${t}`;
+            return t;
+          })
+          .pipe(z.string().url()),
       }),
     )
     .mutation(async ({ input, ctx }) => {

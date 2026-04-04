@@ -260,9 +260,11 @@ async function unlockDiagnosisFromPending(
   };
 
   const display = WZRD_DIAGNOSIS_TOOL_NAMES[toolId] ?? toolId;
-  saveDiagnosisHistory(ctx.user!.id, toolId, result).catch((err) => {
+  try {
+    await saveDiagnosisHistory(ctx.user!.id, toolId, result);
+  } catch (err) {
     logger.error({ err, userId: ctx.user!.id, tool: toolId }, 'Failed to save diagnosis history after unlock');
-  });
+  }
   fireEmailTrigger('first_tool_run', ctx.user!.id, { score: pending.score, toolName: display }).catch(() => {});
   if (pending.score < 40) {
     fireEmailTrigger('low_score', ctx.user!.id, { score: pending.score, toolName: display }).catch(() => {});

@@ -67,6 +67,7 @@ export const appRouter = router({
   blog: blogRouter,
   reviews: reviewsRouter,
   reportsLib: reportsLibRouter,
+  brandProfile: brandProfileRouter,
   onboarding: onboardingRouter,
   feedback: feedbackRouter,
   analytics: analyticsRouter,
@@ -86,7 +87,6 @@ export const appRouter = router({
   workspaces: workspacesRouter,
   contracts: contractsRouter,
   invoices: invoicesRouter,
-  brandProfile: brandProfileRouter,
 });
 
 export type AppRouter = typeof appRouter;
