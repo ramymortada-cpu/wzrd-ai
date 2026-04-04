@@ -1197,3 +1197,106 @@ export const reportDownloads = mysqlTable("report_downloads", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 export type ReportDownload = typeof reportDownloads.$inferSelect;
+
+/**
+ * Premium Reports — stores full Claude-generated premium reports.
+ * Links to diagnosis_history so users can revisit their premium reports.
+ */
+export const premiumReports = mysqlTable("premium_reports", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id").notNull(),
+  toolId: varchar("tool_id", { length: 50 }).notNull(),
+  diagnosisHistoryId: int("diagnosis_history_id"),
+  freeScore: int("free_score"),
+  report: json("report").notNull(),
+  creditsUsed: int("credits_used").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+export type PremiumReport = typeof premiumReports.$inferSelect;
+export type NewPremiumReport = typeof premiumReports.$inferInsert;
+
+/**
+ * Brand Profiles — persistent storage for all brand data points collected across diagnosis tools.
+ * This is the "Brand Twin" — the central repository that powers Brand-Aligned Execution tools
+ * and gives the Copilot true memory of the user's brand voice and constraints.
+ * Data is upserted (merged) every time a user runs a diagnosis, so it accumulates over time.
+ */
+export const brandProfiles = mysqlTable("brand_profiles", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id").notNull(),
+
+  // Core identity (from brand_diagnosis, all tools)
+  companyName: varchar("company_name", { length: 255 }),
+  industry: varchar("industry", { length: 100 }),
+  market: varchar("market", { length: 50 }),
+  website: varchar("website", { length: 500 }),
+  socialMedia: varchar("social_media", { length: 500 }),
+  yearsInBusiness: varchar("years_in_business", { length: 50 }),
+  teamSize: varchar("team_size", { length: 50 }),
+  monthlyRevenue: varchar("monthly_revenue", { length: 50 }),
+
+  // Positioning & audience (from brand_diagnosis, identity_snapshot)
+  currentPositioning: text("current_positioning"),
+  targetAudience: text("target_audience"),
+  biggestChallenge: text("biggest_challenge"),
+  brandPersonality: text("brand_personality"),
+  desiredPerception: text("desired_perception"),
+  currentGap: text("current_gap"),
+  competitors: text("competitors"),
+
+  // Messaging (from message_check)
+  tagline: varchar("tagline", { length: 500 }),
+  elevatorPitch: text("elevator_pitch"),
+  websiteHeadline: varchar("website_headline", { length: 500 }),
+  instagramBio: varchar("instagram_bio", { length: 500 }),
+  linkedinAbout: text("linkedin_about"),
+  toneOfVoice: varchar("tone_of_voice", { length: 50 }),
+  keyDifferentiator: text("key_differentiator"),
+  customerQuote: varchar("customer_quote", { length: 500 }),
+
+  // Visual identity (from identity_snapshot, design_health)
+  brandColors: varchar("brand_colors", { length: 200 }),
+  hasLogo: varchar("has_logo", { length: 50 }),
+  hasGuidelines: varchar("has_guidelines", { length: 50 }),
+
+  // Offer structure (from offer_check)
+  currentPackages: text("current_packages"),
+  numberOfPackages: varchar("number_of_packages", { length: 50 }),
+  pricingModel: varchar("pricing_model", { length: 50 }),
+  cheapestPrice: varchar("cheapest_price", { length: 120 }),
+  highestPrice: varchar("highest_price", { length: 120 }),
+  commonObjections: text("common_objections"),
+  competitorPricing: text("competitor_pricing"),
+
+  // Presence (from presence_audit)
+  instagramHandle: varchar("instagram_handle", { length: 255 }),
+  instagramFollowers: varchar("instagram_followers", { length: 50 }),
+  otherPlatforms: varchar("other_platforms", { length: 500 }),
+  postingFrequency: varchar("posting_frequency", { length: 50 }),
+  contentType: varchar("content_type", { length: 500 }),
+  inquiryMethod: text("inquiry_method"),
+  avgResponseTime: varchar("avg_response_time", { length: 50 }),
+  googleBusiness: varchar("google_business", { length: 50 }),
+
+  // Launch readiness (from launch_readiness)
+  launchType: varchar("launch_type", { length: 50 }),
+  targetLaunchDate: varchar("target_launch_date", { length: 50 }),
+  hasOfferStructure: varchar("has_offer_structure", { length: 50 }),
+  hasWebsite: varchar("has_website", { length: 50 }),
+  hasContentPlan: varchar("has_content_plan", { length: 50 }),
+  marketingBudget: varchar("marketing_budget", { length: 50 }),
+  teamCapacity: text("team_capacity"),
+  biggestConcern: text("biggest_concern"),
+  successMetric: text("success_metric"),
+
+  // Auto-extracted data (from URL scraping)
+  autoExtractedData: json("auto_extracted_data"),
+
+  // Metadata
+  lastToolUsed: varchar("last_tool_used", { length: 50 }),
+  totalDiagnosesRun: int("total_diagnoses_run").notNull().default(0),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+export type BrandProfile = typeof brandProfiles.$inferSelect;
+export type NewBrandProfile = typeof brandProfiles.$inferInsert;

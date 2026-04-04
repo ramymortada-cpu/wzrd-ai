@@ -12,6 +12,7 @@ import {
   userChecklists,
   clients,
   brandHealthSnapshots,
+  brandProfiles,
 } from "../../drizzle/schema";
 
 const DIAGNOSIS_TOOL_IDS = [
@@ -223,6 +224,128 @@ export async function buildBrandContext(
 الشركة: ${user.company || "غير محدد"}
 الصناعة: ${user.industry || "غير محدد"}
 السوق: ${user.market || "غير محدد"}`);
+  }
+
+  // ── Brand Profile (accumulated data from all diagnosis tools) ──
+  const [brandProfile] = await db
+    .select()
+    .from(brandProfiles)
+    .where(eq(brandProfiles.userId, userId))
+    .limit(1);
+
+  if (brandProfile) {
+    const bp = brandProfile;
+    const profileLines: string[] = ["\n## ملف البراند الكامل (Brand Profile — بيانات متراكمة من كل الأدوات)"];
+
+    const coreFields: Array<[string, string | null | undefined]> = [
+      ["اسم الشركة", bp.companyName],
+      ["الصناعة", bp.industry],
+      ["السوق", bp.market],
+      ["الموقع", bp.website],
+      ["السوشيال ميديا", bp.socialMedia],
+      ["سنوات في السوق", bp.yearsInBusiness],
+      ["حجم الفريق", bp.teamSize],
+      ["الإيراد الشهري", bp.monthlyRevenue],
+    ];
+    const corePopulated = coreFields.filter(([, v]) => v && v.trim());
+    if (corePopulated.length > 0) {
+      profileLines.push("### الهوية الأساسية");
+      for (const [label, value] of corePopulated) profileLines.push(`- ${label}: ${value}`);
+    }
+
+    const posFields: Array<[string, string | null | undefined]> = [
+      ["التموضع الحالي", bp.currentPositioning],
+      ["الجمهور المستهدف", bp.targetAudience],
+      ["أكبر تحدي", bp.biggestChallenge],
+      ["شخصية البراند", bp.brandPersonality],
+      ["الصورة المرغوبة", bp.desiredPerception],
+      ["الفجوة الحالية", bp.currentGap],
+      ["المنافسين", bp.competitors],
+    ];
+    const posPopulated = posFields.filter(([, v]) => v && v.trim());
+    if (posPopulated.length > 0) {
+      profileLines.push("### التموضع والجمهور");
+      for (const [label, value] of posPopulated) profileLines.push(`- ${label}: ${value}`);
+    }
+
+    const msgFields: Array<[string, string | null | undefined]> = [
+      ["التاجلاين", bp.tagline],
+      ["الـ Elevator Pitch", bp.elevatorPitch],
+      ["عنوان الموقع", bp.websiteHeadline],
+      ["بايو إنستجرام", bp.instagramBio],
+      ["لينكدإن About", bp.linkedinAbout],
+      ["نبرة الصوت", bp.toneOfVoice],
+      ["الميزة التنافسية", bp.keyDifferentiator],
+      ["اقتباس عميل", bp.customerQuote],
+    ];
+    const msgPopulated = msgFields.filter(([, v]) => v && v.trim());
+    if (msgPopulated.length > 0) {
+      profileLines.push("### الرسائل والمحتوى");
+      for (const [label, value] of msgPopulated) profileLines.push(`- ${label}: ${value}`);
+    }
+
+    const visFields: Array<[string, string | null | undefined]> = [
+      ["ألوان البراند", bp.brandColors],
+      ["لوجو", bp.hasLogo],
+      ["دليل هوية بصرية", bp.hasGuidelines],
+    ];
+    const visPopulated = visFields.filter(([, v]) => v && v.trim());
+    if (visPopulated.length > 0) {
+      profileLines.push("### الهوية البصرية");
+      for (const [label, value] of visPopulated) profileLines.push(`- ${label}: ${value}`);
+    }
+
+    const offerFields: Array<[string, string | null | undefined]> = [
+      ["الباقات الحالية", bp.currentPackages],
+      ["عدد الباقات", bp.numberOfPackages],
+      ["نموذج التسعير", bp.pricingModel],
+      ["أقل سعر", bp.cheapestPrice],
+      ["أعلى سعر", bp.highestPrice],
+      ["الاعتراضات الشائعة", bp.commonObjections],
+      ["تسعير المنافسين", bp.competitorPricing],
+    ];
+    const offerPopulated = offerFields.filter(([, v]) => v && v.trim());
+    if (offerPopulated.length > 0) {
+      profileLines.push("### هيكل العرض والتسعير");
+      for (const [label, value] of offerPopulated) profileLines.push(`- ${label}: ${value}`);
+    }
+
+    const presFields: Array<[string, string | null | undefined]> = [
+      ["حساب إنستجرام", bp.instagramHandle],
+      ["عدد المتابعين", bp.instagramFollowers],
+      ["منصات أخرى", bp.otherPlatforms],
+      ["تكرار النشر", bp.postingFrequency],
+      ["نوع المحتوى", bp.contentType],
+      ["طريقة الاستفسار", bp.inquiryMethod],
+      ["متوسط وقت الرد", bp.avgResponseTime],
+      ["جوجل بيزنس", bp.googleBusiness],
+    ];
+    const presPopulated = presFields.filter(([, v]) => v && v.trim());
+    if (presPopulated.length > 0) {
+      profileLines.push("### الحضور الرقمي");
+      for (const [label, value] of presPopulated) profileLines.push(`- ${label}: ${value}`);
+    }
+
+    const launchFields: Array<[string, string | null | undefined]> = [
+      ["نوع الإطلاق", bp.launchType],
+      ["تاريخ الإطلاق المستهدف", bp.targetLaunchDate],
+      ["هيكل عرض جاهز", bp.hasOfferStructure],
+      ["موقع جاهز", bp.hasWebsite],
+      ["خطة محتوى", bp.hasContentPlan],
+      ["ميزانية التسويق", bp.marketingBudget],
+      ["قدرة الفريق", bp.teamCapacity],
+      ["أكبر قلق", bp.biggestConcern],
+      ["مقياس النجاح", bp.successMetric],
+    ];
+    const launchPopulated = launchFields.filter(([, v]) => v && v.trim());
+    if (launchPopulated.length > 0) {
+      profileLines.push("### جاهزية الإطلاق");
+      for (const [label, value] of launchPopulated) profileLines.push(`- ${label}: ${value}`);
+    }
+
+    profileLines.push(`\nعدد التشخيصات الكلي: ${bp.totalDiagnosesRun} | آخر أداة: ${bp.lastToolUsed || "—"} | آخر تحديث: ${bp.updatedAt}`);
+
+    parts.push(profileLines.join("\n"));
   }
 
   const diagnosisRows = await db
