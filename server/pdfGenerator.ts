@@ -1,11 +1,11 @@
 /**
  * PDF Generator — Converts deliverable content into branded PDF documents
- * Uses jsPDF for server-side PDF generation with Primo Marca branding
+ * Uses jsPDF for server-side PDF generation with WZZRD AI branding
  */
 import { jsPDF } from "jspdf";
 import { storagePut } from "./storage";
 
-// Primo Marca brand colors (from brand guidelines)
+// WZZRD AI brand colors (from brand guidelines)
 const BRAND = {
   primary: "#E8A838",      // Gold/Amber
   secondary: "#1A1A2E",    // Dark navy
@@ -249,7 +249,7 @@ export async function generateDeliverablePDF(options: GeneratePDFOptions): Promi
     doc.setFontSize(7);
     doc.setTextColor(BRAND.textLight);
     doc.text(`${title} — ${clientName || "Client"}`, margin, 10);
-    doc.text(`Primo Marca`, pageWidth - margin, 10, { align: "right" });
+    doc.text(`WZZRD AI`, pageWidth - margin, 10, { align: "right" });
     y = 18;
   };
 
@@ -399,11 +399,11 @@ export async function generateDeliverablePDF(options: GeneratePDFOptions): Promi
   doc.setFontSize(8);
   doc.setTextColor(BRAND.textLight);
   doc.setFont("helvetica", "italic");
-  doc.text("This document was prepared by Primo Marca using Wzrd AI — AI-Powered Brand Engineering.", margin, y);
+  doc.text("This document was prepared by WZZRD AI using Wzrd AI — AI-Powered Brand Engineering.", margin, y);
   y += 5;
   doc.text("All content is confidential and intended solely for the named recipient.", margin, y);
   y += 5;
-  doc.text(`© ${new Date().getFullYear()} Primo Marca. All rights reserved.`, margin, y);
+  doc.text(`© ${new Date().getFullYear()} WZZRD AI. All rights reserved.`, margin, y);
 
   // Generate buffer
   const arrayBuffer = doc.output("arraybuffer");

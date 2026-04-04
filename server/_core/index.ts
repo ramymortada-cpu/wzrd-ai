@@ -92,6 +92,9 @@ async function startServer() {
   app.use('/api/trpc/copilot.chat', rateLimiters.ai);
   // Signup (3 per hour — prevents spam accounts)
   app.use('/api/trpc/auth.signup', rateLimiters.signup);
+  // OTP login — 5 requests per 15 minutes (prevents email flooding + brute-force code guessing)
+  app.use('/api/trpc/auth.requestLogin', rateLimiters.otpRequest);
+  app.use('/api/trpc/auth.verifyLogin', rateLimiters.otpVerify);
   // Invite token acceptance — 5 per hour per IP (prevents brute-force)
   app.use('/api/trpc/workspaces.acceptInvite', rateLimiters.acceptInvite);
   // Credits purchase (5 per hour)

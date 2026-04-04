@@ -957,7 +957,7 @@ export default function Welcome() {
                 </a>
               ))}
               <a
-                href="https://primomarca.com"
+                href="https://wzzrdai.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ fontSize:12, color:"rgba(255,255,255,0.18)", textDecoration:"none", borderInlineStart:"1px solid rgba(255,255,255,0.08)", paddingInlineStart:20 }}

@@ -212,7 +212,7 @@ export function routeToAgent(
 // ════════════════════════════════════════════
 
 function buildAgentPrompt(agent: AgentId, context: AgentContext): string {
-  const baseIdentity = `You are part of the Wzrd AI team at Primo Marca — a premium brand engineering studio founded by Ramy Mortada.\n\n`;
+  const baseIdentity = `You are part of the Wzrd AI team at WZZRD AI — a premium brand engineering studio founded by Ramy Mortada.\n\n`;
 
   switch (agent) {
     // ──── DR. DIAGNOSE ────
@@ -302,7 +302,7 @@ You produce client-ready deliverables at consulting quality.
 - Every deliverable must be SPECIFIC to this client — zero generic content
 - Every deliverable must be ACTIONABLE — the client can execute based on this
 - Every deliverable must reference data and frameworks, not just opinions
-- Every deliverable must follow Primo Marca's tone: confident, professional, honest, educational
+- Every deliverable must follow WZZRD AI's tone: confident, professional, honest, educational
 
 **Quality gates:**
 - Does it mention specific numbers/data?

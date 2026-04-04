@@ -135,7 +135,7 @@ WHY THIS MATTERS FOR PRIMO MARCA: Most clients come with misaligned prisms — t
     'Let me show you how Louis Vuitton maintains $19.4B in brand value — every facet of their identity reinforces the same message. That\'s what we need to build for you.',
     'The biggest gap I see in your brand is between [facet X] and [facet Y]. Your visual identity says one thing, but your customer experience says another. That\'s costing you premium pricing power.',
   ],
-  counterArguments: `Critics argue the Prism is too complex for small brands and that not all 6 facets are equally important. Some argue it's better suited for luxury brands than mass-market ones. Sharp (2010) argues that brand identity matters less than mental and physical availability. However, for premium brands and brand repositioning — which is Primo Marca's core work — the Prism remains the gold standard for identity analysis.`,
+  counterArguments: `Critics argue the Prism is too complex for small brands and that not all 6 facets are equally important. Some argue it's better suited for luxury brands than mass-market ones. Sharp (2010) argues that brand identity matters less than mental and physical availability. However, for premium brands and brand repositioning — which is WZZRD AI's core work — the Prism remains the gold standard for identity analysis.`,
   connectionToOtherFrameworks: 'Connects to Aaker\'s Brand Personality (expands the Personality facet), Keller\'s CBBE (builds the foundation for brand knowledge), and Sharp\'s distinctiveness (Physique facet is essentially distinctiveness assets).',
   tags: ['brand_identity', 'luxury', 'premium', 'repositioning', 'visual_identity', 'brand_audit'],
 };
@@ -233,7 +233,7 @@ WHY THIS MATTERS FOR PRIMO MARCA: This framework is essential for challenging cl
     'Your loyalty program is rewarding people who would buy anyway. The real growth comes from reaching the 80% of category buyers who DON\'T know you exist yet.',
     'Let me ask you: if I removed your logo from your packaging, could customers still identify your brand? If not, you don\'t have distinctive brand assets — and that\'s the #1 thing we need to fix.',
   ],
-  counterArguments: `Sharp's work is controversial. Critics argue it applies mainly to FMCG (fast-moving consumer goods) and may not work for luxury, B2B, or niche brands. Mark Ritson argues that Sharp oversimplifies and that targeting + differentiation still matter for premium brands. The truth is nuanced: for mass-market brands, Sharp is largely right. For premium/luxury brands (Primo Marca's sweet spot), Kapferer's identity approach is more relevant, but Sharp's emphasis on distinctive assets and reach still applies.`,
+  counterArguments: `Sharp's work is controversial. Critics argue it applies mainly to FMCG (fast-moving consumer goods) and may not work for luxury, B2B, or niche brands. Mark Ritson argues that Sharp oversimplifies and that targeting + differentiation still matter for premium brands. The truth is nuanced: for mass-market brands, Sharp is largely right. For premium/luxury brands (WZZRD AI's sweet spot), Kapferer's identity approach is more relevant, but Sharp's emphasis on distinctive assets and reach still applies.`,
   connectionToOtherFrameworks: 'Directly challenges Keller\'s CBBE (brand knowledge matters less than availability), complements Kapferer\'s Physique facet (distinctive assets), and contradicts Porter\'s differentiation strategy for mass markets.',
   tags: ['brand_growth', 'mental_availability', 'physical_availability', 'distinctive_assets', 'mass_market', 'reach'],
 };
@@ -335,7 +335,7 @@ WHY THIS MATTERS FOR PRIMO MARCA: Every proposal, every pricing page, every clie
     'Here\'s why Starbucks charges 5x more than the coffee shop next door: it\'s not the coffee, it\'s the FRAME. The store design, the cup sizes, the barista ritual — everything says "this is premium." We need to build that frame for your brand.',
     'Every month you operate without a clear brand strategy, you\'re losing money to competitors who understand pricing psychology. That\'s not a scare tactic — it\'s loss aversion, and it\'s real. Let me show you the numbers.',
   ],
-  counterArguments: `Critics argue that behavioral economics can be manipulative and that "nudging" customers crosses ethical lines. Richard Thaler (co-author of "Nudge") distinguishes between "libertarian paternalism" (helping people make better choices) and manipulation. For Primo Marca, the ethical line is clear: use these principles to help clients communicate their TRUE value, not to deceive. If a brand genuinely delivers premium quality, anchoring and framing help customers recognize that value.`,
+  counterArguments: `Critics argue that behavioral economics can be manipulative and that "nudging" customers crosses ethical lines. Richard Thaler (co-author of "Nudge") distinguishes between "libertarian paternalism" (helping people make better choices) and manipulation. For WZZRD AI, the ethical line is clear: use these principles to help clients communicate their TRUE value, not to deceive. If a brand genuinely delivers premium quality, anchoring and framing help customers recognize that value.`,
   connectionToOtherFrameworks: 'Directly supports Premium Pricing Psychology (Veblen goods, price-quality heuristic), complements Cialdini\'s Influence principles (scarcity = loss aversion), and explains why Sharp\'s distinctive assets work (System 1 recognition).',
   tags: ['pricing', 'behavioral_economics', 'anchoring', 'loss_aversion', 'premium', 'proposals', 'psychology'],
 };
@@ -363,13 +363,13 @@ const CIALDINI_INFLUENCE: AcademicFramework = {
 
 FOR BRAND STRATEGY, each principle has specific applications:
 
-RECIPROCITY IN BRANDING: Primo Marca's Quick-Check tool is pure reciprocity — give a free brand health diagnosis, and prospects feel obligated to engage further. Content marketing (free guides, webinars, insights) works the same way.
+RECIPROCITY IN BRANDING: WZZRD AI's Quick-Check tool is pure reciprocity — give a free brand health diagnosis, and prospects feel obligated to engage further. Content marketing (free guides, webinars, insights) works the same way.
 
 SOCIAL PROOF IN MENA: In collectivist cultures like Egypt and KSA, social proof is EVEN MORE POWERFUL than in Western markets. Family recommendations, community endorsements, and visible success stories carry enormous weight.
 
 SCARCITY FOR PREMIUM BRANDS: Hermès Birkin bag has a 6-year waiting list — and that waiting list IS the product. The scarcity creates the desire. For agencies, "we only take 5 new clients per quarter" creates similar dynamics.
 
-AUTHORITY IN CONSULTING: Primo Marca's academic frameworks, published methodology, and case studies all build authority. When the AI Brain cites Kapferer and Kahneman, it signals expertise that justifies premium pricing.`,
+AUTHORITY IN CONSULTING: WZZRD AI's academic frameworks, published methodology, and case studies all build authority. When the AI Brain cites Kapferer and Kahneman, it signals expertise that justifies premium pricing.`,
   applicationSteps: [
     'Reciprocity: Create a free value-first touchpoint (Quick-Check, free audit, insights report)',
     'Commitment: Get small commitments first (newsletter signup → free consultation → paid project)',
@@ -450,7 +450,7 @@ const PORTER_FIVE_FORCES: AcademicFramework = {
   deepExplanation: `Michael Porter's Five Forces framework (Harvard Business Review, 1979) is the foundational tool for industry analysis. While originally designed for corporate strategy, it's incredibly powerful for brand strategy because BRAND IS THE ULTIMATE COMPETITIVE MOAT.
 
 FOR THE MENA BRANDING AGENCY MARKET:
-1. COMPETITIVE RIVALRY (HIGH): The MENA marketing/advertising market is projected to reach $10.76B by 2026. Thousands of agencies compete, most on price. Brand strategy agencies like Primo Marca compete on expertise, not price.
+1. COMPETITIVE RIVALRY (HIGH): The MENA marketing/advertising market is projected to reach $10.76B by 2026. Thousands of agencies compete, most on price. Brand strategy agencies like WZZRD AI compete on expertise, not price.
 
 2. THREAT OF NEW ENTRANTS (HIGH): Low barriers — anyone with a laptop can call themselves a "branding agency." This makes DIFFERENTIATION through methodology and results critical.
 
@@ -460,13 +460,13 @@ FOR THE MENA BRANDING AGENCY MARKET:
 
 5. THREAT OF SUBSTITUTES (GROWING): In-house teams, AI tools, freelance platforms (Fiverr, Upwork), and DIY tools (Canva, Wix) are all substitutes. The defense: offer strategic thinking that tools can't replicate.
 
-WHY THIS MATTERS: When Primo Marca's AI Brain analyzes a client's industry using Five Forces, it demonstrates strategic depth that justifies premium pricing. It shows the client that brand strategy isn't just "making things pretty" — it's a competitive weapon.`,
+WHY THIS MATTERS: When WZZRD AI's AI Brain analyzes a client's industry using Five Forces, it demonstrates strategic depth that justifies premium pricing. It shows the client that brand strategy isn't just "making things pretty" — it's a competitive weapon.`,
   applicationSteps: [
     'Map the client\'s industry using all 5 forces — rate each as High/Medium/Low',
     'Identify where brand strategy can reduce competitive pressure (usually rivalry and buyer power)',
     'Show the client how a strong brand creates barriers to entry for competitors',
     'Quantify the cost of NOT having a brand strategy (lost pricing power, customer churn)',
-    'Position Primo Marca\'s services as a strategic investment, not a cost',
+    'Position WZZRD AI\'s services as a strategic investment, not a cost',
   ],
   commonMistakes: [
     'Analyzing forces without connecting to brand strategy — the framework is a means, not an end',
@@ -501,7 +501,7 @@ WHY THIS MATTERS: When Primo Marca's AI Brain analyzes a client's industry using
     },
     {
       brand: 'MENA Branding Agency Market',
-      context: 'Five Forces analysis of the industry Primo Marca operates in',
+      context: 'Five Forces analysis of the industry WZZRD AI operates in',
       strategy: 'High rivalry (thousands of agencies), high new entrant threat (low barriers), moderate-high buyer power (easy to switch), low supplier power (growing talent pool), growing substitute threat (AI, DIY tools). The winning strategy: build a METHODOLOGY-BASED brand that creates switching costs and authority.',
       results: 'Agencies with clear methodology and proven results command 3-5x higher fees than generic agencies.',
       numbers: 'MENA ad market $10.76B by 2026, premium agencies charge 3-5x generic rates, client retention 40% higher for methodology-driven agencies',
@@ -610,7 +610,7 @@ FOR PRIMO MARCA: This framework is perfect for clients who feel "stuck" in compe
     'Cirque du Soleil didn\'t try to be a better circus — they created something entirely new and charged theater prices. What\'s your equivalent? What can you eliminate that everyone else thinks is essential?',
     'The biggest growth isn\'t in stealing competitors\' customers — it\'s in the people who aren\'t buying from ANYONE in your category yet. Those are your noncustomers, and they\'re a much bigger market.',
   ],
-  counterArguments: `Critics argue blue oceans are temporary (competitors eventually follow), that the framework is better at explaining past success than predicting future opportunities, and that execution matters more than strategy. Porter argues that sustainable competitive advantage comes from choosing a unique position, not from value innovation. The reality: Blue Ocean is excellent for REPOSITIONING (Primo Marca's core work) but must be combined with execution excellence.`,
+  counterArguments: `Critics argue blue oceans are temporary (competitors eventually follow), that the framework is better at explaining past success than predicting future opportunities, and that execution matters more than strategy. Porter argues that sustainable competitive advantage comes from choosing a unique position, not from value innovation. The reality: Blue Ocean is excellent for REPOSITIONING (WZZRD AI's core work) but must be combined with execution excellence.`,
   connectionToOtherFrameworks: 'Directly challenges Porter\'s Five Forces (make competition irrelevant instead of fighting forces), connects to Kapferer\'s Prism (blue ocean requires a new brand identity), and supports Sharp\'s growth thesis (blue oceans create new category buyers).',
   tags: ['repositioning', 'competitive_strategy', 'value_innovation', 'market_creation', 'differentiation'],
 };
@@ -639,13 +639,13 @@ VEBLEN GOODS (Thorstein Veblen, 1899):
 Named after economist Thorstein Veblen who observed "conspicuous consumption" — buying expensive things to signal status. For Veblen goods, the demand curve slopes UPWARD: raise the price, and MORE people want it. Examples: Hermès Birkin (starts at $10,000, resells for $500,000), Rolex (3-year waiting lists), Ferrari (intentionally produces fewer cars than demand).
 
 THE KSA LUXURY OPPORTUNITY:
-Saudi Arabia's luxury market is projected to reach $37.83B by 2034. Vision 2030 is creating a new class of consumers who want premium experiences. The entertainment sector alone is projected at $12.96B. For Primo Marca clients in KSA, premium positioning isn't optional — it's where the growth is.
+Saudi Arabia's luxury market is projected to reach $37.83B by 2034. Vision 2030 is creating a new class of consumers who want premium experiences. The entertainment sector alone is projected at $12.96B. For WZZRD AI clients in KSA, premium positioning isn't optional — it's where the growth is.
 
 EGYPT'S PREMIUM PARADOX:
 In Egypt's price-sensitive market, premium positioning seems counterintuitive. But Gourmet Egypt proves it works: 50% gross margins on in-house products, e-commerce at 35% of sales. The key: premium doesn't mean "expensive for everyone" — it means "worth it for the right customer."
 
 WHY AGENCIES SHOULD USE THIS:
-When presenting Primo Marca's pricing (Clarity Package 25,000 EGP, Brand Foundation 50,000-120,000 EGP), the AI Brain should frame it using these principles:
+When presenting WZZRD AI's pricing (Clarity Package 25,000 EGP, Brand Foundation 50,000-120,000 EGP), the AI Brain should frame it using these principles:
 - Anchor with the Growth Partnership (120,000+ EGP) first
 - Use the price-quality heuristic: "Our methodology includes 7 academic frameworks — that depth is why our clients see 40%+ revenue growth"
 - Apply Weber's Law: "The difference between our 50K and a 15K agency is 35K — but the difference in results is 10x"`,
@@ -731,7 +731,7 @@ const BRAND_REPOSITIONING: AcademicFramework = {
 THE 4 TYPES OF REPOSITIONING:
 
 1. UPMARKET REPOSITIONING (Mass → Premium):
-Most common for Primo Marca clients. Requires: new visual identity, premium pricing, quality improvements, and a narrative that justifies the change. Risk: alienating existing price-sensitive customers.
+Most common for WZZRD AI clients. Requires: new visual identity, premium pricing, quality improvements, and a narrative that justifies the change. Risk: alienating existing price-sensitive customers.
 
 2. MODERNIZATION REPOSITIONING (Old → Contemporary):
 For heritage brands that feel dated. Requires: updated visual identity while preserving heritage elements, digital transformation, and new customer acquisition. Risk: losing brand heritage that loyal customers value.
@@ -806,7 +806,7 @@ THE REPOSITIONING PARADOX: The biggest challenge isn't creating the new position
     'Saudi Arabia is spending $500B on NEOM to reposition an entire NATION. Your brand repositioning is the same principle at a different scale — and the ROI is just as transformative.',
     'Here\'s the hard truth: your brand is stuck in a position that limits your growth. You can\'t charge premium prices with a budget brand perception. We need to move you — and I have a specific plan for how.',
   ],
-  counterArguments: `Repositioning is risky — research shows 60-70% of repositioning efforts fail. The main reasons: insufficient investment, lack of commitment, trying to please everyone, and not changing the actual product/service. Success requires full organizational commitment and 12-24 months of consistent execution. Primo Marca must be honest with clients about the risk and the investment required.`,
+  counterArguments: `Repositioning is risky — research shows 60-70% of repositioning efforts fail. The main reasons: insufficient investment, lack of commitment, trying to please everyone, and not changing the actual product/service. Success requires full organizational commitment and 12-24 months of consistent execution. WZZRD AI must be honest with clients about the risk and the investment required.`,
   connectionToOtherFrameworks: 'Uses Kapferer\'s Prism to define the new identity, Blue Ocean Strategy to find the new position, Kahneman\'s framing to communicate the change, and Sharp\'s distinctive assets to build recognition in the new position.',
   tags: ['repositioning', 'brand_identity', 'transformation', 'premium', 'turnaround', 'ksa', 'egypt'],
 };
@@ -1002,7 +1002,7 @@ These laws explain why some clients' marketing isn't working — they're targeti
     'Your "ideal customer" targeting is actually limiting your growth. Research from the Ehrenberg-Bass Institute shows that brands share customers with ALL competitors — not just similar ones. We need to broaden your reach.',
     'Most of your revenue comes from people who buy from you occasionally — light buyers. They\'re not "disloyal" — that\'s normal behavior. The question is: how do we reach MORE of them?',
   ],
-  counterArguments: `The biggest criticism is that Ehrenberg-Bass research is based primarily on FMCG data and may not apply to luxury, B2B, or subscription businesses. Mark Ritson argues that targeting and differentiation still matter for premium brands. The nuance: for mass-market brands, Ehrenberg-Bass is largely correct. For premium/luxury brands (Primo Marca's focus), a hybrid approach works — use distinctive assets and broad reach (Ehrenberg-Bass) combined with premium identity (Kapferer) and behavioral pricing (Kahneman).`,
+  counterArguments: `The biggest criticism is that Ehrenberg-Bass research is based primarily on FMCG data and may not apply to luxury, B2B, or subscription businesses. Mark Ritson argues that targeting and differentiation still matter for premium brands. The nuance: for mass-market brands, Ehrenberg-Bass is largely correct. For premium/luxury brands (WZZRD AI's focus), a hybrid approach works — use distinctive assets and broad reach (Ehrenberg-Bass) combined with premium identity (Kapferer) and behavioral pricing (Kahneman).`,
   connectionToOtherFrameworks: 'Foundational to Sharp\'s "How Brands Grow" (Sharp is the Institute\'s director), challenges Keller\'s brand equity model (loyalty is less important than penetration), and complements Porter\'s market share analysis (bigger brands have structural advantages).',
   tags: ['brand_growth', 'marketing_science', 'penetration', 'loyalty', 'distinctive_assets', 'evidence_based'],
 };

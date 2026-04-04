@@ -26,7 +26,7 @@ export function securityHeaders(req: Request, res: Response, next: NextFunction)
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: https: blob:",
-      "connect-src 'self' https://api.anthropic.com https://*.amazonaws.com",
+      "connect-src 'self' https://api.anthropic.com https://api.groq.com https://api.openai.com https://generativelanguage.googleapis.com https://*.amazonaws.com https://paymob.com https://accept.paymob.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

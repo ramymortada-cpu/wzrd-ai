@@ -89,7 +89,7 @@ export type ProposalStatus = typeof PROPOSAL_STATUSES[number];
 /**
  * Service Prices (EGP) — SINGLE SOURCE OF TRUTH
  * 
- * These are the official Primo Marca pricing.
+ * These are the official WZZRD AI pricing.
  * Used in: proposals, quick-check AI scoring, knowledge base.
  * 
  * IMPORTANT: If you change pricing, change ONLY here.

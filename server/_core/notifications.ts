@@ -50,7 +50,7 @@ function getEmailConfig(): EmailConfig {
   return {
     provider,
     apiKey: process.env.EMAIL_API_KEY,
-    from: process.env.EMAIL_FROM || 'Primo Marca <noreply@primomarca.com>',
+    from: process.env.EMAIL_FROM || 'WZZRD AI <noreply@wzzrdai.com>',
   };
 }
 
@@ -118,7 +118,7 @@ function buildEmailHtml(title: string, message: string, ctaUrl?: string): string
 <head><meta charset="utf-8"></head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1a1a1a;">
   <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 24px; border-radius: 12px 12px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 20px;">Primo Marca</h1>
+    <h1 style="color: white; margin: 0; font-size: 20px;">WZZRD AI</h1>
   </div>
   <div style="background: #ffffff; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
     <h2 style="margin-top: 0; font-size: 18px;">${title}</h2>
@@ -126,7 +126,7 @@ function buildEmailHtml(title: string, message: string, ctaUrl?: string): string
     ${ctaUrl ? `<a href="${ctaUrl}" style="display: inline-block; background: #667eea; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin-top: 16px;">View Details</a>` : ''}
   </div>
   <p style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 16px;">
-    Primo Marca Command Center — Powered by Wzrd AI
+    WZZRD AI Command Center
   </p>
 </body>
 </html>`.trim();

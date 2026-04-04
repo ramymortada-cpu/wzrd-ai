@@ -108,7 +108,7 @@ async function sendStatusEmail(opts: {
           </div>
         </div>
         <p style="text-align:center;color:#94a3b8;font-size:11px;margin-top:16px;">
-          WZZRD AI by Primo Marca
+          WZZRD AI by WZZRD AI
         </p>
       </div>
     </body></html>`;

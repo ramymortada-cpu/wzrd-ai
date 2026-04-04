@@ -641,7 +641,7 @@ export function getSharpVsKellerDebate(): string {
     output += `- ${e}\n`;
   }
   output += `\n## Resolution\n${d.resolution}\n\n`;
-  output += `## Practical Guide for Primo Marca\n${d.practicalGuide}\n\n`;
+  output += `## Practical Guide for WZZRD AI\n${d.practicalGuide}\n\n`;
   return output;
 }
 

@@ -488,7 +488,7 @@ export const PRIMO_MARCA_POSITIONING = {
   pricingContext: `
 ## HOW PRIMO MARCA PRICING COMPARES TO MARKET
 
-### Primo Marca Pricing (from official price list):
+### WZZRD AI Pricing (from official price list):
 - Clarity Package: 25,000 EGP / 3,500 SAR — BELOW market average for strategy work
 - Brand Foundation: 60,000 EGP / 8,500 SAR — COMPETITIVE with mid-tier agencies
 - Growth Partnership: 120,000 EGP / 17,000 SAR — PREMIUM but justified by depth
@@ -499,7 +499,7 @@ export const PRIMO_MARCA_POSITIONING = {
 - Average UAE brand strategy: AED 25,000-100,000 (Primo's Growth Partnership equivalent is competitive)
 
 ### Key Selling Points:
-1. Primo Marca's pricing is BELOW average for the depth of work delivered
+1. WZZRD AI's pricing is BELOW average for the depth of work delivered
 2. Most agencies at this price point deliver only visual identity — Primo delivers strategy + identity + systems
 3. The Clarity Package at 25K EGP is essentially a loss-leader that builds trust for larger engagements
 4. Growth Partnership at 120K EGP delivers what UAE agencies charge 100K+ AED for
@@ -684,7 +684,7 @@ export function getAllMarketIntelligenceForKnowledgeBase(): string {
   // Usage instructions
   output += `## HOW TO USE THIS MARKET DATA IN CONVERSATIONS\n\n`;
   output += `1. **When discussing a client's market**: Reference specific numbers for their market (Egypt, KSA, UAE)\n`;
-  output += `2. **When justifying pricing**: Compare Primo Marca's pricing to market benchmarks\n`;
+  output += `2. **When justifying pricing**: Compare WZZRD AI's pricing to market benchmarks\n`;
   output += `3. **When recommending channels**: Use platform-specific data (e.g., Snapchat dominance in KSA)\n`;
   output += `4. **When building strategy**: Reference industry benchmarks (CAC, conversion, retention)\n`;
   output += `5. **When discussing trends**: Use consumer behavior data to support recommendations\n`;

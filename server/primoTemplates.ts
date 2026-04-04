@@ -242,7 +242,7 @@ export async function processFilledTemplate(
   try {
     const response = await resilientLLM({
       messages: [
-        { role: 'system', content: 'You are Primo Marca\'s knowledge architect. Extract actionable patterns from consultant experience. Respond in JSON: { "patterns": ["pattern1", "pattern2"], "insights": "one paragraph of deep insight" }' },
+        { role: 'system', content: 'You are WZZRD AI\'s knowledge architect. Extract actionable patterns from consultant experience. Respond in JSON: { "patterns": ["pattern1", "pattern2"], "insights": "one paragraph of deep insight" }' },
         { role: 'user', content: `${template.patternExtractionPrompt}\n\nDATA:\n${content}` },
       ],
     }, { context: 'knowledge' });

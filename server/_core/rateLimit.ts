@@ -170,4 +170,18 @@ export const rateLimiters = {
     windowMs: 60 * 60_000,
     message: 'Too many invite attempts. Please try again later.',
   }),
+
+  /** OTP request — 5 per 15 minutes per IP (prevents email flooding) */
+  otpRequest: createRateLimit({
+    max: process.env.NODE_ENV === 'production' ? 5 : 50,
+    windowMs: 15 * 60_000,
+    message: 'Too many login attempts. Please wait 15 minutes before trying again.',
+  }),
+
+  /** OTP verify — 10 per 15 minutes per IP (prevents brute-force code guessing) */
+  otpVerify: createRateLimit({
+    max: process.env.NODE_ENV === 'production' ? 10 : 100,
+    windowMs: 15 * 60_000,
+    message: 'Too many verification attempts. Please wait 15 minutes before trying again.',
+  }),
 };

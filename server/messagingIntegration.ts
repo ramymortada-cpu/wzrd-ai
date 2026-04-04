@@ -476,7 +476,7 @@ export function createTelegramRouter(): Router {
       if (telegramText.startsWith("/start")) {
         await sendTelegramMessage(
           chatId,
-          `مرحباً ${userName}! أنا Wzrd AI — المستشار الذكي لـ Primo Marca. اكتب سؤالك وهجاوبك. 🧠`,
+          `مرحباً ${userName}! أنا Wzrd AI — المستشار الذكي لـ WZZRD AI. اكتب سؤالك وهجاوبك. 🧠`,
         );
         return;
       }

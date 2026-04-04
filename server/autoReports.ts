@@ -83,7 +83,7 @@ export async function generateMonthlyReport(
       messages: [
         {
           role: 'system',
-          content: `You are a senior brand strategist at Primo Marca. Generate a monthly performance report in STRICT Markdown.
+          content: `You are a senior brand strategist at WZZRD AI. Generate a monthly performance report in STRICT Markdown.
 
 Structure (use exactly these headings in this order):
 # Monthly Brand Report — [Month Year]
