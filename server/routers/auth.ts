@@ -130,7 +130,7 @@ export const authRouter = router({
       const code = String(Math.floor(100000 + Math.random() * 900000));
       const devBypass = process.env.NODE_ENV === 'development' || process.env.EMAIL_PROVIDER === 'none';
       if (devBypass) {
-        console.log(`\n🔑 [DEV] OTP code for ${input.email}: ${code}\n`);
+        logger.info({ email: input.email, code }, '[DEV] OTP login code');
       }
 
       // Store OTP with 10min expiry (in-memory)

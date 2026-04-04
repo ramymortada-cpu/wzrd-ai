@@ -445,6 +445,260 @@ function ToolSkeleton() {
   );
 }
 
+// ─── Tier comparison upsell (Free → Full → Premium) ─────────────────────────
+function TierComparisonUpsell({
+  isAr,
+  onPremiumClick,
+  premiumLoading,
+}: {
+  isAr: boolean;
+  onPremiumClick: () => void;
+  premiumLoading: boolean;
+}) {
+  const tiers = {
+    free: { name: isAr ? 'معاينة مجانية' : 'Free preview', badge: null as string | null },
+    full: {
+      name: isAr ? 'التشخيص الكامل' : 'Full diagnosis',
+      badge: isAr ? 'أنت هنا' : 'Current',
+    },
+    premium: {
+      name: isAr ? 'التقرير المميز' : 'Premium report',
+      badge: isAr ? 'موصى به' : 'Recommended',
+    },
+  };
+
+  const rows: { key: string; free: boolean; full: boolean; premium: boolean }[] = [
+    {
+      key: isAr ? 'درجة الصحة /100' : 'Health score (/100)',
+      free: true,
+      full: true,
+      premium: true,
+    },
+    {
+      key: isAr ? 'ملخص المشاكل (عناوين فقط)' : 'Issue headlines (limited)',
+      free: true,
+      full: false,
+      premium: false,
+    },
+    {
+      key: isAr ? 'كل النتائج والتفاصيل' : 'All findings & detail',
+      free: false,
+      full: true,
+      premium: true,
+    },
+    {
+      key: isAr ? 'خطوات عمل قابلة للتنفيذ' : 'Action items',
+      free: false,
+      full: true,
+      premium: true,
+    },
+    {
+      key: isAr ? 'توصية خدمة' : 'Service recommendation',
+      free: false,
+      full: true,
+      premium: true,
+    },
+    {
+      key: isAr ? 'تحليل Claude — محاور عميقة' : 'Claude deep pillar analysis',
+      free: false,
+      full: false,
+      premium: true,
+    },
+    {
+      key: isAr ? 'ملخص تنفيذي' : 'Executive summary',
+      free: false,
+      full: false,
+      premium: true,
+    },
+    {
+      key: isAr ? 'خريطة أولويات' : 'Priority matrix',
+      free: false,
+      full: false,
+      premium: true,
+    },
+    {
+      key: isAr ? 'خطة ٣٠ / ٦٠ / ٩٠ يوم' : '30 / 60 / 90-day plan',
+      free: false,
+      full: false,
+      premium: true,
+    },
+    {
+      key: isAr ? 'Quick Wins' : 'Quick wins',
+      free: false,
+      full: false,
+      premium: true,
+    },
+    {
+      key: isAr ? 'تصدير PDF للتقرير' : 'PDF export',
+      free: false,
+      full: true,
+      premium: true,
+    },
+  ];
+
+  const cell = (ok: boolean) => (
+    <span className="text-base font-bold" aria-hidden>
+      {ok ? <span className="text-emerald-600">✓</span> : <span className="text-zinc-300">✗</span>}
+    </span>
+  );
+
+  return (
+    <div className="mb-6 rounded-2xl border border-zinc-200 bg-zinc-50/80 p-5 shadow-sm">
+      <h3 className="mb-1 text-center text-sm font-extrabold text-zinc-900">
+        {isAr ? 'قارن الخطط' : 'Compare plans'}
+      </h3>
+      <p className="mb-5 text-center text-xs text-zinc-500">
+        {isAr
+          ? 'شفت المعاينة وفتحت التقرير الكامل — الخطوة الجاية: تقرير مميز بتحليل أعمق.'
+          : 'You saw the preview and unlocked the full report — go deeper with Premium.'}
+      </p>
+
+      {/* Mobile: stacked tier cards */}
+      <div className="flex flex-col gap-4 md:hidden">
+        {(['free', 'full', 'premium'] as const).map((col) => {
+          const t = tiers[col];
+          const isPremiumCol = col === 'premium';
+          return (
+            <div
+              key={col}
+              className={`rounded-2xl border bg-white p-4 shadow-sm ${
+                isPremiumCol ? 'border-indigo-300 ring-2 ring-indigo-100' : 'border-zinc-200'
+              }`}
+            >
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <span className="font-bold text-zinc-900">{t.name}</span>
+                {t.badge && (
+                  <span
+                    className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                      isPremiumCol
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-indigo-100 text-indigo-800'
+                    }`}
+                  >
+                    {t.badge}
+                  </span>
+                )}
+              </div>
+              <ul className="space-y-2 text-sm text-zinc-600">
+                {rows.map((r) => {
+                  const ok = col === 'free' ? r.free : col === 'full' ? r.full : r.premium;
+                  return (
+                    <li key={r.key} className="flex items-center justify-between gap-2 border-b border-zinc-100 pb-2 last:border-0 last:pb-0">
+                      <span className="text-xs leading-snug">{r.key}</span>
+                      {cell(ok)}
+                    </li>
+                  );
+                })}
+              </ul>
+              {isPremiumCol && (
+                <button
+                  type="button"
+                  onClick={onPremiumClick}
+                  disabled={premiumLoading}
+                  className="mt-4 w-full rounded-full bg-[#1B4FD8] py-3 text-sm font-bold text-white transition hover:bg-[#1440B8] disabled:opacity-50"
+                >
+                  {premiumLoading
+                    ? isAr
+                      ? 'جاري إعداد التقرير…'
+                      : 'Generating report…'
+                    : isAr
+                      ? '✦ احصل على التقرير المميز'
+                      : '✦ Get Premium report'}
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop: comparison table */}
+      <div className="hidden overflow-x-auto md:block">
+        <table className="w-full min-w-[520px] border-separate border-spacing-0 text-sm">
+          <thead>
+            <tr>
+              <th className="rounded-tl-xl border border-b-0 border-r-0 border-zinc-200 bg-white px-3 py-3 text-left text-xs font-bold text-zinc-500">
+                {isAr ? 'الميزة' : 'Feature'}
+              </th>
+              <th className="border border-b-0 border-r-0 border-zinc-200 bg-white px-3 py-3 text-center text-xs font-bold text-zinc-800">
+                {tiers.free.name}
+              </th>
+              <th className="border border-b-0 border-r-0 border-zinc-200 bg-indigo-50/80 px-3 py-3 text-center text-xs font-bold text-indigo-950">
+                <span className="block">{tiers.full.name}</span>
+                <span className="mt-1 inline-block rounded-full bg-indigo-200 px-2 py-0.5 text-[10px] font-bold text-indigo-900">
+                  {tiers.full.badge}
+                </span>
+              </th>
+              <th className="rounded-tr-xl border border-b-0 border-zinc-200 bg-gradient-to-b from-indigo-50 to-violet-50 px-3 py-3 text-center text-xs font-bold text-indigo-950 ring-2 ring-indigo-200/80">
+                <span className="block">{tiers.premium.name}</span>
+                <span className="mt-1 inline-block rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] font-bold text-white">
+                  {tiers.premium.badge}
+                </span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={r.key}>
+                <td
+                  className={`border border-r-0 border-zinc-200 bg-white px-3 py-2.5 text-xs text-zinc-600 ${
+                    i === rows.length - 1 ? 'rounded-bl-xl border-b' : ''
+                  }`}
+                >
+                  {r.key}
+                </td>
+                <td
+                  className={`border border-r-0 border-zinc-200 bg-white px-3 py-2.5 text-center ${
+                    i === rows.length - 1 ? 'border-b' : ''
+                  }`}
+                >
+                  {cell(r.free)}
+                </td>
+                <td
+                  className={`border border-r-0 border-zinc-200 bg-indigo-50/50 px-3 py-2.5 text-center ${
+                    i === rows.length - 1 ? 'border-b' : ''
+                  }`}
+                >
+                  {cell(r.full)}
+                </td>
+                <td
+                  className={`border border-zinc-200 bg-indigo-50/30 px-3 py-2.5 text-center ${
+                    i === rows.length - 1 ? 'rounded-br-xl border-b' : ''
+                  }`}
+                >
+                  {cell(r.premium)}
+                </td>
+              </tr>
+            ))}
+            <tr>
+              <td className="rounded-b-xl border border-t-0 border-zinc-200 bg-zinc-50 px-3 py-4 text-xs text-zinc-500">
+                {isAr ? 'الخطوة التالية' : 'Next step'}
+              </td>
+              <td className="border border-t-0 border-r-0 border-zinc-200 bg-zinc-50" />
+              <td className="border border-t-0 border-r-0 border-zinc-200 bg-zinc-50" />
+              <td className="rounded-br-xl border border-t-0 border-zinc-200 bg-zinc-50 p-3">
+                <button
+                  type="button"
+                  onClick={onPremiumClick}
+                  disabled={premiumLoading}
+                  className="w-full rounded-full bg-[#1B4FD8] py-2.5 text-xs font-bold text-white transition hover:bg-[#1440B8] disabled:opacity-50"
+                >
+                  {premiumLoading
+                    ? isAr
+                      ? 'جاري الإعداد…'
+                      : 'Preparing…'
+                    : isAr
+                      ? '✦ التقرير المميز'
+                      : '✦ Premium report'}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function ToolPage({ config }: { config: ToolConfig }) {
   const [, navigate] = useLocation();
@@ -462,6 +716,41 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const pdfMutation = trpc.reportPdf.generateHtml.useMutation();
   const premiumPdfMutation = trpc.reportPdf.generatePremiumHtml.useMutation();
+  const premiumGenMutation = trpc.premium.generateReport.useMutation();
+
+  const handleGeneratePremium = async () => {
+    if (!result || !user) return;
+    setError('');
+    try {
+      const formPayload: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(formData)) {
+        formPayload[k] = v;
+      }
+      const out = await premiumGenMutation.mutateAsync({
+        toolId: config.id,
+        formData: formPayload,
+        freeScore: result.score,
+      });
+      if (out.success && out.report) {
+        setPremiumReport({
+          report: out.report as Record<string, unknown>,
+          creditsUsed: out.creditsUsed,
+          creditsRemaining: out.creditsRemaining,
+        });
+        if (import.meta.env.VITE_POSTHOG_KEY) {
+          posthog.capture('premium_report_purchased', { toolId: config.id, source: 'tier_comparison' });
+        }
+      } else {
+        const msg = typeof out.error === 'string' ? out.error : '';
+        setError(
+          msg ||
+            (isAr ? 'تعذر إنشاء التقرير المميز. تحقق من الرصيد.' : 'Could not create Premium report. Check your credits.'),
+        );
+      }
+    } catch {
+      setError(isAr ? 'تعذر إنشاء التقرير المميز. حاول مجدداً.' : 'Premium report failed. Please try again.');
+    }
+  };
 
   const handleDownloadPdf = async () => {
     if (!result) return;
@@ -979,7 +1268,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
   if (result) {
     return (
       <div className="wzrd-public-page min-h-screen">
-        <div className="mx-auto max-w-lg px-6 py-16">
+        <div className="mx-auto max-w-2xl px-6 py-16">
           <button
             type="button"
             onClick={() => navigate('/tools')}
@@ -987,6 +1276,17 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
           >
             {isAr ? '→ رجوع للأدوات' : '← Back to Tools'}
           </button>
+
+          {error ? (
+            <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+              <p>{error}</p>
+              {looksLikeInsufficientCredits(error) && (
+                <a href="/pricing" className="mt-2 inline-block font-semibold text-[#1B4FD8] hover:underline">
+                  {isAr ? 'اشترِ كريدت أو شوف الباقات ←' : 'Buy credits or view plans →'}
+                </a>
+              )}
+            </div>
+          ) : null}
 
           {/* Score */}
           <div className="mb-6 rounded-2xl border border-[#E5E7EB] bg-white p-8 text-center shadow-sm">
@@ -1073,6 +1373,12 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
               </a>
             </div>
           )}
+
+          <TierComparisonUpsell
+            isAr={isAr}
+            onPremiumClick={() => void handleGeneratePremium()}
+            premiumLoading={premiumGenMutation.isPending}
+          />
 
           {/* Share Report Panel */}
           <div className="mb-5">

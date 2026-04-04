@@ -261,6 +261,13 @@ async function startServer() {
       } catch (err) {
         logger.warn({ err }, 'Abandoned cart worker failed to start');
       }
+
+      try {
+        const { seedEmailTemplates } = await import('../seeds/emailTemplates');
+        await seedEmailTemplates();
+      } catch (err) {
+        logger.warn({ err }, 'Email template seed failed — automations may be empty until seeded');
+      }
     }, 5000); // Wait 5s after startup to not block
   });
 }

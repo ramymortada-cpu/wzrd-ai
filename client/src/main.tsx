@@ -1,3 +1,4 @@
+import { initClientSentry } from '@/lib/sentry';
 import posthog from "posthog-js";
 import { trpc } from "@/lib/trpc";
 import { UNAUTHED_ERR_MSG } from '@shared/const';
@@ -9,6 +10,8 @@ import App from "./App";
 import { getLoginUrl } from "./const";
 import { WorkspaceProvider } from "./contexts/WorkspaceContext";
 import "./index.css";
+
+initClientSentry();
 
 if (import.meta.env.VITE_POSTHOG_KEY) {
   posthog.init(import.meta.env.VITE_POSTHOG_KEY, {
