@@ -105,6 +105,8 @@ async function startServer() {
   app.use('/api/trpc/research.full', rateLimiters.ai);
   app.use('/api/trpc/research.deep', rateLimiters.ai);
   app.use('/api/trpc/knowledge.amplify', rateLimiters.ai);
+  app.use('/api/trpc/brandProfile.autoExtract', rateLimiters.ai);
+  app.use('/api/trpc/brandProfile.updateProfile', rateLimiters.publicWrite);
   // General API rate limit (100 req/min)
   app.use('/api/', rateLimiters.general);
 

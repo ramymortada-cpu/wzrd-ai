@@ -1,5 +1,6 @@
 import React, { useState, useId, useEffect } from 'react';
 import posthog from 'posthog-js';
+import { toast } from 'sonner';
 import { useLocation } from 'wouter';
 import { waMeQualifiedLeadHref } from '@/lib/waContact';
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -99,6 +100,20 @@ const severityStyle = (s: string) =>
     : s === 'medium'
       ? { bg: '#FFFBEB', border: '#FDE68A', dot: '#D97706', text: '#D97706', label: 'medium' }
       : { bg: '#F0FDF4', border: '#BBF7D0', dot: '#16A34A', text: '#16A34A', label: 'low' };
+
+/** Next tool to name in post-unlock “complete your profile” nudge (AR + EN). */
+function getNextToolSuggestionForProfileNudge(toolId: string): { en: string; ar: string } {
+  switch (toolId) {
+    case 'brand_diagnosis':
+      return { en: 'Offer Check', ar: 'فحص العرض' };
+    case 'offer_check':
+      return { en: 'Message Check', ar: 'فحص الرسالة' };
+    case 'message_check':
+      return { en: 'Identity Snapshot', ar: 'لقطة الهوية' };
+    default:
+      return { en: 'another tool', ar: 'أداة أخرى' };
+  }
+}
 
 /** Backend credit / balance errors (AR + EN) — show a pricing CTA in the UI. */
 function looksLikeInsufficientCredits(message: string): boolean {
@@ -714,6 +729,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
   const [premiumReport, setPremiumReport] = useState<PremiumReportPayload | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const utils = trpc.useUtils();
   const pdfMutation = trpc.reportPdf.generateHtml.useMutation();
   const premiumPdfMutation = trpc.reportPdf.generatePremiumHtml.useMutation();
   const premiumGenMutation = trpc.premium.generateReport.useMutation();
@@ -914,6 +930,33 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
           }
           setResult(toolResult as ToolResult);
           setFreePreview(null);
+
+          void (async () => {
+            try {
+              const profile = await utils.brandProfile.getMyProfile.fetch();
+              void utils.brandProfile.getMyProfile.invalidate();
+              if (profile.completeness55 >= 80) return;
+              const nextTool = getNextToolSuggestionForProfileNudge(config.id);
+              const pct = profile.completeness55;
+              const description = isAr
+                ? nextTool.ar === 'أداة أخرى'
+                  ? `ملفك مكتمل بنسبة ${pct}%. شغّل أداة أخرى لإضافة المزيد من البيانات.`
+                  : `ملفك مكتمل بنسبة ${pct}%. شغّل «${nextTool.ar}» لإضافة المزيد من البيانات.`
+                : nextTool.en === 'another tool'
+                  ? `Your profile is now ${pct}% complete. Run another tool to add more data.`
+                  : `Your profile is now ${pct}% complete. Run the ${nextTool.en} to add more data.`;
+              toast.success(isAr ? 'تم تحديث ملف البراند! 📈' : 'Brand Profile Updated! 📈', {
+                description,
+                duration: 12_000,
+                action: {
+                  label: isAr ? 'عرض الملف' : 'View profile',
+                  onClick: () => navigate('/my-brand'),
+                },
+              });
+            } catch {
+              /* optional nudge — ignore fetch errors */
+            }
+          })();
         } else {
           setError(isAr ? 'استجابة غير متوقعة. حاول مجدداً.' : 'Unexpected response. Please try again.');
         }

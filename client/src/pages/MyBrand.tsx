@@ -1,14 +1,19 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, type ChangeEvent } from 'react';
 import { useLocation } from 'wouter';
+import { Download, Globe, Loader2, Pencil, Sparkles, X } from 'lucide-react';
+import { toast } from 'sonner';
+import { useAuth } from '@/_core/hooks/useAuth';
 import { useI18n } from '@/lib/i18n';
+import { trpc } from '@/lib/trpc';
 import WzrdPublicHeader from '@/components/WzrdPublicHeader';
+import { Tooltip as RadixTooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Area,
   AreaChart,
   CartesianGrid,
   ReferenceLine,
   ResponsiveContainer,
-  Tooltip,
+  Tooltip as RechartsTooltip,
   XAxis,
   YAxis,
 } from 'recharts';
@@ -93,7 +98,443 @@ interface BrandProfileData {
   successMetric?: string | null;
   totalDiagnosesRun?: number;
   lastToolUsed?: string | null;
-  updatedAt?: string;
+  updatedAt?: string | Date;
+  createdAt?: string | Date;
+  displayName?: string | null;
+  completeness55?: number;
+  filledSlots55?: number;
+}
+
+const BRAND_EXPORT_KEYS: (keyof BrandProfileData)[] = [
+  'companyName',
+  'industry',
+  'market',
+  'website',
+  'socialMedia',
+  'yearsInBusiness',
+  'teamSize',
+  'monthlyRevenue',
+  'currentPositioning',
+  'targetAudience',
+  'biggestChallenge',
+  'brandPersonality',
+  'desiredPerception',
+  'currentGap',
+  'competitors',
+  'tagline',
+  'elevatorPitch',
+  'websiteHeadline',
+  'instagramBio',
+  'linkedinAbout',
+  'toneOfVoice',
+  'keyDifferentiator',
+  'customerQuote',
+  'brandColors',
+  'hasLogo',
+  'hasGuidelines',
+  'currentPackages',
+  'numberOfPackages',
+  'pricingModel',
+  'cheapestPrice',
+  'highestPrice',
+  'commonObjections',
+  'competitorPricing',
+  'instagramHandle',
+  'instagramFollowers',
+  'otherPlatforms',
+  'postingFrequency',
+  'contentType',
+  'inquiryMethod',
+  'avgResponseTime',
+  'googleBusiness',
+  'launchType',
+  'targetLaunchDate',
+  'hasOfferStructure',
+  'hasWebsite',
+  'hasContentPlan',
+  'marketingBudget',
+  'teamCapacity',
+  'biggestConcern',
+  'successMetric',
+];
+
+const BRAND_FORM_FIELD_CLASS =
+  'w-full rounded-2xl border border-zinc-200/80 bg-white/90 px-4 py-3 text-sm text-zinc-900 outline-none ring-primary/0 transition placeholder:text-zinc-400 focus:border-primary/40 focus:ring-2 focus:ring-primary/20 dark:border-zinc-700 dark:bg-zinc-900/60 dark:text-white dark:placeholder:text-zinc-500';
+
+const BRAND_FORM_TEXTAREA_CLASS = `${BRAND_FORM_FIELD_CLASS} min-h-[100px] resize-y`;
+
+function isNonEmptyProfileString(v: string | null | undefined): v is string {
+  return typeof v === 'string' && v.trim().length > 0;
+}
+
+function buildBrandProfileExportObject(profile: BrandProfileData): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (isNonEmptyProfileString(profile.displayName)) out.name = profile.displayName.trim();
+  for (const k of BRAND_EXPORT_KEYS) {
+    const v = profile[k];
+    if (typeof v === 'string' && v.trim().length > 0) out[k] = v.trim();
+  }
+  return out;
+}
+
+function slugCompanyForExportFilename(company: string | null | undefined): string | null {
+  if (!isNonEmptyProfileString(company)) return null;
+  const slug = company
+    .trim()
+    .replace(/[^\p{L}\p{N}]+/gu, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+  return slug.length > 0 ? slug : null;
+}
+
+function downloadBrandProfileJson(profile: BrandProfileData, isAr: boolean) {
+  const data = buildBrandProfileExportObject(profile);
+  if (Object.keys(data).length === 0) {
+    toast.info(
+      isAr ? 'مفيش بيانات للتصدير — عبّي الملف الأول.' : 'Nothing to export yet — add some profile fields first.',
+    );
+    return;
+  }
+  const slug = slugCompanyForExportFilename(profile.companyName);
+  const filename = slug ? `${slug}-brand-profile.json` : 'my-brand-profile.json';
+  const blob = new Blob([`${JSON.stringify(data, null, 2)}\n`], {
+    type: 'application/json;charset=utf-8',
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function BilingualFieldLabel({
+  isAr,
+  primary,
+  secondary,
+}: {
+  isAr: boolean;
+  primary: string;
+  secondary: string;
+}) {
+  return (
+    <div className="mb-1.5">
+      <span className="block text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+        {isAr ? primary : secondary}
+      </span>
+      <span
+        className="mt-0.5 block text-[10px] font-medium leading-tight text-zinc-400 dark:text-zinc-500"
+        dir={isAr ? 'ltr' : 'rtl'}
+      >
+        {isAr ? secondary : primary}
+      </span>
+    </div>
+  );
+}
+
+function ScanWebsiteModal({
+  open,
+  onClose,
+  isAr,
+  url,
+  setUrl,
+  error,
+  isPending,
+  onSubmit,
+}: {
+  open: boolean;
+  onClose: () => void;
+  isAr: boolean;
+  url: string;
+  setUrl: (v: string) => void;
+  error: string;
+  isPending: boolean;
+  onSubmit: () => void;
+}) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <button
+        type="button"
+        className="absolute inset-0 bg-zinc-950/55 backdrop-blur-md dark:bg-black/60"
+        aria-label={isAr ? 'إغلاق' : 'Close'}
+        onClick={onClose}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="scan-modal-title"
+        className="relative z-10 w-full max-w-md rounded-3xl border border-white/15 bg-white/80 p-6 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/75"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <h2 id="scan-modal-title" className="text-lg font-bold text-zinc-900 dark:text-white">
+              {isAr ? 'استخراج بيانات البراند تلقائياً' : 'Auto-Extract Brand Data'}
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+              {isAr
+                ? 'دخل رابط موقعك والذكاء الاصطناعي هيقرأه ويملأ ملف البراند بتاعك تلقائياً.'
+                : 'Enter your website URL. Our AI will scan it and automatically fill your brand profile.'}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full p-1.5 text-zinc-500 transition hover:bg-zinc-200/80 dark:hover:bg-zinc-800"
+            aria-label={isAr ? 'إغلاق' : 'Close'}
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            onSubmit();
+          }}
+        >
+          <div>
+            <label htmlFor="brand-scan-url" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+              URL
+            </label>
+            <input
+              id="brand-scan-url"
+              type="url"
+              inputMode="url"
+              autoComplete="url"
+              placeholder="https://example.com"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              disabled={isPending}
+              className={BRAND_FORM_FIELD_CLASS}
+            />
+          </div>
+          {error ? (
+            <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+              {error}
+            </p>
+          ) : null}
+          <button
+            type="submit"
+            disabled={isPending || !url.trim()}
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-violet-600 py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition hover:brightness-110 disabled:opacity-50"
+          >
+            {isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
+                {isAr ? 'جاري الفحص...' : 'WZZRING...'}
+              </>
+            ) : isAr ? (
+              'ابدأ الفحص'
+            ) : (
+              'Start Scan'
+            )}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function emptyProfileForm() {
+  return {
+    companyName: '',
+    industry: '',
+    market: '',
+    website: '',
+    tagline: '',
+    elevatorPitch: '',
+    toneOfVoice: '',
+    targetAudience: '',
+    brandPersonality: '',
+    brandColors: '',
+  };
+}
+
+type EditProfileFormValues = ReturnType<typeof emptyProfileForm>;
+
+function EditProfileModal({
+  open,
+  onClose,
+  isAr,
+  profile,
+  editError,
+  isPending,
+  onSubmit,
+}: {
+  open: boolean;
+  onClose: () => void;
+  isAr: boolean;
+  profile: BrandProfileData | null;
+  editError: string;
+  isPending: boolean;
+  onSubmit: (values: EditProfileFormValues) => void;
+}) {
+  const [form, setForm] = useState<EditProfileFormValues>(emptyProfileForm);
+
+  useEffect(() => {
+    if (!open || !profile) return;
+    setForm({
+      companyName: profile.companyName ?? '',
+      industry: profile.industry ?? '',
+      market: profile.market ?? '',
+      website: profile.website ?? '',
+      tagline: profile.tagline ?? '',
+      elevatorPitch: profile.elevatorPitch ?? '',
+      toneOfVoice: profile.toneOfVoice ?? '',
+      targetAudience: profile.targetAudience ?? '',
+      brandPersonality: profile.brandPersonality ?? '',
+      brandColors: profile.brandColors ?? '',
+    });
+  }, [open, profile]);
+
+  if (!open) return null;
+
+  const set =
+    (key: keyof EditProfileFormValues) =>
+    (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setForm((f) => ({ ...f, [key]: e.target.value }));
+    };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4">
+      <button
+        type="button"
+        className="absolute inset-0 bg-zinc-950/55 backdrop-blur-md dark:bg-black/60"
+        aria-label={isAr ? 'إغلاق' : 'Close'}
+        onClick={onClose}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-profile-modal-title"
+        className="relative z-10 flex max-h-[min(92vh,100dvh)] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-white/15 bg-white/85 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/80"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-zinc-200/60 px-5 py-4 dark:border-zinc-800/80">
+          <div className="min-w-0">
+            <h2 id="edit-profile-modal-title" className="text-lg font-bold text-zinc-900 dark:text-white">
+              {isAr ? 'تعديل ملف البراند' : 'Edit brand profile'}
+            </h2>
+            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+              {isAr
+                ? 'حدّث بياناتك الأساسية — الحقول بالعربي والإنجليزي تحت كل عنوان.'
+                : 'Update your core brand fields — each label shows Arabic and English.'}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isPending}
+            className="rounded-full p-1.5 text-zinc-500 transition hover:bg-zinc-200/80 disabled:opacity-50 dark:hover:bg-zinc-800"
+            aria-label={isAr ? 'إغلاق' : 'Close'}
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <form
+          className="min-h-0 flex-1 overflow-y-auto px-5 py-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            onSubmit(form);
+          }}
+        >
+          <div className="space-y-4 pb-2">
+            <div>
+              <BilingualFieldLabel isAr={isAr} primary="اسم الشركة" secondary="Company name" />
+              <input
+                type="text"
+                autoComplete="organization"
+                value={form.companyName}
+                onChange={set('companyName')}
+                disabled={isPending}
+                className={BRAND_FORM_FIELD_CLASS}
+              />
+            </div>
+            <div>
+              <BilingualFieldLabel isAr={isAr} primary="المجال / الصناعة" secondary="Industry" />
+              <input type="text" value={form.industry} onChange={set('industry')} disabled={isPending} className={BRAND_FORM_FIELD_CLASS} />
+            </div>
+            <div>
+              <BilingualFieldLabel isAr={isAr} primary="السوق" secondary="Market" />
+              <input type="text" value={form.market} onChange={set('market')} disabled={isPending} className={BRAND_FORM_FIELD_CLASS} />
+            </div>
+            <div>
+              <BilingualFieldLabel isAr={isAr} primary="الموقع الإلكتروني" secondary="Website" />
+              <input
+                type="url"
+                inputMode="url"
+                autoComplete="url"
+                placeholder="https://"
+                value={form.website}
+                onChange={set('website')}
+                disabled={isPending}
+                className={BRAND_FORM_FIELD_CLASS}
+              />
+            </div>
+            <div>
+              <BilingualFieldLabel isAr={isAr} primary="الشعار النصي" secondary="Tagline" />
+              <input type="text" value={form.tagline} onChange={set('tagline')} disabled={isPending} className={BRAND_FORM_FIELD_CLASS} />
+            </div>
+            <div>
+              <BilingualFieldLabel isAr={isAr} primary="العرض المختصر (مصعد)" secondary="Elevator pitch" />
+              <textarea value={form.elevatorPitch} onChange={set('elevatorPitch')} disabled={isPending} rows={4} className={BRAND_FORM_TEXTAREA_CLASS} />
+            </div>
+            <div>
+              <BilingualFieldLabel isAr={isAr} primary="نبرة الصوت" secondary="Tone of voice" />
+              <input type="text" value={form.toneOfVoice} onChange={set('toneOfVoice')} disabled={isPending} className={BRAND_FORM_FIELD_CLASS} />
+            </div>
+            <div>
+              <BilingualFieldLabel isAr={isAr} primary="الجمهور المستهدف" secondary="Target audience" />
+              <textarea value={form.targetAudience} onChange={set('targetAudience')} disabled={isPending} rows={3} className={BRAND_FORM_TEXTAREA_CLASS} />
+            </div>
+            <div>
+              <BilingualFieldLabel isAr={isAr} primary="شخصية البراند" secondary="Brand personality" />
+              <textarea value={form.brandPersonality} onChange={set('brandPersonality')} disabled={isPending} rows={3} className={BRAND_FORM_TEXTAREA_CLASS} />
+            </div>
+            <div>
+              <BilingualFieldLabel isAr={isAr} primary="ألوان البراند" secondary="Brand colors" />
+              <input
+                type="text"
+                placeholder={isAr ? 'مثال: #0F172A، ترابي، ذهبي' : 'e.g. #0F172A, terracotta, gold'}
+                value={form.brandColors}
+                onChange={set('brandColors')}
+                disabled={isPending}
+                className={BRAND_FORM_FIELD_CLASS}
+              />
+            </div>
+          </div>
+          {editError ? (
+            <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+              {editError}
+            </p>
+          ) : null}
+          <div className="sticky bottom-0 -mx-5 -mb-px mt-4 border-t border-zinc-200/60 bg-white/90 px-5 py-4 backdrop-blur-md dark:border-zinc-800/80 dark:bg-zinc-950/90">
+            <button
+              type="submit"
+              disabled={isPending}
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-violet-600 py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition hover:brightness-110 disabled:opacity-50"
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
+                  {isAr ? 'جاري الحفظ...' : 'Saving...'}
+                </>
+              ) : isAr ? (
+                'حفظ التغييرات'
+              ) : (
+                'Save changes'
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 }
 
 function BrandHealthEmptyIllustration({ className }: { className?: string }) {
@@ -169,13 +610,24 @@ function ProfileSection({ title, icon, fields, isAr }: ProfileSectionProps) {
   );
 }
 
-function BrandProfileCard({ profile, isAr }: { profile: BrandProfileData; isAr: boolean }) {
+function BrandProfileCard({
+  profile,
+  isAr,
+  onScanClick,
+  onEditClick,
+}: {
+  profile: BrandProfileData;
+  isAr: boolean;
+  onScanClick: () => void;
+  onEditClick: () => void;
+}) {
   const sections = useMemo(() => {
     const s = [
       {
         title: isAr ? 'الهوية الأساسية' : 'Core Identity',
         icon: '🏢',
         fields: [
+          { label: isAr ? 'الاسم' : 'Name', value: profile.displayName },
           { label: isAr ? 'الشركة' : 'Company', value: profile.companyName },
           { label: isAr ? 'الصناعة' : 'Industry', value: profile.industry },
           { label: isAr ? 'السوق' : 'Market', value: profile.market },
@@ -278,25 +730,13 @@ function BrandProfileCard({ profile, isAr }: { profile: BrandProfileData; isAr: 
     (s) => s.fields.some((f) => f.value && f.value.trim()),
   );
 
-  if (filledCount === 0) return null;
-
   return (
     <div className="wzrd-glass mb-4 overflow-hidden rounded-3xl">
       {/* Header */}
       <div className="border-b border-zinc-200/50 p-5 dark:border-zinc-700/50">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-base font-bold text-zinc-900 dark:text-white">
-              {isAr ? 'ملف البراند' : 'Brand Profile'}
-            </h3>
-            <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
-              {isAr
-                ? `بيانات متراكمة من ${profile.totalDiagnosesRun || 0} تشخيص`
-                : `Accumulated from ${profile.totalDiagnosesRun || 0} diagnoses`}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="relative h-10 w-10">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex min-w-0 flex-1 items-start gap-4">
+            <div className="relative h-10 w-10 shrink-0">
               <svg className="h-10 w-10 -rotate-90" viewBox="0 0 36 36">
                 <circle
                   cx="18"
@@ -323,6 +763,60 @@ function BrandProfileCard({ profile, isAr }: { profile: BrandProfileData; isAr: 
                 {completeness}%
               </span>
             </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-base font-bold text-zinc-900 dark:text-white">
+                {isAr ? 'ملف البراند' : 'Brand Profile'}
+              </h3>
+              <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                {isAr
+                  ? `بيانات متراكمة من ${profile.totalDiagnosesRun ?? 0} تشخيص`
+                  : `Accumulated from ${profile.totalDiagnosesRun ?? 0} diagnoses`}
+              </p>
+              {filledCount === 0 ? (
+                <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                  {isAr ? 'لسه مفيش بيانات — جرّب تعديل الملف أو فحص الموقع.' : 'No fields yet — edit your profile or scan a website.'}
+                </p>
+              ) : null}
+            </div>
+          </div>
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+            <RadixTooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => downloadBrandProfileJson(profile, isAr)}
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-zinc-300/80 bg-white/40 text-zinc-800 shadow-sm transition hover:bg-white/70 dark:border-zinc-600 dark:bg-zinc-900/40 dark:text-zinc-100 dark:hover:bg-zinc-800/60"
+                  aria-label={isAr ? 'تصدير ملف JSON' : 'Export profile as JSON'}
+                >
+                  <Download className="h-3.5 w-3.5 opacity-90" aria-hidden />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-[14rem] text-balance">
+                {isAr
+                  ? 'حمل الملف عشان تشاركه مع الديزاينر أو الإيجنسي'
+                  : 'Export for your designer or agency'}
+              </TooltipContent>
+            </RadixTooltip>
+            <button
+              type="button"
+              onClick={onEditClick}
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-zinc-300/80 bg-white/40 px-4 py-2 text-xs font-semibold text-zinc-800 shadow-sm transition hover:bg-white/70 dark:border-zinc-600 dark:bg-zinc-900/40 dark:text-zinc-100 dark:hover:bg-zinc-800/60"
+            >
+              <Pencil className="h-3.5 w-3.5 opacity-90" aria-hidden />
+              <span>{isAr ? 'تعديل الملف' : 'Edit Profile'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={onScanClick}
+              className="group inline-flex items-center justify-center gap-2 rounded-full border border-transparent bg-gradient-to-r from-violet-500/20 via-cyan-500/15 to-violet-500/20 px-4 py-2 text-xs font-semibold text-zinc-800 shadow-sm transition hover:from-violet-500/30 hover:via-cyan-500/25 hover:to-violet-500/30 dark:text-zinc-100 dark:from-violet-500/25 dark:via-cyan-500/20 dark:to-violet-500/25"
+              style={{
+                boxShadow: '0 0 0 1px rgba(139, 92, 246, 0.35), inset 0 1px 0 rgba(255,255,255,0.06)',
+              }}
+            >
+              <Sparkles className="h-3.5 w-3.5 text-violet-500 transition group-hover:text-cyan-400" aria-hidden />
+              <Globe className="h-3.5 w-3.5 opacity-80" aria-hidden />
+              <span>{isAr ? 'فحص الموقع' : 'Scan Website'}</span>
+            </button>
           </div>
         </div>
         {/* Completeness bar */}
@@ -340,17 +834,19 @@ function BrandProfileCard({ profile, isAr }: { profile: BrandProfileData; isAr: 
       </div>
 
       {/* Sections */}
-      <div className="divide-y divide-zinc-200/50 dark:divide-zinc-700/50">
-        {sectionsWithData.map((section) => (
-          <ProfileSection
-            key={section.title}
-            title={section.title}
-            icon={section.icon}
-            fields={section.fields}
-            isAr={isAr}
-          />
-        ))}
-      </div>
+      {sectionsWithData.length > 0 ? (
+        <div className="divide-y divide-zinc-200/50 dark:divide-zinc-700/50">
+          {sectionsWithData.map((section) => (
+            <ProfileSection
+              key={section.title}
+              title={section.title}
+              icon={section.icon}
+              fields={section.fields}
+              isAr={isAr}
+            />
+          ))}
+        </div>
+      ) : null}
 
       {/* Footer hint */}
       {completeness < 80 && (
@@ -370,16 +866,63 @@ export default function MyBrand() {
   const [, navigate] = useLocation();
   const { locale } = useI18n();
   const isAr = locale === 'ar';
+  const { user, loading: authLoading } = useAuth();
+  const utils = trpc.useUtils();
+  const [scanOpen, setScanOpen] = useState(false);
+  const [scanUrl, setScanUrl] = useState('');
+  const [scanError, setScanError] = useState('');
+  const [editOpen, setEditOpen] = useState(false);
+  const [editError, setEditError] = useState('');
+
+  const profileQuery = trpc.brandProfile.getMyProfile.useQuery(undefined, {
+    enabled: Boolean(user) && !authLoading,
+    retry: 1,
+  });
+
+  const updateProfileMutation = trpc.brandProfile.updateProfile.useMutation({
+    onSuccess: () => {
+      toast.success(isAr ? 'تم حفظ ملف البراند.' : 'Brand profile saved.');
+      setEditOpen(false);
+      setEditError('');
+      void utils.brandProfile.getMyProfile.invalidate();
+    },
+    onError: (err) => {
+      setEditError(err.message || (isAr ? 'فشل الحفظ' : 'Save failed'));
+    },
+  });
+
+  const extractMutation = trpc.brandProfile.autoExtract.useMutation({
+    onSuccess: (data) => {
+      if (!data.success) {
+        toast.info(data.error || (isAr ? 'مفيش بيانات جديدة للاستخراج.' : 'No new data extracted.'));
+        return;
+      }
+      const n = data.fieldsExtracted;
+      if (n <= 0) {
+        toast.info(isAr ? 'تم الفحص — مفيش حقول جديدة للتحديث.' : 'Scan complete — no new fields to update.');
+      } else {
+        toast.success(
+          isAr ? `تم استخراج ${n} حقول بنجاح` : `Extracted ${n} field${n === 1 ? '' : 's'} successfully`,
+        );
+      }
+      setScanOpen(false);
+      setScanUrl('');
+      setScanError('');
+      void utils.brandProfile.getMyProfile.invalidate();
+    },
+    onError: (err) => {
+      setScanError(err.message || (isAr ? 'فشل الفحص' : 'Scan failed'));
+    },
+  });
 
   const [history, setHistory] = useState<DiagnosisEntry[]>([]);
   const [trend, setTrend] = useState<string>('new');
   const [checklists, setChecklists] = useState<Checklist[]>([]);
-  const [brandProfile, setBrandProfile] = useState<BrandProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedDiagnosis, setSelectedDiagnosis] = useState<DiagnosisEntry | null>(null);
 
-  // Fetch history + checklists + brand profile
+  // Fetch history + checklists (brand profile via tRPC above)
   useEffect(() => {
     setLoading(true);
     Promise.all([
@@ -392,10 +935,6 @@ export default function MyBrand() {
         const data = d.result?.data?.json ?? d.result?.data ?? [];
         setChecklists(Array.isArray(data) ? data : []);
       }),
-      fetch('/api/trpc/brandProfile.getMyProfile').then(r => r.json()).then(d => {
-        const data = d.result?.data?.json ?? d.result?.data ?? null;
-        setBrandProfile(data);
-      }).catch(() => { /* brand profile not available yet — silent */ }),
     ])
       .catch(() => setError(isAr ? 'حصل مشكلة في التحميل — حاول تاني.' : 'Failed to load — please try again.'))
       .finally(() => setLoading(false));
@@ -493,6 +1032,82 @@ export default function MyBrand() {
           {isAr ? 'صحة البراند بتاعك' : 'Your Brand Health'}
         </h1>
 
+        {user && (
+          <>
+            {profileQuery.isLoading && (
+              <div className="wzrd-glass mb-6 h-32 animate-pulse rounded-3xl border border-white/10" />
+            )}
+            {profileQuery.isError && (
+              <div className="mb-4 rounded-2xl border border-amber-200/60 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/30 dark:text-amber-100">
+                {profileQuery.error.message}
+              </div>
+            )}
+            {profileQuery.data && (
+              <BrandProfileCard
+                profile={profileQuery.data as unknown as BrandProfileData}
+                isAr={isAr}
+                onEditClick={() => {
+                  setEditError('');
+                  setEditOpen(true);
+                }}
+                onScanClick={() => {
+                  setScanError('');
+                  setScanUrl(profileQuery.data?.website?.trim() || '');
+                  setScanOpen(true);
+                }}
+              />
+            )}
+            <EditProfileModal
+              open={editOpen}
+              onClose={() => {
+                if (!updateProfileMutation.isPending) {
+                  setEditOpen(false);
+                  setEditError('');
+                }
+              }}
+              isAr={isAr}
+              profile={(profileQuery.data as unknown as BrandProfileData) ?? null}
+              editError={editError}
+              isPending={updateProfileMutation.isPending}
+              onSubmit={(values) => {
+                setEditError('');
+                updateProfileMutation.mutate({
+                  companyName: values.companyName,
+                  industry: values.industry,
+                  market: values.market,
+                  website: values.website,
+                  tagline: values.tagline,
+                  elevatorPitch: values.elevatorPitch,
+                  toneOfVoice: values.toneOfVoice,
+                  targetAudience: values.targetAudience,
+                  brandPersonality: values.brandPersonality,
+                  brandColors: values.brandColors,
+                });
+              }}
+            />
+            <ScanWebsiteModal
+              open={scanOpen}
+              onClose={() => {
+                if (!extractMutation.isPending) {
+                  setScanOpen(false);
+                  setScanError('');
+                }
+              }}
+              isAr={isAr}
+              url={scanUrl}
+              setUrl={setScanUrl}
+              error={scanError}
+              isPending={extractMutation.isPending}
+              onSubmit={() => {
+                setScanError('');
+                const trimmed = scanUrl.trim();
+                if (!trimmed) return;
+                extractMutation.mutate({ url: trimmed });
+              }}
+            />
+          </>
+        )}
+
         {/* Error */}
         {error && (
           <div className="mb-4 rounded-2xl border border-red-200/60 bg-red-500/10 p-4 text-sm text-red-700 dark:border-red-500/30 dark:text-red-300">
@@ -558,9 +1173,6 @@ export default function MyBrand() {
                 <span>{isAr ? 'قوي' : 'Strong'}</span>
               </div>
             </div>
-
-            {/* ═══ BRAND PROFILE CARD ═══ */}
-            {brandProfile && <BrandProfileCard profile={brandProfile} isAr={isAr} />}
 
             {/* Stats + score trend chart */}
             {chartData.length > 0 && (
@@ -651,7 +1263,7 @@ export default function MyBrand() {
                           label={{ value: '40', fill: 'rgba(239,68,68,0.5)', fontSize: 10 }}
                         />
 
-                        <Tooltip
+                        <RechartsTooltip
                           contentStyle={{
                             borderRadius: '12px',
                             border: '1px solid rgba(255,255,255,0.08)',
@@ -664,7 +1276,9 @@ export default function MyBrand() {
                           itemStyle={{ color: '#00F0FF' }}
                           labelStyle={{ color: '#71717A', marginBottom: '4px' }}
                           formatter={(value: number) => [`${value}/100`, isAr ? 'النتيجة' : 'Score']}
-                          labelFormatter={(_, payload) => (payload?.[0]?.payload?.tool as string) || ''}
+                          labelFormatter={(_: unknown, payload: { payload?: { tool?: string } }[] | undefined) =>
+                            payload?.[0]?.payload?.tool ?? ''
+                          }
                           cursor={{ stroke: 'rgba(255,255,255,0.06)', strokeWidth: 1 }}
                         />
 
