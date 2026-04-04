@@ -19,6 +19,18 @@ interface TriggerMetadata {
   [key: string]: unknown;
 }
 
+function applyAutomationPlaceholders(
+  text: string,
+  userName: string,
+  metadata?: TriggerMetadata,
+): string {
+  return text
+    .replace(/\{\{NAME\}\}/g, userName || '')
+    .replace(/\{\{SCORE\}\}/g, String(metadata?.score ?? ''))
+    .replace(/\{\{CREDITS\}\}/g, String(metadata?.credits ?? ''))
+    .replace(/\{\{TOOL_NAME\}\}/g, String(metadata?.toolName ?? ''));
+}
+
 /**
  * Fire an email automation trigger. Non-blocking — always resolves.
  * 
@@ -66,21 +78,17 @@ export async function fireEmailTrigger(
           trigger,
         });
       } else {
-        // Send immediately
-        const html = template.html
-          .replace(/\{\{NAME\}\}/g, user.name || '')
-          .replace(/\{\{SCORE\}\}/g, String(metadata?.score || ''))
-          .replace(/\{\{CREDITS\}\}/g, String(metadata?.credits || ''))
-          .replace(/\{\{TOOL_NAME\}\}/g, String(metadata?.toolName || ''));
+        // Send immediately — use wzrdEmails.sendEmail (Resend / SendGrid / skip if no provider)
+        const name = user.name || '';
+        const subjectBase = template.subjectAr || template.subject;
+        const subject = applyAutomationPlaceholders(subjectBase, name, metadata);
+        const html = applyAutomationPlaceholders(template.html, name, metadata);
 
-        // Try to send
         try {
-          const { Resend } = await import('resend');
-          const resend = new Resend(process.env.EMAIL_API_KEY);
-          await resend.emails.send({
-            from: process.env.EMAIL_FROM || 'WZZRD AI <noreply@wzzrdai.com>',
+          const { sendEmail } = await import('./wzrdEmails');
+          const ok = await sendEmail({
             to: user.email,
-            subject: template.subjectAr || template.subject,
+            subject,
             html,
           });
 
@@ -89,13 +97,18 @@ export async function fireEmailTrigger(
             email: user.email,
             templateId: rule.templateId,
             automationRuleId: rule.id,
-            subject: template.subjectAr || template.subject,
-            status: 'sent',
+            subject,
+            status: ok ? 'sent' : 'failed',
             trigger,
-            sentAt: new Date(),
+            sentAt: ok ? new Date() : undefined,
+            errorMessage: ok ? undefined : 'Email skipped or provider not configured',
           });
 
-          logger.info({ trigger, userId, template: template.name }, 'Email automation sent');
+          if (ok) {
+            logger.info({ trigger, userId, template: template.name }, 'Email automation sent');
+          } else {
+            logger.info({ trigger, userId, template: template.name }, 'Email automation skipped (no provider)');
+          }
         } catch (sendErr: unknown) {
           const msg = sendErr instanceof Error ? sendErr.message : String(sendErr);
           await db.insert(emailSendLog).values({
@@ -103,7 +116,7 @@ export async function fireEmailTrigger(
             email: user.email,
             templateId: rule.templateId,
             automationRuleId: rule.id,
-            subject: template.subjectAr || template.subject,
+            subject,
             status: 'failed',
             trigger,
             errorMessage: msg.substring(0, 500),
