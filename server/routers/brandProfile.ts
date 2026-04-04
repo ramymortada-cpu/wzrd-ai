@@ -125,7 +125,7 @@ export async function upsertBrandProfile(
         ...updates,
         lastToolUsed: toolId,
         totalDiagnosesRun: 1,
-      } as any);
+      } as typeof brandProfiles.$inferInsert);
     }
 
     logger.info(
@@ -215,7 +215,7 @@ export const brandProfileRouter = router({
         await db.insert(brandProfiles).values({
           userId: ctx.user!.id,
           ...updates,
-        } as any);
+        } as typeof brandProfiles.$inferInsert);
       }
 
       return { success: true };
