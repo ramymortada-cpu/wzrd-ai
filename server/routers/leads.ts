@@ -48,7 +48,7 @@ export const leadsRouter = router({
       const sanitized = sanitizeObject(input);
       const answersText = sanitized.answers.map((a) => `Q: ${a.question}\nA: ${a.answer}`).join('\n\n');
 
-      const diagnosisPrompt = `You are Wzrd AI, the brand engineering intelligence of Primo Marca agency.
+      const diagnosisPrompt = `You are Wzrd AI, the brand engineering intelligence of WZZRD AI agency.
 
 A potential client just completed a Brand Health Quick-Check. Analyze their answers and provide:
 
@@ -69,7 +69,7 @@ Client Info:
 Quick-Check Answers:
 ${answersText}
 
-Pricing Reference (official Primo Marca prices):
+Pricing Reference (official WZZRD AI prices):
 ${buildPricingReference()}
 
 Respond in JSON format:

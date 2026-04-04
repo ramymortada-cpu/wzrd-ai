@@ -2635,7 +2635,7 @@ export default function WzrdAdmin() {
           ))}
         </nav>
         <div className="p-4 border-t border-gray-100 text-[10px] text-gray-400 text-center">
-          <span className="opacity-60">{t('1–9 لوحة', '1–9 tabs')}</span><br />Primo Marca © 2026
+          <span className="opacity-60">{t('1–9 لوحة', '1–9 tabs')}</span><br />WZZRD AI © 2026
         </div>
       </aside>
 

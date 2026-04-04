@@ -92,7 +92,7 @@ Categorize all findings into:
 Three specific, actionable things the brand owner can implement TODAY with zero budget.
 
 ## ٦. التوصية النهائية
-Which Primo Marca service phase is recommended and why (AUDIT / BUILD / TAKEOFF).
+Which WZZRD AI service phase is recommended and why (AUDIT / BUILD / TAKEOFF).
 
 IMPORTANT RULES:
 - Write 2000-3000 words minimum

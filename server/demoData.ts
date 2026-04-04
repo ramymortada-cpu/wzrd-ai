@@ -88,7 +88,7 @@ export const DEMO_DATA: DemoData = {
   knowledge: [
     {
       title: 'MENA Brand Identity Pricing Benchmarks (2025)',
-      content: 'Based on our market research across 50+ agencies in MENA:\n\n- Budget agencies (Fiverr/freelancers): 5,000 - 30,000 EGP\n- Mid-tier agencies: 50,000 - 150,000 EGP\n- Premium agencies (Primo Marca tier): 150,000 - 350,000 EGP\n- International agencies: 500,000+ EGP\n\nPrimo Marca sits in the premium-but-accessible tier with data-driven, framework-backed deliverables that justify the investment.',
+      content: 'Based on our market research across 50+ agencies in MENA:\n\n- Budget agencies (Fiverr/freelancers): 5,000 - 30,000 EGP\n- Mid-tier agencies: 50,000 - 150,000 EGP\n- Premium agencies (WZZRD AI tier): 150,000 - 350,000 EGP\n- International agencies: 500,000+ EGP\n\nWZZRD AI sits in the premium-but-accessible tier with data-driven, framework-backed deliverables that justify the investment.',
       category: 'market_insight',
       industry: 'Branding',
       tags: ['pricing', 'MENA', 'benchmark', 'agency'],
@@ -169,8 +169,8 @@ export const ONBOARDING_STEPS = [
   {
     id: 'welcome',
     target: 'body',
-    title: 'Welcome to Primo Command Center',
-    titleAr: 'مرحباً بك في Primo Command Center',
+    title: 'Welcome to WZZRD AI',
+    titleAr: 'مرحباً بك في WZZRD AI',
     content: 'Your AI-powered brand engineering dashboard. Let us show you around.',
     contentAr: 'لوحة هندسة العلامات التجارية بالذكاء الاصطناعي. دعنا نأخذك في جولة.',
   },

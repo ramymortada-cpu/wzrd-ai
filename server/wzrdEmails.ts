@@ -69,7 +69,7 @@ interface EmailPayload {
 export async function sendEmail(payload: EmailPayload): Promise<boolean> {
   const provider = process.env.EMAIL_PROVIDER || 'none';
   const apiKey = process.env.EMAIL_API_KEY;
-  const from = process.env.EMAIL_FROM || 'WZZRD AI <noreply@primomarca.com>';
+  const from = process.env.EMAIL_FROM || 'WZZRD AI <noreply@wzzrdai.com>';
 
   if (provider === 'none' || !apiKey) {
     logger.info({ to: payload.to, subject: payload.subject }, '[Email] Skipped — no provider configured');
@@ -165,14 +165,14 @@ ${preheader ? `<div style="display:none;font-size:1px;color:#09090b;line-height:
 <tr><td style="padding:0 0 4px 0;">
   <span style="${STYLE.logo}">WZZRD <span style="${STYLE.logoAI}">AI</span></span>
 </td></tr>
-<tr><td style="${STYLE.sub}padding-bottom:20px;">by Primo Marca</td></tr>
+<tr><td style="${STYLE.sub}padding-bottom:20px;">by WZZRD AI</td></tr>
 <!-- Content -->
 <tr><td>
 ${body}
 </td></tr>
 <!-- Footer -->
 <tr><td style="${STYLE.footer}padding-top:24px;border-top:1px solid #1a1a28;">
-  <p style="margin:0 0 4px;">WZZRD AI by <a href="https://primomarca.com" style="${STYLE.footerLink}">Primo Marca</a></p>
+  <p style="margin:0 0 4px;">WZZRD AI by <a href="https://wzzrdai.com" style="${STYLE.footerLink}">WZZRD AI</a></p>
   <p style="margin:0;font-style:italic;${STYLE.gold}">"Marks Fade, MARCAS Don't."</p>
 </td></tr>
 </table>

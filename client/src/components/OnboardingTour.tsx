@@ -21,8 +21,8 @@ const TOUR_STEPS: TourStep[] = [
   {
     id: 'welcome',
     target: 'body',
-    title: 'Welcome to Primo Command Center',
-    titleAr: 'مرحباً بك في Primo Command Center',
+    title: 'Welcome to WZZRD AI',
+    titleAr: 'مرحباً بك في WZZRD AI',
     content: 'Your AI-powered brand engineering dashboard. Let us show you around.',
     contentAr: 'لوحة هندسة العلامات التجارية بالذكاء الاصطناعي. دعنا نأخذك في جولة.',
   },

@@ -113,7 +113,7 @@ export default function QuickCheckPage() {
             />
             <div>
               <h1 className="text-lg font-bold tracking-tight">Wzrd AI</h1>
-              <p className="text-xs text-white/50">by Primo Marca</p>
+              <p className="text-xs text-white/50">by WZZRD AI</p>
             </div>
           </div>
           <Badge variant="outline" className="border-white/10 text-white/60 text-xs">
@@ -259,7 +259,7 @@ export default function QuickCheckPage() {
 
             {/* Social proof */}
             <div className="text-center space-y-2 py-8">
-              <p className="text-sm text-white/40">Powered by Primo Marca's 4D Framework</p>
+              <p className="text-sm text-white/40">Powered by WZZRD AI's 4D Framework</p>
               <p className="text-xs text-white/25">
                 Diagnose · Design · Deploy · Optimize
               </p>
@@ -347,7 +347,7 @@ export default function QuickCheckPage() {
             <div className="space-y-3">
               <h3 className="text-2xl font-bold">Analyzing Your Brand...</h3>
               <p className="text-white/50">
-                Our AI is running a comprehensive brand health assessment using Primo Marca's 4D Framework.
+                Our AI is running a comprehensive brand health assessment using WZZRD AI's 4D Framework.
                 This usually takes 10-20 seconds.
               </p>
             </div>
@@ -432,7 +432,7 @@ export default function QuickCheckPage() {
               </div>
 
               <div className="text-center space-y-2">
-                <p className="text-xs text-zinc-500">Powered by Wzrd AI — Primo Marca</p>
+                <p className="text-xs text-zinc-500">Powered by WZZRD AI</p>
               </div>
             </div>
           </div>

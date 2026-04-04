@@ -231,20 +231,20 @@ export const MENA_CASE_STUDIES: MENACaseStudy[] = [
   // ════════ PRIMO MARCA OWN PROJECTS ════════
   {
     id: 'primo_01',
-    brand: 'Primo Marca Case: Beehive (F&B Rebrand)',
+    brand: 'WZZRD AI Case: Beehive (F&B Rebrand)',
     industry: 'F&B', market: 'egypt',
     situation: 'Beehive was a Cairo-based healthy food restaurant with good products but confused brand identity. Multiple menus, inconsistent visual identity, unclear positioning in the "healthy eating" category.',
     challenge: 'Clarity Gap — the brand didn\'t know what it was. Was it a diet restaurant? A health food store? A juice bar? Customers were confused and didn\'t know what to expect.',
     strategy: 'Applied the 4D Framework: (1) DIAGNOSE: Discovery call revealed the owner wanted to be "the Shake Shack of healthy food" — clear, consistent, premium. (2) DESIGN: Positioned as "Real Food, Real Good" — not diet food, not supplements, just genuinely good food that happens to be healthy. (3) DEPLOY: New visual identity (warm, inviting, not clinical), streamlined menu around core offering, consistent brand voice. (4) OPTIMIZE: Tracked customer perception shift through social media sentiment.',
     results: 'Customer footfall increased 35% in 3 months. Average order value increased 20%. Social media engagement tripled. Customer retention improved from 40% to 65%. Brand perception shifted from "diet place" to "where I actually want to eat."',
     lessonsLearned: 'Most F&B brands don\'t have a food problem — they have a clarity problem. When you simplify the brand promise and make it emotionally appealing (not just functional), everything improves.',
-    frameworksUsed: ['4D Framework (Primo Marca methodology)', 'Kapferer Prism (Personality shift from clinical to warm)', 'Sharp (Distinctive assets — warm colors, "Real Food" tagline)'],
+    frameworksUsed: ['4D Framework (WZZRD AI methodology)', 'Kapferer Prism (Personality shift from clinical to warm)', 'Sharp (Distinctive assets — warm colors, "Real Food" tagline)'],
     patternToRecognize: 'When a restaurant/food brand is "a little bit of everything" and customers don\'t know what to expect. Classic Clarity Gap.',
     tags: ['egypt', 'f&b', 'primo_marca', 'rebrand', 'clarity_gap', '4d_framework'],
   },
   {
     id: 'primo_02',
-    brand: 'Primo Marca Case: Tazkyah Plus (Islamic Finance Platform)',
+    brand: 'WZZRD AI Case: Tazkyah Plus (Islamic Finance Platform)',
     industry: 'Tech', market: 'ksa',
     situation: 'Tazkyah Plus was a new Islamic investment platform targeting Saudi millennials. The Sharia-compliant investment space was dominated by banks with old-fashioned, complex branding.',
     challenge: 'Identity Crisis — the fintech didn\'t know if it should look like a bank (trust) or a startup (modern). The Sharia compliance aspect felt like a constraint on branding, not an asset.',

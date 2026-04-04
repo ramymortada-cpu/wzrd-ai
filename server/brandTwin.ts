@@ -92,7 +92,7 @@ export async function runBrandAudit(params: {
 }): Promise<BrandAuditResult> {
   const { client, researchContext, knowledgeContext, notes, previousSnapshot } = params;
 
-  const systemPrompt = `You are Wzrd AI — Brand Digital Twin Engine, an expert brand health analyst working within the Primo Marca methodology.
+  const systemPrompt = `You are Wzrd AI — Brand Digital Twin Engine, an expert brand health analyst working within the WZZRD AI methodology.
 
 Your job is to evaluate a brand's health across 7 dimensions and produce a comprehensive audit.
 

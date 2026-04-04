@@ -141,9 +141,9 @@ export default function DashboardLayout({
         <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full">
             <div className="flex flex-col items-center gap-4">
               <div className="flex items-center gap-3">
-                <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663371561184/TgSL8MhgJ4oMR4dsotVnRS/wzrd-ai-logo_a6bceffd.png" alt="Primo Marca" className="w-12 h-12 rounded-lg" />
+                <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663371561184/TgSL8MhgJ4oMR4dsotVnRS/wzrd-ai-logo_a6bceffd.png" alt="WZZRD AI" className="w-12 h-12 rounded-lg" />
                 <div>
-                  <h1 className="text-lg font-bold tracking-tight">Primo Marca</h1>
+                  <h1 className="text-lg font-bold tracking-tight">WZZRD AI</h1>
                   <p className="text-xs text-muted-foreground tracking-wider">
                     {locale === "ar" ? "Command Center · مساحة العمل الداخلية" : "Command Center · Internal workspace"}
                   </p>
@@ -282,16 +282,16 @@ function DashboardLayoutContent({
                 aria-label="Toggle navigation"
               >
                 {isCollapsed ? (
-                  <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663371561184/TgSL8MhgJ4oMR4dsotVnRS/wzrd-ai-logo_a6bceffd.png" alt="Primo Marca" className="w-8 h-8 rounded-lg" />
+                  <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663371561184/TgSL8MhgJ4oMR4dsotVnRS/wzrd-ai-logo_a6bceffd.png" alt="WZZRD AI" className="w-8 h-8 rounded-lg" />
                 ) : (
                   <PanelLeft className="h-4 w-4 text-muted-foreground" />
                 )}
               </button>
               {!isCollapsed ? (
                 <div className="flex items-center gap-2 min-w-0">
-                  <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663371561184/TgSL8MhgJ4oMR4dsotVnRS/wzrd-ai-logo_a6bceffd.png" alt="Primo Marca" className="w-7 h-7 rounded-md shrink-0" />
+                  <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663371561184/TgSL8MhgJ4oMR4dsotVnRS/wzrd-ai-logo_a6bceffd.png" alt="WZZRD AI" className="w-7 h-7 rounded-md shrink-0" />
                   <div className="min-w-0">
-                    <span className="font-bold tracking-tight text-sm block truncate">Primo Marca</span>
+                    <span className="font-bold tracking-tight text-sm block truncate">WZZRD AI</span>
                     <span className="text-[10px] text-muted-foreground tracking-wider block leading-tight">
                       {locale === "ar" ? "Command Center · داخلي" : "Command Center · Internal"}
                     </span>

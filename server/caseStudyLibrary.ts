@@ -6,7 +6,7 @@
  * 17 case studies across 3 categories:
  * - Global Icons (7): Nike, Apple, Airbnb, Starbucks, Patagonia, Dollar Shave Club, Oatly
  * - Regional Champions (7): Careem, Noon, Talabat, Jahez, Anghami, Huda Beauty, Kitopi
- * - Primo Marca Cases (3): Beehive, Tazkyah Plus, Ramy Mortada (enhanced with deeper analysis)
+ * - WZZRD AI Cases (3): Beehive, Tazkyah Plus, Ramy Mortada (enhanced with deeper analysis)
  * 
  * Each case study includes:
  * - Situation with real numbers
@@ -366,7 +366,7 @@ Ries & Trout's Positioning: Apple repositioned itself as the anti-status quo bra
   // ═══════════════════════════════════════════════════════════════════════════
   
   {
-    brandName: `Beehive (Primo Marca Case)`,
+    brandName: `Beehive (WZZRD AI Case)`,
     category: 'primo_marca',
     situation: `Beehive was an established service company in the Egyptian market with solid service quality but a brand image that positioned them as C-class. Despite delivering quality comparable to premium providers, their visual identity, messaging, and market positioning attracted only price-sensitive clients. Their revenue was capped by the perception gap — clients who could afford premium services didn't consider Beehive because the brand didn't signal premium quality. This is a common trap in the Egyptian market where many capable companies are stuck in a "quality ceiling" — great work, wrong perception.`,
     challenge: `The core challenge was not service improvement but PERCEPTION transformation. Beehive needed to shift from being perceived as a budget option to being recognized as an A/B-class provider — without losing existing clients during the transition. This required a complete brand overhaul that would signal premium positioning while maintaining operational continuity. The risk: alienating current clients before new premium clients arrived.`,
@@ -390,7 +390,7 @@ Ries & Trout's Positioning: Apple repositioned itself as the anti-status quo bra
     tags: ['repositioning', 'premium_pricing', 'brand_strategy', 'perception_gap'],
   },
   {
-    brandName: `Tazkyah Plus (Primo Marca Case)`,
+    brandName: `Tazkyah Plus (WZZRD AI Case)`,
     category: 'primo_marca',
     situation: `Tazkyah Plus started as a vision for an educational platform focused on personal development, values, and meaningful education. The founder had a powerful concept — education that transforms character, not just transfers knowledge — but zero brand structure. There was no visual identity, no messaging framework, no scalable architecture. The vision was strong but existed only in the founder's head, making it impossible to communicate consistently or scale beyond personal efforts.`,
     challenge: `The challenge was transforming an abstract vision into a concrete, scalable brand ecosystem. This wasn't a simple logo project — it required building an entire brand architecture that could support multiple sub-brands (Studio, Books, Podcast, Academy, Insights) while maintaining a unified identity. The risk: creating something too rigid that couldn't grow, or too loose that would lose coherence.`,
@@ -413,7 +413,7 @@ Ries & Trout's Positioning: Apple repositioned itself as the anti-status quo bra
     tags: ['brand_architecture', 'category_creation', 'brand_strategy', 'purpose_driven'],
   },
   {
-    brandName: `Ramy Mortada (Primo Marca Case)`,
+    brandName: `Ramy Mortada (WZZRD AI Case)`,
     category: 'primo_marca',
     situation: `Ramy Mortada had a strong personal voice with strategic thinking, leadership insights, and geopolitical awareness. He was already creating content and sharing perspectives, but without a structured brand — it was personal social media presence, not a recognizable intellectual brand. The content was valuable but scattered, the visual identity was inconsistent, and there was no clear positioning that differentiated him from thousands of other "thought leaders" on social media.`,
     challenge: `The challenge was fundamentally different from corporate branding: build a brand that IS the person — amplifying authentic strengths without creating a fake persona. The brand needed to reflect authority, credibility, and intellectual depth while remaining approachable. The risk: making it too corporate (losing authenticity) or too casual (losing authority).`,
@@ -504,7 +504,7 @@ export function formatCaseStudiesForPrompt(cases: CaseStudy[]): string {
   let prompt = '\n## RELEVANT CASE STUDIES (Reference these when advising)\n\n';
   
   for (const cs of cases) {
-    prompt += `### ${cs.brandName} (${cs.category === 'global_icon' ? 'Global' : cs.category === 'regional_champion' ? 'MENA' : 'Primo Marca'})\n`;
+    prompt += `### ${cs.brandName} (${cs.category === 'global_icon' ? 'Global' : cs.category === 'regional_champion' ? 'MENA' : 'WZZRD AI'})\n`;
     prompt += `**Situation:** ${cs.situation}\n`;
     prompt += `**What They Did:** ${cs.whatTheyDid}\n`;
     prompt += `**Results:** ${cs.results}\n`;
@@ -532,7 +532,7 @@ export function getAllCaseStudiesForKnowledgeBase(): string {
   let kb = `## COMPREHENSIVE CASE STUDY LIBRARY — ${CASE_STUDIES.length} REAL-WORLD BRAND CASES\n\n`;
   kb += `This library contains ${CASE_STUDIES.filter(c => c.category === 'global_icon').length} Global Icons, `;
   kb += `${CASE_STUDIES.filter(c => c.category === 'regional_champion').length} Regional Champions, and `;
-  kb += `${CASE_STUDIES.filter(c => c.category === 'primo_marca').length} Primo Marca cases.\n`;
+  kb += `${CASE_STUDIES.filter(c => c.category === 'primo_marca').length} WZZRD AI cases.\n`;
   kb += `Each case has real numbers, specific strategies, and actionable patterns.\n\n`;
   
   // Group by category

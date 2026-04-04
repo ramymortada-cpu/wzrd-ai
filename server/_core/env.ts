@@ -8,7 +8,7 @@ function requireEnv(name: string, value: string | undefined): string {
 
 export const ENV = {
   // App
-  appId: process.env.VITE_APP_ID ?? "primo-command-center",
+  appId: process.env.VITE_APP_ID ?? "wzzrd-ai",
   isProduction: process.env.NODE_ENV === "production",
   port: parseInt(process.env.PORT || "3000"),
 
@@ -45,7 +45,7 @@ export const ENV = {
   // Email notifications (optional)
   emailProvider: process.env.EMAIL_PROVIDER ?? "none",
   emailApiKey: process.env.EMAIL_API_KEY ?? "",
-  emailFrom: process.env.EMAIL_FROM ?? "Primo Marca <noreply@primomarca.com>",
+  emailFrom: process.env.EMAIL_FROM ?? "WZZRD AI <noreply@wzzrdai.com>",
 
   // WhatsApp/Telegram (optional)
   whatsappToken: process.env.WHATSAPP_TOKEN ?? "",

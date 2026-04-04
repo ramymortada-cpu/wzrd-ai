@@ -133,7 +133,7 @@ body{font-family:'IBM Plex Sans Arabic',sans-serif;background:#fff;color:#1e293b
   <div class="header">
     <div>
       <div class="logo">WZZRD <b>AI</b></div>
-      <div style="font-size:12px;color:#94a3b8;margin-top:2px">by Primo Marca</div>
+      <div style="font-size:12px;color:#94a3b8;margin-top:2px">by WZZRD AI</div>
     </div>
     <div class="header-meta">
       <div>${data.date}</div>
@@ -188,7 +188,7 @@ body{font-family:'IBM Plex Sans Arabic',sans-serif;background:#fff;color:#1e293b
   <!-- Footer -->
   <div class="footer">
     <div>
-      <strong>WZZRD AI</strong> by Primo Marca<br>
+      <strong>WZZRD AI</strong> by WZZRD AI<br>
       "Marks Fade, MARCAS Don't."
     </div>
     <div style="text-align:left">
@@ -487,7 +487,7 @@ body{font-family:'IBM Plex Sans Arabic',sans-serif;background:#fff;color:#1e293b
   <div class="header">
     <div>
       <div class="logo">WZZRD <b>AI</b></div>
-      <div style="font-size:12px;color:#94a3b8;margin-top:2px">by Primo Marca</div>
+      <div style="font-size:12px;color:#94a3b8;margin-top:2px">by WZZRD AI</div>
     </div>
     <div class="header-meta">
       <div>${dateEsc}</div>
@@ -510,7 +510,7 @@ body{font-family:'IBM Plex Sans Arabic',sans-serif;background:#fff;color:#1e293b
 
   <div class="footer">
     <div>
-      <strong>WZZRD AI</strong> by Primo Marca<br>
+      <strong>WZZRD AI</strong> by WZZRD AI<br>
       "Marks Fade, MARCAS Don't."
     </div>
     <div style="text-align:left">

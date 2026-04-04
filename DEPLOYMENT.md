@@ -1,4 +1,4 @@
-# Primo Command Center — Production Deployment Guide
+# WZZRD AI — Production Deployment Guide
 ## Railway + Anthropic Claude + MySQL
 
 ---
@@ -78,17 +78,17 @@ EMAIL_FROM=WZZRD AI <noreply@wzzrdai.com>
 
 ```bash
 # 1. فك الضغط عن الـ zip
-unzip primo-command-center-10of10-final.zip -d primo-command-center
-cd primo-command-center
+unzip wzzrd-ai-10of10-final.zip -d wzzrd-ai
+cd wzzrd-ai
 
 # 2. أنشئ repo جديد على GitHub (private)
-# اذهب لـ https://github.com/new → اسمه primo-command-center → Private
+# اذهب لـ https://github.com/new → اسمه wzzrd-ai → Private
 
 # 3. ارفع الكود
 git init
 git add .
-git commit -m "Primo Command Center v1.0 — production ready"
-git remote add origin https://github.com/YOUR_USERNAME/primo-command-center.git
+git commit -m "WZZRD AI v1.0 — production ready"
+git remote add origin https://github.com/YOUR_USERNAME/wzzrd-ai.git
 git push -u origin main
 ```
 
@@ -96,7 +96,7 @@ git push -u origin main
 
 1. اذهب إلى https://railway.app → **New Project**
 2. اختر **Deploy from GitHub Repo**
-3. اختر `primo-command-center` repo
+3. اختر `wzzrd-ai` repo
 4. Railway هيبدأ يبني تلقائياً (استنى — هيفشل لأنه محتاج env vars)
 
 ### Step 4: إضافة MySQL Database (دقيقتين)
@@ -143,7 +143,7 @@ npx drizzle-kit migrate
 
 ### Step 7: Test! (دقيقتين)
 
-1. Railway هيديك URL شكله: `https://primo-command-center-production.up.railway.app`
+1. Railway هيديك URL شكله: `https://wzzrd-ai-production.up.railway.app`
 2. افتحه في المتصفح
 3. **تهانينا — Wzrd AI شغال في production!** 🎉
 
@@ -167,8 +167,8 @@ npx drizzle-kit migrate
 
 ### Custom Domain
 1. Railway → Service → **Settings** → **Custom Domain**
-2. أضف مثلاً: `app.primomarca.com`
-3. أضف CNAME record في DNS: `app.primomarca.com → xxx.up.railway.app`
+2. أضف مثلاً: `app.wzzrdai.com`
+3. أضف CNAME record في DNS: `app.wzzrdai.com → xxx.up.railway.app`
 
 ### Telegram Bot
 1. أنشئ bot على @BotFather في Telegram → خذ الـ token
@@ -181,7 +181,7 @@ npx drizzle-kit migrate
 ```
 EMAIL_PROVIDER=resend
 EMAIL_API_KEY=re_xxx
-EMAIL_FROM=Primo Marca <noreply@your-domain.com>
+EMAIL_FROM=WZZRD AI <noreply@your-domain.com>
 ```
 
 ---

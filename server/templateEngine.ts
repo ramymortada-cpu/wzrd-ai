@@ -238,7 +238,7 @@ export const TEMPLATES: DeliverableTemplate[] = [
         description: "How the audit was conducted and what frameworks were applied.",
         requiredElements: ["Audit methodology description", "Data sources analyzed", "Frameworks applied (4D, Keller's CBBE, etc.)", "Limitations and caveats"],
         minWordCount: 200,
-        exampleOutput: "This audit was conducted using Primo Marca's 4D Framework (Diagnose, Design, Deploy, Optimize) combined with Keller's Customer-Based Brand Equity model.\n\nData Sources:\n- Digital presence analysis (website, social media, search visibility)\n- Competitive benchmarking against top 5 competitors\n- Industry benchmark data for {market} {industry} sector\n- Client-provided business metrics and customer data\n\nFrameworks Applied:\n- Keller's CBBE Pyramid: Measuring brand equity from identity to resonance\n- Porter's Five Forces: Assessing competitive dynamics\n- Kapferer's Brand Identity Prism: Evaluating brand identity coherence"
+        exampleOutput: "This audit was conducted using WZZRD AI's 4D Framework (Diagnose, Design, Deploy, Optimize) combined with Keller's Customer-Based Brand Equity model.\n\nData Sources:\n- Digital presence analysis (website, social media, search visibility)\n- Competitive benchmarking against top 5 competitors\n- Industry benchmark data for {market} {industry} sector\n- Client-provided business metrics and customer data\n\nFrameworks Applied:\n- Keller's CBBE Pyramid: Measuring brand equity from identity to resonance\n- Porter's Five Forces: Assessing competitive dynamics\n- Kapferer's Brand Identity Prism: Evaluating brand identity coherence"
       },
       {
         id: "brand_scorecard",

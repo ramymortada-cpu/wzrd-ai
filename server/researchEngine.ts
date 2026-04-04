@@ -730,7 +730,7 @@ async function synthesizeResearch(
       messages: [
         {
           role: 'system',
-          content: `You are a Senior Brand Strategy Consultant at Primo Marca. Synthesize the research data into actionable insights using Primo Marca's 4D Framework lens. Be specific, connect every insight to a business outcome, and think like a strategist — not a reporter.`
+          content: `You are a Senior Brand Strategy Consultant at WZZRD AI. Synthesize the research data into actionable insights using WZZRD AI's 4D Framework lens. Be specific, connect every insight to a business outcome, and think like a strategist — not a reporter.`
         },
         {
           role: 'user',
@@ -751,7 +751,7 @@ ${academicSummary}
 Synthesize this into:
 1. A comprehensive summary (2-3 paragraphs)
 2. 5-7 key insights (each must be specific and actionable)
-3. 3-5 strategic recommendations (using Primo Marca's methodology)
+3. 3-5 strategic recommendations (using WZZRD AI's methodology)
 
 Return JSON.`
         }

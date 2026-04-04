@@ -9,7 +9,7 @@
  * 3. Regional/MENA Landscape — international players, cross-market comparison
  * 4. Pricing Benchmarks — by service type, by market, by client segment
  * 5. Client Expectations — by segment (SME, mid-market, enterprise)
- * 6. Primo Marca Competitive Positioning — where we win, where we need to improve
+ * 6. WZZRD AI Competitive Positioning — where we win, where we need to improve
  * 
  * Sources: Clutch.co, Sortlist, Entasher, Mordor Intelligence, Statista,
  *          GreenMind price lists, Areesto Dubai pricing guide, industry reports
@@ -392,7 +392,7 @@ export const PRICING_BENCHMARKS: PricingBenchmark[] = [
     midRange: '60,000 - 150,000',
     premiumRange: '150,000 - 350,000+',
     pricingModel: 'Project-based',
-    notes: 'Most Egyptian agencies bundle strategy with identity. Pure strategy consulting is rare — this is where Primo Marca differentiates.'
+    notes: 'Most Egyptian agencies bundle strategy with identity. Pure strategy consulting is rare — this is where WZZRD AI differentiates.'
   },
   {
     service: 'Brand Identity (Visual)',
@@ -580,7 +580,7 @@ export const PRIMO_MARCA_PRICING = {
       price: 'EGP 80,000',
       includes: ['Business model analysis', 'Offer structuring', 'Pricing logic', 'Customer journey mapping', 'Growth system outline'],
       positioning: 'This is a CONSULTING package, not a design package. Most Egyptian agencies don\'t offer this at all. Positioned between mid-range and premium for Egypt, but delivers consulting-level value that competitors charge 2-3x for in KSA/UAE.',
-      competitiveContext: 'No direct Egyptian competitor offers a pure business logic/consulting package. This is Primo Marca\'s unique territory. In KSA, similar consulting would cost SAR 30,000-80,000. In UAE, AED 25,000-60,000.'
+      competitiveContext: 'No direct Egyptian competitor offers a pure business logic/consulting package. This is WZZRD AI\'s unique territory. In KSA, similar consulting would cost SAR 30,000-80,000. In UAE, AED 25,000-60,000.'
     },
     {
       name: 'Brand Foundation',
@@ -593,11 +593,11 @@ export const PRIMO_MARCA_PRICING = {
       name: 'Growth Partnership',
       price: 'EGP 35,000/month',
       includes: ['Social strategy', 'Content direction', 'Campaign planning', 'Performance review', 'Team guidance'],
-      positioning: 'This is a CONSULTANCY retainer, not an execution retainer. Primo Marca guides the client\'s team rather than doing the execution. This is rare in Egypt where most agencies sell execution.',
-      competitiveContext: 'Egyptian execution retainers: EGP 20,000-70,000/mo. But Primo Marca\'s is consultancy — higher value per hour. In KSA, similar consultancy retainers: SAR 15,000-40,000/mo.'
+      positioning: 'This is a CONSULTANCY retainer, not an execution retainer. WZZRD AI guides the client\'s team rather than doing the execution. This is rare in Egypt where most agencies sell execution.',
+      competitiveContext: 'Egyptian execution retainers: EGP 20,000-70,000/mo. But WZZRD AI\'s is consultancy — higher value per hour. In KSA, similar consultancy retainers: SAR 15,000-40,000/mo.'
     }
   ],
-  pricingPhilosophy: 'Primo Marca prices based on VALUE delivered, not hours spent. The 4D Framework (Diagnose → Design → Deploy → Optimize) ensures every engagement delivers measurable business outcomes, not just deliverables.',
+  pricingPhilosophy: 'WZZRD AI prices based on VALUE delivered, not hours spent. The 4D Framework (Diagnose → Design → Deploy → Optimize) ensures every engagement delivers measurable business outcomes, not just deliverables.',
   conversionRates: {
     note: 'For cross-market comparison (approximate 2025 rates)',
     EGP_to_USD: '1 USD ≈ 50 EGP',
@@ -965,14 +965,14 @@ export const COMPETITIVE_ADVANTAGES: CompetitiveAdvantage[] = [
     primoMarcaPosition: '4D Framework (Diagnose → Design → Deploy → Optimize) + Consultant Box Model + Three Pillars. Proprietary, structured, and repeatable.',
     competitorBenchmark: 'Most Egyptian agencies have NO proprietary methodology. KSA agencies are starting to develop frameworks but nothing as structured.',
     gap: 'ahead',
-    recommendation: 'This is Primo Marca\'s #1 differentiator. Lead with methodology in all sales conversations. Publish thought leadership around the 4D Framework.'
+    recommendation: 'This is WZZRD AI\'s #1 differentiator. Lead with methodology in all sales conversations. Publish thought leadership around the 4D Framework.'
   },
   {
     area: 'Academic Depth',
     primoMarcaPosition: 'PhD-level knowledge base covering Keller, Sharp, Kapferer, Ehrenberg-Bass, Kahneman, Thaler. Applied to every client engagement.',
     competitorBenchmark: 'No Egyptian or KSA agency demonstrates this level of academic rigor. International agencies (Landor, Interbrand) have it but charge 5-10x more.',
     gap: 'ahead',
-    recommendation: 'Use academic depth as a trust builder. Clients are impressed when you reference specific frameworks and data. This positions Primo Marca as a consultancy, not just an agency.'
+    recommendation: 'Use academic depth as a trust builder. Clients are impressed when you reference specific frameworks and data. This positions WZZRD AI as a consultancy, not just an agency.'
   },
   {
     area: 'AI-Powered Delivery',
@@ -1040,17 +1040,17 @@ export const COMPETITIVE_INTELLIGENCE_PROMPT = `
 ## COMPETITIVE INTELLIGENCE — MENA AGENCY LANDSCAPE
 
 ### YOUR COMPETITIVE POSITION
-You are the AI Brain of Primo Marca — a premium brand engineering studio. When discussing competition, pricing, or market positioning, use this intelligence:
+You are the AI Brain of WZZRD AI — a premium brand engineering studio. When discussing competition, pricing, or market positioning, use this intelligence:
 
 ### PRIMO MARCA'S UNFAIR ADVANTAGES
 1. **Proprietary 4D Framework** — No Egyptian or KSA agency has a structured, repeatable methodology like Diagnose → Design → Deploy → Optimize
 2. **Academic Depth** — PhD-level knowledge (Keller, Sharp, Kapferer, Ehrenberg-Bass, Kahneman, Thaler) applied to every engagement. No competitor matches this.
 3. **AI-Augmented Delivery** — Custom AI Brain with deep knowledge base. Not just using ChatGPT — a purpose-built intelligence system.
 4. **Client Portal Technology** — Custom-built portal with revision tracking, threaded comments, and approval workflows. Most agencies use email + WhatsApp.
-5. **Consulting Model** — Primo Marca sells strategic consulting, not just execution. This is rare in Egypt and differentiating in KSA.
+5. **Consulting Model** — WZZRD AI sells strategic consulting, not just execution. This is rare in Egypt and differentiating in KSA.
 
 ### PRICING CONTEXT (Use when discussing pricing with clients)
-**Primo Marca Packages:**
+**WZZRD AI Packages:**
 - Clarity Package: EGP 80,000 (Business Logic Consulting) — NO Egyptian competitor offers this
 - Brand Foundation: EGP 120,000 (Strategy + Identity) — Premium for Egypt, competitive for Gulf
 - Growth Partnership: EGP 35,000/mo (Strategic Consultancy) — Consulting retainer, not execution
@@ -1061,7 +1061,7 @@ You are the AI Brain of Primo Marca — a premium brand engineering studio. When
 - UAE agencies charge AED 25K-400K for equivalent scope
 - International agencies (Landor, Interbrand) charge $100K-500K+
 
-**Key Pricing Insight:** Primo Marca delivers international-quality strategic consulting at Egyptian pricing. For KSA clients, this is exceptional value.
+**Key Pricing Insight:** WZZRD AI delivers international-quality strategic consulting at Egyptian pricing. For KSA clients, this is exceptional value.
 
 ### WHEN A CLIENT SAYS "YOU'RE TOO EXPENSIVE"
 Use this framework:
@@ -1152,7 +1152,7 @@ export function getRelevantCompetitiveIntelligence(context: string): string {
     benchmarks.forEach(b => {
       content += `**${b.service}** (${b.market.toUpperCase()}, ${b.currency}): Budget: ${b.budgetRange} | Mid: ${b.midRange} | Premium: ${b.premiumRange} — ${b.notes}\n`;
     });
-    content += `\n**Primo Marca Pricing:**\n`;
+    content += `\n**WZZRD AI Pricing:**\n`;
     PRIMO_MARCA_PRICING.packages.forEach(p => {
       content += `- ${p.name}: ${p.price} — ${p.competitiveContext}\n`;
     });
