@@ -9,6 +9,7 @@ import { getDb } from "../db/index";
 import { brandProfiles } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { logger } from "../_core/logger";
+import { autoExtractBrandData } from "../brandAutoExtract";
 
 /** Field mapping: tool formData key → brand_profiles column */
 const FIELD_MAP: Record<string, string> = {
@@ -219,5 +220,17 @@ export const brandProfileRouter = router({
       }
 
       return { success: true };
+    }),
+
+  /** Auto-extract brand data from a URL */
+  autoExtract: protectedProcedure
+    .input(
+      z.object({
+        url: z.string().url().max(500),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const result = await autoExtractBrandData(ctx.user!.id, input.url);
+      return result;
     }),
 });
