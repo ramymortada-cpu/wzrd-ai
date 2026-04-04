@@ -42,6 +42,7 @@ import { fireEmailTrigger } from "../emailTrigger";
 import { getRedis } from "../_core/redis";
 import { scrapeWebsite, buildWebsiteContext, captureScreenshot } from "../researchEngine";
 import { getSemanticKnowledge, getOpenAIClient } from "../vectorSearch";
+import { upsertBrandProfile } from "./brandProfile";
 
 /** Clamp benchmark pillar scores (module-level fn so callers pass a narrowed array, not `parsed.companies` twice). */
 function clampBenchmarkCompanyRows(
@@ -733,11 +734,13 @@ export const toolsRouter = router({
    */
   freeBrandDiagnosis: protectedProcedure
     .input(brandDiagnosisInputSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       if (!isToolEnabled('brand_diagnosis')) {
         throw new Error('هذه الأداة معطّلة مؤقتاً. يرجى المحاولة لاحقاً.');
       }
       pruneExpiredUnlockTokens();
+      // Save form data to brand profile (non-blocking)
+      upsertBrandProfile(ctx.user!.id, 'brand_diagnosis', input as Record<string, unknown>).catch(() => {});
       const userPrompt = buildBrandDiagnosisUserPrompt(input);
       const text = await callDiagnosisModel('brand_diagnosis', TOOL_SYSTEM, userPrompt);
       const body = parseDiagnosisAiResponse(text, 'brand_diagnosis');
@@ -775,11 +778,13 @@ export const toolsRouter = router({
 
   freeDesignHealthDiagnosis: protectedProcedure
     .input(designHealthInputSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       if (!isToolEnabled('design_health')) {
         throw new Error('هذه الأداة معطّلة مؤقتاً. يرجى المحاولة لاحقاً.');
       }
       pruneExpiredUnlockTokens();
+      // Save form data to brand profile (non-blocking)
+      upsertBrandProfile(ctx.user!.id, 'design_health', input as Record<string, unknown>).catch(() => {});
 
       const base64Image = await captureScreenshot(input.website);
       if (!base64Image) {
@@ -826,11 +831,13 @@ export const toolsRouter = router({
 
   freeOfferCheckDiagnosis: protectedProcedure
     .input(offerCheckInputSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       if (!isToolEnabled('offer_check')) {
         throw new Error('هذه الأداة معطّلة مؤقتاً. يرجى المحاولة لاحقاً.');
       }
       pruneExpiredUnlockTokens();
+      // Save form data to brand profile (non-blocking)
+      upsertBrandProfile(ctx.user!.id, 'offer_check', input as Record<string, unknown>).catch(() => {});
       const userPrompt = buildOfferCheckUserPrompt(input);
       const text = await callDiagnosisModel('offer_check', TOOL_SYSTEM, userPrompt);
       const body = parseDiagnosisAiResponse(text, 'offer_check');
@@ -858,11 +865,13 @@ export const toolsRouter = router({
 
   freeMessageCheckDiagnosis: protectedProcedure
     .input(messageCheckInputSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       if (!isToolEnabled('message_check')) {
         throw new Error('هذه الأداة معطّلة مؤقتاً. يرجى المحاولة لاحقاً.');
       }
       pruneExpiredUnlockTokens();
+      // Save form data to brand profile (non-blocking)
+      upsertBrandProfile(ctx.user!.id, 'message_check', input as Record<string, unknown>).catch(() => {});
       const userPrompt = buildMessageCheckUserPrompt(input);
       const text = await callDiagnosisModel('message_check', TOOL_SYSTEM, userPrompt);
       const body = parseDiagnosisAiResponse(text, 'message_check');
@@ -890,11 +899,13 @@ export const toolsRouter = router({
 
   freePresenceAuditDiagnosis: protectedProcedure
     .input(presenceAuditInputSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       if (!isToolEnabled('presence_audit')) {
         throw new Error('هذه الأداة معطّلة مؤقتاً. يرجى المحاولة لاحقاً.');
       }
       pruneExpiredUnlockTokens();
+      // Save form data to brand profile (non-blocking)
+      upsertBrandProfile(ctx.user!.id, 'presence_audit', input as Record<string, unknown>).catch(() => {});
       const userPrompt = buildPresenceAuditUserPrompt(input);
       const text = await callDiagnosisModel('presence_audit', TOOL_SYSTEM, userPrompt);
       const body = parseDiagnosisAiResponse(text, 'presence_audit');
@@ -922,11 +933,13 @@ export const toolsRouter = router({
 
   freeIdentitySnapshotDiagnosis: protectedProcedure
     .input(identitySnapshotInputSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       if (!isToolEnabled('identity_snapshot')) {
         throw new Error('هذه الأداة معطّلة مؤقتاً. يرجى المحاولة لاحقاً.');
       }
       pruneExpiredUnlockTokens();
+      // Save form data to brand profile (non-blocking)
+      upsertBrandProfile(ctx.user!.id, 'identity_snapshot', input as Record<string, unknown>).catch(() => {});
       const userPrompt = buildIdentitySnapshotUserPrompt(input);
       const text = await callDiagnosisModel('identity_snapshot', TOOL_SYSTEM, userPrompt);
       const body = parseDiagnosisAiResponse(text, 'identity_snapshot');
@@ -954,11 +967,13 @@ export const toolsRouter = router({
 
   freeLaunchReadinessDiagnosis: protectedProcedure
     .input(launchReadinessInputSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       if (!isToolEnabled('launch_readiness')) {
         throw new Error('هذه الأداة معطّلة مؤقتاً. يرجى المحاولة لاحقاً.');
       }
       pruneExpiredUnlockTokens();
+      // Save form data to brand profile (non-blocking)
+      upsertBrandProfile(ctx.user!.id, 'launch_readiness', input as Record<string, unknown>).catch(() => {});
       const userPrompt = buildLaunchReadinessUserPrompt(input);
       const text = await callDiagnosisModel('launch_readiness', TOOL_SYSTEM, userPrompt);
       const body = parseDiagnosisAiResponse(text, 'launch_readiness');

@@ -43,6 +43,7 @@ import { invoicesRouter } from "./invoices";
 import { blogRouter } from "./blog";
 import { reviewsRouter } from "./reviews";
 import { reportsLibRouter } from "./reportsLib";
+import { brandProfileRouter } from "./brandProfile";
 
 export const appRouter = router({
   system: systemRouter,
@@ -85,6 +86,7 @@ export const appRouter = router({
   workspaces: workspacesRouter,
   contracts: contractsRouter,
   invoices: invoicesRouter,
+  brandProfile: brandProfileRouter,
 });
 
 export type AppRouter = typeof appRouter;
