@@ -38,7 +38,7 @@ export const knowledgeRouter = router({
     }).optional())
     .query(async ({ input }) => getKnowledgeEntries(input)),
 
-  /** Get single entry */
+  /** Get single entry — UNUSED: No client component calls this endpoint */
   getById: protectedProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .query(async ({ input }) => {
@@ -148,7 +148,7 @@ export const knowledgeRouter = router({
       return { imported: result.entriesCreated };
     }),
 
-  /** Get knowledge templates for structured entry */
+  /** Get knowledge templates — UNUSED: No client component calls this endpoint */
   templates: protectedProcedure.query(() => {
     return KNOWLEDGE_TEMPLATES.map(t => ({
       id: t.id, name: t.name, nameAr: t.nameAr,
@@ -157,7 +157,7 @@ export const knowledgeRouter = router({
     }));
   }),
 
-  /** Create entry from template */
+  /** Create entry from template — UNUSED: No client component calls this endpoint */
   createFromTemplate: protectedProcedure
     .input(z.object({
       templateId: z.string().max(100),
@@ -216,7 +216,7 @@ export const knowledgeRouter = router({
       return { id, amplified: false };
     }),
 
-  /** AI-amplify an existing entry */
+  /** AI-amplify an existing entry — UNUSED: No client component calls this endpoint */
   amplify: protectedProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ input, ctx }) => {
@@ -285,10 +285,10 @@ export const knowledgeRouter = router({
   analytics: protectedProcedure.query(async () => getKnowledgeAnalytics()),
 
   /** Get project experience templates */
-  primoTemplates: protectedProcedure.query(() => getProjectTemplates()),
+  projectTemplates: protectedProcedure.query(() => getProjectTemplates()),
 
   /** Process a filled project template */
-  submitPrimoTemplate: protectedProcedure
+  submitProjectTemplate: protectedProcedure
     .input(z.object({
       templateId: z.string().max(100),
       data: z.record(z.string(), z.any()),

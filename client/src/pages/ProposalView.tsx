@@ -24,7 +24,7 @@ const SECTIONS = [
   "deliverables",
   "timeline",
   "investment",
-  "whyPrimoMarca",
+  "whyWzzrdAi",
   "terms",
 ] as const;
 
@@ -36,7 +36,7 @@ const SECTION_LABELS: Record<string, string> = {
   deliverables: "Deliverables",
   timeline: "Timeline",
   investment: "Investment",
-  whyPrimoMarca: "Why WZZRD AI",
+  whyWzzrdAi: "Why WZZRD AI",
   terms: "Terms & Conditions",
 };
 

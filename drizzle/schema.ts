@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, json, primaryKey, index } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, json, primaryKey } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -273,7 +273,7 @@ export const proposals = mysqlTable("proposals", {
   deliverables: text("deliverables"),
   timeline: text("timeline"),
   investment: text("investment"),
-  whyPrimoMarca: text("whyPrimoMarca"), // Legacy column name — UI displays as "Why WZZRD AI"
+  whyWzzrdAi: text("whyWzzrdAi"),
   terms: text("terms"),
   customNotes: text("customNotes"),
   // Pricing
@@ -1306,7 +1306,7 @@ export type NewBrandProfile = typeof brandProfiles.$inferInsert;
 // ═══════════════════════════════════════════════════════════════════════════
 
 export const otpCodes = mysqlTable("otp_codes", {
-  id: int("id").autoincrement().primaryKey(),
+  id: serial("id").primaryKey(),
   email: varchar("email", { length: 255 }).notNull(),
   code: varchar("code", { length: 10 }).notNull(),
   expiresAt: timestamp("expires_at").notNull(),

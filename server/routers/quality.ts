@@ -1,5 +1,8 @@
 /**
  * Quality & LLM Monitoring Router
+ * STATUS: PLANNED — Not yet wired to any client UI component.
+ * Endpoints: assess, ownerReview, clientFeedback, dashboard, llmStats, health
+ * Will be activated when the Quality Dashboard feature is built.
  * ================================
  * 
  * Endpoints:

@@ -105,6 +105,8 @@ export interface ResearchReport {
   totalSources: number;
   createdAt: number;
   cached: boolean;
+  /** True when Google Custom Search API is not configured — results are AI-only */
+  searchDisabled?: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -642,6 +644,12 @@ export async function conductResearch(params: {
   searchQueries.push(marketQuery);
   const marketResults = await searchGoogle(marketQuery, 8);
 
+  // Detect if search API is not configured (all searches returned empty)
+  const searchDisabled = companyResults.length === 0 && competitorResults.length === 0 && marketResults.length === 0;
+  if (searchDisabled) {
+    logger.warn({ companyName, industry }, '[Research] All searches returned empty — Google Custom Search API not configured. Results will use AI general knowledge only.');
+  }
+
   // Step 4: Scrape company website if provided
   const scrapedPages: ScrapedPage[] = [];
   if (website) {
@@ -700,6 +708,7 @@ export async function conductResearch(params: {
     totalSources: allSearchResults.length + academicResults.length + scrapedPages.length,
     createdAt: startTime,
     cached: false,
+    searchDisabled,
   };
 }
 
