@@ -61,3 +61,20 @@ export const ENV = {
   appUrl: process.env.APP_URL ?? "http://localhost:3000",
 };
 
+/**
+ * Validates that critical environment variables are set.
+ * In production: crashes immediately with a clear error message.
+ * In development: logs a warning but continues.
+ */
+export function validateCriticalEnv(): void {
+  const critical = ['DATABASE_URL', 'JWT_SECRET'];
+  const missing = critical.filter(k => !process.env[k]?.trim());
+  if (missing.length > 0 && process.env.NODE_ENV === 'production') {
+    console.error(`FATAL: Missing critical environment variables: ${missing.join(', ')}. Server cannot start.`);
+    process.exit(1);
+  }
+  if (missing.length > 0) {
+    console.warn(`[ENV] Warning: Missing variables (non-production): ${missing.join(', ')}`);
+  }
+}
+

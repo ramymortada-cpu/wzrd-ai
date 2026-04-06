@@ -156,8 +156,11 @@ export async function deductCredits(
       const currentBalance = await getUserCredits(userId);
       return { success: false, newBalance: currentBalance, cost, error: `وصلت الحد اليومي (${DAILY_CREDIT_CAP} كريدت/يوم). حاول بكره!` };
     }
-  } catch {
-    // If daily cap check fails — allow the deduction (fail open)
+  } catch (err) {
+    const { logger } = await import("../_core/logger");
+    logger.warn({ err, userId }, 'Daily credit cap check failed — blocking deduction for safety');
+    const currentBalance = await getUserCredits(userId);
+    return { success: false, newBalance: currentBalance, cost, error: 'حصل مشكلة مؤقتة — حاول تاني كمان شوية.' };
   }
 
   try {

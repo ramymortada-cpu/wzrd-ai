@@ -1296,19 +1296,20 @@ Respond ONLY in this JSON format:
         try {
           parsed = JSON.parse(text.replace(/```json|```/g, '').trim()) as BenchmarkParsed;
         } catch {
-          // Fallback
-          parsed = {
-            companies: allCompanyNames.map((c) => ({
-              name: c,
-              totalScore: 50 + Math.floor(Math.random() * 30),
-              pillars: { positioning: 50, messaging: 50, offer: 50, identity: 50, journey: 50 },
-              strengths: ['تحليل أولي'],
-              weaknesses: ['محتاج بيانات أكتر'],
-            })),
+          // AI returned invalid JSON — refund credits instead of showing fake data
+          logger.warn({ textLength: text.length }, 'Benchmark JSON parse failed — refunding credits');
+          try {
+            const { addCredits } = await import('../db');
+            await addCredits(ctx.user!.id, deduction.cost, 'refund', 'Refund — benchmark parse failed');
+          } catch { /* best effort refund */ }
+          return {
+            success: false,
+            error: 'حصل مشكلة في تحليل النتائج — الكريدت اترجعت. حاول تاني.',
+            refunded: true,
+            companies: [],
             gaps: [],
-            overallInsight: 'حصل مشكلة في التحليل المقارن — حاول تاني مع تفاصيل أكتر.',
+            overallInsight: '',
           };
-          logger.warn({ textLength: text.length }, 'Benchmark JSON parse failed — used fallback');
         }
 
         const companiesClamp = parsed.companies;
