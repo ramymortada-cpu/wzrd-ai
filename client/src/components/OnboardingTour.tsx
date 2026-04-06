@@ -60,7 +60,7 @@ const TOUR_STEPS: TourStep[] = [
   },
 ];
 
-const TOUR_STORAGE_KEY = 'primo_tour_completed';
+const TOUR_STORAGE_KEY = 'wzzrd_tour_completed';
 
 export function OnboardingTour({ isAr = false }: { isAr?: boolean }) {
   const [currentStep, setCurrentStep] = useState(0);

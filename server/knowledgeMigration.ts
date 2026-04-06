@@ -173,7 +173,7 @@ export function prepareStaticMigration(): MigrationEntry[] {
     {
       name: 'KnowledgeBase_Core',
       category: 'methodology',
-      tags: ['knowledge_base', 'agent', 'primo_marca'],
+      tags: ['knowledge_base', 'agent', 'wzzrd_ai'],
       contentGetter: () =>
         [
           AGENT_IDENTITY,
@@ -187,7 +187,7 @@ export function prepareStaticMigration(): MigrationEntry[] {
     {
       name: 'KnowledgeBase_Services',
       category: 'methodology',
-      tags: ['services', 'offerings', 'primo_marca'],
+      tags: ['services', 'offerings', 'wzzrd_ai'],
       contentGetter: formatServiceDeepKnowledge,
     },
     {

@@ -1,5 +1,5 @@
 /**
- * PRIMO PROJECT DOCUMENTATION TEMPLATES
+ * WZZRD PROJECT DOCUMENTATION TEMPLATES
  * ======================================
  * 
  * Structured templates for Ramy to document his past projects
@@ -28,7 +28,7 @@ import { amplifyKnowledgeEntry } from './knowledgeAmplifier';
 // TEMPLATE DEFINITIONS
 // ════════════════════════════════════════════
 
-export interface PrimoTemplate {
+export interface ProjectTemplate {
   id: string;
   name: string;
   nameAr: string;
@@ -54,7 +54,7 @@ interface TemplateField {
   helpTextAr?: string;
 }
 
-export const PRIMO_TEMPLATES: PrimoTemplate[] = [
+export const PROJECT_TEMPLATES: ProjectTemplate[] = [
   // ──── PAST PROJECT ────
   {
     id: 'past_project',
@@ -216,7 +216,7 @@ export async function processFilledTemplate(
   patterns: string[];
   insights: string;
 }> {
-  const template = PRIMO_TEMPLATES.find(t => t.id === templateId);
+  const template = PROJECT_TEMPLATES.find(t => t.id === templateId);
   if (!template) throw new Error(`Template not found: ${templateId}`);
 
   // Format content from fields
@@ -263,7 +263,7 @@ export async function processFilledTemplate(
     fieldStr(data, "market"),
     fieldStr(data, "diagnosticPattern"),
     fieldStr(data, "serviceType"),
-    "primo_experience",
+    "wzzrd_experience",
   ].filter(Boolean);
 
   const entryId = await createKnowledgeEntry({
@@ -296,7 +296,7 @@ export async function processFilledTemplate(
  * Get all available templates for the frontend.
  */
 export function getAvailableTemplates() {
-  return PRIMO_TEMPLATES.map(t => ({
+  return PROJECT_TEMPLATES.map(t => ({
     id: t.id, name: t.name, nameAr: t.nameAr,
     description: t.description, descriptionAr: t.descriptionAr,
     icon: t.icon, category: t.category,

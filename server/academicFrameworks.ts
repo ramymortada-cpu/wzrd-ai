@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════
- * PRIMO MARCA AI BRAIN — ACADEMIC FRAMEWORKS & REAL-WORLD EXAMPLES
+ * WZZRD AI BRAIN — ACADEMIC FRAMEWORKS & REAL-WORLD EXAMPLES
  * ═══════════════════════════════════════════════════════════════════════
  * 
  * 10 deep academic frameworks with real-world examples, MENA applications,
@@ -72,7 +72,7 @@ The Prism is organized along two axes:
 
 KEY INSIGHT: A strong brand has alignment across all 6 facets. When facets contradict each other, the brand feels inauthentic. For example, a brand claiming "premium culture" but with "cheap physique" creates cognitive dissonance.
 
-WHY THIS MATTERS FOR PRIMO MARCA: Most clients come with misaligned prisms — they want to be "premium" but their visual identity says "budget." The Prism makes this gap visible and actionable.`,
+WHY THIS MATTERS FOR WZZRD AI: Most clients come with misaligned prisms — they want to be "premium" but their visual identity says "budget." The Prism makes this gap visible and actionable.`,
   applicationSteps: [
     'Audit the current state of each facet — what does the brand currently project?',
     'Define the desired state — what should each facet communicate?',
@@ -170,7 +170,7 @@ KEY CONTRARIAN FINDINGS:
 
 4. BRAND LOVE IS RARE: Most customers are indifferent to most brands. They buy based on habit and availability, not emotional connection. Even Apple's "fanboys" are a tiny fraction of their customer base.
 
-WHY THIS MATTERS FOR PRIMO MARCA: This framework is essential for challenging clients who want to "find their niche" when they should be broadening their reach. It's also crucial for social media strategy — reach matters more than engagement rate.`,
+WHY THIS MATTERS FOR WZZRD AI: This framework is essential for challenging clients who want to "find their niche" when they should be broadening their reach. It's also crucial for social media strategy — reach matters more than engagement rate.`,
   applicationSteps: [
     'Audit distinctive brand assets — can customers identify your brand without seeing the name?',
     'Measure mental availability — in how many buying situations does your brand come to mind?',
@@ -272,7 +272,7 @@ THE PRICING REVOLUTION:
 2. LOSS AVERSION: "Limited time offer" works because the fear of LOSING the deal is 2x stronger than the desire to SAVE money.
 3. DECOY EFFECT: Starbucks Tall ($3.95), Grande ($4.45), Venti ($4.95). Grande exists to make Venti look like better value — the 50¢ difference for 4 more oz is irresistible.
 
-WHY THIS MATTERS FOR PRIMO MARCA: Every proposal, every pricing page, every client conversation uses these principles. When we present 3 packages (Clarity, Foundation, Growth), the middle one is the anchor that makes the premium one feel justified.`,
+WHY THIS MATTERS FOR WZZRD AI: Every proposal, every pricing page, every client conversation uses these principles. When we present 3 packages (Clarity, Foundation, Growth), the middle one is the anchor that makes the premium one feel justified.`,
   applicationSteps: [
     'Audit current pricing presentation — is there an anchor? Is the most expensive option shown first?',
     'Design 3-tier pricing with a strategic decoy — the middle tier should make the top tier look like better value',
@@ -548,7 +548,7 @@ CLASSIC EXAMPLE — CIRQUE DU SOLEIL:
 
 Result: Achieved in 20 years what Ringling Bros. took 100 years to achieve, at higher ticket prices with lower costs.
 
-FOR PRIMO MARCA: This framework is perfect for clients who feel "stuck" in competitive markets. Instead of fighting for market share in a red ocean, help them create a blue ocean by redefining what they offer.`,
+FOR WZZRD AI: This framework is perfect for clients who feel "stuck" in competitive markets. Instead of fighting for market share in a red ocean, help them create a blue ocean by redefining what they offer.`,
   applicationSteps: [
     'Draw the current Strategy Canvas — plot your client vs competitors on key industry factors',
     'Apply the Four Actions Framework — what to eliminate, reduce, raise, create?',
@@ -840,7 +840,7 @@ MOMENTS OF TRUTH:
 - Zero Moment of Truth (Google): The online research phase BEFORE the first moment
 - Ultimate Moment of Truth (Brian Solis): When the customer shares their experience
 
-FOR PRIMO MARCA'S CLIENTS:
+FOR WZZRD AI'S CLIENTS:
 Most clients only think about the "Act" stage (getting the sale). But the journey starts much earlier and continues much later. A brand strategy must optimize ALL 5 stages. The Quick-Check tool is an "Ask" stage touchpoint. The Client Portal is an "Act" and "Advocate" stage touchpoint.
 
 MOBILE-FIRST IN MENA:
@@ -938,7 +938,7 @@ The Duplication of Purchase Law shows that brands share customers with ALL compe
 4. MOST OF YOUR BUYERS ARE "LIGHT" BUYERS:
 The NBD-Dirichlet model shows that the majority of any brand's revenue comes from light buyers who buy infrequently. Heavy buyers are a small minority. Marketing should reach ALL category buyers, not just heavy users.
 
-WHY THIS MATTERS FOR PRIMO MARCA:
+WHY THIS MATTERS FOR WZZRD AI:
 These laws explain why some clients' marketing isn't working — they're targeting too narrowly, investing in loyalty instead of acquisition, and measuring the wrong metrics (engagement instead of reach). The AI Brain should use these laws to diagnose marketing strategy problems.`,
   applicationSteps: [
     'Audit the client\'s buyer base — what % are light vs heavy buyers?',

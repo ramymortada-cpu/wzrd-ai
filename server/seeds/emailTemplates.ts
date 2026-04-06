@@ -1,3 +1,4 @@
+import { logger } from "../_core/logger";
 /**
  * Idempotent seed for email_templates + automation_rules (DB-driven automations).
  * Safe to run on every server start — skips rows that already exist (by stable `name`).
@@ -238,7 +239,7 @@ const isCli =
   typeof process.argv[1] === 'string' && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (isCli) {
   void cliMain().catch((err: unknown) => {
-    console.error(err);
+    logger.error({ err }, "[EmailTemplates] Seed failed");
     process.exit(1);
   });
 }

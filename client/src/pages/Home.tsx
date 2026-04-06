@@ -69,7 +69,7 @@ export default function Home() {
 
       <div className="flex flex-wrap items-center gap-3 p-3 rounded-xl border border-border/80 bg-muted/30 shadow-sm">
         <Badge variant="secondary" className="font-medium px-2.5 py-0.5 border border-border/60">
-          {locale === "ar" ? "Primo · Command Center" : "Primo · Command Center"}
+          {locale === "ar" ? "WZZRD · Command Center" : "WZZRD · Command Center"}
         </Badge>
         <span className="hidden sm:inline text-muted-foreground/50">|</span>
         <a
