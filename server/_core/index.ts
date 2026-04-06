@@ -1,4 +1,6 @@
 import "dotenv/config";
+import { validateCriticalEnv } from "./env";
+validateCriticalEnv(); // Crash immediately if critical env vars are missing in production
 import express from "express";
 import { createServer } from "http";
 import net from "net";
@@ -34,6 +36,26 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
     }
   }
   throw new Error(`No available port found starting from ${startPort}`);
+}
+
+/**
+ * Logs integration status at startup for operator visibility.
+ * Shows which services are configured and which are missing.
+ */
+function logStartupChecklist() {
+  const checks: Record<string, boolean> = {
+    'Database': !!process.env.DATABASE_URL,
+    'Auth (JWT)': !!process.env.JWT_SECRET,
+    'Groq (LLM)': !!process.env.GROQ_API_KEY,
+    'Claude (Premium)': !!process.env.ANTHROPIC_API_KEY,
+    'Sentry': !!process.env.SENTRY_DSN,
+    'Email': !!process.env.EMAIL_API_KEY,
+    'Paymob': !!process.env.PAYMOB_SECRET_KEY,
+    'WhatsApp': !!process.env.WHATSAPP_TOKEN,
+  };
+  const configured = Object.entries(checks).filter(([, v]) => v).map(([k]) => k);
+  const missing = Object.entries(checks).filter(([, v]) => !v).map(([k]) => k);
+  logger.info({ configured, missing }, `Startup: ${configured.length}/${Object.keys(checks).length} integrations ready`);
 }
 
 async function startServer() {
@@ -169,6 +191,9 @@ async function startServer() {
   // Bind to 0.0.0.0 for Railway/Docker — required for external health checks
   server.listen(port, "0.0.0.0", () => {
     logger.info({ port }, `Server running on http://0.0.0.0:${port}/`);
+
+    // Log integration status for operator visibility
+    logStartupChecklist();
 
     // === BLOG SEED (fire-and-forget, runs after server is up) ===
     // Spawned detached so Railway's health check passes before seeding begins.
