@@ -1,5 +1,8 @@
 /**
  * Email Automation Router — manages templates, automations, and sends.
+ * STATUS: PLANNED — Not yet wired to any client UI component.
+ * All endpoints are functional but no client page calls them.
+ * Will be activated when the Email Automation feature is built.
  * 
  * Features:
  * 1. Email Templates CRUD — create/edit/delete HTML templates

@@ -173,8 +173,8 @@ export async function createPaymentIntention(
 function verifyHmac(data: Record<string, unknown>, receivedHmac: string): boolean {
   const hmacSecret = process.env.PAYMOB_HMAC_SECRET;
   if (!hmacSecret) {
-    logger.warn('[Paymob] HMAC secret not configured — skipping verification');
-    return true; // Allow in dev, but log warning
+    logger.error('[Paymob] HMAC secret not configured — rejecting webhook for security');
+    return false;
   }
 
   // Paymob HMAC is calculated from specific fields concatenated in order

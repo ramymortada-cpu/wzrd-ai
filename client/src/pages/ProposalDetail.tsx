@@ -24,7 +24,7 @@ const SECTIONS = [
   "deliverables",
   "timeline",
   "investment",
-  "whyPrimoMarca",
+  "whyWzzrdAi",
   "terms",
 ] as const;
 

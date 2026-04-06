@@ -210,7 +210,7 @@ export const createProposalInput = z.object({
   deliverables: optionalExtraLongText,
   timeline: optionalExtraLongText,
   investment: optionalExtraLongText,
-  whyPrimoMarca: optionalExtraLongText, // Legacy DB column name — displays as "Why WZZRD AI",
+  whyWzzrdAi: optionalExtraLongText,
   terms: optionalExtraLongText,
   customNotes: optionalLongText,
   price: z.string().max(20).optional(),

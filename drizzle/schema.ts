@@ -273,7 +273,7 @@ export const proposals = mysqlTable("proposals", {
   deliverables: text("deliverables"),
   timeline: text("timeline"),
   investment: text("investment"),
-  whyPrimoMarca: text("whyPrimoMarca"), // Legacy column name — UI displays as "Why WZZRD AI"
+  whyWzzrdAi: text("whyWzzrdAi"),
   terms: text("terms"),
   customNotes: text("customNotes"),
   // Pricing
