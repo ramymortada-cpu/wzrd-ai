@@ -2,7 +2,7 @@
 -- This ensures OTPs survive server restarts and work across multiple instances
 
 CREATE TABLE `otp_codes` (
-  `id` serial AUTO_INCREMENT PRIMARY KEY,
+  `id` int AUTO_INCREMENT PRIMARY KEY,
   `email` varchar(255) NOT NULL,
   `code` varchar(10) NOT NULL,
   `expires_at` timestamp NOT NULL,

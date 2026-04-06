@@ -1,4 +1,3 @@
-import { logger } from "../_core/logger";
 /**
  * Idempotent seed for email_templates + automation_rules (DB-driven automations).
  * Safe to run on every server start — skips rows that already exist (by stable `name`).
