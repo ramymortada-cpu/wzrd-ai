@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, json, primaryKey } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, json, primaryKey, index } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -1306,7 +1306,7 @@ export type NewBrandProfile = typeof brandProfiles.$inferInsert;
 // ═══════════════════════════════════════════════════════════════════════════
 
 export const otpCodes = mysqlTable("otp_codes", {
-  id: serial("id").primaryKey(),
+  id: int("id").autoincrement().primaryKey(),
   email: varchar("email", { length: 255 }).notNull(),
   code: varchar("code", { length: 10 }).notNull(),
   expiresAt: timestamp("expires_at").notNull(),

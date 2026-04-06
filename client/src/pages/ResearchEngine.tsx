@@ -647,7 +647,7 @@ export default function ResearchEnginePage() {
             {currentReport && (
               <div className="space-y-4 sm:space-y-6">
                 {/* Search API warning */}
-                {(currentReport as Record<string, unknown>).searchDisabled && (
+                {Boolean((currentReport as Record<string, unknown>).searchDisabled) && (
                   <div className="flex items-start gap-3 p-4 rounded-lg border border-yellow-500/30 bg-yellow-500/10 text-sm">
                     <span className="text-yellow-500 text-lg mt-0.5">⚠️</span>
                     <div>
