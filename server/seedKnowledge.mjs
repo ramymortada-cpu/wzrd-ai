@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════
- * PRIMO MARCA KNOWLEDGE BASE SEED SCRIPT
+ * WZZRD AI KNOWLEDGE BASE SEED SCRIPT
  * ═══════════════════════════════════════════════════════════════════════════
  * 
  * Populates the knowledge_entries table with WZZRD AI's proprietary
@@ -522,7 +522,7 @@ Most businesses invest in marks (logos, social media posts, ad campaigns) withou
 **WZZRD AI's Promise:**
 We don't create marks. We engineer MARCAS. Every engagement is designed to build something that lasts — a system, not a decoration.
 
-This philosophy is embedded in the company name itself: "Primo" (first/prime) + "Marca" (brand/mark in multiple languages) = The Prime Brand.`,
+This philosophy is embedded in the company name itself: "WZZRD" — the AI-powered brand wizard that replaces traditional agency guesswork with data-driven diagnosis.
     category: "framework",
     tags: JSON.stringify(["marks-vs-marcas", "philosophy", "core-belief", "brand-engineering"]),
     source: "manual"

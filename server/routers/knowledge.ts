@@ -24,7 +24,7 @@ import {
   scoreKnowledgeQuality, getKnowledgeAnalytics,
 } from "../knowledgeAmplifier";
 import { researchToKnowledge } from "../liveIntelligence";
-import { getAvailableTemplates as getPrimoTemplates, processFilledTemplate } from "../primoTemplates";
+import { getAvailableTemplates as getProjectTemplates, processFilledTemplate } from "../projectTemplates";
 import { semanticSearch as vectorSemanticSearch, indexKnowledgeBase, getIndexStats } from "../vectorSearch";
 
 export const knowledgeRouter = router({
@@ -284,10 +284,10 @@ export const knowledgeRouter = router({
   /** Comprehensive analytics */
   analytics: protectedProcedure.query(async () => getKnowledgeAnalytics()),
 
-  /** Get Primo experience templates (for Ramy) */
-  primoTemplates: protectedProcedure.query(() => getPrimoTemplates()),
+  /** Get project experience templates */
+  primoTemplates: protectedProcedure.query(() => getProjectTemplates()),
 
-  /** Process a filled Primo template */
+  /** Process a filled project template */
   submitPrimoTemplate: protectedProcedure
     .input(z.object({
       templateId: z.string().max(100),

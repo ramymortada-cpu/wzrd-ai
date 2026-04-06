@@ -280,7 +280,7 @@ export async function generateDeliverablePDF(options: GeneratePDFOptions): Promi
   doc.setFontSize(10);
   doc.setTextColor(BRAND.primary);
   doc.setFont("helvetica", "normal");
-  doc.text("PRIMO MARCA", pageWidth / 2, 75, { align: "center" });
+  doc.text("WZZRD AI", pageWidth / 2, 75, { align: "center" });
   doc.setFontSize(7);
   doc.setTextColor("#9CA3AF");
   doc.text("Brand Engineering", pageWidth / 2, 80, { align: "center" });

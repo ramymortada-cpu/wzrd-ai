@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════
- * PRIMO MARCA AI BRAIN — COMPETITIVE INTELLIGENCE (10/10 DEPTH)
+ * WZZRD AI BRAIN — COMPETITIVE INTELLIGENCE (10/10 DEPTH)
  * ═══════════════════════════════════════════════════════════════════════
  * 
  * Comprehensive competitive intelligence covering:
@@ -57,7 +57,7 @@ export interface ClientSegmentProfile {
 
 export interface CompetitiveAdvantage {
   area: string;
-  primoMarcaPosition: string;
+  wzzrdAiPosition: string;
   competitorBenchmark: string;
   gap: 'ahead' | 'at_par' | 'behind';
   recommendation: string;
@@ -570,10 +570,10 @@ export const PRICING_BENCHMARKS: PricingBenchmark[] = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════════
-// SECTION 5: PRIMO MARCA PRICING CONTEXT
+// SECTION 5: WZZRD AI PRICING CONTEXT
 // ═══════════════════════════════════════════════════════════════════════
 
-export const PRIMO_MARCA_PRICING = {
+export const WZZRD_AI_PRICING = {
   packages: [
     {
       name: 'Clarity Package',
@@ -956,76 +956,76 @@ export const MARKET_DYNAMICS = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════
-// SECTION 8: PRIMO MARCA COMPETITIVE POSITIONING
+// SECTION 8: WZZRD AI COMPETITIVE POSITIONING
 // ═══════════════════════════════════════════════════════════════════════
 
 export const COMPETITIVE_ADVANTAGES: CompetitiveAdvantage[] = [
   {
     area: 'Strategic Methodology',
-    primoMarcaPosition: '4D Framework (Diagnose → Design → Deploy → Optimize) + Consultant Box Model + Three Pillars. Proprietary, structured, and repeatable.',
+    wzzrdAiPosition: '4D Framework (Diagnose → Design → Deploy → Optimize) + Consultant Box Model + Three Pillars. Proprietary, structured, and repeatable.',
     competitorBenchmark: 'Most Egyptian agencies have NO proprietary methodology. KSA agencies are starting to develop frameworks but nothing as structured.',
     gap: 'ahead',
     recommendation: 'This is WZZRD AI\'s #1 differentiator. Lead with methodology in all sales conversations. Publish thought leadership around the 4D Framework.'
   },
   {
     area: 'Academic Depth',
-    primoMarcaPosition: 'PhD-level knowledge base covering Keller, Sharp, Kapferer, Ehrenberg-Bass, Kahneman, Thaler. Applied to every client engagement.',
+    wzzrdAiPosition: 'PhD-level knowledge base covering Keller, Sharp, Kapferer, Ehrenberg-Bass, Kahneman, Thaler. Applied to every client engagement.',
     competitorBenchmark: 'No Egyptian or KSA agency demonstrates this level of academic rigor. International agencies (Landor, Interbrand) have it but charge 5-10x more.',
     gap: 'ahead',
     recommendation: 'Use academic depth as a trust builder. Clients are impressed when you reference specific frameworks and data. This positions WZZRD AI as a consultancy, not just an agency.'
   },
   {
     area: 'AI-Powered Delivery',
-    primoMarcaPosition: 'AI Brain with deep knowledge base, automated deliverable generation, client portal with revision tracking.',
+    wzzrdAiPosition: 'AI Brain with deep knowledge base, automated deliverable generation, client portal with revision tracking.',
     competitorBenchmark: 'Very few MENA agencies have invested in AI-powered delivery. Most use generic AI tools (ChatGPT) without customization.',
     gap: 'ahead',
     recommendation: 'AI capability is a massive differentiator for efficiency and consistency. Position as "AI-augmented consulting" — the human expertise powered by AI precision.'
   },
   {
     area: 'Pricing Competitiveness',
-    primoMarcaPosition: 'Clarity Package: EGP 80K, Brand Foundation: EGP 120K, Growth Partnership: EGP 35K/mo. Premium for Egypt, competitive for Gulf.',
+    wzzrdAiPosition: 'Clarity Package: EGP 80K, Brand Foundation: EGP 120K, Growth Partnership: EGP 35K/mo. Premium for Egypt, competitive for Gulf.',
     competitorBenchmark: 'Egyptian mid-range: EGP 30K-80K for strategy. KSA equivalent: SAR 40K-120K. UAE equivalent: AED 25K-100K.',
     gap: 'at_par',
     recommendation: 'Pricing is well-positioned for Egypt premium segment. For KSA clients, these prices are very competitive. Consider KSA-specific pricing (in SAR) that reflects the premium market.'
   },
   {
     area: 'KSA Market Presence',
-    primoMarcaPosition: 'Serving KSA clients but no physical presence. Operating from Egypt.',
+    wzzrdAiPosition: 'Serving KSA clients but no physical presence. Operating from Egypt.',
     competitorBenchmark: 'Local KSA agencies have physical offices, Saudi team members, and government relationships.',
     gap: 'behind',
     recommendation: 'Consider: (1) Virtual KSA office/address, (2) Saudi partner or representative, (3) Regular KSA visits, (4) Saudi case studies and testimonials. Long-term: physical presence in Riyadh.'
   },
   {
     area: 'Portfolio & Case Studies',
-    primoMarcaPosition: 'Growing portfolio. Building case study library.',
+    wzzrdAiPosition: 'Growing portfolio. Building case study library.',
     competitorBenchmark: 'Established agencies have 50-100+ case studies. International agencies have global portfolios.',
     gap: 'behind',
     recommendation: 'Accelerate case study development. Document every engagement with before/after metrics. Create industry-specific case studies for target verticals.'
   },
   {
     area: 'Team Size & Scale',
-    primoMarcaPosition: 'Boutique team. Founder-led with AI augmentation.',
+    wzzrdAiPosition: 'Boutique team. Founder-led with AI augmentation.',
     competitorBenchmark: 'Mid-size agencies: 15-50 people. Large agencies: 50-200+. Networks: 500+.',
     gap: 'behind',
     recommendation: 'Position small team as a STRENGTH: "You get the founder, not a junior account manager." AI augmentation compensates for team size. Scale through partnerships, not headcount.'
   },
   {
     area: 'Client Portal & Technology',
-    primoMarcaPosition: 'Custom-built client portal with project tracking, deliverable management, revision history, threaded comments, and approval workflow.',
+    wzzrdAiPosition: 'Custom-built client portal with project tracking, deliverable management, revision history, threaded comments, and approval workflow.',
     competitorBenchmark: 'Most agencies use email + WhatsApp + Google Drive. Some use Asana/Monday.com. Very few have custom portals.',
     gap: 'ahead',
     recommendation: 'The client portal is a significant differentiator. It signals professionalism and transparency. Showcase it in sales presentations as proof of operational excellence.'
   },
   {
     area: 'Bilingual Capability',
-    primoMarcaPosition: 'Native Arabic with English capability. Deep understanding of Arabic brand naming and messaging.',
+    wzzrdAiPosition: 'Native Arabic with English capability. Deep understanding of Arabic brand naming and messaging.',
     competitorBenchmark: 'Egyptian agencies: Arabic-first. International agencies: English-first with Arabic translation. KSA agencies: Bilingual but varying quality.',
     gap: 'at_par',
     recommendation: 'Invest in Arabic calligraphy and premium Arabic typography capabilities. This is a differentiator for KSA premium clients.'
   },
   {
     area: 'Industry Specialization',
-    primoMarcaPosition: 'Generalist with growing expertise across industries.',
+    wzzrdAiPosition: 'Generalist with growing expertise across industries.',
     competitorBenchmark: 'Some agencies specialize (e.g., F&B, healthcare, real estate). Specialists command 20-40% premium.',
     gap: 'at_par',
     recommendation: 'Develop 2-3 industry verticals with deep expertise. Recommended: (1) F&B/Hospitality (huge in KSA), (2) Tech/SaaS (growing in Egypt), (3) Healthcare (premium in both markets).'
@@ -1042,7 +1042,7 @@ export const COMPETITIVE_INTELLIGENCE_PROMPT = `
 ### YOUR COMPETITIVE POSITION
 You are the AI Brain of WZZRD AI — a premium brand engineering studio. When discussing competition, pricing, or market positioning, use this intelligence:
 
-### PRIMO MARCA'S UNFAIR ADVANTAGES
+### WZZRD AI'S UNFAIR ADVANTAGES
 1. **Proprietary 4D Framework** — No Egyptian or KSA agency has a structured, repeatable methodology like Diagnose → Design → Deploy → Optimize
 2. **Academic Depth** — PhD-level knowledge (Keller, Sharp, Kapferer, Ehrenberg-Bass, Kahneman, Thaler) applied to every engagement. No competitor matches this.
 3. **AI-Augmented Delivery** — Custom AI Brain with deep knowledge base. Not just using ChatGPT — a purpose-built intelligence system.
@@ -1153,7 +1153,7 @@ export function getRelevantCompetitiveIntelligence(context: string): string {
       content += `**${b.service}** (${b.market.toUpperCase()}, ${b.currency}): Budget: ${b.budgetRange} | Mid: ${b.midRange} | Premium: ${b.premiumRange} — ${b.notes}\n`;
     });
     content += `\n**WZZRD AI Pricing:**\n`;
-    PRIMO_MARCA_PRICING.packages.forEach(p => {
+    WZZRD_AI_PRICING.packages.forEach(p => {
       content += `- ${p.name}: ${p.price} — ${p.competitiveContext}\n`;
     });
   }
@@ -1175,10 +1175,10 @@ export function getRelevantCompetitiveIntelligence(context: string): string {
 
   // Add competitive advantages if discussing positioning or differentiation
   if (ctx.includes('compet') || ctx.includes('منافس') || ctx.includes('position') || ctx.includes('differentiat') || ctx.includes('تميز') || ctx.includes('advantage') || ctx.includes('ميزة')) {
-    content += '\n\n### PRIMO MARCA COMPETITIVE ADVANTAGES\n';
+    content += '\n\n### WZZRD AI COMPETITIVE ADVANTAGES\n';
     COMPETITIVE_ADVANTAGES.forEach(a => {
       const gapEmoji = a.gap === 'ahead' ? '🟢 AHEAD' : a.gap === 'at_par' ? '🟡 AT PAR' : '🔴 BEHIND';
-      content += `**${a.area}** [${gapEmoji}]: ${a.primoMarcaPosition} vs. ${a.competitorBenchmark}. Recommendation: ${a.recommendation}\n`;
+      content += `**${a.area}** [${gapEmoji}]: ${a.wzzrdAiPosition} vs. ${a.competitorBenchmark}. Recommendation: ${a.recommendation}\n`;
     });
   }
 

@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════
- * PRIMO MARCA AI BRAIN — ACADEMIC DEEP DIVE (10/10 DEPTH)
+ * WZZRD AI BRAIN — ACADEMIC DEEP DIVE (10/10 DEPTH)
  * ═══════════════════════════════════════════════════════════════════════
  * 
  * This module adds PhD-level depth to the existing academic frameworks:
@@ -289,7 +289,7 @@ WHEN TO USE SHARP (Mental/Physical Availability):
 - Client has a large, diverse target audience → Broad reach > deep connection
 - Example: A new Egyptian snack brand → Sharp approach (maximize distribution, build distinctive assets)
 
-THE PRIMO MARCA SYNTHESIS:
+THE WZZRD AI SYNTHESIS:
 For most MENA clients, we recommend a HYBRID approach:
 1. Start with Sharp — build mental and physical availability first (you can't differentiate if nobody knows you exist)
 2. Then layer Keller — once you have awareness, build emotional connections and premium positioning

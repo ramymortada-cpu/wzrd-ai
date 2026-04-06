@@ -228,9 +228,9 @@ export const MENA_CASE_STUDIES: MENACaseStudy[] = [
     tags: ['mena', 'retail', 'ecommerce', 'local_vs_global', 'marketplace', 'arabic_first'],
   },
 
-  // ════════ PRIMO MARCA OWN PROJECTS ════════
+  // ════════ WZZRD AI OWN PROJECTS ════════
   {
-    id: 'primo_01',
+    id: 'wzzrd_01',
     brand: 'WZZRD AI Case: Beehive (F&B Rebrand)',
     industry: 'F&B', market: 'egypt',
     situation: 'Beehive was a Cairo-based healthy food restaurant with good products but confused brand identity. Multiple menus, inconsistent visual identity, unclear positioning in the "healthy eating" category.',
@@ -240,10 +240,10 @@ export const MENA_CASE_STUDIES: MENACaseStudy[] = [
     lessonsLearned: 'Most F&B brands don\'t have a food problem — they have a clarity problem. When you simplify the brand promise and make it emotionally appealing (not just functional), everything improves.',
     frameworksUsed: ['4D Framework (WZZRD AI methodology)', 'Kapferer Prism (Personality shift from clinical to warm)', 'Sharp (Distinctive assets — warm colors, "Real Food" tagline)'],
     patternToRecognize: 'When a restaurant/food brand is "a little bit of everything" and customers don\'t know what to expect. Classic Clarity Gap.',
-    tags: ['egypt', 'f&b', 'primo_marca', 'rebrand', 'clarity_gap', '4d_framework'],
+    tags: ['egypt', 'f&b', 'wzzrd_ai', 'rebrand', 'clarity_gap', '4d_framework'],
   },
   {
-    id: 'primo_02',
+    id: 'wzzrd_02',
     brand: 'WZZRD AI Case: Tazkyah Plus (Islamic Finance Platform)',
     industry: 'Tech', market: 'ksa',
     situation: 'Tazkyah Plus was a new Islamic investment platform targeting Saudi millennials. The Sharia-compliant investment space was dominated by banks with old-fashioned, complex branding.',
@@ -253,7 +253,7 @@ export const MENA_CASE_STUDIES: MENACaseStudy[] = [
     lessonsLearned: 'In KSA fintech, Sharia compliance is NOT a constraint — it\'s the most powerful brand differentiator you have. Don\'t hide it in the footer; put it in the headline.',
     frameworksUsed: ['4D Framework', 'Kapferer (Culture facet — Islamic values as brand core)', 'Cialdini (Authority — Sharia board prominence)', 'Keller (Brand identity — values-led)'],
     patternToRecognize: 'When a Saudi/MENA financial client treats regulatory compliance as a burden instead of a brand asset. The fix: compliance IS the positioning.',
-    tags: ['ksa', 'tech', 'fintech', 'islamic_finance', 'primo_marca', 'sharia', 'trust', '4d_framework'],
+    tags: ['ksa', 'tech', 'fintech', 'islamic_finance', 'wzzrd_ai', 'sharia', 'trust', '4d_framework'],
   },
 ];
 

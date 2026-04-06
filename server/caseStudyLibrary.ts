@@ -21,7 +21,7 @@
 
 export interface CaseStudy {
   brandName: string;
-  category: 'global_icon' | 'regional_champion' | 'primo_marca';
+  category: 'global_icon' | 'regional_champion' | 'wzzrd_ai';
   situation: string;
   challenge: string;
   whatTheyDid: string;
@@ -362,12 +362,12 @@ Ries & Trout's Positioning: Apple repositioned itself as the anti-status quo bra
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // PRIMO MARCA CASES (Enhanced with deeper analysis)
+  // WZZRD AI CASES (Enhanced with deeper analysis)
   // ═══════════════════════════════════════════════════════════════════════════
   
   {
     brandName: `Beehive (WZZRD AI Case)`,
-    category: 'primo_marca',
+    category: 'wzzrd_ai',
     situation: `Beehive was an established service company in the Egyptian market with solid service quality but a brand image that positioned them as C-class. Despite delivering quality comparable to premium providers, their visual identity, messaging, and market positioning attracted only price-sensitive clients. Their revenue was capped by the perception gap — clients who could afford premium services didn't consider Beehive because the brand didn't signal premium quality. This is a common trap in the Egyptian market where many capable companies are stuck in a "quality ceiling" — great work, wrong perception.`,
     challenge: `The core challenge was not service improvement but PERCEPTION transformation. Beehive needed to shift from being perceived as a budget option to being recognized as an A/B-class provider — without losing existing clients during the transition. This required a complete brand overhaul that would signal premium positioning while maintaining operational continuity. The risk: alienating current clients before new premium clients arrived.`,
     whatTheyDid: `- Conducted deep brand audit revealing the gap between service quality (8/10) and brand perception (4/10)
@@ -391,7 +391,7 @@ Ries & Trout's Positioning: Apple repositioned itself as the anti-status quo bra
   },
   {
     brandName: `Tazkyah Plus (WZZRD AI Case)`,
-    category: 'primo_marca',
+    category: 'wzzrd_ai',
     situation: `Tazkyah Plus started as a vision for an educational platform focused on personal development, values, and meaningful education. The founder had a powerful concept — education that transforms character, not just transfers knowledge — but zero brand structure. There was no visual identity, no messaging framework, no scalable architecture. The vision was strong but existed only in the founder's head, making it impossible to communicate consistently or scale beyond personal efforts.`,
     challenge: `The challenge was transforming an abstract vision into a concrete, scalable brand ecosystem. This wasn't a simple logo project — it required building an entire brand architecture that could support multiple sub-brands (Studio, Books, Podcast, Academy, Insights) while maintaining a unified identity. The risk: creating something too rigid that couldn't grow, or too loose that would lose coherence.`,
     whatTheyDid: `- Deep discovery process: extracted the founder's vision, values, and long-term ambitions through structured interviews
@@ -414,7 +414,7 @@ Ries & Trout's Positioning: Apple repositioned itself as the anti-status quo bra
   },
   {
     brandName: `Ramy Mortada (WZZRD AI Case)`,
-    category: 'primo_marca',
+    category: 'wzzrd_ai',
     situation: `Ramy Mortada had a strong personal voice with strategic thinking, leadership insights, and geopolitical awareness. He was already creating content and sharing perspectives, but without a structured brand — it was personal social media presence, not a recognizable intellectual brand. The content was valuable but scattered, the visual identity was inconsistent, and there was no clear positioning that differentiated him from thousands of other "thought leaders" on social media.`,
     challenge: `The challenge was fundamentally different from corporate branding: build a brand that IS the person — amplifying authentic strengths without creating a fake persona. The brand needed to reflect authority, credibility, and intellectual depth while remaining approachable. The risk: making it too corporate (losing authenticity) or too casual (losing authority).`,
     whatTheyDid: `- Defined clear positioning as a thought-leadership brand (not a content creator, not an influencer — a thought leader)
@@ -450,7 +450,7 @@ export function matchCaseStudies(params: {
   industry?: string;
   challenge?: string;
   tags?: string[];
-  category?: 'global_icon' | 'regional_champion' | 'primo_marca';
+  category?: 'global_icon' | 'regional_champion' | 'wzzrd_ai';
   limit?: number;
 }): CaseStudy[] {
   const { clientSituation, industry, challenge, tags, category, limit = 5 } = params;
@@ -482,7 +482,7 @@ export function matchCaseStudies(params: {
     
     // MENA relevance bonus for regional cases
     if (cs.category === 'regional_champion') score += 3;
-    if (cs.category === 'primo_marca') score += 5;
+    if (cs.category === 'wzzrd_ai') score += 5;
     
     return { cs, score };
   });
@@ -532,14 +532,14 @@ export function getAllCaseStudiesForKnowledgeBase(): string {
   let kb = `## COMPREHENSIVE CASE STUDY LIBRARY — ${CASE_STUDIES.length} REAL-WORLD BRAND CASES\n\n`;
   kb += `This library contains ${CASE_STUDIES.filter(c => c.category === 'global_icon').length} Global Icons, `;
   kb += `${CASE_STUDIES.filter(c => c.category === 'regional_champion').length} Regional Champions, and `;
-  kb += `${CASE_STUDIES.filter(c => c.category === 'primo_marca').length} WZZRD AI cases.\n`;
+  kb += `${CASE_STUDIES.filter(c => c.category === 'wzzrd_ai').length} WZZRD AI cases.\n`;
   kb += `Each case has real numbers, specific strategies, and actionable patterns.\n\n`;
   
   // Group by category
   const categories = [
     { key: 'global_icon', label: "GLOBAL ICONS — Lessons from the World's Best Brands" },
     { key: 'regional_champion', label: 'REGIONAL CHAMPIONS — MENA Success Stories' },
-    { key: 'primo_marca', label: 'PRIMO MARCA CASES — Our Own Track Record' },
+    { key: 'wzzrd_ai', label: 'WZZRD AI CASES — Our Own Track Record' },
   ];
   
   for (const cat of categories) {

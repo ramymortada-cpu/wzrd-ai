@@ -40,7 +40,7 @@ test.describe('WZZRD AI Smoke Tests', () => {
 
   test('tools page loads', async ({ page }) => {
     await page.goto(`${BASE}/tools`);
-    await expect(page).toHaveTitle(/WZZRD|WZRD|أدوات|Primo|Command Center|Wzrd/i);
+    await expect(page).toHaveTitle(/WZZRD|WZRD|أدوات|Command Center/i);
     await page.waitForTimeout(2000);
     const body = await page.textContent('body');
     expect(body).toMatch(/تشخيص|diagnosis|tools|أدوات/i);
@@ -119,7 +119,7 @@ test.describe('WZZRD AI Smoke Tests', () => {
     await page.goto(`${BASE}/services-info`);
     await page.waitForTimeout(1000);
     const body = await page.textContent('body');
-    expect(body).toContain('Primo');
+    expect(body).toContain('WZZRD');
   });
 
   test('/api/debug/whoami returns 404', async ({ request }) => {

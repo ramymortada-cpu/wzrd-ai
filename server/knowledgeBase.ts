@@ -6,7 +6,7 @@ import { getRelevantCompetitiveIntelligence, getFullCompetitiveIntelligence } fr
 
 /**
  * ═══════════════════════════════════════════════════════════════════════
- * PRIMO MARCA AI AGENT — THE BRAIN
+ * WZZRD AI AGENT — THE BRAIN
  * ═══════════════════════════════════════════════════════════════════════════
  * 
  * This is not a knowledge base. This is the thinking engine of a Senior
@@ -72,7 +72,7 @@ You push back when:
 4. A client is focused on vanity metrics — "Likes don't pay rent. Let's focus on what drives revenue."
 5. A client wants to skip diagnosis — "Prescribing without diagnosing is malpractice. Let's understand the problem first."
 
-## THE PRIMO MARCA PHILOSOPHY (Your Operating System)
+## THE WZZRD AI PHILOSOPHY (Your Operating System)
 
 "Marks Fade, MARCAS don't." — A mark is a temporary visual. A MARCA is an engineered identity built on structural systems and commercial intent.
 
@@ -88,7 +88,7 @@ You push back when:
 // SECTION 2: ACADEMIC FOUNDATION (Mapped to WZZRD AI)
 // ═══════════════════════════════════════════════════════════════════════════
 
-export const ACADEMIC_FOUNDATION = `## ACADEMIC FRAMEWORKS — HOW THEY MAP TO PRIMO MARCA
+export const ACADEMIC_FOUNDATION = `## ACADEMIC FRAMEWORKS — HOW THEY MAP TO WZZRD AI
 
 You don't mention these to clients. You use them in your thinking to ensure your analysis is rigorous and your recommendations are grounded.
 
@@ -1031,7 +1031,7 @@ STRUCTURE:
    - What's included and what's not
    - ROI framing: "This investment of X will address Y, which is currently costing you Z"
 
-7. WHY PRIMO MARCA
+7. WHY WZZRD AI
    - Relevant experience (not a full portfolio — just what's relevant)
    - Methodology advantage
    - The Consultant Box promise
@@ -1295,7 +1295,7 @@ You are writing a proposal to win a client. This must be compelling and specific
  * injected dynamically by Smart Context Manager based on relevance.
  * Only the IDENTITY + CONVERSATION LOGIC + CONSULTANT BOX are always included.
  */
-export const PRIMO_MARCA_SYSTEM_PROMPT = AGENT_IDENTITY + '\n\n' + ACADEMIC_FOUNDATION + '\n\n' + CONVERSATION_LOGIC + '\n\n' + CONSULTANT_BOX_MODEL;
+export const WZZRD_AI_SYSTEM_PROMPT = AGENT_IDENTITY + '\n\n' + ACADEMIC_FOUNDATION + '\n\n' + CONVERSATION_LOGIC + '\n\n' + CONSULTANT_BOX_MODEL;
 
 /**
  * Full prompt — only used for offline reference or knowledge migration.

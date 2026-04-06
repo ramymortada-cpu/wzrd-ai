@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, json, primaryKey } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, json, primaryKey, index } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -273,7 +273,7 @@ export const proposals = mysqlTable("proposals", {
   deliverables: text("deliverables"),
   timeline: text("timeline"),
   investment: text("investment"),
-  whyPrimoMarca: text("whyPrimoMarca"),
+  whyPrimoMarca: text("whyPrimoMarca"), // Legacy column name — UI displays as "Why WZZRD AI"
   terms: text("terms"),
   customNotes: text("customNotes"),
   // Pricing
@@ -1300,3 +1300,17 @@ export const brandProfiles = mysqlTable("brand_profiles", {
 });
 export type BrandProfile = typeof brandProfiles.$inferSelect;
 export type NewBrandProfile = typeof brandProfiles.$inferInsert;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// OTP CODES — Replaces in-memory Map for multi-instance safety
+// ═══════════════════════════════════════════════════════════════════════════
+
+export const otpCodes = mysqlTable("otp_codes", {
+  id: int("id").autoincrement().primaryKey(),
+  email: varchar("email", { length: 255 }).notNull(),
+  code: varchar("code", { length: 10 }).notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  emailIdx: index("otp_email_idx").on(table.email),
+}));

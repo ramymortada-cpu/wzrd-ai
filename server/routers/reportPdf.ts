@@ -193,7 +193,7 @@ body{font-family:'IBM Plex Sans Arabic',sans-serif;background:#fff;color:#1e293b
     </div>
     <div style="text-align:left">
       <a href="${APP_URL}">${APP_URL.replace('https://', '')}</a><br>
-      <a href="https://instagram.com/primomarca">@primomarca</a>
+      <a href="https://instagram.com/wzzrdai">@wzzrdai</a>
     </div>
   </div>
 </div>
@@ -515,7 +515,7 @@ body{font-family:'IBM Plex Sans Arabic',sans-serif;background:#fff;color:#1e293b
     </div>
     <div style="text-align:left">
       <a href="${APP_URL}">${escapeHtmlPdf(APP_URL.replace('https://', ''))}</a><br>
-      <a href="https://instagram.com/primomarca">@primomarca</a>
+      <a href="https://instagram.com/wzzrdai">@wzzrdai</a>
     </div>
   </div>
 </div>

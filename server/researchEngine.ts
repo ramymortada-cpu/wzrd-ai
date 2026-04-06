@@ -113,7 +113,9 @@ export interface ResearchReport {
 
 export async function searchGoogle(query: string, _numResults: number = 10): Promise<SearchResult[]> {
   try {
-    // TODO: Implement real Google Custom Search API here
+    // INTENTIONALLY DISABLED — Google Search API not configured.
+    // Returns empty array to prevent hallucinations (searchViaLLM was permanently removed).
+    // To enable: set GOOGLE_SEARCH_API_KEY and GOOGLE_SEARCH_CX env vars.
     // For now, we return empty array to prevent hallucinations
     logger.warn({ query }, '[ResearchEngine] Google search called but no API configured. Returning empty.');
     return [];
@@ -422,7 +424,8 @@ function parseHTML(url: string, html: string): ScrapedPage {
 
 export async function searchAcademic(query: string, _numResults: number = 5): Promise<AcademicResult[]> {
   try {
-    // TODO: Implement real Academic Search API (e.g., Semantic Scholar, Crossref)
+    // INTENTIONALLY DISABLED — Academic Search API not configured.
+    // Returns empty array. To enable: integrate Semantic Scholar or Crossref API.
     // For now, we return empty array to prevent hallucinations
     logger.warn({ query }, '[ResearchEngine] Academic search called but no API configured. Returning empty.');
     return [];
