@@ -98,7 +98,9 @@ async function main() {
       } catch (err) {
         // errno 1060 (ER_DUP_FIELDNAME): column already exists — safe to skip
         // errno 1050 (ER_TABLE_EXISTS_ERROR): table already exists — safe to skip
-        if (err.errno === 1060 || err.errno === 1050) {
+        // errno 1061 (ER_DUP_KEYNAME): index name already exists — safe to skip
+        //   (happens when a migration ran partially then was re-run after a fix)
+        if (err.errno === 1060 || err.errno === 1050 || err.errno === 1061) {
           console.warn(`   ⚠ Already exists, skipping: ${err.sqlMessage}`);
           continue;
         }
