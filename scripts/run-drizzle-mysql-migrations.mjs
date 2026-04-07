@@ -111,12 +111,14 @@ async function main() {
       try {
         await conn.query(stmt);
       } catch (err) {
-        // errno 1060 (ER_DUP_FIELDNAME): column already exists — safe to skip
         // errno 1050 (ER_TABLE_EXISTS_ERROR): table already exists — safe to skip
+        // errno 1054 (ER_BAD_FIELD_ERROR): unknown column — safe to skip on renames
+        //   (column was created with the new name from the start; rename is a no-op)
+        // errno 1060 (ER_DUP_FIELDNAME): column already exists — safe to skip
         // errno 1061 (ER_DUP_KEYNAME): index name already exists — safe to skip
         //   (happens when a migration ran partially then was re-run after a fix)
-        if (err.errno === 1060 || err.errno === 1050 || err.errno === 1061) {
-          console.warn(`   ⚠ Already exists, skipping: ${err.sqlMessage}`);
+        if (err.errno === 1050 || err.errno === 1054 || err.errno === 1060 || err.errno === 1061) {
+          console.warn(`   ⚠ Already exists / not applicable, skipping: ${err.sqlMessage}`);
           continue;
         }
         throw err;
