@@ -194,9 +194,15 @@ Extract this JSON:
         ],
       });
       const content = (response.choices[0]?.message?.content as string) || "{}";
-      const parsed = JSON.parse(content.replace(/```json\n?|\n?```/g, ""));
-      const service = parsed.service || "consultation";
-      const reason = parsed.reason || "Based on your needs.";
+      let service = "consultation";
+      let reason = "Based on your needs.";
+      try {
+        const parsed = JSON.parse(content.replace(/```json\n?|\n?```/g, ""));
+        service = parsed.service || service;
+        reason = parsed.reason || reason;
+      } catch {
+        logger.warn({ content }, 'assessNeeds LLM response was not valid JSON — using default service recommendation');
+      }
       await updateOnboardingSession(input.id, {
         assessmentAnswers: input.answers,
         recommendedService: service,

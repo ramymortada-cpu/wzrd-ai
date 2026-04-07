@@ -1310,6 +1310,7 @@ export const otpCodes = mysqlTable("otp_codes", {
   email: varchar("email", { length: 255 }).notNull(),
   code: varchar("code", { length: 10 }).notNull(),
   expiresAt: timestamp("expires_at").notNull(),
+  failedAttempts: int("failed_attempts").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   emailIdx: index("otp_email_idx").on(table.email),
