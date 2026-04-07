@@ -36,6 +36,10 @@ const FILES = [
   '0025_invite_tokens.sql',
   '0027_knowledge_entries_embedding.sql',
   '0028_brand_profiles.sql',
+  // 0034 MUST run before 0029/0031/0032: it creates otp_codes + tool_reviews
+  // using IF NOT EXISTS, so subsequent migrations that ALTER or index those
+  // tables will always find them present regardless of prior partial runs.
+  '0034_create_missing_tables.sql',
   '0029_otp_codes.sql',
   '0030_rename_whyPrimoMarca.sql',
   '0031_add_performance_indexes.sql',
@@ -70,12 +74,23 @@ function normalizeSql(sql) {
  * Split a SQL file into individual statements.
  * Handles multi-line CREATE TABLE statements by splitting on semicolons
  * that appear at the end of a line (possibly followed by whitespace/newlines).
+ *
+ * Root-bug fix: the old filter `!s.startsWith('--')` silently dropped any
+ * statement whose FIRST LINE was a SQL comment (e.g. 0029_otp_codes.sql
+ * starts with two comment lines before the CREATE TABLE).  Those statements
+ * were counted as "0 statements" and never executed, leaving tables absent.
+ * We now strip leading comment lines before deciding whether real SQL exists.
  */
 function splitStatements(sql) {
   return sql
     .split(/;\s*(?:\n|$)/)
     .map((s) => s.trim())
-    .filter((s) => s.length > 0 && !s.startsWith('--'));
+    .filter((s) => {
+      if (!s.length) return false;
+      // Remove leading comment lines; if anything real remains, keep it.
+      const withoutLeadingComments = s.replace(/^(--[^\n]*\n\s*)*/g, '').trim();
+      return withoutLeadingComments.length > 0;
+    });
 }
 
 async function main() {
