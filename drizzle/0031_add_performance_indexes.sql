@@ -28,6 +28,5 @@ CREATE INDEX `idx_referrals_referrerId` ON `referrals` (`referrer_id`);
 -- Timestamp-based queries (data retention cleanup + analytics)
 CREATE INDEX `idx_credit_transactions_createdAt` ON `credit_transactions` (`createdAt`);
 CREATE INDEX `idx_copilot_messages_createdAt` ON `copilot_messages` (`created_at`);
-CREATE INDEX `idx_otp_codes_expiresAt` ON `otp_codes` (`expires_at`);
 CREATE INDEX `idx_llm_usage_log_createdAt` ON `llm_usage_log` (`createdAt`);
 CREATE INDEX `idx_abandoned_carts_createdAt` ON `abandoned_carts` (`created_at`);
