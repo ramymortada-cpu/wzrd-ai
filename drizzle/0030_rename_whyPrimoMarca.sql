@@ -4,6 +4,8 @@
 -- created) the statement is skipped and the migration succeeds.
 DROP PROCEDURE IF EXISTS rename_whyPrimoMarca;
 
+DELIMITER //
+
 CREATE PROCEDURE rename_whyPrimoMarca()
 BEGIN
   IF EXISTS (
@@ -15,7 +17,9 @@ BEGIN
   ) THEN
     ALTER TABLE `proposals` RENAME COLUMN `whyPrimoMarca` TO `whyWzzrdAi`;
   END IF;
-END;
+END //
+
+DELIMITER ;
 
 CALL rename_whyPrimoMarca();
 DROP PROCEDURE IF EXISTS rename_whyPrimoMarca;
