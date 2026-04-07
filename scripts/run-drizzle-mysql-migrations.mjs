@@ -40,6 +40,7 @@ const FILES = [
   '0030_rename_whyPrimoMarca.sql',
   '0031_add_performance_indexes.sql',
   '0032_otp_failed_attempts.sql',
+  '0033_tool_reviews.sql',
 ];
 
 /** Tables we expect after 0015–0017 (0018 alters enum, 0019 Paymob idempotency). */
