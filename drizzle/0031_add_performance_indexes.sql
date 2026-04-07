@@ -6,7 +6,6 @@
 
 -- userId lookups (camelCase DB columns)
 CREATE INDEX `idx_credit_transactions_userId` ON `credit_transactions` (`userId`);
-CREATE INDEX `idx_tool_reviews_userId` ON `tool_reviews` (`userId`);
 
 -- user_id lookups (snake_case DB columns)
 CREATE INDEX `idx_copilot_messages_userId` ON `copilot_messages` (`user_id`);
