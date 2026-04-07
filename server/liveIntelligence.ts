@@ -113,7 +113,7 @@ ${comp.strengths.map(s => `- ${s}`).join('\n')}
 **Weaknesses:**
 ${comp.weaknesses.map(w => `- ${w}`).join('\n')}
 
-**How Primo Marca wins:** Our data-driven, framework-backed approach provides deeper strategic value than ${comp.name}'s offering.
+**How WZZRD AI wins:** Our data-driven, framework-backed approach provides deeper strategic value than ${comp.name}'s offering.
 **Researched:** ${new Date().toISOString().split('T')[0]}`;
 
         const id = await createKnowledgeEntry({
@@ -451,7 +451,7 @@ export async function deepResearch(
       messages: [
         {
           role: 'system',
-          content: `You are a senior brand strategy researcher for Primo Marca, a premium brand engineering agency in MENA. 
+          content: `You are a senior brand strategy researcher for WZZRD AI, a premium brand engineering agency in MENA. 
 
 Your job: Take raw research data and create STRUCTURED knowledge entries that the AI Brain can use in future client conversations.
 

@@ -9,6 +9,7 @@ import {
   copilotMessages,
   llmCacheTable,
   llmUsageLog,
+  otpCodes,
   researchCache,
 } from '../../drizzle/schema';
 import { getDb } from '../db/index';
@@ -78,6 +79,12 @@ export async function runDataRetentionCleanup() {
       .delete(auditLog)
       .where(lt(auditLog.createdAt, getCutoff(RETENTION_RULES.auditLog)));
     logger.debug({ deleted: affectedRows(auditResult) }, '[DataRetention] Cleaned audit_log');
+
+    // Clean expired OTP codes (1 day retention)
+    const otpResult = await db
+      .delete(otpCodes)
+      .where(lt(otpCodes.expiresAt, now));
+    logger.debug({ deleted: affectedRows(otpResult) }, '[DataRetention] Cleaned expired otp_codes');
 
     logger.info('[DataRetention] Cleanup job completed successfully');
   } catch (error) {

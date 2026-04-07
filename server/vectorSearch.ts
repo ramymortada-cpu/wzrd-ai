@@ -233,7 +233,7 @@ const SYNONYM_GROUPS: string[][] = [
   ['egypt', 'cairo', 'مصر', 'القاهرة', 'مصري'],
   ['saudi', 'ksa', 'riyadh', 'jeddah', 'السعودية', 'الرياض', 'جدة', 'سعودي'],
   ['uae', 'dubai', 'abudhabi', 'الإمارات', 'دبي'],
-  // Services (Primo-specific)
+  // Services (WZZRD-specific)
   ['audit', 'check', 'review', 'assess', 'diagnose', 'فحص', 'مراجعة', 'تشخيص', 'تقييم'],
   ['offer', 'package', 'tier', 'pricing', 'عرض', 'باكدج', 'تسعير', 'سعر'],
   ['launch', 'start', 'begin', 'go-to-market', 'إطلاق', 'بداية', 'انطلاق'],
@@ -325,8 +325,8 @@ function generateSimpleEmbedding(text: string): number[] {
     'methodology', 'process', 'workflow', 'pipeline', 'automation', 'efficiency',
     'performance', 'engagement', 'traffic', 'follower', 'impression', 'reach',
     'satisfaction', 'feedback', 'rating', 'review', 'testimonial', 'referral', 'nps',
-    // Primo-specific (25)
-    '4d', 'diagnose', 'design', 'deploy', 'optimize', 'primo', 'marca', 'wzrd',
+    // WZZRD-specific (25)
+    '4d', 'diagnose', 'design', 'deploy', 'optimize', 'wzzrd', 'wzzrdai', 'wzrd',
     'consultant', 'box', 'discovery', 'playbook', 'healthcheck', 'takeoff',
     'portal', 'onboarding', 'proposal', 'pipeline', 'observatory', 'twin',
     'agent', 'orchestrator', 'researcher', 'strategist', 'executor',

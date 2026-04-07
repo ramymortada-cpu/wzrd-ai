@@ -21,7 +21,7 @@ import { scrapeWebsite, buildWebsiteContext, fetchLighthouseScores } from "../re
 import { getSemanticKnowledge } from "../vectorSearch";
 import { getDb } from "../db/index";
 import { users, creditTransactions } from "../../drizzle/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { validatePromoCode, type PromoValidation } from "../db/promoCodes";
 import { getPremiumPrices, getPremiumReportCreditCost } from "../siteConfig";
 import { sendPremiumReportEmail } from "../wzrdEmails";
@@ -92,7 +92,7 @@ Categorize all findings into:
 Three specific, actionable things the brand owner can implement TODAY with zero budget.
 
 ## ٦. التوصية النهائية
-Which Primo Marca service phase is recommended and why (AUDIT / BUILD / TAKEOFF).
+Which WZZRD AI service phase is recommended and why (AUDIT / BUILD / TAKEOFF).
 
 IMPORTANT RULES:
 - Write 2000-3000 words minimum
@@ -123,6 +123,27 @@ Respond in valid JSON:
 async function deductPremiumCredits(userId: number, amount: number, tool: string): Promise<{ success: boolean; error?: string }> {
   const db = await getDb();
   if (!db) return { success: false, error: 'Database unavailable' };
+
+  // Daily cap check (fail-closed — same pattern as credits.ts)
+  const DAILY_CREDIT_CAP = 500;
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayUsage = await db.select({ total: sql<number>`COALESCE(SUM(ABS(amount)), 0)` })
+      .from(creditTransactions)
+      .where(and(
+        eq(creditTransactions.userId, userId),
+        eq(creditTransactions.type, 'tool_usage'),
+        sql`createdAt >= ${today}`
+      ));
+    const usedToday = todayUsage[0]?.total || 0;
+    if (usedToday + amount > DAILY_CREDIT_CAP) {
+      return { success: false, error: `وصلت الحد اليومي (${DAILY_CREDIT_CAP} كريدت/يوم). حاول بكره!` };
+    }
+  } catch (err) {
+    logger.warn({ err, userId }, 'Premium daily cap check failed — blocking for safety');
+    return { success: false, error: 'حصل مشكلة مؤقتة — حاول تاني كمان شوية.' };
+  }
 
   // Atomic deduction
   const result = await db.execute(

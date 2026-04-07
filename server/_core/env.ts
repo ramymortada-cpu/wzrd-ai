@@ -8,7 +8,7 @@ function requireEnv(name: string, value: string | undefined): string {
 
 export const ENV = {
   // App
-  appId: process.env.VITE_APP_ID ?? "primo-command-center",
+  appId: process.env.VITE_APP_ID ?? "wzzrd-ai",
   isProduction: process.env.NODE_ENV === "production",
   port: parseInt(process.env.PORT || "3000"),
 
@@ -45,7 +45,7 @@ export const ENV = {
   // Email notifications (optional)
   emailProvider: process.env.EMAIL_PROVIDER ?? "none",
   emailApiKey: process.env.EMAIL_API_KEY ?? "",
-  emailFrom: process.env.EMAIL_FROM ?? "Primo Marca <noreply@primomarca.com>",
+  emailFrom: process.env.EMAIL_FROM ?? "WZZRD AI <noreply@wzzrdai.com>",
 
   // WhatsApp/Telegram (optional)
   whatsappToken: process.env.WHATSAPP_TOKEN ?? "",
@@ -60,4 +60,21 @@ export const ENV = {
   // Frontend
   appUrl: process.env.APP_URL ?? "http://localhost:3000",
 };
+
+/**
+ * Validates that critical environment variables are set.
+ * In production: crashes immediately with a clear error message.
+ * In development: logs a warning but continues.
+ */
+export function validateCriticalEnv(): void {
+  const critical = ['DATABASE_URL', 'JWT_SECRET'];
+  const missing = critical.filter(k => !process.env[k]?.trim());
+  if (missing.length > 0 && process.env.NODE_ENV === 'production') {
+    console.error(`FATAL: Missing critical environment variables: ${missing.join(', ')}. Server cannot start.`);
+    process.exit(1);
+  }
+  if (missing.length > 0) {
+    console.warn(`[ENV] Warning: Missing variables (non-production): ${missing.join(', ')}`);
+  }
+}
 

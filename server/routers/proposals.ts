@@ -92,7 +92,7 @@ export const proposalsRouter = router({
     .mutation(async ({ input, ctx }) => { checkEditor(ctx); requireWorkspaceRole(ctx, "editor"); const { id, ...data } = input; await updateProposal(id, data); await audit('proposals', id, 'update', ctx.user?.id, undefined, { workspaceId: ctx.workspaceId }); return { success: true }; }),
 
   regenerateSection: protectedProcedure
-    .input(z.object({ proposalId: z.number(), section: z.enum(["executiveSummary", "clientBackground", "serviceDescription", "methodology", "deliverables", "timeline", "investment", "whyPrimoMarca", "terms", "title"]) }) )
+    .input(z.object({ proposalId: z.number(), section: z.enum(["executiveSummary", "clientBackground", "serviceDescription", "methodology", "deliverables", "timeline", "investment", "whyWzzrdAi", "terms", "title"]) }) )
     .mutation(async ({ input, ctx }) => {
       checkEditor(ctx);
       requireWorkspaceRole(ctx, "editor");

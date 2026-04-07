@@ -259,7 +259,7 @@ function ToolSectionCard({ tool, navigate, t, isAr, index }: {
             <span style={{ fontSize:13, color:C.muted }}>⚡ {tool.cost} {isAr ? "كريدت" : "credits"}</span>
           </div>
         </div>
-        {/* Mock report card */}
+        {/* Sample report card — static demo for landing page (not real user data) */}
         <div style={{ direction: isAr ? "rtl" : "ltr" }}>
           <div style={{ background:C.surface, border:`2px solid ${C.border}`, borderRadius:20, padding:"28px 24px", boxShadow:`0 8px 40px ${C.blueGlow}` }}>
             <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:18 }}>
@@ -826,8 +826,8 @@ export default function Welcome() {
       {/* ══ FOUNDER QUOTE ══ */}
       {(() => {
         const name    = hpCfg.founderName    || "Ramy Mortada";
-        const titleEn = hpCfg.founderTitleEn || "Founder & CEO, PRIMO MARCA";
-        const titleAr = hpCfg.founderTitleAr || "مؤسس و رئيس تنفيذي، PRIMO MARCA";
+        const titleEn = hpCfg.founderTitleEn || "Founder & CEO, WZZRD AI";
+        const titleAr = hpCfg.founderTitleAr || "مؤسس و رئيس تنفيذي، WZZRD AI";
         const quoteEn = hpCfg.founderQuoteEn || "I built WZZRD AI because I was tired of watching great businesses fail due to bad marketing decisions. You deserve clarity, not guesswork.";
         const quoteAr = hpCfg.founderQuoteAr || "بنيت WZZRD AI لأني سئمت من رؤية مشاريع رائعة تفشل بسبب قرارات تسويقية خاطئة. أنت تستحق وضوحاً حقيقياً، ليس تخميناً.";
         const imgSrc  = hpCfg.founderImageUrl || "/founder.jpg";
@@ -957,14 +957,14 @@ export default function Welcome() {
                 </a>
               ))}
               <a
-                href="https://primomarca.com"
+                href="https://wzzrdai.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ fontSize:12, color:"rgba(255,255,255,0.18)", textDecoration:"none", borderInlineStart:"1px solid rgba(255,255,255,0.08)", paddingInlineStart:20 }}
                 onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.5)")}
                 onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.18)")}
               >
-                Powered by PRIMO MARCA
+                Powered by WZZRD AI
               </a>
             </div>
           </div>

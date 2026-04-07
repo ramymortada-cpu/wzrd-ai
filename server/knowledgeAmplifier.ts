@@ -137,7 +137,7 @@ ${tplField(data, "implication") ? `**BRANDING IMPLICATION:** ${tplField(data, "i
       { key: 'strengths', label: 'Strengths', labelAr: 'نقاط القوة', type: 'textarea' },
       { key: 'weaknesses', label: 'Weaknesses', labelAr: 'نقاط الضعف', type: 'textarea' },
       { key: 'differentiator', label: 'Their Key Differentiator', labelAr: 'ما يميّزهم', type: 'text' },
-      { key: 'howWeWin', label: 'How Primo Marca Wins Against Them', labelAr: 'كيف نتفوّق عليهم', type: 'textarea' },
+      { key: 'howWeWin', label: 'How WZZRD AI Wins Against Them', labelAr: 'كيف نتفوّق عليهم', type: 'textarea' },
     ],
     formatForAI: (data) => `
 ## COMPETITOR: ${tplField(data, "competitorName")} (${tplField(data, "market")}, ${tplField(data, "pricingTier")})
@@ -252,7 +252,7 @@ export async function amplifyKnowledgeEntry(
   connectedFrameworks: string[];
   aiInsight: string;
 }> {
-  const prompt = `You are the AI Brain of Primo Marca, a premium brand engineering agency.
+  const prompt = `You are the AI Brain of WZZRD AI, a premium brand engineering agency.
 
 A consultant just added this knowledge entry:
 

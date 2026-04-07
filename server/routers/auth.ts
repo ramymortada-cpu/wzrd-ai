@@ -14,26 +14,19 @@ import { publicProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { logger } from "../_core/logger";
 import { fireEmailTrigger } from "../emailTrigger";
-import { createPublicUser, getUserByEmail } from "../db";
+import { createPublicUser, getUserByEmail, getDb } from "../db";
 import { addCredits, SIGNUP_BONUS } from "../db";
 import { sendWelcomeEmail } from "../wzrdEmails";
 import { signSession } from "../_core/session";
 import { isOwnerAdmin } from "../_core/authorization";
+import { otpCodes } from "../../drizzle/schema";
+import { eq, and, gt } from "drizzle-orm";
 
-// In-memory OTP store (email → { code, expires })
-// In production with multiple servers, use Redis instead
-const otpStore = new Map<string, { code: string; expires: number }>();
-
-// Clean expired OTPs every 10 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, val] of otpStore) {
-    if (val.expires < now) otpStore.delete(key);
-  }
-}, 10 * 60 * 1000);
+// OTP is now stored in the `otp_codes` database table
+// (was: in-memory Map — lost on restart, broken with multiple instances)
 
 export const authRouter = router({
-  /** Get current user (+ canAccessCommandCenter for Primo / admin nav) */
+  /** Get current user (+ canAccessCommandCenter for WZZRD admin nav) */
   me: publicProcedure.query((opts) => {
     const u = opts.ctx.user;
     if (!u) return null;
@@ -133,8 +126,20 @@ export const authRouter = router({
         logger.info({ email: input.email, code }, '[DEV] OTP login code');
       }
 
-      // Store OTP with 10min expiry (in-memory)
-      otpStore.set(input.email, { code, expires: Date.now() + 10 * 60 * 1000 });
+      // Store OTP in database with 10min expiry
+      const db = await getDb();
+      if (!db) {
+        logger.error({ email: input.email }, '[Auth] Database unavailable — cannot store OTP');
+        return { success: false, message: 'Service temporarily unavailable. Please try again.' };
+      }
+      // Delete any existing OTP for this email
+      await db.delete(otpCodes).where(eq(otpCodes.email, input.email));
+      // Insert new OTP
+      await db.insert(otpCodes).values({
+        email: input.email,
+        code,
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      });
 
       // Send code via email
       const { sendEmail } = await import('../wzrdEmails');
@@ -164,19 +169,27 @@ export const authRouter = router({
       code: z.string().length(6),
     }))
     .mutation(async ({ input, ctx }) => {
-      const stored = otpStore.get(input.email);
-      
-      if (!stored || stored.code !== input.code) {
-        return { success: false, user: null, message: 'Invalid code. Please try again.' };
-      }
-      
-      if (Date.now() > stored.expires) {
-        otpStore.delete(input.email);
-        return { success: false, user: null, message: 'Code expired. Please request a new one.' };
+      const db = await getDb();
+      if (!db) {
+        return { success: false, user: null, message: 'Database unavailable.' };
       }
 
-      // OTP valid — clear it
-      otpStore.delete(input.email);
+      // Look up OTP from database
+      const [stored] = await db.select()
+        .from(otpCodes)
+        .where(and(
+          eq(otpCodes.email, input.email),
+          eq(otpCodes.code, input.code),
+          gt(otpCodes.expiresAt, new Date()),
+        ))
+        .limit(1);
+      
+      if (!stored) {
+        return { success: false, user: null, message: 'Invalid or expired code. Please try again.' };
+      }
+
+      // OTP valid — delete it
+      await db.delete(otpCodes).where(eq(otpCodes.email, input.email));
 
       const user = await getUserByEmail(input.email);
       if (!user) {

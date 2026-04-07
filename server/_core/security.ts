@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
+import { logger } from "./logger";
 /**
  * Security Headers Middleware — sets protective HTTP headers.
  * Lightweight alternative to helmet.js with the same core protections.
@@ -22,11 +23,11 @@ export function securityHeaders(req: Request, res: Response, next: NextFunction)
     'Content-Security-Policy',
     [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com",
+      `script-src 'self' 'unsafe-inline' ${process.env.NODE_ENV !== 'production' ? "'unsafe-eval'" : ''} https://cdnjs.cloudflare.com`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: https: blob:",
-      "connect-src 'self' https://api.anthropic.com https://*.amazonaws.com",
+      "connect-src 'self' https://api.anthropic.com https://api.groq.com https://api.openai.com https://generativelanguage.googleapis.com https://*.amazonaws.com https://paymob.com https://accept.paymob.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
@@ -52,6 +53,10 @@ export function securityHeaders(req: Request, res: Response, next: NextFunction)
  * Returns the right CORS options based on environment.
  */
 export function getCorsConfig() {
+  if (process.env.NODE_ENV === 'production' && !process.env.ALLOWED_ORIGINS) {
+    logger.warn('ALLOWED_ORIGINS not set in production — CORS will reject all browser requests');
+  }
+
   const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim())
     : ['http://localhost:5173', 'http://localhost:3000'];

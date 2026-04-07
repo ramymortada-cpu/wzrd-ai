@@ -481,33 +481,33 @@ export const KSA_BUSINESS = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SECTION 7: PRIMO MARCA COMPETITIVE POSITIONING
+// SECTION 7: WZZRD AI COMPETITIVE POSITIONING
 // ═══════════════════════════════════════════════════════════════════════════
 
-export const PRIMO_MARCA_POSITIONING = {
+export const WZZRD_AI_POSITIONING = {
   pricingContext: `
-## HOW PRIMO MARCA PRICING COMPARES TO MARKET
+## HOW WZZRD AI PRICING COMPARES TO MARKET
 
-### Primo Marca Pricing (from official price list):
+### WZZRD AI Pricing (from official price list):
 - Clarity Package: 25,000 EGP / 3,500 SAR — BELOW market average for strategy work
 - Brand Foundation: 60,000 EGP / 8,500 SAR — COMPETITIVE with mid-tier agencies
 - Growth Partnership: 120,000 EGP / 17,000 SAR — PREMIUM but justified by depth
 
 ### Market Context:
-- Average Egypt brand identity: EGP 21,000-31,400 (Primo's Clarity Package at 25K is competitive)
-- Average KSA brand identity: SAR 15,000-80,000 (Primo's Brand Foundation at 8,500 SAR is BELOW market)
-- Average UAE brand strategy: AED 25,000-100,000 (Primo's Growth Partnership equivalent is competitive)
+- Average Egypt brand identity: EGP 21,000-31,400 (WZZRD AI's Clarity Package at 25K is competitive)
+- Average KSA brand identity: SAR 15,000-80,000 (WZZRD AI's Brand Foundation at 8,500 SAR is BELOW market)
+- Average UAE brand strategy: AED 25,000-100,000 (WZZRD AI's Growth Partnership equivalent is competitive)
 
 ### Key Selling Points:
-1. Primo Marca's pricing is BELOW average for the depth of work delivered
-2. Most agencies at this price point deliver only visual identity — Primo delivers strategy + identity + systems
+1. WZZRD AI's pricing is BELOW average for the depth of work delivered
+2. Most agencies at this price point deliver only visual identity — WZZRD AI delivers strategy + identity + systems
 3. The Clarity Package at 25K EGP is essentially a loss-leader that builds trust for larger engagements
 4. Growth Partnership at 120K EGP delivers what UAE agencies charge 100K+ AED for
 
 ### How to Use This in Sales:
 - When client says "too expensive": Show them what agencies in Dubai charge for the same work
 - When client compares to cheaper agencies: Explain the difference between "logo design" and "brand strategy"
-- When client is in KSA: Primo's SAR pricing is significantly below KSA market rates
+- When client is in KSA: WZZRD AI's SAR pricing is significantly below KSA market rates
 - When client wants ROI justification: Use industry benchmarks (CAC reduction, conversion improvement)
 `,
   competitiveAdvantages: [
@@ -618,7 +618,7 @@ export function formatPricingForPrompt(): string {
     output += `- Social Media Management: ${p.socialMediaManagement.basic} (basic) / ${p.socialMediaManagement.growth} (growth) / ${p.socialMediaManagement.enterprise} (enterprise)\n`;
     output += `- Source: ${p.source}\n\n`;
   }
-  output += PRIMO_MARCA_POSITIONING.pricingContext;
+  output += WZZRD_AI_POSITIONING.pricingContext;
   return output;
 }
 
@@ -684,7 +684,7 @@ export function getAllMarketIntelligenceForKnowledgeBase(): string {
   // Usage instructions
   output += `## HOW TO USE THIS MARKET DATA IN CONVERSATIONS\n\n`;
   output += `1. **When discussing a client's market**: Reference specific numbers for their market (Egypt, KSA, UAE)\n`;
-  output += `2. **When justifying pricing**: Compare Primo Marca's pricing to market benchmarks\n`;
+  output += `2. **When justifying pricing**: Compare WZZRD AI's pricing to market benchmarks\n`;
   output += `3. **When recommending channels**: Use platform-specific data (e.g., Snapchat dominance in KSA)\n`;
   output += `4. **When building strategy**: Reference industry benchmarks (CAC, conversion, retention)\n`;
   output += `5. **When discussing trends**: Use consumer behavior data to support recommendations\n`;

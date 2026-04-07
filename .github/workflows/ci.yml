@@ -1,12 +1,9 @@
 ###############################################################################
-# Radd — CI/CD Pipeline (GHCR + Docker)
+# WZZRD AI — CI/CD Pipeline (GHCR + Docker )
 #
 # Triggers:
-#   push → main : lint + test + build Docker images + push to GHCR
-#   pull_request → main : lint + typecheck (monorepo root — client + server)
-#
-# Note: Experimental apps/api + apps/web were removed from the repo; jobs now
-# target the WZRD monorepo (pnpm at repository root).
+#   push → main : lint + typecheck + build Docker image + push to GHCR
+#   pull_request → main : lint + typecheck only
 ###############################################################################
 
 name: CI/CD
@@ -19,112 +16,63 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ${{ github.repository_owner }}/radd
+  IMAGE_NAME: ${{ github.repository_owner }}/wzzrd-ai
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  # ─────────────────────────────────────────────────────────────────────────
-  # Monorepo: TypeScript + ESLint (same surface as quality-gate web checks)
-  # ─────────────────────────────────────────────────────────────────────────
   test-wzrd:
     name: WZRD — Lint & Typecheck
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "pnpm"
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
       - name: TypeScript (tsc --noEmit)
         run: pnpm run check
-
       - name: ESLint
         run: pnpm run lint
 
-  # ─────────────────────────────────────────────────────────────────────────
-  # Build & push Docker images to GHCR (only on push to main)
-  # ─────────────────────────────────────────────────────────────────────────
   build-push:
     name: Build & Push Docker Images
     runs-on: ubuntu-latest
     needs: [test-wzrd]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
     permissions:
       contents: read
       packages: write
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Compute image tag
         id: tag
         run: |
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-8)
           echo "tag=main-${SHORT_SHA}" >> $GITHUB_OUTPUT
           echo "latest_tag=latest" >> $GITHUB_OUTPUT
-
-      # ── API image ──────────────────────────────────────────────────────
-      - name: Build & push API image
+      - name: Build & push WZZRD AI image
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: infrastructure/docker/Dockerfile.api
+          file: Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api:${{ steps.tag.outputs.tag }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api:${{ steps.tag.outputs.latest_tag }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.tag }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.latest_tag }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      # ── Worker image ───────────────────────────────────────────────────
-      - name: Build & push Worker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: infrastructure/docker/Dockerfile.worker
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-worker:${{ steps.tag.outputs.tag }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-worker:${{ steps.tag.outputs.latest_tag }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      # ── Web image ──────────────────────────────────────────────────────
-      - name: Build & push Web image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: infrastructure/docker/Dockerfile.web
-          push: true
-          build-args: |
-            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL || 'https://api.radd.ai' }}
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-web:${{ steps.tag.outputs.tag }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-web:${{ steps.tag.outputs.latest_tag }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Output image tags
+      - name: Output image tag
         run: |
-          echo "Images pushed to GHCR:"
-          echo "  API:    ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api:${{ steps.tag.outputs.tag }}"
-          echo "  Worker: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-worker:${{ steps.tag.outputs.tag }}"
-          echo "  Web:    ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-web:${{ steps.tag.outputs.tag }}"
+          echo "Image pushed to GHCR:"
+          echo "  ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.tag }}"

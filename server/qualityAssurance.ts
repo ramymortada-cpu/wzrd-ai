@@ -85,7 +85,7 @@ export function runRuleBasedQA(
   // ── Specificity — has real names, numbers, data ──
   const hasNumbers = /\d+(%|\s*(EGP|SAR|USD|million|billion|thousand|k))/i.test(content);
   const hasNames = /[A-Z][a-z]+\s(Agency|Brand|Company|Group|Ltd|Inc)/.test(content) ||
-                   /Primo Marca|Keller|Kapferer|Sharp|Porter|Kahneman|Cialdini/.test(content);
+                   /WZZRD AI|Keller|Kapferer|Sharp|Porter|Kahneman|Cialdini/.test(content);
   const specificity = (hasNumbers ? 8 : 0) + (hasNames ? 7 : 0);
   checks.push({
     id: 'specificity', name: 'Specific data & references',
@@ -177,7 +177,7 @@ export async function runAIReview(
       messages: [
         {
           role: 'system',
-          content: `You are the Quality Assurance reviewer for Primo Marca, a premium brand engineering studio. 
+          content: `You are the Quality Assurance reviewer for WZZRD AI, a premium brand engineering studio. 
 
 Your job: Review this deliverable and assess if it meets consulting-quality standards.
 

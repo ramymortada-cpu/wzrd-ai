@@ -3,6 +3,7 @@ import fs from "fs";
 import { type Server } from "http";
 import { nanoid } from "nanoid";
 import path from "path";
+import { logger } from "./logger";
 import { fileURLToPath } from "url";
 import { getDb } from "../db";
 import { escapeHtmlAttr } from "./html";
@@ -96,7 +97,7 @@ export async function setupVite(app: Express, server: Server) {
 export function serveStatic(app: Express) {
   const distPath = path.resolve(__dir, "public");
   if (!fs.existsSync(distPath)) {
-    console.error(`Could not find build directory: ${distPath}`);
+    logger.error({ distPath }, "Could not find build directory");
   }
 
   const distLandingPath = path.resolve(distPath, "landing");

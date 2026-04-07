@@ -1,5 +1,8 @@
 /**
  * Email Automation Router — manages templates, automations, and sends.
+ * STATUS: PLANNED — Not yet wired to any client UI component.
+ * All endpoints are functional but no client page calls them.
+ * Will be activated when the Email Automation feature is built.
  * 
  * Features:
  * 1. Email Templates CRUD — create/edit/delete HTML templates
@@ -33,7 +36,7 @@ const DEFAULT_TEMPLATES = [
 <p>تم تفعيل حسابك وعندك <strong>١٠٠ كريدت مجاني</strong> جاهزين.</p>
 <p>ابدأ بـ <strong>تشخيص البراند</strong> — هيديك صورة شاملة عن وضع البراند بتاعك.</p>
 <a href="{{APP_URL}}/tools" style="display:inline-block;padding:14px 32px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:50px;font-weight:bold;margin:16px 0">ابدأ التشخيص الآن</a>
-<p style="color:#94a3b8;font-size:13px;margin-top:24px">WZZRD AI by Primo Marca</p>
+<p style="color:#94a3b8;font-size:13px;margin-top:24px">WZZRD AI by WZZRD AI</p>
 </div>`,
   },
   {
@@ -48,7 +51,7 @@ const DEFAULT_TEMPLATES = [
 <p>{{SUMMARY}}</p>
 <a href="{{APP_URL}}/tools" style="display:inline-block;padding:14px 32px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:50px;font-weight:bold;margin:16px 0">شوف التقرير الكامل</a>
 <p>عايز تقرير مفصّل أكتر؟ <a href="{{APP_URL}}/tools" style="color:#4f46e5">احصل على التقرير الـ Premium</a></p>
-<p style="color:#94a3b8;font-size:13px;margin-top:24px">WZZRD AI by Primo Marca</p>
+<p style="color:#94a3b8;font-size:13px;margin-top:24px">WZZRD AI by WZZRD AI</p>
 </div>`,
   },
   {
@@ -67,7 +70,7 @@ const DEFAULT_TEMPLATES = [
 <li><strong>فحص الحضور الرقمي</strong> — إزاي بتظهر أونلاين؟</li>
 </ul>
 <a href="{{APP_URL}}/tools" style="display:inline-block;padding:14px 32px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:50px;font-weight:bold;margin:16px 0">روح للأدوات</a>
-<p style="color:#94a3b8;font-size:13px;margin-top:24px">WZZRD AI by Primo Marca</p>
+<p style="color:#94a3b8;font-size:13px;margin-top:24px">WZZRD AI by WZZRD AI</p>
 </div>`,
   },
   {
@@ -82,7 +85,7 @@ const DEFAULT_TEMPLATES = [
 <p>البراندات الناجحة بتتراجع لو متابعتهاش. خد دقيقة وشغّل تشخيص جديد.</p>
 <a href="{{APP_URL}}/tools" style="display:inline-block;padding:14px 32px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:50px;font-weight:bold;margin:16px 0">شغّل تشخيص الآن</a>
 <p>أو لو محتاج مساعدة متخصصة — <a href="{{APP_URL}}/services-info" style="color:#4f46e5">تواصل مع خبير</a></p>
-<p style="color:#94a3b8;font-size:13px;margin-top:24px">WZZRD AI by Primo Marca</p>
+<p style="color:#94a3b8;font-size:13px;margin-top:24px">WZZRD AI by WZZRD AI</p>
 </div>`,
   },
   {
@@ -101,7 +104,7 @@ const DEFAULT_TEMPLATES = [
 <li>لو محتاج مساعدة — <a href="{{APP_URL}}/services-info" style="color:#4f46e5">احجز Clarity Call مجاني</a></li>
 </ol>
 <a href="{{APP_URL}}/tools" style="display:inline-block;padding:14px 32px;background:#ef4444;color:#fff;text-decoration:none;border-radius:50px;font-weight:bold;margin:16px 0">شوف التقرير الكامل</a>
-<p style="color:#94a3b8;font-size:13px;margin-top:24px">WZZRD AI by Primo Marca</p>
+<p style="color:#94a3b8;font-size:13px;margin-top:24px">WZZRD AI by WZZRD AI</p>
 </div>`,
   },
   {
@@ -119,7 +122,7 @@ const DEFAULT_TEMPLATES = [
 <li><strong>باقة ١٥٠٠ كريدت</strong> — ٩٩٩ جنيه (الأوفر)</li>
 </ul>
 <a href="{{APP_URL}}/pricing" style="display:inline-block;padding:14px 32px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:50px;font-weight:bold;margin:16px 0">اشتري كريدت</a>
-<p style="color:#94a3b8;font-size:13px;margin-top:24px">WZZRD AI by Primo Marca</p>
+<p style="color:#94a3b8;font-size:13px;margin-top:24px">WZZRD AI by WZZRD AI</p>
 </div>`,
   },
 ];

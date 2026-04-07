@@ -182,7 +182,7 @@ p{margin:0 0 14px;line-height:1.8;font-size:14px}
 <p><a href="${appUrl}${tip.ctaUrl}" class="btn">${tip.cta}</a></p>
 </div>
 <div class="footer">
-<p>Weekly brand tip from <a href="${appUrl}">WZZRD AI</a> by Primo Marca</p>
+<p>Weekly brand tip from <a href="${appUrl}">WZZRD AI</a> by WZZRD AI</p>
 <p><a href="${appUrl}/unsubscribe?email=${encodeURIComponent(email)}">Unsubscribe</a></p>
 </div>
 </div></body></html>`;
@@ -206,7 +206,7 @@ export async function sendWeeklyNewsletter(): Promise<{ sent: number; failed: nu
   const tipIndex = weekNum % WEEKLY_TIPS.length;
   const tip = WEEKLY_TIPS[tipIndex];
   const appUrl = process.env.APP_URL || 'https://wzzrdai.com';
-  const from = process.env.EMAIL_FROM || 'WZZRD AI <noreply@primomarca.com>';
+  const from = process.env.EMAIL_FROM || 'WZZRD AI <noreply@wzzrdai.com>';
 
   let sent = 0, failed = 0;
 

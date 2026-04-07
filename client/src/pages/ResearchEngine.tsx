@@ -646,6 +646,22 @@ export default function ResearchEnginePage() {
           <ScrollArea className="max-h-[70vh] pr-4">
             {currentReport && (
               <div className="space-y-4 sm:space-y-6">
+                {/* Search API warning */}
+                {Boolean((currentReport as Record<string, unknown>).searchDisabled) && (
+                  <div className="flex items-start gap-3 p-4 rounded-lg border border-yellow-500/30 bg-yellow-500/10 text-sm">
+                    <span className="text-yellow-500 text-lg mt-0.5">⚠️</span>
+                    <div>
+                      <p className="font-medium text-yellow-600 dark:text-yellow-400">
+                        {isRTL ? "تنبيه: البحث مبني على المعرفة العامة فقط" : "Note: Research used AI general knowledge only"}
+                      </p>
+                      <p className="text-muted-foreground mt-1">
+                        {isRTL
+                          ? "محرك البحث الخارجي غير مفعّل حالياً. النتائج مبنية على معرفة الـ AI العامة وبيانات الموقع المسحوبة (إن وُجدت)."
+                          : "External search API is not configured. Results are based on AI general knowledge and any scraped website data."}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 {/* Summary */}
                 {currentReport.summary && (
                   <div>

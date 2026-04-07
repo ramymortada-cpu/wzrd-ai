@@ -105,6 +105,8 @@ export interface ResearchReport {
   totalSources: number;
   createdAt: number;
   cached: boolean;
+  /** True when Google Custom Search API is not configured — results are AI-only */
+  searchDisabled?: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -113,7 +115,9 @@ export interface ResearchReport {
 
 export async function searchGoogle(query: string, _numResults: number = 10): Promise<SearchResult[]> {
   try {
-    // TODO: Implement real Google Custom Search API here
+    // INTENTIONALLY DISABLED — Google Search API not configured.
+    // Returns empty array to prevent hallucinations (searchViaLLM was permanently removed).
+    // To enable: set GOOGLE_SEARCH_API_KEY and GOOGLE_SEARCH_CX env vars.
     // For now, we return empty array to prevent hallucinations
     logger.warn({ query }, '[ResearchEngine] Google search called but no API configured. Returning empty.');
     return [];
@@ -422,7 +426,8 @@ function parseHTML(url: string, html: string): ScrapedPage {
 
 export async function searchAcademic(query: string, _numResults: number = 5): Promise<AcademicResult[]> {
   try {
-    // TODO: Implement real Academic Search API (e.g., Semantic Scholar, Crossref)
+    // INTENTIONALLY DISABLED — Academic Search API not configured.
+    // Returns empty array. To enable: integrate Semantic Scholar or Crossref API.
     // For now, we return empty array to prevent hallucinations
     logger.warn({ query }, '[ResearchEngine] Academic search called but no API configured. Returning empty.');
     return [];
@@ -639,6 +644,12 @@ export async function conductResearch(params: {
   searchQueries.push(marketQuery);
   const marketResults = await searchGoogle(marketQuery, 8);
 
+  // Detect if search API is not configured (all searches returned empty)
+  const searchDisabled = companyResults.length === 0 && competitorResults.length === 0 && marketResults.length === 0;
+  if (searchDisabled) {
+    logger.warn({ companyName, industry }, '[Research] All searches returned empty — Google Custom Search API not configured. Results will use AI general knowledge only.');
+  }
+
   // Step 4: Scrape company website if provided
   const scrapedPages: ScrapedPage[] = [];
   if (website) {
@@ -697,6 +708,7 @@ export async function conductResearch(params: {
     totalSources: allSearchResults.length + academicResults.length + scrapedPages.length,
     createdAt: startTime,
     cached: false,
+    searchDisabled,
   };
 }
 
@@ -730,7 +742,7 @@ async function synthesizeResearch(
       messages: [
         {
           role: 'system',
-          content: `You are a Senior Brand Strategy Consultant at Primo Marca. Synthesize the research data into actionable insights using Primo Marca's 4D Framework lens. Be specific, connect every insight to a business outcome, and think like a strategist — not a reporter.`
+          content: `You are a Senior Brand Strategy Consultant at WZZRD AI. Synthesize the research data into actionable insights using WZZRD AI's 4D Framework lens. Be specific, connect every insight to a business outcome, and think like a strategist — not a reporter.`
         },
         {
           role: 'user',
@@ -751,7 +763,7 @@ ${academicSummary}
 Synthesize this into:
 1. A comprehensive summary (2-3 paragraphs)
 2. 5-7 key insights (each must be specific and actionable)
-3. 3-5 strategic recommendations (using Primo Marca's methodology)
+3. 3-5 strategic recommendations (using WZZRD AI's methodology)
 
 Return JSON.`
         }

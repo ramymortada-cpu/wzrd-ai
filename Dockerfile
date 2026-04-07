@@ -1,5 +1,5 @@
 # ═══════════════════════════════════════════
-# Primo Command Center — Production Dockerfile
+# WZZRD AI — Production Dockerfile
 # ═══════════════════════════════════════════
 # Multi-stage build: install → build → run
 # CACHE BUST v2 - force rebuild

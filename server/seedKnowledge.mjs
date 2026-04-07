@@ -1,9 +1,9 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════
- * PRIMO MARCA KNOWLEDGE BASE SEED SCRIPT
+ * WZZRD AI KNOWLEDGE BASE SEED SCRIPT
  * ═══════════════════════════════════════════════════════════════════════════
  * 
- * Populates the knowledge_entries table with Primo Marca's proprietary
+ * Populates the knowledge_entries table with WZZRD AI's proprietary
  * frameworks, methodologies, case studies, and market insights.
  * 
  * Run: node server/seedKnowledge.mjs
@@ -22,8 +22,8 @@ const entries = [
   // FRAMEWORKS
   // ═══════════════════════════════════════════════════════════════════════
   {
-    title: "The 4D Framework — Primo Marca's Proprietary Brand Engineering Process",
-    content: `The 4D Framework is Primo Marca's proprietary four-stage process for brand engineering. It is NOT a linear process — it's an iterative system where each stage informs and refines the others.
+    title: "The 4D Framework — WZZRD AI's Proprietary Brand Engineering Process",
+    content: `The 4D Framework is WZZRD AI's proprietary four-stage process for brand engineering. It is NOT a linear process — it's an iterative system where each stage informs and refines the others.
 
 **STAGE 1: DIAGNOSE**
 We audit the business, the market, and current bottlenecks. This is the most critical stage — prescribing without diagnosing is malpractice. Key activities:
@@ -65,7 +65,7 @@ The 4D Framework maps to Keller's CBBE Pyramid: Diagnose = Brand Salience, Desig
 
   {
     title: "The Three Pillars That Define Market Authority",
-    content: `Primo Marca focuses on three interconnected pillars that together create market authority. No pillar works in isolation — they form a system.
+    content: `WZZRD AI focuses on three interconnected pillars that together create market authority. No pillar works in isolation — they form a system.
 
 **PILLAR 1: BRAND BUILDING**
 The foundation of market authority. Without a strong brand, everything else is noise.
@@ -93,7 +93,7 @@ These three pillars map to Aaker's brand dimensions: Brand Building = Brand as P
 
   {
     title: "The Consultant Box — Anti-Black-Box Agency Model",
-    content: `The Consultant Box is Primo Marca's operating philosophy that fundamentally differentiates us from traditional agencies. It's the antithesis of the "Black Box" agency model.
+    content: `The Consultant Box is WZZRD AI's operating philosophy that fundamentally differentiates us from traditional agencies. It's the antithesis of the "Black Box" agency model.
 
 **THE PROBLEM WITH BLACK BOX AGENCIES:**
 Traditional agencies operate like black boxes — the client hands over money and has no idea what's happening inside. They get deliverables but don't understand the strategy, can't replicate the thinking, and are permanently dependent on the agency.
@@ -132,7 +132,7 @@ Philosophy: "Creativity without a system is just art. Creativity with a system i
   {
     title: "The Clarity Gap — Most Common Brand Problem Pattern",
     content: `**Pattern Name:** The Clarity Gap
-**Frequency:** Found in ~60% of clients who come to Primo Marca
+**Frequency:** Found in ~60% of clients who come to WZZRD AI
 
 **Symptom:** "We have a great product but nobody knows about us" or "We're not attracting the right customers"
 
@@ -143,7 +143,7 @@ Philosophy: "Creativity without a system is just art. Creativity with a system i
 2. "Can you explain your value proposition in one sentence that a stranger would understand?"
 3. "What do your customers say about you when you're not in the room?"
 
-**Primo Marca Solution:**
+**WZZRD AI Solution:**
 - Diagnose the gap between reality and perception
 - Design the bridge: clear positioning + messaging framework
 - Deploy: consistent communication across all touchpoints
@@ -169,7 +169,7 @@ Philosophy: "Creativity without a system is just art. Creativity with a system i
 2. "What can you do that no competitor can credibly claim?"
 3. "Are your customers buying because they want YOU, or because you're convenient?"
 
-**Primo Marca Solution:**
+**WZZRD AI Solution:**
 - Find the Unfair Advantage (intersection of capability + need + uniqueness)
 - Restructure the offer to lead with value, not price
 - Reposition as authority in a specific niche rather than generalist in a broad market
@@ -188,14 +188,14 @@ Philosophy: "Creativity without a system is just art. Creativity with a system i
 
 **Symptom:** "We've tried everything — social media, ads, events — nothing works" or "We spend money on marketing but can't see results"
 
-**Root Cause:** No system, no strategy, no consistent brand narrative. Marketing is a series of disconnected guesses. This is the core problem Ramy Mortada founded Primo Marca to solve.
+**Root Cause:** No system, no strategy, no consistent brand narrative. Marketing is a series of disconnected guesses. This is the core problem Ramy Mortada founded WZZRD AI to solve.
 
 **Diagnostic Questions:**
 1. "Walk me through your marketing activities in the last 6 months. What was the strategy behind each?"
 2. "Do you have a documented brand strategy that guides all your marketing decisions?"
 3. "If you stopped all marketing tomorrow, what would happen to your business in 3 months?"
 
-**Primo Marca Solution:**
+**WZZRD AI Solution:**
 - Stop everything. Audit what's working and what's not
 - Build the system first: positioning → messaging → content strategy → channel strategy
 - Deploy with intention: every activity has a strategic purpose and measurable outcome
@@ -221,7 +221,7 @@ Philosophy: "Creativity without a system is just art. Creativity with a system i
 2. "If you doubled your customer base tomorrow, could your brand and operations handle it?"
 3. "What's the ONE thing that, if you fixed it, would unlock the next phase of growth?"
 
-**Primo Marca Solution:**
+**WZZRD AI Solution:**
 - Audit the structural integrity of the brand and business model
 - Identify what needs to evolve (not everything — just the bottleneck)
 - Redesign the specific elements that are creating the ceiling
@@ -243,7 +243,7 @@ Philosophy: "Creativity without a system is just art. Creativity with a system i
 
 **Goal:** Reposition to attract A & B market segments while building a brand capable of expanding into multiple international markets.
 
-**The Primo Marca Approach:**
+**The WZZRD AI Approach:**
 This was a classic Clarity Gap + Commodity Trap combination. The company had good services but was perceived as lower-tier because:
 1. Visual identity communicated "budget" rather than "premium"
 2. Messaging didn't differentiate from competitors
@@ -274,7 +274,7 @@ This was a classic Clarity Gap + Commodity Trap combination. The company had goo
 
 **Goal:** Transform the vision into a structured brand with clear identity, message, and scalable system that could grow into multiple programs and branches.
 
-**The Primo Marca Approach:**
+**The WZZRD AI Approach:**
 This was a ground-up brand build — the most comprehensive type of engagement. Everything needed to be created from scratch, but with scalability built in from day one.
 
 **What We Did (4D Framework in action):**
@@ -299,12 +299,12 @@ Tazkyah Plus was designed not as a single project but as a platform capable of e
 
   {
     title: "Case Study: Ramy Mortada — Personal Voice to Thought-Leadership Brand",
-    content: `**Client:** Ramy Mortada (Founder of Primo Marca)
+    content: `**Client:** Ramy Mortada (Founder of WZZRD AI)
 **Challenge:** Transform a personal voice into a recognizable intellectual brand that speaks to ambitious professionals, leaders, and decision-makers across the region.
 
 **Goal:** Build a brand that goes beyond typical personal presence on social media — one that reflects authority, credibility, and intellectual depth.
 
-**The Primo Marca Approach:**
+**The WZZRD AI Approach:**
 Personal branding is different from corporate branding. The brand IS the person, so authenticity is non-negotiable. But authenticity without structure is just noise.
 
 **What We Did:**
@@ -342,7 +342,7 @@ The Egyptian market for brand consulting is characterized by a large volume of S
 
 **Pricing Reality:**
 - Most businesses expect to pay 5,000-20,000 EGP for "branding" (meaning a logo)
-- Primo Marca's pricing (80,000-320,000 EGP) requires significant education about the value difference
+- WZZRD AI's pricing (80,000-320,000 EGP) requires significant education about the value difference
 - The key is framing: "You're not paying for a logo. You're investing in a system that will generate revenue for years."
 
 **Opportunities:**
@@ -427,7 +427,7 @@ The Unfair Advantage lives at the intersection of three circles:
   },
 
   {
-    title: "Customer Journey Mapping — Primo Marca Method",
+    title: "Customer Journey Mapping — WZZRD AI Method",
     content: `**Philosophy:** The customer journey is NOT a linear funnel. It's a loop with multiple entry points and exit points.
 
 **The Five Stages (Based on McKinsey Decision Journey):**
@@ -457,7 +457,7 @@ The Unfair Advantage lives at the intersection of three circles:
    - What makes them recommend to others?
    - How is the relationship maintained over time?
 
-**Primo Marca's Approach:** Identify friction at EACH stage and engineer solutions. The goal: turn strangers into advocates through a seamless, intentional experience.`,
+**WZZRD AI's Approach:** Identify friction at EACH stage and engineer solutions. The goal: turn strangers into advocates through a seamless, intentional experience.`,
     category: "methodology",
     tags: JSON.stringify(["customer-journey", "journey-mapping", "conversion", "loyalty"]),
     source: "manual"
@@ -493,7 +493,7 @@ The Unfair Advantage lives at the intersection of three circles:
    - Don't sell "a logo" → sell "an identity that commands premium pricing"
    - Don't sell "consulting hours" → sell "clarity that eliminates wasted marketing spend"
 
-**Primo Marca's Own Pricing Justification:**
+**WZZRD AI's Own Pricing Justification:**
 80K-320K EGP is justified by the Consultant Box model: total transparency, guided execution, clear finish lines. The client knows exactly what they're getting and why it's worth it. The key: the client owns the strategy forever — it's an investment, not an expense.`,
     category: "methodology",
     tags: JSON.stringify(["pricing", "premium", "psychology", "value-perception"]),
@@ -519,10 +519,10 @@ Most businesses invest in marks (logos, social media posts, ad campaigns) withou
 - Does the brand command premium pricing? → That's a MARCA
 - Will the brand still be relevant in 10 years? → That's a MARCA
 
-**Primo Marca's Promise:**
+**WZZRD AI's Promise:**
 We don't create marks. We engineer MARCAS. Every engagement is designed to build something that lasts — a system, not a decoration.
 
-This philosophy is embedded in the company name itself: "Primo" (first/prime) + "Marca" (brand/mark in multiple languages) = The Prime Brand.`,
+This philosophy is embedded in the company name itself: "WZZRD" — the AI-powered brand wizard that replaces traditional agency guesswork with data-driven diagnosis.
     category: "framework",
     tags: JSON.stringify(["marks-vs-marcas", "philosophy", "core-belief", "brand-engineering"]),
     source: "manual"
@@ -551,10 +551,10 @@ A comprehensive audit of the business's brand health, market position, and growt
 **When to Recommend:**
 - Client is unsure what they need
 - Client thinks they need a logo but actually has deeper problems
-- Client wants to "test" working with Primo Marca before committing to a larger engagement
+- Client wants to "test" working with WZZRD AI before committing to a larger engagement
 - Client has been doing random marketing and wants to understand what's working
 
-**Key Principle:** This is NOT a sales pitch for bigger services. It's a genuine diagnostic that gives the client actionable insights they can use immediately, whether or not they continue with Primo Marca.`,
+**Key Principle:** This is NOT a sales pitch for bigger services. It's a genuine diagnostic that gives the client actionable insights they can use immediately, whether or not they continue with WZZRD AI.`,
     category: "methodology",
     tags: JSON.stringify(["business-health-check", "diagnose", "service", "entry-point"]),
     source: "manual"
@@ -568,7 +568,7 @@ A comprehensive audit of the business's brand health, market position, and growt
 **4D Stages:** DESIGN + DEPLOY
 
 **What It Is:**
-Complete brand identity engineering — from strategic positioning to visual/verbal system deployment. This is Primo Marca's core offering.
+Complete brand identity engineering — from strategic positioning to visual/verbal system deployment. This is WZZRD AI's core offering.
 
 **Deliverables:**
 1. Strategic Positioning Document — Unfair Advantage, target audience, competitive positioning
@@ -598,7 +598,7 @@ Complete brand identity engineering — from strategic positioning to visual/ver
 **4D Stages:** All four — DIAGNOSE → DESIGN → DEPLOY → OPTIMIZE
 
 **What It Is:**
-The complete Primo Marca experience — full 4D Framework execution from diagnosis to optimization. This is for businesses that want transformative results.
+The complete WZZRD AI experience — full 4D Framework execution from diagnosis to optimization. This is for businesses that want transformative results.
 
 **Deliverables:**
 Everything from Brand Identity PLUS:
@@ -626,11 +626,11 @@ Everything from Brand Identity PLUS:
   // BRAND PHILOSOPHY & VALUES
   // ═══════════════════════════════════════════════════════════════════════
   {
-    title: "Primo Marca Brand DNA — Core Identity & Values",
+    title: "WZZRD AI Brand DNA — Core Identity & Values",
     content: `**Who We Are:**
 Premium Brand Engineering for Founders & SMEs. We build enduring identities through clarity, intention, and commercial logic.
 
-At Primo Marca, we don't believe in "marketing services." We believe in Growth Engineering. We are a specialized brand-building studio that operates at the intersection of design, psychology, and business logic.
+At WZZRD AI, we don't believe in "marketing services." We believe in Growth Engineering. We are a specialized brand-building studio that operates at the intersection of design, psychology, and business logic.
 
 **Vision:** "To pioneer prime excellence in every brand, setting new standards for innovation, quality, and market leadership."
 
@@ -664,12 +664,12 @@ At Primo Marca, we don't believe in "marketing services." We believe in Growth E
 
   {
     title: "Ramy Mortada — Founder Philosophy & Approach",
-    content: `**Who:** Ramy Mortada — Founder & Strategy Lead of Primo Marca
+    content: `**Who:** Ramy Mortada — Founder & Strategy Lead of WZZRD AI
 
 **Core Philosophy:**
 "Most businesses don't need more content. They need more clarity. In an era of infinite digital noise, the loudest voice isn't the winner — the clearest one is."
 
-**The Problem He Founded Primo Marca to Solve:**
+**The Problem He Founded WZZRD AI to Solve:**
 The "random effort" trap — when a brand lacks a system, marketing becomes a series of disconnected guesses. Businesses spend money on social media, ads, events, and content without a strategic foundation, and then wonder why nothing works.
 
 **His Approach:**
@@ -704,7 +704,7 @@ Ramy's thinking, methodology, and decision-making patterns are encoded into the 
 4. Inconsistent experience across branches (for chains)
 5. Price competition with similar establishments
 
-**Primo Marca Approach for F&B:**
+**WZZRD AI Approach for F&B:**
 - DIAGNOSE: Is the problem the food, the brand, or the customer experience?
 - Focus on the EXPERIENCE brand, not just the PRODUCT brand
 - Build a narrative that goes beyond "we have good food" (everyone says this)
@@ -738,7 +738,7 @@ Ramy's thinking, methodology, and decision-making patterns are encoded into the 
 4. No emotional connection — purely rational value proposition
 5. Scaling brand inconsistently as the company grows
 
-**Primo Marca Approach for Tech:**
+**WZZRD AI Approach for Tech:**
 - DIAGNOSE: Is the product the problem, or is it the way the product is communicated?
 - Translate features into outcomes: "What does this MEAN for the customer's life/business?"
 - Build a brand that works for both technical and non-technical audiences

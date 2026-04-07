@@ -24,7 +24,7 @@ const SECTIONS = [
   "deliverables",
   "timeline",
   "investment",
-  "whyPrimoMarca",
+  "whyWzzrdAi",
   "terms",
 ] as const;
 
@@ -36,7 +36,7 @@ const SECTION_LABELS: Record<string, string> = {
   deliverables: "Deliverables",
   timeline: "Timeline",
   investment: "Investment",
-  whyPrimoMarca: "Why Primo Marca",
+  whyWzzrdAi: "Why WZZRD AI",
   terms: "Terms & Conditions",
 };
 
@@ -117,7 +117,7 @@ export default function ProposalViewPage() {
               className="w-10 h-10 rounded-lg"
             />
             <div>
-              <h1 className="text-lg font-bold tracking-tight">Primo Marca</h1>
+              <h1 className="text-lg font-bold tracking-tight">WZZRD AI</h1>
               <p className="text-xs text-white/50">Brand Engineering Proposal</p>
             </div>
           </div>
@@ -382,7 +382,7 @@ export default function ProposalViewPage() {
         {/* Footer */}
         <div className="text-center space-y-2 py-8">
           <p className="text-sm text-white/40">
-            This proposal was prepared exclusively for you by Primo Marca.
+            This proposal was prepared exclusively for you by WZZRD AI.
           </p>
           <p className="text-xs text-white/25">
             Powered by Wzrd AI — Brand Engineering Intelligence
