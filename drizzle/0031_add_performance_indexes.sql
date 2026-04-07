@@ -8,10 +8,13 @@
 CREATE INDEX `idx_credit_transactions_userId` ON `credit_transactions` (`userId`);
 
 -- user_id lookups (snake_case DB columns)
+-- NOTE: idx_diagnosis_history_userId omitted — 0015 already creates composite indexes
+--   idx_dh_user_created (user_id, created_at) and idx_dh_user_tool (user_id, tool_id)
+--   which cover all single-column user_id lookups on diagnosis_history.
+-- NOTE: idx_user_checklists_userId omitted — 0015 already creates idx_uc_user (user_id)
+--   on user_checklists.
 CREATE INDEX `idx_copilot_messages_userId` ON `copilot_messages` (`user_id`);
-CREATE INDEX `idx_diagnosis_history_userId` ON `diagnosis_history` (`user_id`);
 CREATE INDEX `idx_service_requests_userId` ON `service_requests` (`user_id`);
-CREATE INDEX `idx_user_checklists_userId` ON `user_checklists` (`user_id`);
 CREATE INDEX `idx_abandoned_carts_userId` ON `abandoned_carts` (`user_id`);
 
 -- brand_profiles: UNIQUE constraint (1:1 with user) — also serves as index
