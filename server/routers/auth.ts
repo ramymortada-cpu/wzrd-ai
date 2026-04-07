@@ -20,7 +20,7 @@ import { sendWelcomeEmail } from "../wzrdEmails";
 import { signSession } from "../_core/session";
 import { isOwnerAdmin } from "../_core/authorization";
 import { otpCodes } from "../../drizzle/schema";
-import { eq, and, gt } from "drizzle-orm";
+import { eq, and, gt, sql } from "drizzle-orm";
 
 // OTP is now stored in the `otp_codes` database table
 // (was: in-memory Map — lost on restart, broken with multiple instances)
@@ -116,7 +116,9 @@ export const authRouter = router({
     .mutation(async ({ input }) => {
       const user = await getUserByEmail(input.email);
       if (!user) {
-        return { success: false, message: 'No account found. Please sign up first.' };
+        // SECURITY: Don't reveal whether email exists — prevents user enumeration
+        logger.info({ email: input.email }, 'Login attempt for non-existent email');
+        return { success: true, message: 'If this email is registered, you will receive a login code.' };
       }
 
       // Generate 6-digit OTP
@@ -157,7 +159,7 @@ export const authRouter = router({
       logger.info({ email: input.email }, 'Login OTP sent');
       return {
         success: true,
-        message: 'Login code sent to your email.',
+        message: 'If this email is registered, you will receive a login code.',
         ...(devBypass && { devCode: code }), // Return OTP in response when email disabled
       };
     }),
@@ -174,7 +176,19 @@ export const authRouter = router({
         return { success: false, user: null, message: 'Database unavailable.' };
       }
 
-      // Look up OTP from database
+      // Per-email lockout: check existing OTP for failed attempts BEFORE verifying
+      const [existingOtp] = await db.select()
+        .from(otpCodes)
+        .where(eq(otpCodes.email, input.email))
+        .limit(1);
+
+      if (existingOtp && existingOtp.failedAttempts >= 5) {
+        // Delete the locked-out OTP — user must request a new one
+        await db.delete(otpCodes).where(eq(otpCodes.email, input.email));
+        return { success: false, user: null, message: 'Too many failed attempts. Please request a new code.' };
+      }
+
+      // Look up OTP from database (email + code + not expired)
       const [stored] = await db.select()
         .from(otpCodes)
         .where(and(
@@ -185,6 +199,12 @@ export const authRouter = router({
         .limit(1);
       
       if (!stored) {
+        // Increment failed attempts counter for this email
+        if (existingOtp) {
+          await db.update(otpCodes)
+            .set({ failedAttempts: sql`failed_attempts + 1` })
+            .where(eq(otpCodes.email, input.email));
+        }
         return { success: false, user: null, message: 'Invalid or expired code. Please try again.' };
       }
 

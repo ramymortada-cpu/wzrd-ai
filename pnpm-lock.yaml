@@ -275,7 +275,7 @@ importers:
         version: 0.5.19(tailwindcss@4.1.14)
       '@tailwindcss/vite':
         specifier: ^4.1.3
-        version: 4.1.14(vite@8.0.3(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6))
+        version: 4.1.14(vite@8.0.5(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6))
       '@types/express':
         specifier: 4.17.21
         version: 4.17.21
@@ -299,7 +299,7 @@ importers:
         version: 8.57.2(eslint@8.57.1)(typescript@5.9.3)
       '@vitejs/plugin-react':
         specifier: ^5.0.4
-        version: 5.0.4(vite@8.0.3(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6))
+        version: 5.0.4(vite@8.0.5(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6))
       add:
         specifier: ^2.0.6
         version: 2.0.6
@@ -337,8 +337,8 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
       vite:
-        specifier: '>=7.1.11'
-        version: 8.0.3(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6)
+        specifier: ^8.0.5
+        version: 8.0.5(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6)
       vitest:
         specifier: ^2.1.4
         version: 2.1.9(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6)
@@ -5360,14 +5360,14 @@ packages:
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
 
-  vite@8.0.3:
-    resolution: {integrity: sha512-B9ifbFudT1TFhfltfaIPgjo9Z3mDynBTJSUYxTjOQruf/zHH+ezCQKcoqO+h7a9Pw9Nm/OtlXAiGT1axBgwqrQ==}
+  vite@8.0.5:
+    resolution: {integrity: sha512-nmu43Qvq9UopTRfMx2jOYW5l16pb3iDC1JH6yMuPkpVbzK0k+L7dfsEDH4jRgYFmsg0sTAqkojoZgzLMlwHsCQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
       '@types/node': ^20.19.0 || >=22.12.0
       '@vitejs/devtools': ^0.1.0
-      esbuild: ^0.27.0
+      esbuild: ^0.27.0 || ^0.28.0
       jiti: '>=1.21.0'
       less: ^4.0.0
       sass: ^1.70.0
@@ -8063,12 +8063,12 @@ snapshots:
       postcss-selector-parser: 6.0.10
       tailwindcss: 4.1.14
 
-  '@tailwindcss/vite@4.1.14(vite@8.0.3(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6))':
+  '@tailwindcss/vite@4.1.14(vite@8.0.5(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6))':
     dependencies:
       '@tailwindcss/node': 4.1.14
       '@tailwindcss/oxide': 4.1.14
       tailwindcss: 4.1.14
-      vite: 8.0.3(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6)
+      vite: 8.0.5(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6)
 
   '@tanstack/query-core@5.90.2': {}
 
@@ -8452,7 +8452,7 @@ snapshots:
 
   '@ungap/structured-clone@1.3.0': {}
 
-  '@vitejs/plugin-react@5.0.4(vite@8.0.3(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6))':
+  '@vitejs/plugin-react@5.0.4(vite@8.0.5(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6))':
     dependencies:
       '@babel/core': 7.28.4
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.28.4)
@@ -8460,7 +8460,7 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.38
       '@types/babel__core': 7.20.5
       react-refresh: 0.17.0
-      vite: 8.0.3(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6)
+      vite: 8.0.5(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6)
     transitivePeerDependencies:
       - supports-color
 
@@ -8471,13 +8471,13 @@ snapshots:
       chai: 5.3.3
       tinyrainbow: 1.2.0
 
-  '@vitest/mocker@2.1.9(vite@8.0.3(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6))':
+  '@vitest/mocker@2.1.9(vite@8.0.5(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6))':
     dependencies:
       '@vitest/spy': 2.1.9
       estree-walker: 3.0.3
       magic-string: 0.30.19
     optionalDependencies:
-      vite: 8.0.3(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6)
+      vite: 8.0.5(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6)
 
   '@vitest/pretty-format@2.1.9':
     dependencies:
@@ -11554,7 +11554,7 @@ snapshots:
       debug: 4.4.3
       es-module-lexer: 1.7.0
       pathe: 1.1.2
-      vite: 8.0.3(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6)
+      vite: 8.0.5(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6)
     transitivePeerDependencies:
       - '@types/node'
       - '@vitejs/devtools'
@@ -11570,7 +11570,7 @@ snapshots:
       - tsx
       - yaml
 
-  vite@8.0.3(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6):
+  vite@8.0.5(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6):
     dependencies:
       lightningcss: 1.32.0
       picomatch: 4.0.4
@@ -11587,7 +11587,7 @@ snapshots:
   vitest@2.1.9(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6):
     dependencies:
       '@vitest/expect': 2.1.9
-      '@vitest/mocker': 2.1.9(vite@8.0.3(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6))
+      '@vitest/mocker': 2.1.9(vite@8.0.5(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6))
       '@vitest/pretty-format': 2.1.9
       '@vitest/runner': 2.1.9
       '@vitest/snapshot': 2.1.9
@@ -11603,7 +11603,7 @@ snapshots:
       tinyexec: 0.3.2
       tinypool: 1.1.1
       tinyrainbow: 1.2.0
-      vite: 8.0.3(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6)
+      vite: 8.0.5(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6)
       vite-node: 2.1.9(@types/node@24.7.0)(esbuild@0.25.10)(jiti@2.6.1)(tsx@4.20.6)
       why-is-node-running: 2.3.0
     optionalDependencies:

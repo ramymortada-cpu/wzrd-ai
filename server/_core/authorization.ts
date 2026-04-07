@@ -116,7 +116,7 @@ export function createRoleCheck(requiredRole: UserRole) {
       id: u?.id || 1,
       name: u?.name || 'Owner',
       email: u?.email || '',
-      role: (u?.role as UserRole) || 'admin', // Default: admin (backward compatible)
+      role: (u?.role as UserRole) || 'viewer', // Default: least privilege
     };
 
     requireRole(user, requiredRole);

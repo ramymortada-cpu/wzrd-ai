@@ -52,6 +52,7 @@ function logStartupChecklist() {
     'Email': !!process.env.EMAIL_API_KEY,
     'Paymob': !!process.env.PAYMOB_SECRET_KEY,
     'WhatsApp': !!process.env.WHATSAPP_TOKEN,
+    'JWT Rotation': !!process.env.JWT_SECRET_PREVIOUS,
   };
   const configured = Object.entries(checks).filter(([, v]) => v).map(([k]) => k);
   const missing = Object.entries(checks).filter(([, v]) => !v).map(([k]) => k);
@@ -90,6 +91,7 @@ async function startServer() {
   app.use('/api/trpc/feedback.publicSubmit', rateLimiters.publicWrite);
   // Onboarding public (10 req/min)
   app.use('/api/trpc/onboarding.submit', rateLimiters.publicWrite);
+  app.use('/api/trpc/referral.applyReferral', rateLimiters.publicWrite); // 10/min — prevents brute-force
   // AI Tools (10 req/min — prevents credit drain)
   app.use('/api/trpc/tools.brandDiagnosis', rateLimiters.toolUsage);
   app.use('/api/trpc/tools.offerCheck', rateLimiters.toolUsage);

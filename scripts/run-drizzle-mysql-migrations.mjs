@@ -36,6 +36,10 @@ const FILES = [
   '0025_invite_tokens.sql',
   '0027_knowledge_entries_embedding.sql',
   '0028_brand_profiles.sql',
+  '0029_otp_codes.sql',
+  '0030_rename_whyPrimoMarca.sql',
+  '0031_add_performance_indexes.sql',
+  '0032_otp_failed_attempts.sql',
 ];
 
 /** Tables we expect after 0015–0017 (0018 alters enum, 0019 Paymob idempotency). */
