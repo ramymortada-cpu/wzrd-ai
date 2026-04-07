@@ -22,8 +22,8 @@ CREATE TABLE IF NOT EXISTS `otp_codes` (
   PRIMARY KEY (`id`)
 );
 
-CREATE INDEX IF NOT EXISTS `otp_email_idx`          ON `otp_codes` (`email`);
-CREATE INDEX IF NOT EXISTS `idx_otp_codes_expiresAt` ON `otp_codes` (`expires_at`);
+CREATE INDEX `otp_email_idx`          ON `otp_codes` (`email`);
+CREATE INDEX `idx_otp_codes_expiresAt` ON `otp_codes` (`expires_at`);
 
 -- ── tool_reviews ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `tool_reviews` (
@@ -44,4 +44,4 @@ CREATE TABLE IF NOT EXISTS `tool_reviews` (
   PRIMARY KEY (`id`)
 );
 
-CREATE INDEX IF NOT EXISTS `idx_tool_reviews_userId` ON `tool_reviews` (`userId`);
+CREATE INDEX `idx_tool_reviews_userId` ON `tool_reviews` (`userId`);
