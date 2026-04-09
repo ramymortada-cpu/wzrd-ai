@@ -14,13 +14,14 @@
 
 import { describe, it, expect } from 'vitest';
 import {
-  shortText, optionalShortText, emailField, optionalEmail,
-  urlField, optionalUrl, idField, phoneField,
-  marketEnum, serviceTypeEnum, projectStageEnum, projectStatusEnum,
-  clientStatusEnum, deliverableStatusEnum, paymentStatusEnum, proposalStatusEnum,
-  languageEnum, leadScoreEnum, leadStatusEnum, leadSourceEnum,
-  createClientInput, updateClientInput, createProjectInput, updateProjectInput,
-  updateDeliverableInput, createPaymentInput, quickCheckInput, aiChatInput,
+  shortText, emailField,
+  urlField, idField,
+  marketEnum, serviceTypeEnum, projectStageEnum,
+  deliverableStatusEnum, proposalStatusEnum,
+  languageEnum, leadStatusEnum,
+  createClientInput, createProjectInput,
+  quickCheckInput, aiChatInput,
+  updateProjectInput,
 } from '../shared/validators';
 import { WZRD_DIAGNOSIS_TOOL_COSTS, WZRD_DIAGNOSIS_TOOL_NAMES } from '../shared/wzrdDiagnosisToolCosts';
 

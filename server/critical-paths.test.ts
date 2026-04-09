@@ -84,7 +84,7 @@ function computePaymobHmac(secret: string, obj: Record<string, unknown>): string
 }
 
 /** Mirror of searchGoogle() — returns [] without API keys */
-async function searchGoogleSafe(query: string): Promise<unknown[]> {
+async function searchGoogleSafe(_query: string): Promise<unknown[]> {
   const apiKey = process.env.GOOGLE_SEARCH_API_KEY?.trim();
   const cx = process.env.GOOGLE_SEARCH_CX?.trim();
   if (!apiKey || !cx) return [];

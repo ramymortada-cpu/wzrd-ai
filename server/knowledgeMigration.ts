@@ -281,12 +281,12 @@ export async function migrateStaticKnowledge(): Promise<{
       await db.insert(knowledgeEntries).values(row);
       existingTitles.add(entry.title);
       created++;
-    } catch (err: any) {
+    } catch (err: unknown) {
       // errno 1062 = ER_DUP_ENTRY: title already exists (DB-level unique constraint).
       // Titles may differ in case from what the in-memory Set stores, so the
       // existingTitles.has() check passes but the INSERT still conflicts. Treat
       // these as skips — not errors — to avoid noisy startup logs.
-      if (err?.errno === 1062) {
+      if ((err as { errno?: number })?.errno === 1062) {
         skipped++;
       } else {
         errors++;
