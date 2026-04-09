@@ -4,6 +4,9 @@ import path from "path";
 const templateRoot = path.resolve(import.meta.dirname);
 
 export default defineConfig({
+  // Explicitly empty plugins list — prevents vite.config.ts React plugin from being
+  // merged in and injecting __vite_ssr_exportName__ into server/shared modules.
+  plugins: [],
   root: templateRoot,
   resolve: {
     alias: {
