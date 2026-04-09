@@ -113,14 +113,39 @@ export interface ResearchReport {
 // 1. GOOGLE SEARCH (via Forge API proxy or direct fetch)
 // ═══════════════════════════════════════════════════════════════════════════
 
-export async function searchGoogle(query: string, _numResults: number = 10): Promise<SearchResult[]> {
-  try {
-    // INTENTIONALLY DISABLED — Google Search API not configured.
-    // Returns empty array to prevent hallucinations (searchViaLLM was permanently removed).
-    // To enable: set GOOGLE_SEARCH_API_KEY and GOOGLE_SEARCH_CX env vars.
-    // For now, we return empty array to prevent hallucinations
-    logger.warn({ query }, '[ResearchEngine] Google search called but no API configured. Returning empty.');
+export async function searchGoogle(query: string, numResults: number = 10): Promise<SearchResult[]> {
+  const apiKey = process.env.GOOGLE_SEARCH_API_KEY?.trim();
+  const cx = process.env.GOOGLE_SEARCH_CX?.trim();
+
+  if (!apiKey || !cx) {
+    logger.warn({ query }, '[ResearchEngine] Google Search API not configured (GOOGLE_SEARCH_API_KEY / GOOGLE_SEARCH_CX missing). Returning empty.');
     return [];
+  }
+
+  try {
+    const num = Math.min(numResults, 10); // Google CSE max is 10 per request
+    const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&q=${encodeURIComponent(query)}&num=${num}`;
+
+    const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => '');
+      logger.error({ query, status: response.status, body }, '[ResearchEngine] Google Search API error');
+      return [];
+    }
+
+    const data = await response.json() as {
+      items?: Array<{ title: string; link: string; snippet: string; displayLink: string }>;
+    };
+
+    if (!data.items?.length) return [];
+
+    return data.items.map(item => ({
+      title: item.title ?? '',
+      url: item.link ?? '',
+      snippet: item.snippet ?? '',
+      source: item.displayLink ?? new URL(item.link ?? 'https://unknown').hostname,
+    }));
   } catch (error) {
     logger.error({ query, error }, '[ResearchEngine] Google search failed');
     return [];
