@@ -19,6 +19,7 @@ import { type InvokeParams, type InvokeResult } from './llm';
 import { invokeWithProvider, routeToProvider } from './llmProviders';
 import { getCachedResponse, setCachedResponse, getCacheStats } from './llmCache';
 import { logger } from './logger';
+import { trackLLMUsage } from './alerts';
 
 // ============ TYPES ============
 
@@ -31,6 +32,8 @@ interface ResilientLLMOptions {
   timeout?: number;
   /** Allow offline/degraded response */
   allowOffline?: boolean;
+  /** User ID for abuse tracking (optional) */
+  userId?: number;
 }
 
 interface LLMUsageEntry {
@@ -145,7 +148,7 @@ export async function resilientLLM(
   params: InvokeParams,
   options: ResilientLLMOptions = {}
 ): Promise<InvokeResult> {
-  const { context = 'default', skipCache = false, timeout = 30000, allowOffline = true } = options;
+  const { context = 'default', skipCache = false, timeout = 30000, allowOffline = true, userId } = options;
   const startTime = Date.now();
 
   // ── Layer 1: Cache Check ──
@@ -244,6 +247,9 @@ export async function resilientLLM(
       error: null,
       context,
     });
+
+    // Abuse detection: track per-user LLM calls (non-cached only)
+    if (userId) trackLLMUsage(userId);
 
     return result;
 
