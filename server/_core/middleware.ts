@@ -35,6 +35,9 @@ export function applyMiddleware(app: Express) {
   // Quick-check (LLM-heavy — most aggressive limiting)
   app.use('/api/trpc/leads.submitQuickCheck', rateLimiters.quickCheck);
 
+  // Free quick diagnosis (LLM-heavy, public) — 3/hour per IP prevents API burn
+  app.use('/api/trpc/tools.freeQuickDiagnosis', rateLimiters.freeReport);
+
   // Client portal (public but sensitive)
   app.use('/api/trpc/portal.viewProject', rateLimiters.portal);
 
