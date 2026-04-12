@@ -298,6 +298,71 @@ export async function sendPremiumReportEmail(
 /**
  * PDF guide email — sent after downloading a guide
  */
+/**
+ * Quick Check complete — immediate funnel (Sprint E, no cron).
+ */
+export async function sendQuickCheckResultEmail(
+  to: string,
+  name: string | null | undefined,
+  score: number,
+  topIssuesText: string
+): Promise<boolean> {
+  const appUrl = process.env.APP_URL || 'http://localhost:3000';
+  const fullAuditUrl = `${appUrl}/app/full-audit`;
+  const greeting = name?.trim() ? `Hi ${name.trim()},` : 'Hi,';
+  const issuesBlock = topIssuesText.trim()
+    ? `<p style="${STYLE.h2}">Top issues (summary)</p><p style="${STYLE.p};white-space:pre-line;">${topIssuesText.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>`
+    : '';
+
+  const body = `
+<h1 style="${STYLE.h1}">نتيجة الفحص السريع ⚡</h1>
+<p style="${STYLE.p}">${greeting}</p>
+<div style="${STYLE.score}">${score}<span style="font-size:18px;color:#64647a;">/100</span></div>
+${issuesBlock}
+<p style="${STYLE.p}">جاهز للتحليل الشامل على 7 محاور؟ اضغط هنا:</p>
+<p style="text-align:center;padding-top:8px;">
+  <a href="${fullAuditUrl}" style="${STYLE.cta}">ابدأ التحليل الشامل →</a>
+</p>
+<p style="font-size:12px;color:#64647a;line-height:1.6;">${fullAuditUrl}</p>`;
+
+  return sendEmail({
+    to,
+    subject: `نتيجة الفحص السريع — ${score}/100 | WZZRD AI`,
+    html: wrapEmail(body, `Score ${score}/100 — Full Audit: ${fullAuditUrl}`),
+  });
+}
+
+/**
+ * Paymob purchase confirmed — immediate confirmation (Sprint E, no cron).
+ */
+export async function sendPurchaseConfirmationEmail(
+  to: string,
+  name: string | null | undefined,
+  planId: string,
+  creditsAdded: number
+): Promise<boolean> {
+  const appUrl = process.env.APP_URL || 'http://localhost:3000';
+  const fullAuditUrl = `${appUrl}/app/full-audit`;
+  const greeting = name?.trim() ? `Hi ${name.trim()},` : 'Hi,';
+  const planLabel = planId === 'strategy_pack' ? 'Strategy Pack' : planId === 'full_audit' ? 'Full Audit' : planId;
+
+  const body = `
+<h1 style="${STYLE.h1}">تم تأكيد الدفع ✓</h1>
+<p style="${STYLE.p}">${greeting}</p>
+<p style="${STYLE.p}">Your <strong style="${STYLE.accent}">${planLabel}</strong> purchase is confirmed. <strong>+${creditsAdded}</strong> credits were added to your account.</p>
+<p style="${STYLE.p}">Next step — run your 7-pillar brand audit:</p>
+<p style="text-align:center;padding-top:8px;">
+  <a href="${fullAuditUrl}" style="${STYLE.cta}">Open Full Audit →</a>
+</p>
+<p style="font-size:12px;color:#64647a;line-height:1.6;">${fullAuditUrl}</p>`;
+
+  return sendEmail({
+    to,
+    subject: `Payment confirmed — ${planLabel} | WZZRD AI`,
+    html: wrapEmail(body, `Payment confirmed. Full Audit: ${fullAuditUrl}`),
+  });
+}
+
 export async function sendGuideEmail(to: string, guideTitle: string, guideUrl: string): Promise<boolean> {
   const appUrl = process.env.APP_URL || 'http://localhost:3000';
 

@@ -43,6 +43,22 @@ export function escapeHtml(s: unknown): string {
     .replace(/'/g, "&#39;");
 }
 
+function whatsappE164ForPdf(): string {
+  return (process.env.WHATSAPP_E164 || process.env.VITE_WHATSAPP_E164 || "201107107012").replace(/\D/g, "");
+}
+
+/** Primo Marca hand-off — qualified WhatsApp (Sprint E). */
+export function buildFullAuditPrimoWaHref(row: FullAuditResult): string {
+  const score = row.overallScore ?? "—";
+  const text = [
+    "أهلاً رامي،",
+    `أنا من شركة ${String(row.companyName || "").trim() || "علامة تجارية"}.`,
+    `عملت تحليل شامل على WZZRD AI والـ Score ${score}/100.`,
+    "عايز فريق ينفذلي الخطة (Primo Marca) — نقدر نتكلم؟",
+  ].join("\n");
+  return `https://wa.me/${whatsappE164ForPdf()}?text=${encodeURIComponent(text)}`;
+}
+
 export function getFullAuditPdfDir(): string {
   return process.env.WZZRD_PDF_TMP_DIR ?? join(tmpdir(), "wzzrd-pdfs");
 }
@@ -282,8 +298,8 @@ export function buildFullAuditHtml(row: FullAuditResult): string {
   <section class="pdf-page">
     <h2>12. الخطوة التالية</h2>
     <div class="cta-box">
-      <p>استشارة استراتيجية مع <strong>Primo Marca</strong></p>
-      <p><a class="cta" href="https://wa.me/">WhatsApp</a> · <a class="cta" href="https://wzzrdai.com">wzzrdai.com</a></p>
+      <p>عايز فريق ينفذلك؟ — <strong>Primo Marca</strong></p>
+      <p><a class="cta" href="${buildFullAuditPrimoWaHref(row)}">تواصل على WhatsApp</a> · <a class="cta" href="https://wzzrdai.com">wzzrdai.com</a></p>
     </div>
   </section>
 </body>

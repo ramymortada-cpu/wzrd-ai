@@ -412,6 +412,18 @@ export function mountPaymobWebhook(app: Express) {
           logWebhookEvent({ id: `txn-${transactionId}`, transactionId, status: added ? 'success' : 'failed', userId, planId, credits, amountCents: transaction.amount_cents || 0, timestamp: Date.now(), error: added ? undefined : 'Credits add failed after retries' });
 
           if (added) {
+            void (async () => {
+              try {
+                const { getUserById } = await import('./db/users');
+                const { sendPurchaseConfirmationEmail } = await import('./wzrdEmails');
+                const userRow = await getUserById(userId);
+                if (userRow?.email) {
+                  await sendPurchaseConfirmationEmail(userRow.email, userRow.name, planId, credits);
+                }
+              } catch (err) {
+                logger.warn({ err, userId }, '[Paymob] purchase confirmation email failed');
+              }
+            })();
             if (promoCodeExtra) {
               try {
                 await incrementPromoUsage(promoCodeExtra);

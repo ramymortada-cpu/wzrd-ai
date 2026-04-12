@@ -56,6 +56,20 @@ export function getLanguageInstruction(market: string): string {
   }
 }
 
+/** Sprint E — concrete tone anchors for LLM (Egypt عامية vs KSA formal). */
+export function getToneExamples(market: string): string {
+  switch (market) {
+    case 'egypt':
+      return `TONE EXAMPLES (Egyptian Arabic — عامية): Prefer natural phrasing like "الـ brand identity بتاعك محتاج شغل" instead of heavy فصحى. English terms (Brand, SEO, Positioning, landing page) are fine mixed in. When naming regional brand references for style only (not claims about the client): e.g. Juhayna, Fawry, Vodafone Egypt, Noon Egypt.`;
+    case 'ksa':
+      return `TONE EXAMPLES (KSA — formal Arabic): Use professional phrasing such as "نلاحظ أن العلامة التجارية تحتاج إلى تطوير". Regional brand references for style only: e.g. Almarai, STC, Al Rajhi, Jarir, Noon KSA.`;
+    case 'uae':
+      return `TONE EXAMPLES (UAE): Formal, professional Arabic suitable for UAE business; English technical terms standard. Regional references for style only: e.g. Emirates, Etisalat, Carrefour UAE, noon UAE.`;
+    default:
+      return `TONE: Clear Modern Standard Arabic for summaries; English technical terms OK; stay evidence-based.`;
+  }
+}
+
 // ─── Action plan builder (NOT LLM) ──────────────────────────────────────────
 
 export function buildActionPlan(
@@ -250,6 +264,8 @@ NEVER invent data. NEVER hallucinate statistics. If you don't know, say you don'
 
 ${getLanguageInstruction(market)}
 
+${getToneExamples(market)}
+
 Respond ONLY with valid JSON matching this exact structure:
 {
   "pillars": [
@@ -303,6 +319,8 @@ If data is missing — say so explicitly.
 NEVER invent data. NEVER hallucinate.
 
 ${getLanguageInstruction(market)}
+
+${getToneExamples(market)}
 
 Respond ONLY with valid JSON matching this exact structure:
 {
