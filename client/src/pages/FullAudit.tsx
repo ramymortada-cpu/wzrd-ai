@@ -1,5 +1,5 @@
 /**
- * FullAudit.tsx — Sprint A: 7-pillar brand audit
+ * FullAudit.tsx — Sprint A + D: 7-pillar brand audit + Honesty Engine
  * Routes: /app/full-audit (new) | /app/full-audit/:id (view saved)
  * States: form | loading | results | partial | error
  */
@@ -35,6 +35,7 @@ interface Pillar {
   nameAr: string;
   score: number;
   summary: string;
+  source?: string;
   findings: Array<{ title: string; detail: string; severity: 'high' | 'medium' | 'low' }>;
 }
 
@@ -43,7 +44,10 @@ interface AuditResult {
   overallScore: number | null;
   overallLabel: string | null;
   confidence: string;
+  confidenceScore?: number;
   confidenceReason: string;
+  confidenceReasonAr?: string;
+  confidenceSources?: string[];
   top3Issues: Array<{ issue: string; impact: string; fix: string }>;
   actionPlan: { thisWeek: string[]; thisMonth: string[]; next3Months: string[] };
   limitations: string[];
@@ -58,6 +62,19 @@ const LOADING_PHASES = [
   { id: 'analysis', labelAr: 'بنحلل العلامة التجارية...', labelEn: 'Running brand analysis...', icon: '🧠' },
   { id: 'report', labelAr: 'بنجهز التقرير...', labelEn: 'Preparing report...', icon: '📋' },
 ];
+
+const SOURCE_BADGE: Record<string, { icon: string; label: string; labelAr: string; className: string }> = {
+  lighthouse:          { icon: '⚡', label: 'Lighthouse',       labelAr: 'قياس الأداء',      className: 'bg-purple-100 text-purple-700 border-purple-200' },
+  website:             { icon: '🌐', label: 'Website',          labelAr: 'الموقع',            className: 'bg-blue-100 text-blue-700 border-blue-200' },
+  competitor_research: { icon: '🔍', label: 'Research',         labelAr: 'بحث المنافسين',     className: 'bg-orange-100 text-orange-700 border-orange-200' },
+  user_input:          { icon: '📝', label: 'User Input',       labelAr: 'بيانات المستخدم',   className: 'bg-gray-100 text-gray-600 border-gray-200' },
+};
+
+const CONFIDENCE_STYLE: Record<string, { dot: string; text: string }> = {
+  high:   { dot: 'bg-green-500',  text: 'text-green-700' },
+  medium: { dot: 'bg-yellow-500', text: 'text-yellow-700' },
+  low:    { dot: 'bg-red-500',    text: 'text-red-700' },
+};
 
 const SEVERITY_COLOR: Record<string, string> = {
   high: 'bg-red-100 text-red-700 border-red-200',
@@ -85,14 +102,20 @@ function scoreBg(score: number) {
 function PillarCard({ pillar, isAr }: { pillar: Pillar; isAr: boolean }) {
   const [expanded, setExpanded] = useState(false);
   const score = pillar.score ?? 0;
+  const srcBadge = pillar.source ? (SOURCE_BADGE[pillar.source] ?? SOURCE_BADGE['user_input']) : null;
 
   return (
     <Card className={`border ${scoreBg(score)}`}>
       <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-1">
           <h3 className="font-bold text-sm">{isAr ? pillar.nameAr : pillar.name}</h3>
           <span className={`text-2xl font-black ${scoreColor(score)}`}>{score}</span>
         </div>
+        {srcBadge && (
+          <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-medium mb-2 ${srcBadge.className}`}>
+            {srcBadge.icon} {isAr ? srcBadge.labelAr : srcBadge.label}
+          </span>
+        )}
         <div className="w-full h-1.5 rounded-full bg-gray-200 mb-2">
           <div
             className={`h-1.5 rounded-full transition-all ${score >= 80 ? 'bg-green-500' : score >= 60 ? 'bg-yellow-500' : score >= 40 ? 'bg-orange-500' : 'bg-red-500'}`}
@@ -170,18 +193,46 @@ function ResultsView({
       <Card className={`border-2 ${scoreBg(overall)}`}>
         <CardContent className="p-6 text-center">
           <div className={`text-7xl font-black mb-1 ${scoreColor(overall)}`}>{overall}</div>
-          <div className="text-2xl font-bold mb-2">{audit.overallLabel ?? ''}</div>
-          <div className="flex items-center justify-center gap-2 flex-wrap">
-            <Badge variant="outline" className="text-xs">
-              {isAr ? 'الثقة:' : 'Confidence:'} {audit.confidence}
-            </Badge>
-            <Badge variant="outline" className="text-xs">
-              {creditsUsed} {isAr ? 'credit' : 'credits'}
-            </Badge>
-          </div>
-          {audit.confidenceReason && (
-            <p className="text-xs text-muted-foreground mt-2 max-w-md mx-auto">{audit.confidenceReason}</p>
-          )}
+          <div className="text-2xl font-bold mb-3">{audit.overallLabel ?? ''}</div>
+
+          {/* Confidence badge */}
+          {(() => {
+            const cs = CONFIDENCE_STYLE[audit.confidence] ?? CONFIDENCE_STYLE['low'];
+            return (
+              <div className="inline-flex flex-col items-center gap-1 mb-3">
+                <div className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold ${cs.text} border-current/30 bg-white/70`}>
+                  <span className={`h-2 w-2 rounded-full ${cs.dot}`} />
+                  {isAr
+                    ? (audit.confidence === 'high' ? 'ثقة عالية' : audit.confidence === 'medium' ? 'ثقة متوسطة' : 'ثقة منخفضة')
+                    : (audit.confidence === 'high' ? 'High Confidence' : audit.confidence === 'medium' ? 'Medium Confidence' : 'Low Confidence')}
+                  {audit.confidenceScore !== undefined && (
+                    <span className="opacity-60 text-xs">({audit.confidenceScore}/100)</span>
+                  )}
+                </div>
+                {audit.confidenceSources && audit.confidenceSources.length > 0 && (
+                  <div className="flex flex-wrap justify-center gap-1 mt-1">
+                    {audit.confidenceSources.map((src) => {
+                      const b = SOURCE_BADGE[src] ?? SOURCE_BADGE['user_input'];
+                      return (
+                        <span key={src} className={`inline-flex items-center gap-0.5 rounded border px-1.5 py-0.5 text-[10px] ${b.className}`}>
+                          {b.icon} {isAr ? b.labelAr : b.label}
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+                {(isAr ? audit.confidenceReasonAr : audit.confidenceReason) && (
+                  <p className="text-xs text-muted-foreground mt-1 max-w-sm">
+                    {isAr ? audit.confidenceReasonAr : audit.confidenceReason}
+                  </p>
+                )}
+              </div>
+            );
+          })()}
+
+          <Badge variant="outline" className="text-xs">
+            {creditsUsed} {isAr ? 'credit' : 'credits'}
+          </Badge>
         </CardContent>
       </Card>
 
@@ -379,7 +430,7 @@ export default function FullAudit() {
         setState('error');
         return;
       }
-      setAuditResult(data.audit as AuditResult);
+      setAuditResult(data.audit as unknown as AuditResult);
       setCreditsUsed(data.meta.creditsUsed);
       setIsPartial(data.partial ?? false);
       setPartialMessage(data.partialMessage ?? '');
