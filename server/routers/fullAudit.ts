@@ -1,7 +1,7 @@
 /**
- * fullAudit.ts — Sprint A: Unified Brand Analysis
+ * fullAudit.ts — Sprint A + D: Unified Brand Analysis + Honesty Engine
  * 7-pillar brand audit using 2 parallel LLM calls (CallA: pillars 1-4, CallB: pillars 5-7 + meta).
- * actionPlan is built in the backend — NOT by the LLM.
+ * actionPlan, confidence, source attribution, and limitations are built in the backend — NOT the LLM.
  */
 
 import { protectedProcedure, router } from "../_core/trpc";
@@ -76,6 +76,155 @@ export function safeParseLLM(text: string, label: string): Record<string, unknow
     logger.error({ err, text: text?.slice(0, 300) }, `[FullAudit] Failed to parse ${label}`);
     return null;
   }
+}
+
+// ─── Honesty Engine (Sprint D) ───────────────────────────────────────────────
+
+export interface AuditMeta {
+  hasWebsiteData: boolean;
+  hasLighthouseData: boolean;
+  hasCompetitorData: boolean;
+  searchResultsCount: number;
+  hasKnowledgeData: boolean;
+}
+
+export interface ConfidenceResult {
+  level: 'high' | 'medium' | 'low';
+  score: number;
+  reason: string;
+  reasonAr: string;
+  sources: string[];
+}
+
+/**
+ * STEP 1: Confidence Scoring — score-based, NOT from LLM.
+ * websiteData(+30) + lighthouse(+20) + competitors(+25) + knowledge(+10) + userInput(+15)
+ * ≥80=high, ≥50=medium, <50=low
+ */
+export function calculateConfidence(meta: AuditMeta): ConfidenceResult {
+  let score = 15; // userInput always present
+  const sources: string[] = ['user_input'];
+
+  if (meta.hasWebsiteData) {
+    score += 30;
+    sources.push('website_scraping');
+  }
+  if (meta.hasLighthouseData) {
+    score += 20;
+    sources.push('lighthouse_performance');
+  }
+  if (meta.hasCompetitorData) {
+    score += 25;
+    sources.push('competitor_research');
+  }
+  if (meta.hasKnowledgeData) {
+    score += 10;
+    sources.push('industry_knowledge');
+  }
+
+  const level: ConfidenceResult['level'] = score >= 80 ? 'high' : score >= 50 ? 'medium' : 'low';
+
+  const reasonMap: Record<ConfidenceResult['level'], { en: string; ar: string }> = {
+    high: {
+      en: `High confidence — based on: ${sources.join(', ')}`,
+      ar: `ثقة عالية — مبني على: ${sources.map(s => SOURCE_LABEL_AR[s] ?? s).join('، ')}`,
+    },
+    medium: {
+      en: `Medium confidence — limited data available (${sources.join(', ')})`,
+      ar: `ثقة متوسطة — بيانات محدودة (${sources.map(s => SOURCE_LABEL_AR[s] ?? s).join('، ')})`,
+    },
+    low: {
+      en: 'Low confidence — based on user input only, no external data available',
+      ar: 'ثقة منخفضة — مبني على بيانات المستخدم فقط، بدون بيانات خارجية',
+    },
+  };
+
+  return {
+    level,
+    score,
+    reason: reasonMap[level].en,
+    reasonAr: reasonMap[level].ar,
+    sources,
+  };
+}
+
+const SOURCE_LABEL_AR: Record<string, string> = {
+  user_input: 'بيانات المستخدم',
+  website_scraping: 'تحليل الموقع',
+  lighthouse_performance: 'قياس الأداء',
+  competitor_research: 'بحث المنافسين',
+  industry_knowledge: 'معرفة القطاع',
+};
+
+/**
+ * STEP 2: Source Attribution — backend, NOT LLM.
+ * Returns a badge label per pillar based on available data.
+ */
+export function getSourceForPillar(pillarId: string, meta: AuditMeta): string {
+  if (pillarId === 'digital_presence' && meta.hasLighthouseData) return 'lighthouse';
+  if (['digital_presence', 'visual_design'].includes(pillarId) && meta.hasWebsiteData) return 'website';
+  if (pillarId === 'market_readiness' && meta.hasCompetitorData) return 'competitor_research';
+  if (meta.hasWebsiteData) return 'website';
+  return 'user_input';
+}
+
+/**
+ * STEP 3: Limitations — auto-generated, NOT LLM.
+ */
+export function buildLimitations(meta: AuditMeta, market: string): string[] {
+  const isAr = market === 'egypt' || market === 'ksa' || market === 'uae';
+  const limitations: string[] = [];
+
+  if (!meta.hasWebsiteData) {
+    limitations.push(isAr ? 'لم نتمكن من تحليل الموقع الإلكتروني' : 'Website could not be analyzed');
+  }
+  if (!meta.hasLighthouseData) {
+    limitations.push(isAr ? 'لم نتمكن من قياس أداء الموقع (Lighthouse)' : 'Website performance could not be measured (Lighthouse)');
+  }
+  if (!meta.hasCompetitorData) {
+    limitations.push(isAr ? 'بيانات المنافسين غير متاحة أو محدودة' : 'Competitor data unavailable or limited');
+  }
+  limitations.push(
+    isAr
+      ? 'لا يشمل التحليل السوشيال ميديا أو بيانات المبيعات'
+      : 'Analysis does not include social media or sales data'
+  );
+
+  return limitations;
+}
+
+/**
+ * STEP 4a: Score clamping — ensures all pillar scores are 0-100 integers.
+ */
+export function clampScores(pillars: Array<Record<string, unknown>>): Array<Record<string, unknown>> {
+  return pillars.map((p) => ({
+    ...p,
+    score: typeof p.score === 'number'
+      ? Math.max(0, Math.min(100, Math.round(p.score)))
+      : p.score,
+  }));
+}
+
+/**
+ * STEP 4b: Inflation detection — warns when ALL pillars score ≥ 80 (suspiciously high).
+ */
+export function detectInflation(
+  pillars: Array<Record<string, unknown>>,
+  limitations: string[],
+  market: string
+): string[] {
+  const scores = pillars
+    .map((p) => (typeof p.score === 'number' ? p.score : null))
+    .filter((s): s is number => s !== null);
+
+  if (scores.length > 0 && scores.every((s) => s >= 80)) {
+    const isAr = market === 'egypt' || market === 'ksa' || market === 'uae';
+    const warning = isAr
+      ? '⚠️ جميع المحاور حصلت على درجات عالية — قد يكون التقييم متفائلاً أكثر من اللازم'
+      : '⚠️ All pillars scored high — the analysis may be overly optimistic';
+    return [...limitations, warning];
+  }
+  return limitations;
 }
 
 // ─── System prompts ──────────────────────────────────────────────────────────
@@ -323,22 +472,57 @@ ${dataContext || 'No external data available.'}`.trim();
       }
 
       // Merge pillars
-      const pillarsA = (parsedA?.pillars as unknown[]) ?? [];
-      const pillarsB = (parsedB?.pillars as unknown[]) ?? [];
-      const allPillars = [...pillarsA, ...pillarsB];
+      const pillarsARaw = (parsedA?.pillars as Array<Record<string, unknown>>) ?? [];
+      const pillarsBRaw = (parsedB?.pillars as Array<Record<string, unknown>>) ?? [];
+
+      // Build meta for Honesty Engine
+      const auditMeta: AuditMeta = {
+        hasWebsiteData: Boolean(scrapedData),
+        hasLighthouseData: Boolean(lighthouseData),
+        hasCompetitorData: Boolean(searchData && searchData.length > 0),
+        searchResultsCount: searchData?.length ?? 0,
+        hasKnowledgeData: Boolean(knowledgeData),
+      };
+
+      // STEP 1: Confidence Scoring
+      const confidence = calculateConfidence(auditMeta);
+
+      // STEP 2: Source Attribution — tag each pillar
+      const pillarsWithSource = [...pillarsARaw, ...pillarsBRaw].map((p) => ({
+        ...p,
+        source: getSourceForPillar(p.id as string ?? '', auditMeta),
+      }));
+
+      // STEP 4a: Clamp scores
+      const allPillars = clampScores(pillarsWithSource);
+
+      // STEP 3: Limitations (auto-generated, replacing LLM limitations)
+      let limitations = buildLimitations(auditMeta, input.marketRegion);
+
+      // STEP 4b: Inflation detection
+      limitations = detectInflation(allPillars, limitations, input.marketRegion);
 
       const top3Issues = (parsedB?.top3Issues as Array<{ issue: string; impact: string; fix: string }>) ?? [];
       const actionPlan = buildActionPlan(top3Issues, input.marketRegion);
 
+      // Compute overallScore: use LLM value but clamp it
+      const rawOverallScore = parsedB?.overallScore;
+      const overallScore = typeof rawOverallScore === 'number'
+        ? Math.max(0, Math.min(100, Math.round(rawOverallScore)))
+        : null;
+
       const auditResult = {
         pillars: allPillars,
-        overallScore: parsedB?.overallScore ?? null,
+        overallScore,
         overallLabel: parsedB?.overallLabel ?? null,
-        confidence: parsedB?.confidence ?? 'low',
-        confidenceReason: parsedB?.confidenceReason ?? '',
+        confidence: confidence.level,
+        confidenceScore: confidence.score,
+        confidenceReason: confidence.reason,
+        confidenceReasonAr: confidence.reasonAr,
+        confidenceSources: confidence.sources,
         top3Issues,
         actionPlan,
-        limitations: (parsedB?.limitations as string[]) ?? [],
+        limitations,
       };
 
       // 9. Save to DB
@@ -358,11 +542,7 @@ ${dataContext || 'No external data available.'}`.trim();
             overallScore: typeof auditResult.overallScore === 'number' ? auditResult.overallScore : null,
             confidence: auditResult.confidence,
             resultJson: auditResult,
-            metaJson: {
-              hasWebsiteData: Boolean(scrapedData),
-              hasLighthouseData: Boolean(lighthouseData),
-              searchResultsCount: searchData?.length ?? 0,
-            },
+            metaJson: auditMeta,
             creditsUsed: creditsToDeduct,
           };
           const insertResult = await db.insert(fullAuditResults).values(insertValues);
