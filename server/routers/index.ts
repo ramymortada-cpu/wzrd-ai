@@ -28,6 +28,7 @@ import { adminRouter } from "./admin";
 import { creditsRouter } from "./credits";
 import { toolsRouter } from "./tools";
 import { wzrdAdminRouter } from "./wzrdAdmin";
+import { fullAuditRouter } from "./fullAudit";
 import { premiumRouter } from "./premium";
 import { emailAutomationRouter } from "./emailAutomation";
 import { reportPdfRouter } from "./reportPdf";
@@ -77,6 +78,7 @@ export const appRouter = router({
   tools: toolsRouter,
   wzrdAdmin: wzrdAdminRouter,
   premium: premiumRouter,
+  fullAudit: fullAuditRouter,
   emailAutomation: emailAutomationRouter,
   reportPdf: reportPdfRouter,
   referral: referralRouter,

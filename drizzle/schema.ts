@@ -1305,6 +1305,32 @@ export type NewBrandProfile = typeof brandProfiles.$inferInsert;
 // OTP CODES — Replaces in-memory Map for multi-instance safety
 // ═══════════════════════════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════════════════════════
+// FULL AUDIT RESULTS — Sprint A: Unified Brand Analysis (7 pillars)
+// ═══════════════════════════════════════════════════════════════════════════
+
+export const fullAuditResults = mysqlTable("full_audit_results", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("user_id").notNull(),
+  companyName: varchar("company_name", { length: 200 }).notNull(),
+  website: varchar("website", { length: 500 }),
+  industry: varchar("industry", { length: 100 }).notNull(),
+  targetAudience: text("target_audience").notNull(),
+  mainChallenge: text("main_challenge").notNull(),
+  marketRegion: varchar("market_region", { length: 20 }).notNull().default("egypt"),
+  overallScore: int("overall_score"),
+  confidence: varchar("confidence", { length: 20 }),
+  resultJson: json("result_json"),
+  metaJson: json("meta_json"),
+  creditsUsed: int("credits_used").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  userIdx: index("idx_full_audit_userId").on(table.userId),
+}));
+
+export type FullAuditResult = typeof fullAuditResults.$inferSelect;
+export type NewFullAuditResult = typeof fullAuditResults.$inferInsert;
+
 export const otpCodes = mysqlTable("otp_codes", {
   id: int("id").autoincrement().primaryKey(),
   email: varchar("email", { length: 255 }).notNull(),

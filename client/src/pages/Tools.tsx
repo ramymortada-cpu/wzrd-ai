@@ -212,6 +212,28 @@ export default function Tools() {
           </p>
         </div>
 
+        {/* ── Full Audit CTA ── */}
+        <div
+          className="mb-8 cursor-pointer rounded-2xl border-2 border-[#1B4FD8] bg-[#EEF2FF] p-6 text-center hover:shadow-lg transition-all"
+          onClick={() => navigate('/app/full-audit')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={e => e.key === 'Enter' && navigate('/app/full-audit')}
+        >
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <span className="text-2xl">🎯</span>
+            <h3 className="text-lg font-black text-[#1B4FD8]">
+              {isAr ? '🚀 ابدأ تحليل شامل' : '🚀 Start Full Audit'}
+            </h3>
+          </div>
+          <p className="text-sm text-[#374151]">
+            {isAr ? '7 محاور في تقرير واحد — الهوية، التمركز، الرسالة، العرض، التواجد الرقمي، التصميم، الجاهزية' : '7 dimensions in one report — Identity, Positioning, Messaging, Offer, Digital, Design, Readiness'}
+          </p>
+          <div className="mt-3 inline-flex items-center gap-1 rounded-full bg-[#1B4FD8] px-4 py-1.5 text-sm font-bold text-white">
+            {isAr ? 'ابدأ الآن (60 credit)' : 'Start Now (60 credits)'} →
+          </div>
+        </div>
+
         {/* ── Tools Grid ── */}
         <div id="tools-grid" className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           {tools.map(tool => {

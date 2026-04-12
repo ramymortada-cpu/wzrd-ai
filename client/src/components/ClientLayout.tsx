@@ -36,6 +36,8 @@ import {
   User,
   ListChecks,
   BarChart3,
+  Target,
+  History,
   Sun,
   Moon,
   Languages,
@@ -45,6 +47,8 @@ import {
 
 const NAV_ITEMS = [
   { icon: Wrench, label: "Tools", labelAr: "الأدوات", path: "/app/tools" },
+  { icon: Target, label: "Full Audit", labelAr: "تحليل شامل", path: "/app/full-audit" },
+  { icon: History, label: "My Audits", labelAr: "تحليلاتي", path: "/app/my-audits" },
   { icon: BookOpen, label: "My Brand", labelAr: "علامتي", path: "/app/my-brand" },
   { icon: Bot, label: "Copilot", labelAr: "المساعد", path: "/app/copilot" },
   { icon: BarChart3, label: "Benchmark", labelAr: "المقارنة", path: "/app/tools/benchmark" },
