@@ -6,7 +6,6 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { z } from 'zod';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -17,7 +16,6 @@ import {
   buildActionPlan,
   fullAuditInputSchema,
   FULL_AUDIT_COST,
-  FULL_AUDIT_PARTIAL_COST,
   LLM_TIMEOUT,
 } from './routers/fullAudit';
 
