@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import posthog from "posthog-js";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,7 @@ function parseMarket(v: string): MarketOption {
 }
 
 export default function QuickCheckPage() {
+  const [, navigate] = useLocation();
   const [step, setStep] = useState<Step>("info");
   const [formData, setFormData] = useState({
     companyName: "",
@@ -436,33 +438,40 @@ export default function QuickCheckPage() {
                 <div className="rounded-2xl border-2 border-red-500/40 bg-red-500/5 p-5 space-y-3">
                   <h3 className="text-base font-bold text-red-400">⚠️ علامتك محتاجة تدخل عاجل</h3>
                   <p className="text-sm text-zinc-400">التحليل الشامل هيوريك بالظبط إيه المشكلة في 7 محاور</p>
-                  <a href="/app/full-audit">
-                    <button className="w-full rounded-lg bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 text-sm font-semibold transition">
-                      ابدأ التحليل الشامل →
-                    </button>
-                  </a>
+                  <Button
+                    type="button"
+                    className="w-full rounded-lg bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 text-sm font-semibold"
+                    onClick={() => navigate("/app/full-audit")}
+                  >
+                    ابدأ التحليل الشامل →
+                  </Button>
                 </div>
               )}
               {result.score >= 60 && result.score < 80 && (
                 <div className="rounded-2xl border-2 border-yellow-500/40 bg-yellow-500/5 p-5 space-y-3">
-                  <h3 className="text-base font-bold text-yellow-400">💡 فيه فرصة تتحسن أكتر</h3>
+                  <h3 className="text-base font-bold text-yellow-400">💡 فيه فرصة تتحسن</h3>
                   <p className="text-sm text-zinc-400">اعرف التفاصيل الكاملة وخطة العمل في 7 محاور</p>
-                  <a href="/app/full-audit">
-                    <button className="w-full rounded-lg bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2.5 text-sm font-semibold transition">
-                      اعرف التفاصيل →
-                    </button>
-                  </a>
+                  <Button
+                    type="button"
+                    className="w-full rounded-lg bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2.5 text-sm font-semibold"
+                    onClick={() => navigate("/app/full-audit")}
+                  >
+                    اعرف التفاصيل →
+                  </Button>
                 </div>
               )}
               {result.score >= 80 && (
                 <div className="rounded-2xl border-2 border-green-500/40 bg-green-500/5 p-5 space-y-3">
-                  <h3 className="text-base font-bold text-green-400">✨ علامتك قوية — اكتشف إزاي تخليها أقوى</h3>
+                  <h3 className="text-base font-bold text-green-400">✨ علامتك قوية — اكتشف أكتر</h3>
                   <p className="text-sm text-zinc-400">شوف التحليل الشامل في 7 محاور</p>
-                  <a href="/app/full-audit">
-                    <button className="w-full rounded-lg border border-green-500/40 text-green-400 px-4 py-2.5 text-sm font-semibold hover:bg-green-500/10 transition">
-                      شوف التحليل الشامل →
-                    </button>
-                  </a>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full rounded-lg border-green-500/40 text-green-400 px-4 py-2.5 text-sm font-semibold hover:bg-green-500/10"
+                    onClick={() => navigate("/app/full-audit")}
+                  >
+                    شوف التحليل الشامل →
+                  </Button>
                 </div>
               )}
 

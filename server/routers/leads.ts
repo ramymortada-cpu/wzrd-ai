@@ -18,6 +18,7 @@ import { logger } from "../_core/logger";
 import { resilientLLM } from "../_core/llmRouter";
 import { notifyOwner } from "../_core/notification";
 import { notifyLeadSubmitted } from "../_core/notifications";
+import { sendQuickCheckResultEmail } from "../wzrdEmails";
 import { matchMENACaseStudies } from "../menaCaseStudies";
 import {
   createLead, getLeadById, listLeads, updateLead, getLeadStats, getLeadFunnelStats,
@@ -35,6 +36,22 @@ function buildPricingReference(): string {
   return Object.entries(SERVICE_PRICES)
     .map(([key, price]) => `- ${SERVICE_LABELS[key as keyof typeof SERVICE_LABELS] || key}: ${formatPrice(price)}`)
     .join('\n');
+}
+
+/** First lines for email "top issues" teaser (Sprint E). */
+function buildQuickCheckTopIssuesForEmail(teaser: string, full: string): string {
+  const lines = full
+    .split(/\n+/)
+    .map((s) => s.replace(/^[-*•\d.)]+\s*/, "").trim())
+    .filter(Boolean)
+    .slice(0, 3);
+  if (lines.length > 0) return lines.join("\n");
+  return teaser
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 3)
+    .join("\n");
 }
 
 export const leadsRouter = router({
@@ -160,6 +177,13 @@ Respond in JSON format:
       }
 
       logger.info({ leadId: lead?.id, score: diagnosis.score, scoreLabel: diagnosis.scoreLabel }, 'Quick-check lead submitted');
+
+      void sendQuickCheckResultEmail(
+        sanitized.email,
+        sanitized.contactName,
+        diagnosis.score,
+        buildQuickCheckTopIssuesForEmail(diagnosis.diagnosisTeaser, diagnosis.fullDiagnosis)
+      ).catch((err) => logger.warn({ err, email: sanitized.email }, '[QuickCheck] follow-up email failed'));
 
       // ══ FUNNEL AUTOMATION (fire-and-forget) ══
       const leadId = lead?.id;

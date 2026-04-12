@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { INDUSTRIES } from '@/lib/industries';
 import { waMeQualifiedLeadHref } from '@/lib/waContact';
+import { formatTierPrice } from '@shared/const';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -102,6 +103,10 @@ function scoreBg(score: number) {
   if (score >= 60) return 'bg-yellow-50 border-yellow-200';
   if (score >= 40) return 'bg-orange-50 border-orange-200';
   return 'bg-red-50 border-red-200';
+}
+
+function tierMarketKey(m: string): string {
+  return m === 'egypt' || m === 'ksa' || m === 'uae' ? m : 'other';
 }
 
 function StrategyJsonBlock({ title, data }: { title: string; data: Record<string, unknown> | null }) {
@@ -191,6 +196,8 @@ function ResultsView({
   userCredits,
   onGenerateStrategyPack,
   strategySectionRef,
+  companyName,
+  marketForPricing,
 }: {
   audit: AuditResult;
   isPartial: boolean;
@@ -207,11 +214,22 @@ function ResultsView({
   userCredits: number;
   onGenerateStrategyPack: () => void;
   strategySectionRef: RefObject<HTMLDivElement | null>;
+  companyName: string;
+  marketForPricing: string;
 }) {
   const [, navigate] = useLocation();
-  const waHref = waMeQualifiedLeadHref({ diagnosisLabel: 'التحليل الشامل' });
+  const waHref = waMeQualifiedLeadHref({
+    diagnosisLabel: 'التحليل الشامل',
+    brandName: companyName.trim() || null,
+    score: audit.overallScore ?? undefined,
+  });
   const overall = audit.overallScore ?? 0;
   const canRunStrategy = userCredits >= strategyPackCost;
+  const strategyWa = waMeQualifiedLeadHref({
+    diagnosisLabel: isAr ? 'حزمة الاستراتيجية' : 'Strategy Pack',
+    brandName: companyName.trim() || null,
+    score: overall,
+  });
 
   return (
     <div className="space-y-6 pb-10">
@@ -294,6 +312,28 @@ function ResultsView({
           </Badge>
         </CardContent>
       </Card>
+
+      {auditRecordId !== null && overall < 70 && (
+        <Card className="border-2 border-amber-400/70 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/35 dark:to-orange-950/25">
+          <CardContent className="p-5 space-y-3 text-center">
+            <p className="text-lg font-bold text-amber-950 dark:text-amber-50">
+              {isAr ? 'عايز خطة تنفيذ كاملة؟' : 'Want a full execution plan?'}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {isAr
+                ? `حزمة الاستراتيجية — يبدأ من ${formatTierPrice('strategy_pack', tierMarketKey(marketForPricing))}`
+                : `Strategy Pack — from ${formatTierPrice('strategy_pack', tierMarketKey(marketForPricing))}`}
+            </p>
+            <Button
+              type="button"
+              className="bg-amber-600 hover:bg-amber-700"
+              onClick={() => strategySectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+            >
+              {isAr ? 'اكتشف الحزمة ↓' : 'Explore Strategy Pack ↓'}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* 7 Pillars */}
       {audit.pillars?.length > 0 && (
@@ -401,10 +441,25 @@ function ResultsView({
             </Card>
           )}
           {strategyPack ? (
-            <div className="grid gap-3 md:grid-cols-3">
-              <StrategyJsonBlock title={isAr ? 'تنافسية' : 'Competitive'} data={strategyPack.competitive} />
-              <StrategyJsonBlock title={isAr ? 'الرسالة' : 'Messaging'} data={strategyPack.messaging} />
-              <StrategyJsonBlock title={isAr ? 'خطة ٩٠ يوم' : '90-day roadmap'} data={strategyPack.roadmap} />
+            <div className="space-y-4">
+              <div className="grid gap-3 md:grid-cols-3">
+                <StrategyJsonBlock title={isAr ? 'تنافسية' : 'Competitive'} data={strategyPack.competitive} />
+                <StrategyJsonBlock title={isAr ? 'الرسالة' : 'Messaging'} data={strategyPack.messaging} />
+                <StrategyJsonBlock title={isAr ? 'خطة ٩٠ يوم' : '90-day roadmap'} data={strategyPack.roadmap} />
+              </div>
+              <div className="rounded-xl border border-green-200/60 bg-green-50/50 dark:bg-green-950/20 p-4 text-center space-y-2">
+                <p className="text-sm font-semibold">{isAr ? 'عايز فريق ينفذلك؟' : 'Want a team to run this for you?'}</p>
+                <p className="text-xs text-muted-foreground">Primo Marca</p>
+                <a
+                  href={strategyWa}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  WhatsApp
+                </a>
+              </div>
             </div>
           ) : (
             <Card className="border-2 border-amber-200/60 bg-amber-50/40">
@@ -525,6 +580,10 @@ export default function FullAudit() {
       const result = row.resultJson as AuditResult;
       setAuditResult(result);
       setResolvedAuditId(row.id);
+      const m = row.marketRegion;
+      if (m === 'egypt' || m === 'ksa' || m === 'uae' || m === 'other') {
+        setMarketRegion(m);
+      }
       setState('results');
     }
   }, [auditId, savedAuditQuery.data]);
@@ -780,6 +839,8 @@ export default function FullAudit() {
               pdfMutation.mutate({ auditId: resolvedAuditId });
             }
           }}
+          companyName={(auditId && savedAuditQuery.data?.companyName) || companyName || ''}
+          marketForPricing={marketRegion}
         />
       </div>
     );
