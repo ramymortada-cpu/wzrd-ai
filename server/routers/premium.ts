@@ -334,7 +334,13 @@ export const premiumRouter = router({
           // Try to extract JSON from response
           const match = text.match(/\{[\s\S]*\}/);
           if (match) {
-            report = JSON.parse(match[0]) as Record<string, unknown>;
+            try {
+              report = JSON.parse(match[0]) as Record<string, unknown>;
+            } catch {
+              logger.error({ textLength: text.length }, '[Premium] Fallback JSON parse also failed');
+              await bestEffortPremiumRefund();
+              return { success: false, error: 'فشل في إنشاء التقرير. يرجى المحاولة مرة أخرى. الكريدت اترجعت.' };
+            }
           } else {
             logger.error({ textLength: text.length }, '[Premium] Failed to parse Claude response');
             await bestEffortPremiumRefund();

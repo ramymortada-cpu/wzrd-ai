@@ -18,6 +18,8 @@ import { mountMessagingWebhooks } from "../messagingIntegration";
 import { installProcessErrorHandlers, expressErrorHandler } from "./errorHandler";
 import { initSentry } from "./sentry";
 import { startDataRetentionScheduler } from "./dataRetention";
+import { getDb } from "../db";
+import { sql } from "drizzle-orm";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -73,8 +75,17 @@ async function startServer() {
   app.use(securityHeaders);
   app.use(requestLogger);
 
-  // === SIMPLE HEALTH CHECK (for Docker/Railway — no auth, no params) ===
-  app.get('/healthz', (_req, res) => res.status(200).json({ ok: true, uptime: Math.floor(process.uptime()) }));
+  // === HEALTH CHECK (DB-aware — returns 503 when DB is unreachable) ===
+  app.get('/healthz', async (_req, res) => {
+    try {
+      const db = await getDb();
+      if (!db) throw new Error('db null');
+      await db.execute(sql`SELECT 1`);
+      res.status(200).json({ ok: true, uptime: Math.floor(process.uptime()) });
+    } catch {
+      res.status(503).json({ ok: false, error: 'database_unavailable' });
+    }
+  });
 
   // Legacy path — do not expose session debug on any environment
   app.get('/api/debug/whoami', (_req, res) => res.status(404).json({ error: 'not_found' }));

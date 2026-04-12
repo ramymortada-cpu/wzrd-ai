@@ -10,7 +10,7 @@
 
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "../_core/cookies";
-import { publicProcedure, router } from "../_core/trpc";
+import { publicProcedure, protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { logger } from "../_core/logger";
 import { fireEmailTrigger } from "../emailTrigger";
@@ -19,7 +19,7 @@ import { addCredits, SIGNUP_BONUS } from "../db";
 import { sendWelcomeEmail } from "../wzrdEmails";
 import { signSession } from "../_core/session";
 import { isOwnerAdmin } from "../_core/authorization";
-import { otpCodes } from "../../drizzle/schema";
+import { otpCodes, users, creditTransactions, diagnosisHistory, brandProfiles } from "../../drizzle/schema";
 import { eq, and, gt, sql } from "drizzle-orm";
 
 // OTP is now stored in the `otp_codes` database table
@@ -235,5 +235,39 @@ export const authRouter = router({
     const cookieOptions = getSessionCookieOptions(ctx.req);
     ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
     return { success: true } as const;
+  }),
+
+  /**
+   * Delete own account (GDPR / Saudi PDPL compliance).
+   * Removes all personal data, clears session.
+   */
+  deleteAccount: protectedProcedure.mutation(async ({ ctx }) => {
+    const userId = ctx.user!.id;
+    const db = await getDb();
+    if (!db) throw new Error('Database unavailable');
+
+    try {
+      // Delete personal data in dependency order (child → parent)
+      await db.delete(diagnosisHistory).where(eq(diagnosisHistory.userId, userId));
+      await db.delete(brandProfiles).where(eq(brandProfiles.userId, userId));
+      await db.delete(creditTransactions).where(eq(creditTransactions.userId, userId));
+      const [userRow] = await db.select({ email: users.email }).from(users).where(eq(users.id, userId));
+      if (userRow?.email) {
+        await db.delete(otpCodes).where(eq(otpCodes.email, userRow.email));
+      }
+      await db.delete(users).where(eq(users.id, userId));
+
+      // Clear session cookie
+      if (ctx.res) {
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+      }
+
+      logger.info({ userId }, '[Auth] Account deleted by user request');
+      return { success: true };
+    } catch (err) {
+      logger.error({ err, userId }, '[Auth] deleteAccount failed');
+      throw new Error('Failed to delete account. Please contact support.');
+    }
   }),
 });
