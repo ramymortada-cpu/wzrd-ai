@@ -40,6 +40,7 @@ const REDIRECTS: Record<string, string> = {
   '/research':        '/cc/research',
   '/knowledge':       '/cc/knowledge',
   '/brand-twin':      '/cc/brand-twin',
+  '/brand-monitor': '/cc/brand-monitor',
   '/leads':           '/cc/leads',
   '/sales-funnel':    '/cc/sales-funnel',
   '/playbooks':       '/cc/playbooks',
@@ -198,6 +199,7 @@ describe('Sprint 0 — Shell Classification', () => {
     expect(getShell('/cc/dashboard')).toBe('agency');
     expect(getShell('/cc/clients')).toBe('agency');
     expect(getShell('/cc/research')).toBe('agency');
+    expect(getShell('/cc/brand-monitor')).toBe('agency');
   });
 
   it('correctly classifies /admin/* as admin shell', () => {

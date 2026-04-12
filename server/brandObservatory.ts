@@ -17,7 +17,9 @@ import { logger } from './_core/logger';
 import { searchGoogle } from './researchEngine';
 import {
   getClients, getClientById,
-  createBrandAlert, getLatestSnapshot,
+  createBrandAlertFromObservatory,
+  getLatestSnapshot,
+  updateClient,
 } from './db';
 import { createKnowledgeEntry } from './db';
 
@@ -243,8 +245,7 @@ export async function observeClient(clientId: number): Promise<ObservatoryResult
   // Save alerts to database
   for (const alert of alerts) {
     try {
-      await createBrandAlert({
-        clientId,
+      await createBrandAlertFromObservatory(clientId, {
         type: alert.type,
         severity: alert.severity,
         message: alert.message,
@@ -291,6 +292,12 @@ export async function observeClient(clientId: number): Promise<ObservatoryResult
   logger.info({
     clientId, signals: allSignals.length, alerts: alerts.length, healthDelta,
   }, 'Observatory scan completed');
+
+  try {
+    await updateClient(clientId, { brandMonitorLastRunAt: new Date() });
+  } catch (err) {
+    logger.debug({ err, clientId }, '[Observatory] brandMonitorLastRunAt not updated (migration pending?)');
+  }
 
   return { clientId, companyName, signals: allSignals, alerts, healthDelta, summary };
 }

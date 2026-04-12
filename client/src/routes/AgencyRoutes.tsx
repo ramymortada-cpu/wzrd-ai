@@ -27,6 +27,7 @@ const ResearchEnginePage = lazy(() => import("@/pages/ResearchEngine"));
 const KnowledgeBasePage = lazy(() => import("@/pages/KnowledgeBase"));
 const PipelinePage = lazy(() => import("@/pages/Pipeline"));
 const BrandTwinPage = lazy(() => import("@/pages/BrandTwin"));
+const BrandMonitorPage = lazy(() => import("@/pages/BrandMonitor"));
 const LeadsPage = lazy(() => import("@/pages/Leads"));
 const SalesFunnelPage = lazy(() => import("@/pages/SalesFunnel"));
 
@@ -81,6 +82,11 @@ export default function AgencyRoutes() {
         <Route path="/cc/brand-twin">{() => (
           <CommandCenterGuard>
             <S><BrandTwinPage /></S>
+          </CommandCenterGuard>
+        )}</Route>
+        <Route path="/cc/brand-monitor">{() => (
+          <CommandCenterGuard>
+            <S><BrandMonitorPage /></S>
           </CommandCenterGuard>
         )}</Route>
         <Route path="/cc/leads">{() => <S><LeadsPage /></S>}</Route>

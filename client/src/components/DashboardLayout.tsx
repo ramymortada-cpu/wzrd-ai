@@ -51,6 +51,7 @@ import {
   Heart,
   Target,
   TrendingUp,
+  Radio,
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -89,6 +90,7 @@ const NAV_FINANCE: SidebarNavItem[] = [
 const NAV_AI_TOOLS: SidebarNavItem[] = [
   { icon: Sparkles, labelKey: "nav.ai", label: "AI Copilot", labelAr: "AI Copilot", path: "/cc/ai", requiresCommandCenter: true },
   { icon: Heart, labelKey: "nav.brandTwin", label: "Brand Health Score", labelAr: "مؤشر صحة البراند", path: "/cc/brand-twin", requiresCommandCenter: true },
+  { icon: Radio, labelKey: "nav.brandMonitor", label: "Brand Monitor", labelAr: "مراقبة العلامة", path: "/cc/brand-monitor", requiresCommandCenter: true },
   { icon: Brain, labelKey: "nav.research", label: "Research", labelAr: "Research", path: "/cc/research", requiresCommandCenter: true },
   { icon: BookOpen, labelKey: "nav.playbooks", label: "Playbooks", labelAr: "Playbooks", path: "/cc/playbooks" },
 ];
