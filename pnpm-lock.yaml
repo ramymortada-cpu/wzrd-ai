@@ -39,7 +39,8 @@ overrides:
   fast-xml-parser@>=4.0.0-beta.3 <=5.5.6: '>=5.5.7'
   picomatch@>=4.0.0 <4.0.4: '>=4.0.4'
   path-to-regexp@<0.1.13: 0.1.13
-  basic-ftp@=5.2.0: '>=5.2.1'
+  basic-ftp@=5.2.0: '>=5.2.2'
+  basic-ftp@5.2.1: '>=5.2.2'
 
 importers:
 
@@ -2890,8 +2891,8 @@ packages:
     resolution: {integrity: sha512-vAPMQdnyKCBtkmQA6FMCBvU9qFIppS3nzyXnEM+Lo2IAhG4Mpjv9cCxMudhgV3YdNNJv6TNqXy97dfRVL2LmaQ==}
     hasBin: true
 
-  basic-ftp@5.2.1:
-    resolution: {integrity: sha512-0yaL8JdxTknKDILitVpfYfV2Ob6yb3udX/hK97M7I3jOeznBNxQPtVvTUtnhUkyHlxFWyr5Lvknmgzoc7jf+1Q==}
+  basic-ftp@5.2.2:
+    resolution: {integrity: sha512-1tDrzKsdCg70WGvbFss/ulVAxupNauGnOlgpyjKzeQxzyllBLS0CGLV7tjIXTK3ZQA9/FBEm9qyFFN1bciA6pw==}
     engines: {node: '>=10.0.0'}
 
   body-parser@1.20.3:
@@ -8725,7 +8726,7 @@ snapshots:
 
   baseline-browser-mapping@2.8.12: {}
 
-  basic-ftp@5.2.1: {}
+  basic-ftp@5.2.2: {}
 
   body-parser@1.20.3:
     dependencies:
@@ -9606,7 +9607,7 @@ snapshots:
 
   get-uri@6.0.5:
     dependencies:
-      basic-ftp: 5.2.1
+      basic-ftp: 5.2.2
       data-uri-to-buffer: 6.0.2
       debug: 4.4.3
     transitivePeerDependencies:
