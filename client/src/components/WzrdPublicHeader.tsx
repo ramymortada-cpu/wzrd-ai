@@ -182,8 +182,8 @@ export default function WzrdPublicHeader({ credits }: WzrdPublicHeaderProps = {}
 
             {user ? (
               <a
-                href="/tools"
-                onClick={(e) => { e.preventDefault(); navigate("/tools"); }}
+                href="/app/tools"
+                onClick={(e) => { e.preventDefault(); navigate("/app/tools"); }}
                 style={{
                   padding: "9px 20px",
                   borderRadius: 8,
@@ -309,8 +309,8 @@ export default function WzrdPublicHeader({ credits }: WzrdPublicHeaderProps = {}
             <div style={{ borderTop: `1px solid ${BORDER}`, marginTop: 12, paddingTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
               {user ? (
                 <a
-                  href="/tools"
-                  onClick={(e) => { e.preventDefault(); navigate("/tools"); setMenuOpen(false); }}
+                  href="/app/tools"
+                  onClick={(e) => { e.preventDefault(); navigate("/app/tools"); setMenuOpen(false); }}
                   style={{ padding: "12px 16px", borderRadius: 8, fontSize: 15, fontWeight: 700, color: "#fff", background: BLUE, textDecoration: "none", textAlign: "center" }}
                 >
                   {isAr ? "← لوحة التحكم" : "Dashboard →"}

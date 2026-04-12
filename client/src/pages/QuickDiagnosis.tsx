@@ -118,7 +118,7 @@ export default function QuickDiagnosis() {
             <a href="/signup" className="block w-full py-4 bg-indigo-600 text-white rounded-2xl font-semibold text-center text-base hover:bg-indigo-500 transition">
               {isAr ? 'سجّل مجاناً واحصل على تشخيص كامل مع الكريدت ←' : '→ Sign up free — full diagnosis with credits'}
             </a>
-            <a href="/tools/brand-diagnosis" className="block w-full py-3 bg-white border border-gray-200 rounded-2xl text-sm font-medium text-gray-700 text-center hover:bg-gray-50 transition">
+            <a href="/app/tools/brand-diagnosis" className="block w-full py-3 bg-white border border-gray-200 rounded-2xl text-sm font-medium text-gray-700 text-center hover:bg-gray-50 transition">
               {isAr ? 'عندك حساب؟ التشخيص الكامل ←' : 'Have an account? Full diagnosis →'}
             </a>
           </div>

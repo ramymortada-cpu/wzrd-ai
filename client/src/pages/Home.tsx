@@ -73,7 +73,7 @@ export default function Home() {
         </Badge>
         <span className="hidden sm:inline text-muted-foreground/50">|</span>
         <a
-          href="/wzrd-admin"
+          href="/admin"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 rounded-lg px-2 py-1 hover:bg-indigo-500/10 transition-colors"

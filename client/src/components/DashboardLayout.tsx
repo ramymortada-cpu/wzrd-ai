@@ -68,38 +68,38 @@ type SidebarNavItem = {
 };
 
 const NAV_OVERVIEW: SidebarNavItem[] = [
-  { icon: LayoutDashboard, labelKey: "nav.dashboard", label: "Dashboard", labelAr: "Dashboard", path: "/dashboard" },
-  { icon: BarChart3, labelKey: "nav.analytics", label: "Analytics", labelAr: "Analytics", path: "/analytics" },
-  { icon: Zap, labelKey: "nav.pipeline", label: "Pipeline", labelAr: "Pipeline", path: "/pipeline", requiresCommandCenter: true },
+  { icon: LayoutDashboard, labelKey: "nav.dashboard", label: "Dashboard", labelAr: "Dashboard", path: "/cc/dashboard" },
+  { icon: BarChart3, labelKey: "nav.analytics", label: "Analytics", labelAr: "Analytics", path: "/cc/analytics" },
+  { icon: Zap, labelKey: "nav.pipeline", label: "Pipeline", labelAr: "Pipeline", path: "/cc/pipeline", requiresCommandCenter: true },
 ];
 
 const NAV_WORKSPACE: SidebarNavItem[] = [
-  { icon: Users, labelKey: "nav.clients", label: "Clients", labelAr: "Clients", path: "/clients" },
-  { icon: FolderKanban, labelKey: "nav.projects", label: "Projects", labelAr: "Projects", path: "/projects" },
-  { icon: CheckSquare, labelKey: "nav.deliverables", label: "Deliverables", labelAr: "Deliverables", path: "/deliverables" },
-  { icon: StickyNote, labelKey: "nav.notes", label: "Notes", labelAr: "Notes", path: "/notes" },
+  { icon: Users, labelKey: "nav.clients", label: "Clients", labelAr: "Clients", path: "/cc/clients" },
+  { icon: FolderKanban, labelKey: "nav.projects", label: "Projects", labelAr: "Projects", path: "/cc/projects" },
+  { icon: CheckSquare, labelKey: "nav.deliverables", label: "Deliverables", labelAr: "Deliverables", path: "/cc/deliverables" },
+  { icon: StickyNote, labelKey: "nav.notes", label: "Notes", labelAr: "Notes", path: "/cc/notes" },
 ];
 
 const NAV_FINANCE: SidebarNavItem[] = [
-  { icon: FileText, labelKey: "nav.proposals", label: "Proposals", labelAr: "Proposals", path: "/proposals" },
-  { icon: FileText, label: "Contracts", labelAr: "Contracts", path: "/contracts" },
-  { icon: DollarSign, label: "Invoices", labelAr: "Invoices", path: "/invoices" },
+  { icon: FileText, labelKey: "nav.proposals", label: "Proposals", labelAr: "Proposals", path: "/cc/proposals" },
+  { icon: FileText, label: "Contracts", labelAr: "Contracts", path: "/cc/contracts" },
+  { icon: DollarSign, label: "Invoices", labelAr: "Invoices", path: "/cc/invoices" },
 ];
 
 const NAV_AI_TOOLS: SidebarNavItem[] = [
-  { icon: Sparkles, labelKey: "nav.ai", label: "AI Copilot", labelAr: "AI Copilot", path: "/ai", requiresCommandCenter: true },
-  { icon: Heart, labelKey: "nav.brandTwin", label: "Brand Health Score", labelAr: "مؤشر صحة البراند", path: "/brand-twin", requiresCommandCenter: true },
-  { icon: Brain, labelKey: "nav.research", label: "Research", labelAr: "Research", path: "/research", requiresCommandCenter: true },
-  { icon: BookOpen, labelKey: "nav.playbooks", label: "Playbooks", labelAr: "Playbooks", path: "/playbooks" },
+  { icon: Sparkles, labelKey: "nav.ai", label: "AI Copilot", labelAr: "AI Copilot", path: "/cc/ai", requiresCommandCenter: true },
+  { icon: Heart, labelKey: "nav.brandTwin", label: "Brand Health Score", labelAr: "مؤشر صحة البراند", path: "/cc/brand-twin", requiresCommandCenter: true },
+  { icon: Brain, labelKey: "nav.research", label: "Research", labelAr: "Research", path: "/cc/research", requiresCommandCenter: true },
+  { icon: BookOpen, labelKey: "nav.playbooks", label: "Playbooks", labelAr: "Playbooks", path: "/cc/playbooks" },
 ];
 
 const NAV_MORE: SidebarNavItem[] = [
-  { icon: DollarSign, labelKey: "nav.financials", label: "Financials", labelAr: "Financials", path: "/financials" },
-  { icon: Rocket, labelKey: "nav.onboarding", label: "Onboarding", labelAr: "Onboarding", path: "/onboarding" },
-  { icon: Shield, labelKey: "nav.portal", label: "Portal", labelAr: "Portal", path: "/portal-management" },
-  { icon: Database, labelKey: "nav.knowledge", label: "Knowledge", labelAr: "Knowledge", path: "/knowledge", requiresCommandCenter: true },
-  { icon: Target, labelKey: "nav.leads", label: "Leads", labelAr: "Leads", path: "/leads" },
-  { icon: TrendingUp, labelKey: "nav.salesFunnel", label: "Sales Funnel", labelAr: "Sales Funnel", path: "/sales-funnel" },
+  { icon: DollarSign, labelKey: "nav.financials", label: "Financials", labelAr: "Financials", path: "/cc/financials" },
+  { icon: Rocket, labelKey: "nav.onboarding", label: "Onboarding", labelAr: "Onboarding", path: "/cc/onboarding" },
+  { icon: Shield, labelKey: "nav.portal", label: "Portal", labelAr: "Portal", path: "/cc/portal-management" },
+  { icon: Database, labelKey: "nav.knowledge", label: "Knowledge", labelAr: "Knowledge", path: "/cc/knowledge", requiresCommandCenter: true },
+  { icon: Target, labelKey: "nav.leads", label: "Leads", labelAr: "Leads", path: "/cc/leads" },
+  { icon: TrendingUp, labelKey: "nav.salesFunnel", label: "Sales Funnel", labelAr: "Sales Funnel", path: "/cc/sales-funnel" },
 ];
 
 const ALL_SIDEBAR_ITEMS: SidebarNavItem[] = [
@@ -321,7 +321,7 @@ function DashboardLayoutContent({
                         {items.map((item) => {
                           const isActive =
                             location === item.path ||
-                            (item.path !== "/dashboard" && location.startsWith(item.path));
+                            (item.path !== "/cc/dashboard" && location.startsWith(item.path));
                           return (
                             <SidebarMenuItem key={item.path}>
                               <SidebarMenuButton
@@ -353,7 +353,7 @@ function DashboardLayoutContent({
                 {locale === "ar" ? "← منتج منفصل" : "← Separate product"}
               </p>
               <a
-                href="/wzrd-admin"
+                href="/admin"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex flex-col gap-0.5 px-3 py-2 rounded-lg bg-indigo-500/5 border border-indigo-500/10 hover:bg-indigo-500/10 hover:border-indigo-500/20 transition text-xs font-medium text-indigo-400"

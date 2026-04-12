@@ -28,7 +28,7 @@ const TOUR_STEPS: TourStep[] = [
   },
   {
     id: 'clients',
-    target: '[href="/clients"]',
+    target: '[href="/cc/clients"]',
     title: 'Manage Clients',
     titleAr: 'إدارة العملاء',
     content: 'Start by adding your clients. Each client gets a complete project lifecycle with the 4D Framework.',

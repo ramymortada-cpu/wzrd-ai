@@ -278,7 +278,7 @@ export default function Copilot() {
 
             <div className="mb-4 flex w-full items-center justify-between rounded-3xl border-[0.5px] border-white/40 bg-white/50 px-4 py-3 backdrop-blur-xl dark:border-zinc-700/50 dark:bg-zinc-950/40">
               <div className="flex items-center gap-3 min-w-0">
-                <a href="/my-brand" className="shrink-0 rounded-full border border-zinc-200/80 p-2 text-zinc-500 transition hover:border-primary hover:text-primary dark:border-zinc-600 dark:text-zinc-400">
+                <a href="/app/my-brand" className="shrink-0 rounded-full border border-zinc-200/80 p-2 text-zinc-500 transition hover:border-primary hover:text-primary dark:border-zinc-600 dark:text-zinc-400">
                   ←
                 </a>
                 <div className="min-w-0">

@@ -1,142 +1,36 @@
-import { lazy, Suspense, useEffect, useMemo } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import posthog from 'posthog-js';
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch, useLocation } from "wouter";
+import { Route, Switch, useLocation, Redirect } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { I18nProvider } from "./lib/i18n";
-import DashboardLayout from "./components/DashboardLayout";
-import CommandCenterGuard from "./components/CommandCenterGuard";
-import { PageSkeleton, ChatSkeleton, DetailPageSkeleton } from "./components/PageSkeleton";
-import WzrdAppShell from "./components/WzrdAppShell";
+import { PageSkeleton } from "./components/PageSkeleton";
 import QuickSearch from "./components/QuickSearch";
 
-/** Public WZZRD funnel + tools; Command Center (/dashboard, etc.) stays on default app chrome. */
-const WZZRD_PREMIUM_SHELL_RE = new RegExp(
-  "^/(?:signup|login|pricing|my-brand|copilot|wzrd-admin|admin|panel|profile|settings|my-requests|quick-check|tools|portal|proposal-view)(?:/|$)"
-);
-
-// ============ LAZY-LOADED PAGES ============
-// Each page is loaded only when the user navigates to it.
-// This reduces the initial bundle size significantly.
-
-const Home = lazy(() => import("./pages/Home"));
+// ===== LAZY PAGES — PUBLIC =====
 const WelcomePage = lazy(() => import("./pages/Welcome"));
-const ClientsPage = lazy(() => import("./pages/Clients"));
-const ClientDetailPage = lazy(() => import("./pages/ClientDetail"));
-const ProjectsPage = lazy(() => import("./pages/Projects"));
-const ProjectDetailPage = lazy(() => import("./pages/ProjectDetail"));
-const DeliverablesPage = lazy(() => import("./pages/Deliverables"));
-const NotesPage = lazy(() => import("./pages/Notes"));
-const FinancialsPage = lazy(() => import("./pages/Financials"));
-const AIEnginePage = lazy(() => import("./pages/AIEngine"));
-const PlaybooksPage = lazy(() => import("./pages/Playbooks"));
-const ProposalsPage = lazy(() => import("./pages/Proposals"));
-const ProposalDetailPage = lazy(() => import("./pages/ProposalDetail"));
-const AnalyticsPage = lazy(() => import("./pages/Analytics"));
-const OnboardingPage = lazy(() => import("./pages/Onboarding"));
-const ClientPortalPage = lazy(() => import("./pages/ClientPortal"));
-const PortalManagementPage = lazy(() => import("./pages/PortalManagement"));
-const ResearchEnginePage = lazy(() => import("./pages/ResearchEngine"));
-const KnowledgeBasePage = lazy(() => import("./pages/KnowledgeBase"));
-const PipelinePage = lazy(() => import("./pages/Pipeline"));
-const BrandTwinPage = lazy(() => import("./pages/BrandTwin"));
-const LeadsPage = lazy(() => import("./pages/Leads"));
-const SalesFunnelPage = lazy(() => import("./pages/SalesFunnel"));
-const QuickCheckPage = lazy(() => import("./pages/QuickCheck"));
-const ProposalViewPage = lazy(() => import("./pages/ProposalView"));
-
-// WZZRD AI — Public funnel pages
 const SignupPage = lazy(() => import("./pages/Signup"));
 const LoginPage = lazy(() => import("./pages/Login"));
 const BlogIndexPage = lazy(() => import("./pages/public/BlogIndex"));
 const BlogPostPage = lazy(() => import("./pages/public/BlogPost"));
-const ToolsPage = lazy(() => import("./pages/Tools"));
-const BrandDiagnosisPage = lazy(() => import("./pages/tools/BrandDiagnosis"));
-const OfferCheckPage = lazy(() => import("./pages/tools/OfferCheck"));
-const MessageCheckPage = lazy(() => import("./pages/tools/MessageCheck"));
-const PresenceAuditPage = lazy(() => import("./pages/tools/PresenceAudit"));
-const IdentitySnapshotPage = lazy(() => import("./pages/tools/IdentitySnapshot"));
-const LaunchReadinessPage = lazy(() => import("./pages/tools/LaunchReadiness"));
-const DesignHealthPage = lazy(() => import("./pages/tools/DesignHealth"));
-const PricingPage = lazy(() => import("./pages/Pricing"));
+const QuickCheckPage = lazy(() => import("./pages/QuickCheck"));
+const QuickDiagnosisPage = lazy(() => import("./pages/QuickDiagnosis"));
+const ClientPortalPage = lazy(() => import("./pages/ClientPortal"));
+const ProposalViewPage = lazy(() => import("./pages/ProposalView"));
 const TermsOfUsePage = lazy(() => import("./pages/public/TermsOfUse"));
 const PrivacyPolicyPage = lazy(() => import("./pages/public/PrivacyPolicy"));
 const ReportsPage = lazy(() => import("./pages/public/Reports"));
-const WzrdAdminPage = lazy(() => import("./pages/WzrdAdmin"));
-const ProfilePage = lazy(() => import("./pages/Profile"));
-const MyBrandPage = lazy(() => import("./pages/MyBrand"));
-const CopilotPage = lazy(() => import("./pages/Copilot"));
-const CompetitiveBenchmarkPage = lazy(() => import("./pages/CompetitiveBenchmark"));
-const QuickDiagnosisPage = lazy(() => import("./pages/QuickDiagnosis"));
-const MyRequestsPage = lazy(() => import("./pages/MyRequests"));
-const SettingsPage = lazy(() => import("./pages/Settings"));
-const ContractsPage = lazy(() => import("./pages/Contracts"));
-const InvitePage = lazy(() => import("./pages/Invite"));
-const InvoicesPage = lazy(() => import("./pages/Invoices"));
 
-function SuspenseWrapper({ children, fallback }: { children: React.ReactNode; fallback?: React.ReactNode }) {
-  return (
-    <Suspense fallback={fallback || <PageSkeleton />}>
-      {children}
-    </Suspense>
-  );
-}
+// ===== LAZY ROUTE BUNDLES (shell + all child pages loaded together) =====
+const ClientRoutes = lazy(() => import("./routes/ClientRoutes"));
+const AgencyRoutes = lazy(() => import("./routes/AgencyRoutes"));
+const AdminRoutes = lazy(() => import("./routes/AdminRoutes"));
 
-function DashboardRouter() {
-  return (
-    <DashboardLayout>
-      <Switch>
-        <Route path="/dashboard">{() => <SuspenseWrapper><Home /></SuspenseWrapper>}</Route>
-        <Route path="/clients">{() => <SuspenseWrapper><ClientsPage /></SuspenseWrapper>}</Route>
-        <Route path="/clients/:id">{() => <SuspenseWrapper fallback={<DetailPageSkeleton />}><ClientDetailPage /></SuspenseWrapper>}</Route>
-        <Route path="/projects">{() => <SuspenseWrapper><ProjectsPage /></SuspenseWrapper>}</Route>
-        <Route path="/projects/:id">{() => <SuspenseWrapper fallback={<DetailPageSkeleton />}><ProjectDetailPage /></SuspenseWrapper>}</Route>
-        <Route path="/deliverables">{() => <SuspenseWrapper><DeliverablesPage /></SuspenseWrapper>}</Route>
-        <Route path="/notes">{() => <SuspenseWrapper><NotesPage /></SuspenseWrapper>}</Route>
-        <Route path="/financials">{() => <SuspenseWrapper><FinancialsPage /></SuspenseWrapper>}</Route>
-        <Route path="/ai">{() => (
-          <CommandCenterGuard>
-            <SuspenseWrapper fallback={<ChatSkeleton />}><AIEnginePage /></SuspenseWrapper>
-          </CommandCenterGuard>
-        )}</Route>
-        <Route path="/proposals">{() => <SuspenseWrapper><ProposalsPage /></SuspenseWrapper>}</Route>
-        <Route path="/contracts">{() => <SuspenseWrapper><ContractsPage /></SuspenseWrapper>}</Route>
-        <Route path="/invoices">{() => <SuspenseWrapper><InvoicesPage /></SuspenseWrapper>}</Route>
-        <Route path="/proposals/:id">{() => <SuspenseWrapper fallback={<DetailPageSkeleton />}><ProposalDetailPage /></SuspenseWrapper>}</Route>
-        <Route path="/analytics">{() => <SuspenseWrapper><AnalyticsPage /></SuspenseWrapper>}</Route>
-        <Route path="/playbooks">{() => <SuspenseWrapper><PlaybooksPage /></SuspenseWrapper>}</Route>
-        <Route path="/onboarding">{() => <SuspenseWrapper><OnboardingPage /></SuspenseWrapper>}</Route>
-        <Route path="/portal-management">{() => <SuspenseWrapper><PortalManagementPage /></SuspenseWrapper>}</Route>
-        <Route path="/research">{() => (
-          <CommandCenterGuard>
-            <SuspenseWrapper><ResearchEnginePage /></SuspenseWrapper>
-          </CommandCenterGuard>
-        )}</Route>
-        <Route path="/knowledge">{() => (
-          <CommandCenterGuard>
-            <SuspenseWrapper><KnowledgeBasePage /></SuspenseWrapper>
-          </CommandCenterGuard>
-        )}</Route>
-        <Route path="/pipeline">{() => (
-          <CommandCenterGuard>
-            <SuspenseWrapper><PipelinePage /></SuspenseWrapper>
-          </CommandCenterGuard>
-        )}</Route>
-        <Route path="/brand-twin">{() => (
-          <CommandCenterGuard>
-            <SuspenseWrapper><BrandTwinPage /></SuspenseWrapper>
-          </CommandCenterGuard>
-        )}</Route>
-        <Route path="/leads">{() => <SuspenseWrapper><LeadsPage /></SuspenseWrapper>}</Route>
-        <Route path="/sales-funnel">{() => <SuspenseWrapper><SalesFunnelPage /></SuspenseWrapper>}</Route>
-        <Route path="/404" component={NotFound} />
-        <Route component={NotFound} />
-      </Switch>
-    </DashboardLayout>
-  );
+function S({ children }: { children: React.ReactNode }) {
+  return <Suspense fallback={<PageSkeleton />}>{children}</Suspense>;
 }
 
 function PostHogPageViews() {
@@ -149,64 +43,75 @@ function PostHogPageViews() {
   return null;
 }
 
-function PremiumShellLayout({ children }: { children: React.ReactNode }) {
-  const [loc] = useLocation();
-  const useShell = useMemo(() => WZZRD_PREMIUM_SHELL_RE.test(loc), [loc]);
-  if (useShell) return <WzrdAppShell>{children}</WzrdAppShell>;
-  return <>{children}</>;
-}
-
 function App() {
   return (
     <ErrorBoundary>
       <I18nProvider>
         <ThemeProvider defaultTheme="dark" switchable>
           <TooltipProvider>
-            <PremiumShellLayout>
-              <PostHogPageViews />
-              <Toaster />
-              <QuickSearch />
-              <Switch>
-                {/* WZZRD AI — Public funnel pages (no auth) */}
-                <Route path="/">{() => <SuspenseWrapper><WelcomePage /></SuspenseWrapper>}</Route>
-                <Route path="/signup">{() => <SuspenseWrapper><SignupPage /></SuspenseWrapper>}</Route>
-                <Route path="/login">{() => <SuspenseWrapper><LoginPage /></SuspenseWrapper>}</Route>
-                <Route path="/blog">{() => <SuspenseWrapper><BlogIndexPage /></SuspenseWrapper>}</Route>
-                <Route path="/blog/:slug">{() => <SuspenseWrapper><BlogPostPage /></SuspenseWrapper>}</Route>
-                <Route path="/tools">{() => <SuspenseWrapper><ToolsPage /></SuspenseWrapper>}</Route>
-                <Route path="/tools/brand-diagnosis">{() => <SuspenseWrapper><BrandDiagnosisPage /></SuspenseWrapper>}</Route>
-                <Route path="/tools/offer-check">{() => <SuspenseWrapper><OfferCheckPage /></SuspenseWrapper>}</Route>
-                <Route path="/tools/message-check">{() => <SuspenseWrapper><MessageCheckPage /></SuspenseWrapper>}</Route>
-                <Route path="/tools/presence-audit">{() => <SuspenseWrapper><PresenceAuditPage /></SuspenseWrapper>}</Route>
-                <Route path="/tools/identity-snapshot">{() => <SuspenseWrapper><IdentitySnapshotPage /></SuspenseWrapper>}</Route>
-                <Route path="/tools/launch-readiness">{() => <SuspenseWrapper><LaunchReadinessPage /></SuspenseWrapper>}</Route>
-                <Route path="/tools/design-health">{() => <SuspenseWrapper><DesignHealthPage /></SuspenseWrapper>}</Route>
-                <Route path="/pricing">{() => <SuspenseWrapper><PricingPage /></SuspenseWrapper>}</Route>
-                <Route path="/terms">{() => <SuspenseWrapper><TermsOfUsePage /></SuspenseWrapper>}</Route>
-                <Route path="/privacy">{() => <SuspenseWrapper><PrivacyPolicyPage /></SuspenseWrapper>}</Route>
-                <Route path="/reports">{() => <SuspenseWrapper><ReportsPage /></SuspenseWrapper>}</Route>
-                <Route path="/my-brand">{() => <SuspenseWrapper><MyBrandPage /></SuspenseWrapper>}</Route>
-                <Route path="/copilot">{() => <SuspenseWrapper><CopilotPage /></SuspenseWrapper>}</Route>
-                <Route path="/tools/benchmark">{() => <SuspenseWrapper><CompetitiveBenchmarkPage /></SuspenseWrapper>}</Route>
-                <Route path="/tools/quick">{() => <SuspenseWrapper><QuickDiagnosisPage /></SuspenseWrapper>}</Route>
-                <Route path="/my-requests">{() => <SuspenseWrapper><MyRequestsPage /></SuspenseWrapper>}</Route>
-                <Route path="/admin">{() => <SuspenseWrapper><WzrdAdminPage /></SuspenseWrapper>}</Route>
-                <Route path="/panel">{() => <SuspenseWrapper><WzrdAdminPage /></SuspenseWrapper>}</Route>
-                <Route path="/wzrd-admin">{() => <SuspenseWrapper><WzrdAdminPage /></SuspenseWrapper>}</Route>
-                <Route path="/profile">{() => <SuspenseWrapper><ProfilePage /></SuspenseWrapper>}</Route>
-                <Route path="/settings/team">{() => <SuspenseWrapper><SettingsPage defaultTab="team" /></SuspenseWrapper>}</Route>
-                <Route path="/settings/audit-logs">{() => <SuspenseWrapper><SettingsPage defaultTab="audit" /></SuspenseWrapper>}</Route>
-                <Route path="/settings/whatsapp">{() => <SuspenseWrapper><SettingsPage defaultTab="whatsapp" /></SuspenseWrapper>}</Route>
-                <Route path="/settings">{() => <SuspenseWrapper><SettingsPage /></SuspenseWrapper>}</Route>
-                {/* Existing public routes */}
-                <Route path="/quick-check">{() => <SuspenseWrapper><QuickCheckPage /></SuspenseWrapper>}</Route>
-                <Route path="/invite">{() => <SuspenseWrapper><InvitePage /></SuspenseWrapper>}</Route>
-                <Route path="/portal/:token">{() => <SuspenseWrapper><ClientPortalPage /></SuspenseWrapper>}</Route>
-                <Route path="/proposal-view/:id">{() => <SuspenseWrapper><ProposalViewPage /></SuspenseWrapper>}</Route>
-                {/* Dashboard routes (auth required) */}
-                <Route component={DashboardRouter} />
-              </Switch>
-            </PremiumShellLayout>
+            <PostHogPageViews />
+            <Toaster />
+            <QuickSearch />
+            <Switch>
+              {/* ══════ PUBLIC (no shell, no auth) ══════ */}
+              <Route path="/">{() => <S><WelcomePage /></S>}</Route>
+              <Route path="/signup">{() => <S><SignupPage /></S>}</Route>
+              <Route path="/login">{() => <S><LoginPage /></S>}</Route>
+              <Route path="/quick-check">{() => <S><QuickCheckPage /></S>}</Route>
+              <Route path="/tools/quick">{() => <S><QuickDiagnosisPage /></S>}</Route>
+              <Route path="/portal/:token">{() => <S><ClientPortalPage /></S>}</Route>
+              <Route path="/proposal-view/:id">{() => <S><ProposalViewPage /></S>}</Route>
+              <Route path="/blog">{() => <S><BlogIndexPage /></S>}</Route>
+              <Route path="/blog/:slug">{() => <S><BlogPostPage /></S>}</Route>
+              <Route path="/terms">{() => <S><TermsOfUsePage /></S>}</Route>
+              <Route path="/privacy">{() => <S><PrivacyPolicyPage /></S>}</Route>
+              <Route path="/reports">{() => <S><ReportsPage /></S>}</Route>
+
+              {/* ══════ LEGACY REDIRECTS ══════ */}
+              <Route path="/dashboard">{() => <Redirect to="/cc/dashboard" />}</Route>
+              <Route path="/clients">{() => <Redirect to="/cc/clients" />}</Route>
+              <Route path="/clients/:id">{(p) => <Redirect to={`/cc/clients/${p.id}`} />}</Route>
+              <Route path="/projects">{() => <Redirect to="/cc/projects" />}</Route>
+              <Route path="/projects/:id">{(p) => <Redirect to={`/cc/projects/${p.id}`} />}</Route>
+              <Route path="/deliverables">{() => <Redirect to="/cc/deliverables" />}</Route>
+              <Route path="/notes">{() => <Redirect to="/cc/notes" />}</Route>
+              <Route path="/financials">{() => <Redirect to="/cc/financials" />}</Route>
+              <Route path="/ai">{() => <Redirect to="/cc/ai" />}</Route>
+              <Route path="/proposals">{() => <Redirect to="/cc/proposals" />}</Route>
+              <Route path="/proposals/:id">{(p) => <Redirect to={`/cc/proposals/${p.id}`} />}</Route>
+              <Route path="/contracts">{() => <Redirect to="/cc/contracts" />}</Route>
+              <Route path="/invoices">{() => <Redirect to="/cc/invoices" />}</Route>
+              <Route path="/analytics">{() => <Redirect to="/cc/analytics" />}</Route>
+              <Route path="/pipeline">{() => <Redirect to="/cc/pipeline" />}</Route>
+              <Route path="/research">{() => <Redirect to="/cc/research" />}</Route>
+              <Route path="/knowledge">{() => <Redirect to="/cc/knowledge" />}</Route>
+              <Route path="/brand-twin">{() => <Redirect to="/cc/brand-twin" />}</Route>
+              <Route path="/leads">{() => <Redirect to="/cc/leads" />}</Route>
+              <Route path="/sales-funnel">{() => <Redirect to="/cc/sales-funnel" />}</Route>
+              <Route path="/playbooks">{() => <Redirect to="/cc/playbooks" />}</Route>
+              <Route path="/onboarding">{() => <Redirect to="/cc/onboarding" />}</Route>
+              <Route path="/portal-management">{() => <Redirect to="/cc/portal-management" />}</Route>
+              <Route path="/tools">{() => <Redirect to="/app/tools" />}</Route>
+              <Route path="/tools/:t">{(p) => <Redirect to={`/app/tools/${p.t}`} />}</Route>
+              <Route path="/my-brand">{() => <Redirect to="/app/my-brand" />}</Route>
+              <Route path="/copilot">{() => <Redirect to="/app/copilot" />}</Route>
+              <Route path="/pricing">{() => <Redirect to="/app/pricing" />}</Route>
+              <Route path="/profile">{() => <Redirect to="/app/profile" />}</Route>
+              <Route path="/my-requests">{() => <Redirect to="/app/my-requests" />}</Route>
+              <Route path="/wzrd-admin">{() => <Redirect to="/admin" />}</Route>
+              <Route path="/panel">{() => <Redirect to="/admin" />}</Route>
+              <Route path="/settings">{() => <Redirect to="/admin/settings" />}</Route>
+              <Route path="/settings/:t">{(p) => <Redirect to={`/admin/settings/${p.t}`} />}</Route>
+              <Route path="/invite">{() => <Redirect to="/admin/invite" />}</Route>
+
+              {/* ══════ 3 SHELLS (lazy loaded, each with own guard) ══════ */}
+              <Route path="/app/:rest*">{() => <S><ClientRoutes /></S>}</Route>
+              <Route path="/cc/:rest*">{() => <S><AgencyRoutes /></S>}</Route>
+              <Route path="/admin/:rest*">{() => <S><AdminRoutes /></S>}</Route>
+
+              {/* ══════ 404 ══════ */}
+              <Route component={NotFound} />
+            </Switch>
           </TooltipProvider>
         </ThemeProvider>
       </I18nProvider>

@@ -87,7 +87,7 @@ export default function Signup() {
             body: JSON.stringify({ json: { code: refCode, newUserId: result.user.id } }),
           }).catch(() => {});
         }
-        navigate('/tools/brand-diagnosis');
+        navigate('/app/tools/brand-diagnosis');
       } else {
         setError(toErrorString(result?.message, 'حصل حاجة غلط'));
       }

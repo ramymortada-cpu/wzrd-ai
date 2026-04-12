@@ -950,7 +950,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
                 duration: 12_000,
                 action: {
                   label: isAr ? 'عرض الملف' : 'View profile',
-                  onClick: () => navigate('/my-brand'),
+                  onClick: () => navigate('/app/my-brand'),
                 },
               });
             } catch {
@@ -986,7 +986,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
         <div className="mx-auto max-w-2xl px-6 py-16">
           <button
             type="button"
-            onClick={() => navigate('/tools')}
+            onClick={() => navigate('/app/tools')}
             className="mb-8 flex items-center gap-2 text-sm font-medium text-[#6B7280] hover:text-[#1B4FD8] transition-colors"
           >
             {isAr ? '→ رجوع للأدوات' : '← Back to Tools'}
@@ -1180,7 +1180,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
         <div className="mx-auto max-w-lg px-6 py-16">
           <button
             type="button"
-            onClick={() => navigate('/tools')}
+            onClick={() => navigate('/app/tools')}
             className="mb-8 flex items-center gap-2 text-sm font-medium text-[#6B7280] hover:text-[#1B4FD8] transition-colors"
           >
             {isAr ? '→ رجوع للأدوات' : '← Back to Tools'}
@@ -1285,7 +1285,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
                 <p>{error}</p>
                 {looksLikeInsufficientCredits(error) && (
                   <a
-                    href="/pricing"
+                    href="/app/pricing"
                     className="mt-2 inline-block font-semibold text-[#1B4FD8] hover:underline"
                   >
                     {isAr ? 'اشترِ كريدت أو شوف الباقات ←' : 'Buy credits or view plans →'}
@@ -1314,7 +1314,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
         <div className="mx-auto max-w-2xl px-6 py-16">
           <button
             type="button"
-            onClick={() => navigate('/tools')}
+            onClick={() => navigate('/app/tools')}
             className="mb-8 flex items-center gap-2 text-sm font-medium text-[#6B7280] hover:text-[#1B4FD8] transition-colors"
           >
             {isAr ? '→ رجوع للأدوات' : '← Back to Tools'}
@@ -1324,7 +1324,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
             <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
               <p>{error}</p>
               {looksLikeInsufficientCredits(error) && (
-                <a href="/pricing" className="mt-2 inline-block font-semibold text-[#1B4FD8] hover:underline">
+                <a href="/app/pricing" className="mt-2 inline-block font-semibold text-[#1B4FD8] hover:underline">
                   {isAr ? 'اشترِ كريدت أو شوف الباقات ←' : 'Buy credits or view plans →'}
                 </a>
               )}
@@ -1522,7 +1522,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
         {/* Back */}
         <button
           type="button"
-          onClick={() => navigate('/tools')}
+          onClick={() => navigate('/app/tools')}
           className="mb-8 flex items-center gap-2 text-sm font-medium text-[#6B7280] hover:text-[#1B4FD8] transition-colors"
         >
           {isAr ? '→ رجوع للأدوات' : '← Back to Tools'}
@@ -1591,7 +1591,7 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
             <p>{error}</p>
             {looksLikeInsufficientCredits(error) && (
               <a
-                href="/pricing"
+                href="/app/pricing"
                 className="mt-2 inline-block text-sm font-semibold text-[#1B4FD8] hover:underline"
               >
                 {isAr ? 'اشترِ كريدت أو شوف الباقات ←' : 'Buy credits or view plans →'}
