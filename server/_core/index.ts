@@ -168,6 +168,11 @@ async function startServer() {
 
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
+
+  // Full Audit PDF download (Sprint B) — cookie auth, before tRPC
+  const { mountFullAuditPdfDownload } = await import("../fullAuditPdfRoutes");
+  mountFullAuditPdfDownload(app);
+
   // tRPC API
   app.use(
     "/api/trpc",

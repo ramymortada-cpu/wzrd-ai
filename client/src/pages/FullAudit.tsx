@@ -19,7 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Target, Loader2, ChevronDown, ChevronUp, AlertTriangle,
-  CheckCircle2, History, RefreshCw, MessageSquare
+  CheckCircle2, History, RefreshCw, MessageSquare, FileDown
 } from 'lucide-react';
 import { INDUSTRIES } from '@/lib/industries';
 import { waMeQualifiedLeadHref } from '@/lib/waContact';
@@ -161,6 +161,9 @@ function ResultsView({
   creditsUsed,
   isAr,
   onRetry,
+  auditRecordId,
+  onDownloadPdf,
+  pdfLoading,
 }: {
   audit: AuditResult;
   isPartial: boolean;
@@ -168,6 +171,9 @@ function ResultsView({
   creditsUsed: number;
   isAr: boolean;
   onRetry: () => void;
+  auditRecordId: number | null;
+  onDownloadPdf: () => void;
+  pdfLoading: boolean;
 }) {
   const [, navigate] = useLocation();
   const waHref = waMeQualifiedLeadHref({ diagnosisLabel: 'التحليل الشامل' });
@@ -175,6 +181,25 @@ function ResultsView({
 
   return (
     <div className="space-y-6 pb-10">
+      {auditRecordId !== null && (
+        <div className="flex justify-center">
+          <Button
+            type="button"
+            variant="outline"
+            className="border-2 border-primary"
+            disabled={pdfLoading}
+            onClick={onDownloadPdf}
+          >
+            {pdfLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <FileDown className="mr-2 h-4 w-4" />
+            )}
+            {isAr ? 'حمّل PDF' : 'Download PDF'}
+          </Button>
+        </div>
+      )}
+
       {isPartial && (
         <Card className="border-2 border-yellow-400 bg-yellow-50">
           <CardContent className="p-4 flex items-start gap-2">
@@ -333,8 +358,12 @@ function ResultsView({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Card className="border-dashed border-2 border-muted">
           <CardContent className="p-4 text-center">
-            <p className="text-sm font-medium mb-1">📄 {isAr ? 'عايز تقرير PDF مصمم؟' : 'Want a designed PDF report?'}</p>
-            <p className="text-xs text-muted-foreground">{isAr ? 'قريباً — Sprint B' : 'Coming soon — Sprint B'}</p>
+            <p className="text-sm font-medium mb-1">📄 {isAr ? 'تقرير PDF كامل' : 'Full PDF report'}</p>
+            <p className="text-xs text-muted-foreground">
+              {auditRecordId !== null
+                ? (isAr ? 'استخدم زر «حمّل PDF» أعلاه' : 'Use the Download PDF button above')
+                : (isAr ? 'احفظ التحليل أولاً لتحميل PDF' : 'Save the audit to enable PDF download')}
+            </p>
           </CardContent>
         </Card>
         <Card className="border-2 border-green-200 bg-green-50">
@@ -382,6 +411,8 @@ export default function FullAudit() {
   const [creditsUsed, setCreditsUsed] = useState(0);
   const [loadingPhase, setLoadingPhase] = useState(0);
   const [slowWarning, setSlowWarning] = useState(false);
+  /** DB row id for PDF download (URL :id or last run insertId). */
+  const [resolvedAuditId, setResolvedAuditId] = useState<number | null>(null);
 
   // Form state
   const [companyName, setCompanyName] = useState('');
@@ -403,9 +434,16 @@ export default function FullAudit() {
       const result = row.resultJson as AuditResult;
       setAuditResult(result);
       setCreditsUsed(row.creditsUsed ?? 0);
+      setResolvedAuditId(row.id);
       setState('results');
     }
   }, [auditId, savedAuditQuery.data]);
+
+  const pdfMutation = trpc.fullAudit.generatePdf.useMutation({
+    onSuccess: (data) => {
+      window.open(data.downloadUrl, "_blank", "noopener,noreferrer");
+    },
+  });
 
   // Loading phase cycling
   useEffect(() => {
@@ -434,6 +472,7 @@ export default function FullAudit() {
       setCreditsUsed(data.meta.creditsUsed);
       setIsPartial(data.partial ?? false);
       setPartialMessage(data.partialMessage ?? '');
+      setResolvedAuditId(typeof data.auditId === "number" ? data.auditId : null);
       setState('results');
     },
     onError: () => {
@@ -465,6 +504,7 @@ export default function FullAudit() {
     setState('form');
     setErrorType('none');
     setAuditResult(null);
+    setResolvedAuditId(null);
     mutation.reset();
   };
 
@@ -558,6 +598,13 @@ export default function FullAudit() {
           creditsUsed={creditsUsed}
           isAr={isAr}
           onRetry={handleRetry}
+          auditRecordId={resolvedAuditId}
+          pdfLoading={pdfMutation.isPending}
+          onDownloadPdf={() => {
+            if (resolvedAuditId !== null) {
+              pdfMutation.mutate({ auditId: resolvedAuditId });
+            }
+          }}
         />
       </div>
     );
