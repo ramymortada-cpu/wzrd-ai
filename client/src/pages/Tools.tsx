@@ -4,6 +4,7 @@ import posthog from 'posthog-js';
 import WzrdPublicHeader from '@/components/WzrdPublicHeader';
 import { useI18n } from '@/lib/i18n';
 import { waMeHref } from '@/lib/waContact';
+import { SIGNUP_BONUS_CREDITS } from '@shared/const';
 
 interface ToolInfo {
   id: string;
@@ -87,8 +88,8 @@ export default function Tools() {
     setWelcomeDismissed(true);
   };
 
-  // Welcome card: show when credits === 500 (fresh signup) and not dismissed
-  const showWelcomeCard = credits === 500 && !welcomeDismissed;
+  // Welcome card: fresh signup balance (matches server signup bonus) and not dismissed
+  const showWelcomeCard = credits === SIGNUP_BONUS_CREDITS && !welcomeDismissed;
 
   // Zero credits card: show when credits === 0 (logged in but no credits left)
   const showZeroCreditsCard = credits === 0;
@@ -99,7 +100,7 @@ export default function Tools() {
 
       <div className="mx-auto max-w-5xl px-6 pb-20 pt-24">
 
-        {/* ── Welcome Card (post-signup, 500 credits) ── */}
+        {/* ── Welcome Card (post-signup) ── */}
         {showWelcomeCard && (
           <div className="mb-8 rounded-2xl border border-[#C7D2FE] bg-gradient-to-br from-[#EEF2FF] to-[#F0F9FF] p-6 shadow-sm">
             <div className="flex items-start gap-4">
@@ -119,12 +120,12 @@ export default function Tools() {
                   </button>
                 </div>
                 <p className="mb-1 text-sm font-semibold text-[#1B4FD8]">
-                  {isAr ? '⚡ معاك ٥٠٠ كريدت مجاني — هدية ترحيب من WZZRD AI' : '⚡ You have 500 free credits — a welcome gift from WZZRD AI'}
+                  {isAr ? 'ابدأ بفحص سريع أو أوّل تحليل تشخيصي — رصيد ترحيبي جاهز للاستخدام' : 'Start with a quick check or your first diagnostic — your welcome balance is ready'}
                 </p>
                 <p className="mb-5 text-sm leading-relaxed text-[#374151]">
                   {isAr
-                    ? 'استخدمهم دلوقتي في عمل أول تقرير تشخيص لبراندك. اكتشف نقاط القوة والضعف، واحصل على خطة تحسين فورية — كل ده في دقائق.'
-                    : 'Use them now to run your first brand diagnostic report. Discover strengths and weaknesses, and get an instant improvement plan — all in minutes.'}
+                    ? 'جرّب أدوات التشخيص أو خطّة للتحليل الشامل — هدفنا نوضّح لك إيه اللي يوقف البراند وإيه الخطوة الجاية.'
+                    : 'Run diagnostics or plan a full audit — we surface what is blocking your brand and what to do next.'}
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <button
@@ -132,7 +133,7 @@ export default function Tools() {
                     onClick={() => navigate('/app/tools/brand-diagnosis')}
                     className="rounded-full bg-[#1B4FD8] px-6 py-2.5 text-sm font-bold text-white transition hover:bg-[#1440B8]"
                   >
-                    🔬 {isAr ? 'ابدأ أول تقرير مجاني ←' : 'Start your free report →'}
+                    🔬 {isAr ? 'ابدأ أوّل تحليل ←' : 'Start your first analysis →'}
                   </button>
                   <button
                     type="button"
@@ -154,12 +155,12 @@ export default function Tools() {
               <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#DC2626] text-3xl shadow-md">⚡</span>
               <div className="flex-1">
                 <h3 className="mb-1 text-lg font-extrabold text-[#111827]">
-                  {isAr ? 'الكريدت بتاعك خلص!' : 'Your credits are all used up!'}
+                  {isAr ? 'محتاج تفعيل باقة؟' : 'Ready for your next plan?'}
                 </h3>
                 <p className="mb-5 text-sm leading-relaxed text-[#374151]">
                   {isAr
-                    ? 'محتاج تشحن رصيدك عشان تكمل التحليل. اختار الباقة المناسبة ليك وابدأ من حيث وقفت — بدون انتظار.'
-                    : 'You need to top up your credits to continue. Choose the right plan and pick up right where you left off — no waiting.'}
+                    ? 'ادفع مرة واحدة للتحليل الشامل أو حزمة الاستراتيجية — واكمل من غير انتظار.'
+                    : 'One-time Full Audit or Strategy Pack — pick up where you left off with no subscription.'}
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <a
@@ -168,7 +169,7 @@ export default function Tools() {
                     className="rounded-full bg-[#1B4FD8] px-6 py-2.5 text-sm font-bold text-white transition hover:bg-[#1440B8]"
                     style={{ textDecoration: 'none' }}
                   >
-                    {isAr ? '💳 اشحن الكريدت دلوقتي ←' : '💳 Buy credits now →'}
+                    {isAr ? '💳 شوف الباقات ←' : '💳 View plans →'}
                   </a>
                   <a
                     href={waMeHref()}

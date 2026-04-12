@@ -24,6 +24,7 @@ export const TOOL_COSTS: Record<string, number> = {
   competitive_benchmark: 40,
   copilot_message: 5,
   full_audit: 60,
+  strategy_pack: 140,
 };
 
 export const SIGNUP_BONUS = 100;

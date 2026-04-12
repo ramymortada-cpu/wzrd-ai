@@ -675,4 +675,168 @@ ${dataContext || 'No external data available.'}`.trim();
         filename: `WZZRD-FullAudit-${safe}.pdf`,
       };
     }),
+
+  /** Strategy Pack — 3 parallel LLM sections; ≥2 must succeed; 140 credits */
+  generateStrategyPack: protectedProcedure
+    .input(z.object({ auditId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user!.id;
+      const db = await getDb();
+      if (!db) {
+        return { success: false as const, error: "db_unavailable" as const };
+      }
+
+      const [audit] = await db
+        .select()
+        .from(fullAuditResults)
+        .where(eq(fullAuditResults.id, input.auditId))
+        .limit(1);
+
+      if (!audit || audit.userId !== userId) {
+        return { success: false as const, error: "not_found" as const };
+      }
+
+      const balance = await getUserCredits(userId);
+      const needed = TOOL_COSTS["strategy_pack"] ?? 140;
+      if (balance < needed) {
+        return {
+          success: false as const,
+          error: "insufficient_credits" as const,
+          needed,
+          have: balance,
+        };
+      }
+
+      const auditResult = (audit.resultJson ?? {}) as Record<string, unknown>;
+      const lang = getLanguageInstruction(audit.marketRegion || "egypt");
+
+      const top3 = JSON.stringify(auditResult?.top3Issues ?? []);
+      const actionPlan = JSON.stringify(auditResult?.actionPlan ?? {});
+
+      const toText = (res: Awaited<ReturnType<typeof resilientLLM>>) => {
+        const c = res.choices?.[0]?.message?.content;
+        return typeof c === "string" ? c : "";
+      };
+
+      const [compResult, msgResult, roadmapResult] = await Promise.allSettled([
+        resilientLLM(
+          {
+            messages: [
+              {
+                role: "system",
+                content: `You are a competitive intelligence analyst for MENA brands. ${lang}
+Respond ONLY with valid JSON:
+{
+  "competitors": [
+    { "name": "<competitor name>", "strengths": ["<strength>"], "weaknesses": ["<weakness>"], "positioning": "<one sentence>" }
+  ],
+  "yourAdvantage": "<the brand's biggest competitive advantage>",
+  "threats": ["<market threat>"],
+  "opportunities": ["<market opportunity>"]
+}
+Analyze 3-5 real competitors. Be specific, not generic.`,
+              },
+              {
+                role: "user",
+                content: `Company: ${audit.companyName}, Industry: ${audit.industry}, Score: ${audit.overallScore ?? "—"}/100, Top Issues: ${top3}`,
+              },
+            ],
+          },
+          { context: "strategy_competitive", userId, timeout: LLM_TIMEOUT }
+        ),
+        resilientLLM(
+          {
+            messages: [
+              {
+                role: "system",
+                content: `You are a brand messaging strategist. ${lang}
+Respond ONLY with valid JSON:
+{
+  "tagline": "<proposed brand tagline>",
+  "elevator_pitch": "<30-second brand description>",
+  "tone_of_voice": {
+    "do": ["<tone guideline to follow>", "<another>"],
+    "dont": ["<tone mistake to avoid>", "<another>"]
+  },
+  "key_messages": [
+    { "audience": "<target segment>", "message": "<key message for them>", "channel": "<best channel>" }
+  ]
+}
+Be specific to this brand, not generic advice.`,
+              },
+              {
+                role: "user",
+                content: `Company: ${audit.companyName}, Industry: ${audit.industry}, Target: ${audit.targetAudience}, Challenge: ${audit.mainChallenge}`,
+              },
+            ],
+          },
+          { context: "strategy_messaging", userId, timeout: LLM_TIMEOUT }
+        ),
+        resilientLLM(
+          {
+            messages: [
+              {
+                role: "system",
+                content: `You are a brand implementation planner. ${lang}
+Respond ONLY with valid JSON:
+{
+  "month1": {
+    "theme": "<month theme>",
+    "tasks": [{ "task": "<specific task>", "owner": "<who does it>", "kpi": "<how to measure success>" }]
+  },
+  "month2": {
+    "theme": "<month theme>",
+    "tasks": [{ "task": "<>", "owner": "<>", "kpi": "<>" }]
+  },
+  "month3": {
+    "theme": "<month theme>",
+    "tasks": [{ "task": "<>", "owner": "<>", "kpi": "<>" }]
+  }
+}
+Each month should have 3-5 tasks. Tasks must be specific and actionable.`,
+              },
+              {
+                role: "user",
+                content: `Company: ${audit.companyName}, Score: ${audit.overallScore ?? "—"}/100, Top Issues: ${top3}, Action Plan: ${actionPlan}`,
+              },
+            ],
+          },
+          { context: "strategy_roadmap", userId, timeout: LLM_TIMEOUT }
+        ),
+      ]);
+
+      const competitive =
+        compResult.status === "fulfilled" ? safeParseLLM(toText(compResult.value), "Competitive") : null;
+      const messaging =
+        msgResult.status === "fulfilled" ? safeParseLLM(toText(msgResult.value), "Messaging") : null;
+      const roadmap =
+        roadmapResult.status === "fulfilled" ? safeParseLLM(toText(roadmapResult.value), "Roadmap") : null;
+
+      const successCount = [competitive, messaging, roadmap].filter(Boolean).length;
+      if (successCount < 2) {
+        return {
+          success: false as const,
+          error: "ai_failed" as const,
+          message: "Strategy generation failed. No credits charged.",
+        };
+      }
+
+      const deduct = await deductCredits(userId, "strategy_pack", {
+        auditId: input.auditId,
+      });
+      if (!deduct.success) {
+        return {
+          success: false as const,
+          error: "insufficient_credits" as const,
+          needed,
+          have: balance,
+        };
+      }
+
+      return {
+        success: true as const,
+        strategy: { competitive, messaging, roadmap },
+        meta: { creditsUsed: needed, successCount },
+      };
+    }),
 });

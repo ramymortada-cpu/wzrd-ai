@@ -108,6 +108,37 @@ export function formatPrice(amount: number, currency: string = 'EGP'): string {
   return `${amount.toLocaleString()} ${currency}`;
 }
 
+/** Tier pricing (Sprint C) — single source for marketing + Paymob-aligned amounts. */
+export const TIER_PRICES = {
+  full_audit: { usd: 49, egypt: 2400, ksa: 184, uae: 180 },
+  strategy_pack: { usd: 149, egypt: 7300, ksa: 559, uae: 547 },
+} as const;
+
+export type TierPriceKey = keyof typeof TIER_PRICES;
+
+export function formatTierPrice(tier: TierPriceKey, market: string): string {
+  const p = TIER_PRICES[tier];
+  switch (market) {
+    case "egypt":
+      return `${p.egypt.toLocaleString()} EGP`;
+    case "ksa":
+      return `${p.ksa} SAR`;
+    case "uae":
+      return `${p.uae} AED`;
+    default:
+      return `$${p.usd}`;
+  }
+}
+
+/** Minimum credits after Paymob purchase (matches credit plan `credits` field). */
+export const TIER_CREDIT_GRANTS = {
+  full_audit: 60,
+  strategy_pack: 200,
+} as const;
+
+/** New account welcome grant — keep in sync with server `SIGNUP_BONUS` (credits.ts). */
+export const SIGNUP_BONUS_CREDITS = 100;
+
 /** Max lengths for input validation */
 export const INPUT_LIMITS = {
   SHORT_TEXT: 255,

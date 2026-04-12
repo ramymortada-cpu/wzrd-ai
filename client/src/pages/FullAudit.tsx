@@ -4,8 +4,9 @@
  * States: form | loading | results | partial | error
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, type RefObject } from 'react';
 import { useParams, useLocation } from 'wouter';
+import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { useI18n } from '@/lib/i18n';
@@ -19,7 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Target, Loader2, ChevronDown, ChevronUp, AlertTriangle,
-  CheckCircle2, History, RefreshCw, MessageSquare, FileDown
+  CheckCircle2, History, RefreshCw, MessageSquare, FileDown, Sparkles
 } from 'lucide-react';
 import { INDUSTRIES } from '@/lib/industries';
 import { waMeQualifiedLeadHref } from '@/lib/waContact';
@@ -52,6 +53,12 @@ interface AuditResult {
   actionPlan: { thisWeek: string[]; thisMonth: string[]; next3Months: string[] };
   limitations: string[];
 }
+
+type StrategyPackData = {
+  competitive: Record<string, unknown> | null;
+  messaging: Record<string, unknown> | null;
+  roadmap: Record<string, unknown> | null;
+};
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -95,6 +102,20 @@ function scoreBg(score: number) {
   if (score >= 60) return 'bg-yellow-50 border-yellow-200';
   if (score >= 40) return 'bg-orange-50 border-orange-200';
   return 'bg-red-50 border-red-200';
+}
+
+function StrategyJsonBlock({ title, data }: { title: string; data: Record<string, unknown> | null }) {
+  if (!data) return null;
+  return (
+    <Card className="border-muted">
+      <CardContent className="p-4">
+        <h4 className="font-semibold text-sm mb-2">{title}</h4>
+        <pre className="text-[11px] leading-relaxed overflow-auto max-h-56 rounded-md bg-muted/50 p-3" dir="ltr">
+          {JSON.stringify(data, null, 2)}
+        </pre>
+      </CardContent>
+    </Card>
+  );
 }
 
 // ─── Pillar Card ──────────────────────────────────────────────────────────────
@@ -158,26 +179,39 @@ function ResultsView({
   audit,
   isPartial,
   partialMessage,
-  creditsUsed,
   isAr,
   onRetry,
   auditRecordId,
   onDownloadPdf,
   pdfLoading,
+  strategyPack,
+  strategyPackLoading,
+  strategyPackError,
+  strategyPackCost,
+  userCredits,
+  onGenerateStrategyPack,
+  strategySectionRef,
 }: {
   audit: AuditResult;
   isPartial: boolean;
   partialMessage?: string;
-  creditsUsed: number;
   isAr: boolean;
   onRetry: () => void;
   auditRecordId: number | null;
   onDownloadPdf: () => void;
   pdfLoading: boolean;
+  strategyPack: StrategyPackData | null;
+  strategyPackLoading: boolean;
+  strategyPackError: string | null;
+  strategyPackCost: number;
+  userCredits: number;
+  onGenerateStrategyPack: () => void;
+  strategySectionRef: RefObject<HTMLDivElement | null>;
 }) {
   const [, navigate] = useLocation();
   const waHref = waMeQualifiedLeadHref({ diagnosisLabel: 'التحليل الشامل' });
   const overall = audit.overallScore ?? 0;
+  const canRunStrategy = userCredits >= strategyPackCost;
 
   return (
     <div className="space-y-6 pb-10">
@@ -255,8 +289,8 @@ function ResultsView({
             );
           })()}
 
-          <Badge variant="outline" className="text-xs">
-            {creditsUsed} {isAr ? 'credit' : 'credits'}
+          <Badge variant="outline" className="text-xs text-muted-foreground">
+            {isAr ? 'تحليل شامل مكتمل' : 'Full audit complete'}
           </Badge>
         </CardContent>
       </Card>
@@ -354,6 +388,57 @@ function ResultsView({
         </details>
       )}
 
+      {/* Strategy Pack */}
+      {auditRecordId !== null && (
+        <div ref={strategySectionRef} className="space-y-3">
+          <h2 className="font-bold text-lg flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-amber-500" />
+            {isAr ? 'حزمة الاستراتيجية' : 'Strategy Pack'}
+          </h2>
+          {strategyPackError && (
+            <Card className="border-red-200 bg-red-50">
+              <CardContent className="p-3 text-sm text-red-800">{strategyPackError}</CardContent>
+            </Card>
+          )}
+          {strategyPack ? (
+            <div className="grid gap-3 md:grid-cols-3">
+              <StrategyJsonBlock title={isAr ? 'تنافسية' : 'Competitive'} data={strategyPack.competitive} />
+              <StrategyJsonBlock title={isAr ? 'الرسالة' : 'Messaging'} data={strategyPack.messaging} />
+              <StrategyJsonBlock title={isAr ? 'خطة ٩٠ يوم' : '90-day roadmap'} data={strategyPack.roadmap} />
+            </div>
+          ) : (
+            <Card className="border-2 border-amber-200/60 bg-amber-50/40">
+              <CardContent className="p-4 space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  {isAr
+                    ? 'توسيعة اختيارية: منافسين، رسائل العلامة، وخطة تنفيذ — بعد التحليل الشامل.'
+                    : 'Optional add-on: competitors, brand messaging, and an execution roadmap on top of this audit.'}
+                </p>
+                {!canRunStrategy && (
+                  <p className="text-xs text-amber-900 font-medium">
+                    {isAr ? 'فعّل الباقة أو اشحن الرصيد من الأسعار.' : 'Open Pricing to add balance or upgrade.'}
+                  </p>
+                )}
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={strategyPackLoading || !canRunStrategy}
+                  onClick={onGenerateStrategyPack}
+                  className="bg-amber-600 hover:bg-amber-700"
+                >
+                  {strategyPackLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="mr-2 h-4 w-4" />
+                  )}
+                  {isAr ? 'ولّد حزمة الاستراتيجية' : 'Generate strategy pack'}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
       {/* CTAs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Card className="border-dashed border-2 border-muted">
@@ -401,6 +486,11 @@ export default function FullAudit() {
   const { user } = useAuth({ redirectOnUnauthenticated: true });
   const { locale } = useI18n();
   const isAr = locale === 'ar';
+  const utils = trpc.useUtils();
+  const strategySectionRef = useRef<HTMLDivElement>(null);
+
+  const toolCostsQuery = trpc.credits.toolCosts.useQuery(undefined, { staleTime: 60_000 });
+  const strategyPackCost = toolCostsQuery.data?.costs?.strategy_pack ?? 140;
 
   const [state, setState] = useState<State>('form');
   const [errorType, setErrorType] = useState<ErrorType>('none');
@@ -408,11 +498,12 @@ export default function FullAudit() {
   const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
   const [isPartial, setIsPartial] = useState(false);
   const [partialMessage, setPartialMessage] = useState('');
-  const [creditsUsed, setCreditsUsed] = useState(0);
   const [loadingPhase, setLoadingPhase] = useState(0);
   const [slowWarning, setSlowWarning] = useState(false);
   /** DB row id for PDF download (URL :id or last run insertId). */
   const [resolvedAuditId, setResolvedAuditId] = useState<number | null>(null);
+  const [strategyPack, setStrategyPack] = useState<StrategyPackData | null>(null);
+  const [strategyPackError, setStrategyPackError] = useState<string | null>(null);
 
   // Form state
   const [companyName, setCompanyName] = useState('');
@@ -433,11 +524,86 @@ export default function FullAudit() {
       const row = savedAuditQuery.data;
       const result = row.resultJson as AuditResult;
       setAuditResult(result);
-      setCreditsUsed(row.creditsUsed ?? 0);
       setResolvedAuditId(row.id);
       setState('results');
     }
   }, [auditId, savedAuditQuery.data]);
+
+  useEffect(() => {
+    setStrategyPack(null);
+    setStrategyPackError(null);
+  }, [resolvedAuditId, auditId]);
+
+  /** After Paymob redirect: poll until purchase is reflected (webhook). */
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const qs = new URLSearchParams(window.location.search);
+    if (qs.get('payment') !== 'pending') return;
+    const raw = qs.get('plan') || 'full_audit';
+    const planId = raw === 'strategy_pack' ? 'strategy_pack' : 'full_audit';
+    const tierStrategy = qs.get('tier') === 'strategy';
+
+    let cancelled = false;
+    const run = async () => {
+      for (let i = 0; i < 40; i++) {
+        if (cancelled) return;
+        try {
+          const st = await utils.credits.purchaseStatus.fetch({ planId });
+          await utils.auth.me.invalidate();
+          await utils.credits.balance.invalidate();
+          if (st.processed) {
+            toast.success(isAr ? 'تم تأكيد الدفع.' : 'Payment confirmed.');
+            window.history.replaceState(null, '', window.location.pathname);
+            if (tierStrategy || planId === 'strategy_pack') {
+              setTimeout(() => strategySectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 400);
+            }
+            return;
+          }
+        } catch {
+          /* non-fatal */
+        }
+        await new Promise((r) => setTimeout(r, 3000));
+      }
+      if (!cancelled) {
+        toast.info(isAr ? 'لسه بنأكد الدفع — حدّث الصفحة أو انتظر دقيقة.' : 'Still confirming payment — refresh in a moment.');
+      }
+    };
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [utils, isAr]);
+
+  const strategyPackMutation = trpc.fullAudit.generateStrategyPack.useMutation({
+    onSuccess: (data) => {
+      if (data.success && data.strategy) {
+        setStrategyPack(data.strategy as StrategyPackData);
+        setStrategyPackError(null);
+        void utils.auth.me.invalidate();
+        void utils.credits.balance.invalidate();
+        toast.success(isAr ? 'تم توليد حزمة الاستراتيجية.' : 'Strategy pack generated.');
+      } else if (!data.success) {
+        if (data.error === 'insufficient_credits') {
+          navigate('/app/pricing');
+          return;
+        }
+        const msg =
+          'message' in data && typeof data.message === 'string'
+            ? data.message
+            : data.error === 'not_found'
+              ? isAr
+                ? 'لم يُعثر على التحليل.'
+                : 'Audit not found.'
+              : isAr
+                ? 'تعذّر التوليد.'
+                : 'Generation failed.';
+        setStrategyPackError(msg);
+      }
+    },
+    onError: () => {
+      setStrategyPackError(isAr ? 'خطأ في الشبكة.' : 'Network error.');
+    },
+  });
 
   const pdfMutation = trpc.fullAudit.generatePdf.useMutation({
     onSuccess: (data) => {
@@ -469,7 +635,6 @@ export default function FullAudit() {
         return;
       }
       setAuditResult(data.audit as unknown as AuditResult);
-      setCreditsUsed(data.meta.creditsUsed);
       setIsPartial(data.partial ?? false);
       setPartialMessage(data.partialMessage ?? '');
       setResolvedAuditId(typeof data.auditId === "number" ? data.auditId : null);
@@ -595,11 +760,21 @@ export default function FullAudit() {
           audit={auditResult}
           isPartial={isPartial}
           partialMessage={partialMessage}
-          creditsUsed={creditsUsed}
           isAr={isAr}
           onRetry={handleRetry}
           auditRecordId={resolvedAuditId}
           pdfLoading={pdfMutation.isPending}
+          strategyPack={strategyPack}
+          strategyPackLoading={strategyPackMutation.isPending}
+          strategyPackError={strategyPackError}
+          strategyPackCost={strategyPackCost}
+          userCredits={user?.credits ?? 0}
+          strategySectionRef={strategySectionRef}
+          onGenerateStrategyPack={() => {
+            if (resolvedAuditId === null) return;
+            setStrategyPackError(null);
+            strategyPackMutation.mutate({ auditId: resolvedAuditId });
+          }}
           onDownloadPdf={() => {
             if (resolvedAuditId !== null) {
               pdfMutation.mutate({ auditId: resolvedAuditId });
@@ -624,23 +799,20 @@ export default function FullAudit() {
             : '7 dimensions: Identity, Positioning, Messaging, Offer, Digital Presence, Design, Market Readiness'}
         </p>
         <div className="flex items-center gap-2 mt-2">
-          <Badge variant="outline" className="text-xs">60 {isAr ? 'credit' : 'credits'}</Badge>
-          {user && (
-            <span className="text-xs text-muted-foreground">
-              {isAr ? `رصيدك: ${user.credits ?? 0}` : `Balance: ${user.credits ?? 0}`}
-            </span>
-          )}
+          <Badge variant="outline" className="text-xs text-muted-foreground">
+            {isAr ? 'يتطلب باقة التحليل الشامل' : 'Requires Full Audit plan balance'}
+          </Badge>
         </div>
       </div>
 
       {user && (user.credits ?? 0) < 60 && (
-        <Card className="border-2 border-red-200 bg-red-50 mb-6">
+        <Card className="border-2 border-amber-200 bg-amber-50/60 mb-6">
           <CardContent className="p-4">
-            <p className="text-sm font-semibold text-red-700">
-              {isAr ? `محتاج 60 credit — عندك ${user.credits ?? 0}` : `Need 60 credits — you have ${user.credits ?? 0}`}
+            <p className="text-sm font-semibold text-amber-900">
+              {isAr ? 'محتاج تفعيل باقة التحليل الشامل من الأسعار.' : 'You need the Full Audit plan from Pricing.'}
             </p>
-            <Button size="sm" className="mt-2 bg-red-600 hover:bg-red-700" onClick={() => navigate('/app/pricing')}>
-              {isAr ? 'اشحن رصيدك' : 'Top Up'}
+            <Button size="sm" className="mt-2" onClick={() => navigate('/app/pricing')}>
+              {isAr ? 'اذهب للأسعار' : 'Open pricing'}
             </Button>
           </CardContent>
         </Card>
@@ -741,7 +913,7 @@ export default function FullAudit() {
           {mutation.isPending ? (
             <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{isAr ? 'جاري التحليل...' : 'Analyzing...'}</>
           ) : (
-            <><Target className="mr-2 h-4 w-4" />{isAr ? 'ابدأ التحليل الشامل (60 credit)' : 'Start Full Audit (60 credits)'}</>
+            <><Target className="mr-2 h-4 w-4" />{isAr ? 'ابدأ التحليل الشامل' : 'Start full audit'}</>
           )}
         </Button>
 
