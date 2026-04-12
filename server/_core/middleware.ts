@@ -37,6 +37,7 @@ export function applyMiddleware(app: Express) {
 
   // Free quick diagnosis (LLM-heavy, public) — 3/hour per IP prevents API burn
   app.use('/api/trpc/tools.freeQuickDiagnosis', rateLimiters.freeReport);
+  app.use('/api/trpc/fullAudit.run', rateLimiters.publicWrite); // max 10/hour per user
 
   // Client portal (public but sensitive)
   app.use('/api/trpc/portal.viewProject', rateLimiters.portal);

@@ -19,6 +19,8 @@ const CopilotPage = lazy(() => import("@/pages/Copilot"));
 const PricingPage = lazy(() => import("@/pages/Pricing"));
 const ProfilePage = lazy(() => import("@/pages/Profile"));
 const MyRequestsPage = lazy(() => import("@/pages/MyRequests"));
+const FullAuditPage = lazy(() => import("@/pages/FullAudit"));
+const MyAuditsPage = lazy(() => import("@/pages/MyAudits"));
 
 function S({ children, detail }: { children: React.ReactNode; detail?: boolean }) {
   return (
@@ -46,6 +48,9 @@ export default function ClientRoutes() {
         <Route path="/app/pricing">{() => <S><PricingPage /></S>}</Route>
         <Route path="/app/profile">{() => <S><ProfilePage /></S>}</Route>
         <Route path="/app/my-requests">{() => <S><MyRequestsPage /></S>}</Route>
+        <Route path="/app/full-audit/:id">{() => <S detail><FullAuditPage /></S>}</Route>
+        <Route path="/app/full-audit">{() => <S><FullAuditPage /></S>}</Route>
+        <Route path="/app/my-audits">{() => <S><MyAuditsPage /></S>}</Route>
         <Route component={NotFound} />
       </Switch>
     </ClientLayout>

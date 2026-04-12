@@ -23,6 +23,7 @@ export const TOOL_COSTS: Record<string, number> = {
   ...WZRD_DIAGNOSIS_TOOL_COSTS,
   competitive_benchmark: 40,
   copilot_message: 5,
+  full_audit: 60,
 };
 
 export const SIGNUP_BONUS = 100;
