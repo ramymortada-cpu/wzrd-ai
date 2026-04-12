@@ -83,7 +83,20 @@ export default function Login() {
           });
           posthog.capture('user_logged_in', { method: 'magic_link' });
         }
-        navigate('/tools');
+        // Role-based redirect: fetch full user to check canAccessCommandCenter
+        const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+        if (redirectParam) {
+          navigate(redirectParam);
+        } else {
+          try {
+            const meRes = await fetch('/api/trpc/auth.me', { credentials: 'include' });
+            const meData = await meRes.json();
+            const me = meData?.result?.data?.json ?? meData?.result?.data;
+            navigate(me?.canAccessCommandCenter ? '/cc/dashboard' : '/app/tools');
+          } catch {
+            navigate('/app/tools');
+          }
+        }
       } else {
         setError(toErrorString(result?.message, 'الكود غلط أو انتهى.'));
       }

@@ -164,7 +164,7 @@ export default function CompetitiveBenchmark() {
       <div className="mx-auto max-w-2xl px-6 pb-20 pt-24">
         <button
           type="button"
-          onClick={() => navigate('/tools')}
+          onClick={() => navigate('/app/tools')}
           className="mb-6 text-sm font-medium text-[#6B7280] hover:text-[#1B4FD8]"
         >
           {isAr ? '→ رجوع للأدوات' : '← Back to Tools'}

@@ -129,7 +129,7 @@ export default function Tools() {
                 <div className="flex flex-wrap gap-3">
                   <button
                     type="button"
-                    onClick={() => navigate('/tools/brand-diagnosis')}
+                    onClick={() => navigate('/app/tools/brand-diagnosis')}
                     className="rounded-full bg-[#1B4FD8] px-6 py-2.5 text-sm font-bold text-white transition hover:bg-[#1440B8]"
                   >
                     🔬 {isAr ? 'ابدأ أول تقرير مجاني ←' : 'Start your free report →'}
@@ -163,8 +163,8 @@ export default function Tools() {
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <a
-                    href="/pricing"
-                    onClick={(e) => { e.preventDefault(); navigate('/pricing'); }}
+                    href="/app/pricing"
+                    onClick={(e) => { e.preventDefault(); navigate('/app/pricing'); }}
                     className="rounded-full bg-[#1B4FD8] px-6 py-2.5 text-sm font-bold text-white transition hover:bg-[#1440B8]"
                     style={{ textDecoration: 'none' }}
                   >
@@ -278,8 +278,8 @@ export default function Tools() {
             </p>
             <div className="flex flex-wrap justify-center gap-3">
               <a
-                href="/pricing"
-                onClick={(e) => { e.preventDefault(); navigate('/pricing'); }}
+                href="/app/pricing"
+                onClick={(e) => { e.preventDefault(); navigate('/app/pricing'); }}
                 className="rounded-full bg-[#1B4FD8] px-6 py-2.5 text-sm font-bold text-white hover:bg-[#1440B8] transition"
                 style={{ textDecoration: 'none' }}
               >

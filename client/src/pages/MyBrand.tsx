@@ -1131,7 +1131,7 @@ export default function MyBrand() {
               {isAr ? 'ابدأ أول تشخيص عشان تشوف صحة البراند بتاعك.' : 'Run your first diagnosis to see your brand health.'}
             </p>
             <button
-              onClick={() => navigate('/tools/brand-diagnosis')}
+              onClick={() => navigate('/app/tools/brand-diagnosis')}
               className="wzrd-shimmer-btn rounded-full bg-gradient-to-r from-primary to-violet-600 px-8 py-3.5 text-base font-bold text-primary-foreground shadow-lg shadow-primary/25 transition hover:-translate-y-0.5 hover:brightness-110"
             >
               {isAr ? 'شغّل أول تشخيص ←' : '→ Run First Diagnosis'}
@@ -1415,7 +1415,7 @@ export default function MyBrand() {
                       {isAr ? 'خلّصت أغلب المهام! شغّل تشخيص جديد وشوف التحسّن.' : 'Almost done! Run a new diagnosis to see improvement.'}
                     </p>
                     <button
-                      onClick={() => navigate('/tools/brand-diagnosis')}
+                      onClick={() => navigate('/app/tools/brand-diagnosis')}
                       className="rounded-full bg-gradient-to-r from-primary to-violet-600 px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 transition hover:brightness-110"
                     >
                       {isAr ? 'شغّل تشخيص جديد ←' : '→ Run New Diagnosis'}
@@ -1429,7 +1429,7 @@ export default function MyBrand() {
             <div className="mb-4 grid grid-cols-2 gap-3">
               {/* Copilot Card */}
               <button
-                onClick={() => navigate('/copilot')}
+                onClick={() => navigate('/app/copilot')}
                 className="wzrd-glass rounded-3xl p-4 text-center transition hover:ring-2 hover:ring-primary/15"
               >
                 <div className="mb-2 text-2xl">🧙‍♂️</div>
@@ -1439,7 +1439,7 @@ export default function MyBrand() {
 
               {/* Benchmark Card */}
               <button
-                onClick={() => navigate('/tools/benchmark')}
+                onClick={() => navigate('/app/tools/benchmark')}
                 className="wzrd-glass rounded-3xl p-4 text-center transition hover:ring-2 hover:ring-primary/15"
               >
                 <div className="mb-2 text-2xl">📊</div>
@@ -1449,7 +1449,7 @@ export default function MyBrand() {
 
               {/* Quick Diagnosis Card */}
               <button
-                onClick={() => navigate('/tools/quick')}
+                onClick={() => navigate('/app/tools/quick')}
                 className="wzrd-glass rounded-3xl p-4 text-center transition hover:ring-2 hover:ring-primary/15"
               >
                 <div className="mb-2 text-2xl">⚡</div>
@@ -1483,7 +1483,7 @@ export default function MyBrand() {
             {/* Re-diagnose CTA */}
             <div className="mt-4">
               <button
-                onClick={() => navigate('/tools/brand-diagnosis')}
+                onClick={() => navigate('/app/tools/brand-diagnosis')}
                 className="w-full rounded-3xl bg-gradient-to-r from-primary via-violet-600 to-cyan-600 py-4 text-base font-semibold text-white shadow-lg shadow-primary/25 transition hover:brightness-110"
               >
                 {isAr ? 'شغّل تشخيص جديد وقارن' : 'Run New Diagnosis & Compare'}

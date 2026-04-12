@@ -50,7 +50,7 @@ export default function Profile() {
                 {user?.credits != null ? (locale === 'ar' ? toArabicNumerals(user.credits) : user.credits) : '...'}
               </p>
             </div>
-            <button onClick={() => navigate('/pricing')}
+            <button onClick={() => navigate('/app/pricing')}
               className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white text-sm font-bold hover:from-indigo-700 hover:to-indigo-600 hover:-translate-y-0.5 transition">
               {t('wzrd.buyMore')}
             </button>
