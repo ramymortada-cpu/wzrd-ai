@@ -3,6 +3,7 @@
  * Route: /app/my-audits
  */
 
+import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/_core/hooks/useAuth';
@@ -10,7 +11,7 @@ import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Target, Loader2, ArrowRight } from 'lucide-react';
+import { Target, Loader2, ArrowRight, FileDown } from 'lucide-react';
 
 function scoreColor(score: number | null | undefined) {
   if (!score && score !== 0) return 'text-muted-foreground';
@@ -29,8 +30,17 @@ export default function MyAudits() {
   useAuth({ redirectOnUnauthenticated: true });
   const { locale } = useI18n();
   const isAr = locale === 'ar';
+  const [pdfLoadingFor, setPdfLoadingFor] = useState<number | null>(null);
 
   const { data: audits, isLoading } = trpc.fullAudit.myAudits.useQuery();
+
+  const pdfMutation = trpc.fullAudit.generatePdf.useMutation({
+    onSuccess: (data) => {
+      window.open(data.downloadUrl, "_blank", "noopener,noreferrer");
+    },
+    onMutate: ({ auditId }) => setPdfLoadingFor(auditId),
+    onSettled: () => setPdfLoadingFor(null),
+  });
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
@@ -82,7 +92,25 @@ export default function MyAudits() {
                     {formatDate(audit.createdAt)}
                   </p>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0"
+                    disabled={pdfMutation.isPending}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      pdfMutation.mutate({ auditId: audit.id });
+                    }}
+                  >
+                    {pdfLoadingFor === audit.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <FileDown className="h-4 w-4" />
+                    )}
+                    <span className="sr-only">{isAr ? 'PDF' : 'PDF'}</span>
+                  </Button>
                   {audit.overallScore !== null && audit.overallScore !== undefined && (
                     <span className={`text-3xl font-black ${scoreColor(audit.overallScore)}`}>
                       {audit.overallScore}

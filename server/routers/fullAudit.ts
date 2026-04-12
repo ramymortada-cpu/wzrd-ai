@@ -5,7 +5,11 @@
  */
 
 import { protectedProcedure, router } from "../_core/trpc";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { randomUUID } from "node:crypto";
+import { join } from "node:path";
+import { mkdir } from "node:fs/promises";
 import { logger } from "../_core/logger";
 import { resilientLLM } from "../_core/llmRouter";
 import { deductCredits, getUserCredits, getDb, TOOL_COSTS } from "../db";
@@ -13,6 +17,12 @@ import { fullAuditResults } from "../../drizzle/schema";
 import { eq, desc } from "drizzle-orm";
 import { scrapeWebsite, buildWebsiteContext, fetchLighthouseScores, searchGoogle } from "../researchEngine";
 import { getSemanticKnowledge } from "../vectorSearch";
+import {
+  renderFullAuditPdfToFile,
+  getFullAuditPdfDir,
+  writePdfMetaFile,
+  cleanupOldFullAuditPdfs,
+} from "../fullAuditPdf";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -617,5 +627,52 @@ ${dataContext || 'No external data available.'}`.trim();
       }
 
       return row;
+    }),
+
+  /** Generate downloadable PDF (HTML → Puppeteer) — saved under /tmp/wzzrd-pdfs */
+  generatePdf: protectedProcedure
+    .input(z.object({ auditId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user!.id;
+      const db = await getDb();
+      if (!db) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      }
+
+      const [row] = await db
+        .select()
+        .from(fullAuditResults)
+        .where(eq(fullAuditResults.id, input.auditId))
+        .limit(1);
+
+      if (!row || row.userId !== userId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Audit not found" });
+      }
+
+      const uuid = randomUUID();
+      const dir = getFullAuditPdfDir();
+      await mkdir(dir, { recursive: true });
+      const pdfPath = join(dir, `${uuid}.pdf`);
+
+      try {
+        await renderFullAuditPdfToFile(row, pdfPath);
+      } catch (err) {
+        logger.error({ err, auditId: input.auditId }, "[FullAudit] PDF render failed");
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "PDF generation failed" });
+      }
+
+      await writePdfMetaFile(dir, uuid, {
+        userId,
+        createdAt: Date.now(),
+        auditId: input.auditId,
+      });
+
+      void cleanupOldFullAuditPdfs(dir).catch(() => {});
+
+      const safe = row.companyName.replace(/[^a-zA-Z0-9\u0600-\u06FF\s-]/g, "").trim().slice(0, 50) || "audit";
+      return {
+        downloadUrl: `/api/download-pdf/${uuid}`,
+        filename: `WZZRD-FullAudit-${safe}.pdf`,
+      };
     }),
 });
