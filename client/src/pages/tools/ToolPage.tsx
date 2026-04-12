@@ -820,6 +820,14 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
       navigate('/login');
       return;
     }
+    if (!config.paywallAfterFreePreview && (user.credits ?? 0) <= 0) {
+      toast.info(
+        isAr ? 'محتاج باقة للمتابعة — صفحة الأسعار.' : 'You need a plan to continue — open Pricing.',
+        { duration: 5000 }
+      );
+      navigate('/app/pricing');
+      return;
+    }
     for (const field of config.fields) {
       if (field.required && !formData[field.name]) {
         setError(
@@ -908,6 +916,14 @@ export default function ToolPage({ config }: { config: ToolConfig }) {
 
   const handleUnlockFullDiagnosis = async () => {
     if (!freePreview?.unlockToken) return;
+    if (user && (user.credits ?? 0) <= 0) {
+      toast.info(
+        isAr ? 'محتاج باقة للمتابعة — صفحة الأسعار.' : 'You need a plan to continue — open Pricing.',
+        { duration: 5000 }
+      );
+      navigate('/app/pricing');
+      return;
+    }
     setUnlocking(true);
     setError('');
     try {

@@ -26,6 +26,11 @@ export const creditsRouter = router({
     return { credits: balance };
   }),
 
+  /** Alias for balance (numeric) — used by pricing payment polling UX */
+  getBalance: protectedProcedure.query(async ({ ctx }) => {
+    return await getUserCredits(ctx.user!.id);
+  }),
+
   /** Get current user's transaction history */
   history: protectedProcedure
     .input(z.object({ limit: z.number().int().min(1).max(100).default(50) }).optional())

@@ -159,7 +159,7 @@ export default function WzrdPublicHeader({ credits }: WzrdPublicHeaderProps = {}
               {isAr ? "EN" : "AR"}
             </button>
 
-            {/* Credits badge — always visible: 0 for guests, real balance for logged-in users */}
+            {/* Balance hint — avoid raw credit counts on public chrome */}
             <div style={{
               display: "flex",
               alignItems: "center",
@@ -175,9 +175,14 @@ export default function WzrdPublicHeader({ credits }: WzrdPublicHeaderProps = {}
               cursor: user ? "default" : "pointer",
             }}
             onClick={() => { if (!user) navigate("/signup"); }}
-            title={user ? undefined : (isAr ? "سجّل للحصول على ٥٠٠ كريدت مجاني" : "Sign up for 500 free credits")}
+            title={user ? undefined : (isAr ? "سجّل وابدأ مجاناً" : "Sign up and start for free")}
             >
-              ⚡ {user ? (credits ?? 0) : 0} {isAr ? "كريدت" : "CR"}
+              ⚡{" "}
+              {!user
+                ? (isAr ? "ابدأ مجاناً" : "Start free")
+                : (credits ?? 0) > 0
+                  ? (isAr ? "حساب نشط" : "Active")
+                  : (isAr ? "فعّل باقة" : "Get a plan")}
             </div>
 
             {user ? (

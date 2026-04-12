@@ -132,6 +132,8 @@ const DEFAULT_CONFIG: SiteConfig = {
   ],
   creditPlans: {
     plans: [
+      { id: 'full_audit', credits: 60, priceEGP: 2400, name: 'Full Brand Audit', nameAr: 'التحليل الشامل', descEn: '7-pillar brand audit (60 credits)', descAr: 'تحليل براند ٧ محاور — ٦٠ كريدت', popular: false, sortOrder: 3 },
+      { id: 'strategy_pack', credits: 200, priceEGP: 7300, name: 'Strategy Pack', nameAr: 'باقة الاستراتيجية', descEn: 'Competitive + messaging + 90-day roadmap (200 credits)', descAr: 'منافسين + رسائل + خطة ٩٠ يوم — ٢٠٠ كريدت', popular: false, sortOrder: 4 },
       { id: 'single_report', credits: 100, priceEGP: 99, name: 'Single Report', nameAr: 'تقرير واحد', descEn: '1 Premium AI report', descAr: 'تقرير مفصّل واحد', popular: false, sortOrder: 10 },
       { id: 'single_report_pro', credits: 200, priceEGP: 199, name: 'Full Report Pro', nameAr: 'تقرير مفصّل Pro', descEn: 'Extended premium analysis', descAr: 'تحليل بريميوم موسّع', popular: false, hideFromPricing: true, sortOrder: 12 },
       { id: 'bundle_6', credits: 800, priceEGP: 499, name: '6-Report Bundle', nameAr: 'باقة ٦ تقارير', descEn: 'Save 45% — comprehensive', descAr: 'وفّر ٤٥% — أشمل تحليل', popular: true, sortOrder: 20 },

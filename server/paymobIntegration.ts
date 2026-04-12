@@ -135,7 +135,15 @@ export async function createPaymentIntention(
           ...(promoRaw ? { promoCode: promoRaw.toUpperCase() } : {}),
         },
         special_reference: `wzrd-${userId}-${planId}-${Date.now()}`,
-        redirection_url: `${appUrl}/tools?purchase=success&plan=${planId}`,
+        redirection_url: (() => {
+          if (planId === "full_audit") {
+            return `${appUrl}/app/full-audit?payment=pending&plan=full_audit`;
+          }
+          if (planId === "strategy_pack") {
+            return `${appUrl}/app/full-audit?payment=pending&plan=strategy_pack&tier=strategy`;
+          }
+          return `${appUrl}/tools?purchase=success&plan=${planId}`;
+        })(),
         notification_url: `${appUrl}/api/webhooks/paymob`,
       }),
     });

@@ -39,6 +39,7 @@ export function applyMiddleware(app: Express) {
   app.use('/api/trpc/tools.freeQuickDiagnosis', rateLimiters.freeReport);
   app.use('/api/trpc/fullAudit.run', rateLimiters.publicWrite); // max 10/hour per user
   app.use('/api/trpc/fullAudit.generatePdf', rateLimiters.publicWrite);
+  app.use('/api/trpc/fullAudit.generateStrategyPack', rateLimiters.publicWrite);
 
   // Client portal (public but sensitive)
   app.use('/api/trpc/portal.viewProject', rateLimiters.portal);
