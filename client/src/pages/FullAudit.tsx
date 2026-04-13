@@ -25,6 +25,7 @@ import {
 import { INDUSTRIES } from '@/lib/industries';
 import { waMeQualifiedLeadHref } from '@/lib/waContact';
 import { formatTierPrice } from '@shared/const';
+import { FullAuditRadar } from '@/components/FullAuditRadar';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -351,6 +352,8 @@ function ResultsView({
           </CardContent>
         </Card>
       )}
+
+      <FullAuditRadar pillars={audit.pillars ?? []} isAr={isAr} />
 
       {/* 7 Pillars */}
       {audit.pillars?.length > 0 && (
