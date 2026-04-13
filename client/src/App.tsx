@@ -86,6 +86,7 @@ function App() {
               <Route path="/research">{() => <Redirect to="/cc/research" />}</Route>
               <Route path="/knowledge">{() => <Redirect to="/cc/knowledge" />}</Route>
               <Route path="/brand-twin">{() => <Redirect to="/cc/brand-twin" />}</Route>
+              <Route path="/brand-monitor">{() => <Redirect to="/cc/brand-monitor" />}</Route>
               <Route path="/leads">{() => <Redirect to="/cc/leads" />}</Route>
               <Route path="/sales-funnel">{() => <Redirect to="/cc/sales-funnel" />}</Route>
               <Route path="/playbooks">{() => <Redirect to="/cc/playbooks" />}</Route>

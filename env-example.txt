@@ -16,6 +16,10 @@ JWT_SECRET=your-random-32-char-secret-here
 # Railway MySQL provides this automatically
 DATABASE_URL=mysql://user:password@host:port/database
 
+# Brand Monitor (Sprint F): migration drizzle/0036_brand_monitor_clients.sql adds
+# clients.brand_monitor_enabled, brand_monitor_interval_days, brand_monitor_last_run_at.
+# Hourly worker starts with the server (see server/brandMonitorWorker.ts).
+
 # ═══════════════════════════════════════════════════
 # LLM — DUAL PROVIDER SETUP
 # ═══════════════════════════════════════════════════

@@ -25,6 +25,7 @@ import {
 import { INDUSTRIES } from '@/lib/industries';
 import { waMeQualifiedLeadHref } from '@/lib/waContact';
 import { formatTierPrice } from '@shared/const';
+import { FullAuditRadar } from '@/components/FullAuditRadar';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -60,6 +61,19 @@ type StrategyPackData = {
   messaging: Record<string, unknown> | null;
   roadmap: Record<string, unknown> | null;
 };
+
+/** Matches server `getPersistedStrategyPack` — at least two non-empty JSON objects. */
+function hydrateStrategyFromResultJson(resultJson: unknown): StrategyPackData | null {
+  const rj = (resultJson ?? {}) as Record<string, unknown>;
+  const raw = (rj.strategyPack ?? rj.strategy) as Record<string, unknown> | undefined;
+  if (!raw || typeof raw !== "object") return null;
+  const competitive = (raw.competitive as Record<string, unknown> | null) ?? null;
+  const messaging = (raw.messaging as Record<string, unknown> | null) ?? null;
+  const roadmap = (raw.roadmap as Record<string, unknown> | null) ?? null;
+  const filled = [competitive, messaging, roadmap].filter((p) => p != null && Object.keys(p).length > 0);
+  if (filled.length < 2) return null;
+  return { competitive, messaging, roadmap };
+}
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -195,6 +209,8 @@ function ResultsView({
   strategyPackCost,
   userCredits,
   onGenerateStrategyPack,
+  onDownloadStrategyPdf,
+  strategyPdfLoading,
   strategySectionRef,
   companyName,
   marketForPricing,
@@ -213,6 +229,8 @@ function ResultsView({
   strategyPackCost: number;
   userCredits: number;
   onGenerateStrategyPack: () => void;
+  onDownloadStrategyPdf: () => void;
+  strategyPdfLoading: boolean;
   strategySectionRef: RefObject<HTMLDivElement | null>;
   companyName: string;
   marketForPricing: string;
@@ -335,6 +353,8 @@ function ResultsView({
         </Card>
       )}
 
+      <FullAuditRadar pillars={audit.pillars ?? []} isAr={isAr} />
+
       {/* 7 Pillars */}
       {audit.pillars?.length > 0 && (
         <div>
@@ -442,6 +462,24 @@ function ResultsView({
           )}
           {strategyPack ? (
             <div className="space-y-4">
+              {auditRecordId !== null && (
+                <div className="flex justify-center">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-2 border-amber-600/50"
+                    disabled={strategyPdfLoading}
+                    onClick={onDownloadStrategyPdf}
+                  >
+                    {strategyPdfLoading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <FileDown className="mr-2 h-4 w-4" />
+                    )}
+                    {isAr ? 'حمّل PDF الاستراتيجية' : 'Download strategy PDF'}
+                  </Button>
+                </div>
+              )}
               <div className="grid gap-3 md:grid-cols-3">
                 <StrategyJsonBlock title={isAr ? 'تنافسية' : 'Competitive'} data={strategyPack.competitive} />
                 <StrategyJsonBlock title={isAr ? 'الرسالة' : 'Messaging'} data={strategyPack.messaging} />
@@ -580,6 +618,8 @@ export default function FullAudit() {
       const result = row.resultJson as AuditResult;
       setAuditResult(result);
       setResolvedAuditId(row.id);
+      setStrategyPack(hydrateStrategyFromResultJson(row.resultJson));
+      setStrategyPackError(null);
       const m = row.marketRegion;
       if (m === 'egypt' || m === 'ksa' || m === 'uae' || m === 'other') {
         setMarketRegion(m);
@@ -587,11 +627,6 @@ export default function FullAudit() {
       setState('results');
     }
   }, [auditId, savedAuditQuery.data]);
-
-  useEffect(() => {
-    setStrategyPack(null);
-    setStrategyPackError(null);
-  }, [resolvedAuditId, auditId]);
 
   /** After Paymob redirect: poll until purchase is reflected (webhook). */
   useEffect(() => {
@@ -634,12 +669,13 @@ export default function FullAudit() {
   }, [utils, isAr]);
 
   const strategyPackMutation = trpc.fullAudit.generateStrategyPack.useMutation({
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       if (data.success && data.strategy) {
         setStrategyPack(data.strategy as StrategyPackData);
         setStrategyPackError(null);
         void utils.auth.me.invalidate();
         void utils.credits.balance.invalidate();
+        void utils.fullAudit.getAudit.invalidate({ id: variables.auditId });
         toast.success(isAr ? 'تم توليد حزمة الاستراتيجية.' : 'Strategy pack generated.');
       } else if (!data.success) {
         if (data.error === 'insufficient_credits') {
@@ -665,6 +701,12 @@ export default function FullAudit() {
   });
 
   const pdfMutation = trpc.fullAudit.generatePdf.useMutation({
+    onSuccess: (data) => {
+      window.open(data.downloadUrl, "_blank", "noopener,noreferrer");
+    },
+  });
+
+  const strategyPdfMutation = trpc.fullAudit.generateStrategyPdf.useMutation({
     onSuccess: (data) => {
       window.open(data.downloadUrl, "_blank", "noopener,noreferrer");
     },
@@ -823,6 +865,7 @@ export default function FullAudit() {
           onRetry={handleRetry}
           auditRecordId={resolvedAuditId}
           pdfLoading={pdfMutation.isPending}
+          strategyPdfLoading={strategyPdfMutation.isPending}
           strategyPack={strategyPack}
           strategyPackLoading={strategyPackMutation.isPending}
           strategyPackError={strategyPackError}
@@ -833,6 +876,11 @@ export default function FullAudit() {
             if (resolvedAuditId === null) return;
             setStrategyPackError(null);
             strategyPackMutation.mutate({ auditId: resolvedAuditId });
+          }}
+          onDownloadStrategyPdf={() => {
+            if (resolvedAuditId !== null) {
+              strategyPdfMutation.mutate({ auditId: resolvedAuditId });
+            }
           }}
           onDownloadPdf={() => {
             if (resolvedAuditId !== null) {

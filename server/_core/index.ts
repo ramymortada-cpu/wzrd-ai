@@ -311,6 +311,20 @@ async function startServer() {
       }
 
       try {
+        const { startBrandMonitorWorker } = await import('../brandMonitorWorker');
+        startBrandMonitorWorker();
+      } catch (err) {
+        logger.warn({ err }, 'Brand monitor worker failed to start');
+      }
+
+      try {
+        const { startEmailQueueWorker } = await import('../emailQueueWorker');
+        startEmailQueueWorker();
+      } catch (err) {
+        logger.warn({ err }, 'Email queue worker failed to start');
+      }
+
+      try {
         const { seedEmailTemplates } = await import('../seeds/emailTemplates');
         await seedEmailTemplates();
       } catch (err) {

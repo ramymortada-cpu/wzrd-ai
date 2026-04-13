@@ -5,7 +5,12 @@
  * Tests are pure-logic (no browser / DOM required).
  */
 
+import { readFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
+
+const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 // ─── Helper mirrors ───────────────────────────────────────────────────────────
 
@@ -40,6 +45,7 @@ const REDIRECTS: Record<string, string> = {
   '/research':        '/cc/research',
   '/knowledge':       '/cc/knowledge',
   '/brand-twin':      '/cc/brand-twin',
+  '/brand-monitor': '/cc/brand-monitor',
   '/leads':           '/cc/leads',
   '/sales-funnel':    '/cc/sales-funnel',
   '/playbooks':       '/cc/playbooks',
@@ -198,6 +204,7 @@ describe('Sprint 0 — Shell Classification', () => {
     expect(getShell('/cc/dashboard')).toBe('agency');
     expect(getShell('/cc/clients')).toBe('agency');
     expect(getShell('/cc/research')).toBe('agency');
+    expect(getShell('/cc/brand-monitor')).toBe('agency');
   });
 
   it('correctly classifies /admin/* as admin shell', () => {
@@ -217,6 +224,15 @@ describe('Sprint 0 — Shell Classification', () => {
     expect(getShell('/dashboard')).toBe('legacy');
     expect(getShell('/tools')).toBe('legacy');
     expect(getShell('/pricing')).toBe('legacy');
+  });
+});
+
+describe('Sprint K — Welcome landing (docs/13)', () => {
+  it('Welcome funnels primary CTAs to /quick-check', () => {
+    const welcomeSrc = readFileSync(join(REPO_ROOT, 'client/src/pages/Welcome.tsx'), 'utf8');
+    expect(welcomeSrc).toContain('navigate("/quick-check")');
+    expect(welcomeSrc).toContain('اعرف صحة علامتك');
+    expect(welcomeSrc).toMatch(/dir=\{dir\}/);
   });
 });
 

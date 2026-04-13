@@ -16,6 +16,7 @@ import {
   writePdfMetaFile,
   readPdfMetaFile,
 } from "./fullAuditPdf";
+import { buildStrategyPackHtml, getPersistedStrategyPack } from "./strategyPackPdf";
 import type { FullAuditResult } from "../drizzle/schema";
 
 function minimalRow(overrides: Partial<FullAuditResult> = {}): FullAuditResult {
@@ -69,9 +70,10 @@ describe("Full Audit PDF helpers", () => {
     expect(svg).toContain("points=");
   });
 
-  it("fullAudit router defines generatePdf procedure", () => {
+  it("fullAudit router defines generatePdf + generateStrategyPdf procedures", () => {
     const src = readFileSync(resolve(__dirname, "routers/fullAudit.ts"), "utf8");
     expect(src).toContain("generatePdf:");
+    expect(src).toContain("generateStrategyPdf:");
     expect(src).toContain("protectedProcedure");
   });
 
@@ -83,5 +85,59 @@ describe("Full Audit PDF helpers", () => {
     const meta = await readPdfMetaFile(dir, id);
     expect(meta?.userId).toBe(42);
     expect(meta?.auditId).toBe(7);
+  });
+
+  it("writePdfMetaFile persists kind=strategy_pack", async () => {
+    const dir = join(tmpdir(), `wzzrd-meta-k-${randomUUID()}`);
+    await mkdir(dir, { recursive: true });
+    const id = randomUUID();
+    await writePdfMetaFile(dir, id, {
+      userId: 1,
+      createdAt: Date.now(),
+      auditId: 3,
+      kind: "strategy_pack",
+    });
+    const meta = await readPdfMetaFile(dir, id);
+    expect(meta?.kind).toBe("strategy_pack");
+  });
+
+  it("getPersistedStrategyPack requires ≥2 non-empty sections", () => {
+    const row = minimalRow({
+      resultJson: {
+        pillars: [],
+        overallScore: 50,
+        strategyPack: { competitive: { a: 1 }, messaging: null, roadmap: null },
+      },
+    });
+    expect(getPersistedStrategyPack(row)).toBeNull();
+    const ok = minimalRow({
+      resultJson: {
+        strategyPack: {
+          competitive: { x: 1 },
+          messaging: { y: 2 },
+          roadmap: null,
+        },
+      },
+    });
+    const pack = getPersistedStrategyPack(ok);
+    expect(pack?.competitive).toEqual({ x: 1 });
+    expect(pack?.messaging).toEqual({ y: 2 });
+  });
+
+  it("buildStrategyPackHtml includes the three section titles", () => {
+    const row = minimalRow({
+      resultJson: {
+        strategyPack: {
+          competitive: { note: "<raw>" },
+          messaging: { tagline: "T" },
+          roadmap: { month1: { theme: "M", tasks: [] } },
+        },
+      },
+    });
+    const html = buildStrategyPackHtml(row);
+    expect(html).toContain("STRATEGY PACK");
+    expect(html).toContain("التنافسية");
+    expect(html).toContain("Competitive");
+    expect(html).toContain("&lt;raw&gt;");
   });
 });
