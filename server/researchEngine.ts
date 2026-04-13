@@ -973,13 +973,14 @@ export function buildWebsiteContext(scrapedData: ScrapedPage, maxTokens: number 
  * Fetches Lighthouse scores from Google PageSpeed Insights API.
  * No API key required for basic usage (rate limited).
  */
-export async function fetchLighthouseScores(url: string) {
+export async function fetchLighthouseScores(url: string, options?: { timeoutMs?: number }) {
   try {
+    const timeoutMs = options?.timeoutMs ?? 30000;
     const apiUrl =
       `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}` +
       '&strategy=desktop&category=performance&category=accessibility&category=best-practices&category=seo';
 
-    const response = await fetch(apiUrl, { signal: AbortSignal.timeout(30000) });
+    const response = await fetch(apiUrl, { signal: AbortSignal.timeout(timeoutMs) });
     if (!response.ok) {
       logger.warn({ url, status: response.status }, '[Lighthouse] API request failed');
       return null;

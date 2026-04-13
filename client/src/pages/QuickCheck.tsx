@@ -62,8 +62,11 @@ export default function QuickCheckPage() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [result, setResult] = useState<QuickCheckSubmitResult | null>(null);
 
-  const topIssueForWhatsApp = (result?.diagnosisTeaser || "")
-    .split("\n")[0]
+  const topIssueForWhatsApp = (
+    (result?.top3Issues && result.top3Issues[0]) ||
+    (result?.diagnosisTeaser || "").split("\n")[0] ||
+    ""
+  )
     .trim()
     .slice(0, 80);
 
@@ -396,6 +399,54 @@ export default function QuickCheckPage() {
                   <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-line">{result.diagnosisTeaser}</p>
                 </div>
               </div>
+
+              {!!result.hasWebsiteData && (
+                <div className="space-y-3">
+                  <h2 className="font-mono text-xs text-zinc-600 uppercase tracking-[0.2em]">
+                    // WEBSITE SIGNALS
+                  </h2>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge className="bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                      Live site analyzed
+                    </Badge>
+                  </div>
+                  {result.lighthouseScores && (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+                      {(
+                        [
+                          ["Perf", result.lighthouseScores.performance],
+                          ["A11y", result.lighthouseScores.accessibility],
+                          ["BP", result.lighthouseScores.bestPractices],
+                          ["SEO", result.lighthouseScores.seo],
+                        ] as const
+                      ).map(([label, val]) => (
+                        <div
+                          key={label}
+                          className="rounded-lg border border-zinc-800/60 bg-zinc-900/40 py-3 px-2"
+                        >
+                          <div className="text-zinc-500 mb-1">{label}</div>
+                          <div className="text-lg font-semibold text-zinc-100">{val}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {Array.isArray(result.top3Issues) && result.top3Issues.length > 0 && (
+                <div className="space-y-3">
+                  <h2 className="font-mono text-xs text-zinc-600 uppercase tracking-[0.2em]">
+                    // TOP ISSUES
+                  </h2>
+                  <ol className="list-decimal list-inside space-y-2 text-sm text-zinc-300">
+                    {result.top3Issues.map((issue, i) => (
+                      <li key={i} className="leading-relaxed">
+                        {issue}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
 
               <div className="space-y-3">
                 <h2 className="font-mono text-xs text-zinc-600 uppercase tracking-[0.2em]">

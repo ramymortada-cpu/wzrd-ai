@@ -27,6 +27,11 @@ import {
 } from "../db";
 import { getDb } from "../db/index";
 import { leadMagnetSubscribers } from "../../drizzle/schema";
+import {
+  gatherQuickCheckWebsiteBundle,
+  formatLighthouseForPrompt,
+  normalizeTop3Issues,
+} from "../quickCheckSiteData";
 
 /**
  * Build the pricing reference string from the single source of truth.
@@ -65,6 +70,22 @@ export const leadsRouter = router({
       const sanitized = sanitizeObject(input);
       const answersText = sanitized.answers.map((a) => `Q: ${a.question}\nA: ${a.answer}`).join('\n\n');
 
+      const siteBundle = await gatherQuickCheckWebsiteBundle(sanitized.website);
+      const websiteSignals =
+        siteBundle.hasWebsiteData || siteBundle.websiteContextSnippet || siteBundle.lighthouseScores
+          ? [
+              siteBundle.websiteUrl ? `URL analyzed: ${siteBundle.websiteUrl}` : "",
+              siteBundle.websiteContextSnippet
+                ? `\nPAGE CONTENT SUMMARY (from live site — use as evidence, do not invent facts beyond it):\n${siteBundle.websiteContextSnippet}`
+                : "",
+              siteBundle.lighthouseScores
+                ? `\nLIGHTHOUSE (desktop PageSpeed):\n${formatLighthouseForPrompt(siteBundle.lighthouseScores)}`
+                : "",
+            ]
+              .filter(Boolean)
+              .join("\n")
+          : "No live website data was retrieved (URL missing, blocked, or timed out). Rely on questionnaire answers only.";
+
       const diagnosisPrompt = `You are Wzrd AI, the brand engineering intelligence of WZZRD AI agency.
 
 A potential client just completed a Brand Health Quick-Check. Analyze their answers and provide:
@@ -76,12 +97,16 @@ A potential client just completed a Brand Health Quick-Check. Analyze their answ
 5. Scoring reason (why this score)
 6. Recommended service from: business_health_check, starting_business_logic, brand_identity, business_takeoff, consultation
 7. Estimated project value in EGP
+8. Exactly three short "top issues" strings (max 120 chars each) — most important problems to fix first; may reference website/Lighthouse data when provided
 
 Client Info:
 - Company: ${sanitized.companyName}
 - Industry: ${sanitized.industry || 'Not specified'}
 - Market: ${sanitized.market}
-- Website: ${sanitized.website || 'None'}
+- Website (submitted): ${sanitized.website || 'None'}
+
+WEBSITE / TECHNICAL SIGNALS:
+${websiteSignals}
 
 Quick-Check Answers:
 ${answersText}
@@ -97,7 +122,8 @@ Respond in JSON format:
   "scoreLabel": "hot",
   "scoringReason": "...",
   "recommendedService": "brand_identity",
-  "estimatedValue": 210000
+  "estimatedValue": 210000,
+  "top3Issues": ["Issue one", "Issue two", "Issue three"]
 }`;
 
       let diagnosis = {
@@ -108,6 +134,11 @@ Respond in JSON format:
         scoringReason: 'Medium potential based on initial assessment.',
         recommendedService: 'business_health_check',
         estimatedValue: SERVICE_PRICES.business_health_check,
+        top3Issues: [
+          'Clarify brand positioning vs competitors.',
+          'Align messaging with target audience expectations.',
+          'Strengthen key digital touchpoints and proof points.',
+        ] as string[],
       };
 
       try {
@@ -131,18 +162,40 @@ Respond in JSON format:
                   scoringReason: { type: 'string' },
                   recommendedService: { type: 'string' },
                   estimatedValue: { type: 'number' },
+                  top3Issues: {
+                    type: 'array',
+                    items: { type: 'string' },
+                    minItems: 3,
+                    maxItems: 3,
+                  },
                 },
-                required: ['diagnosisTeaser', 'fullDiagnosis', 'score', 'scoreLabel', 'scoringReason', 'recommendedService', 'estimatedValue'],
+                required: ['diagnosisTeaser', 'fullDiagnosis', 'score', 'scoreLabel', 'scoringReason', 'recommendedService', 'estimatedValue', 'top3Issues'],
                 additionalProperties: false,
               },
             },
           },
         }, { context: 'chat' });
-        const parsed = JSON.parse(llmResponse.choices[0].message.content as string);
-        diagnosis = parsed;
+        const parsed = JSON.parse(llmResponse.choices[0].message.content as string) as typeof diagnosis & {
+          top3Issues?: unknown;
+        };
+        diagnosis = {
+          ...parsed,
+          top3Issues: normalizeTop3Issues(
+            parsed.top3Issues,
+            parsed.diagnosisTeaser ?? diagnosis.diagnosisTeaser,
+            parsed.fullDiagnosis ?? diagnosis.fullDiagnosis,
+          ),
+        };
       } catch (e) {
         logger.warn({ err: e }, 'AI diagnosis failed, using defaults');
       }
+
+      const top3Issues = normalizeTop3Issues(
+        diagnosis.top3Issues,
+        diagnosis.diagnosisTeaser,
+        diagnosis.fullDiagnosis,
+      );
+      diagnosis = { ...diagnosis, top3Issues };
 
       // Create lead in database
       const lead = await createLead({
@@ -176,13 +229,22 @@ Respond in JSON format:
         logger.warn({ err: e }, 'Failed to notify owner about new lead');
       }
 
-      logger.info({ leadId: lead?.id, score: diagnosis.score, scoreLabel: diagnosis.scoreLabel }, 'Quick-check lead submitted');
+      logger.info(
+        {
+          leadId: lead?.id,
+          score: diagnosis.score,
+          scoreLabel: diagnosis.scoreLabel,
+          hasWebsiteData: siteBundle.hasWebsiteData,
+        },
+        'Quick-check lead submitted',
+      );
 
       void sendQuickCheckResultEmail(
         sanitized.email,
         sanitized.contactName,
         diagnosis.score,
-        buildQuickCheckTopIssuesForEmail(diagnosis.diagnosisTeaser, diagnosis.fullDiagnosis)
+        top3Issues.join("\n") ||
+          buildQuickCheckTopIssuesForEmail(diagnosis.diagnosisTeaser, diagnosis.fullDiagnosis),
       ).catch((err) => logger.warn({ err, email: sanitized.email }, '[QuickCheck] follow-up email failed'));
 
       // ══ FUNNEL AUTOMATION (fire-and-forget) ══
@@ -231,6 +293,9 @@ Respond in JSON format:
         score: diagnosis.score,
         scoreLabel: diagnosis.scoreLabel,
         recommendedService: diagnosis.recommendedService,
+        hasWebsiteData: siteBundle.hasWebsiteData,
+        lighthouseScores: siteBundle.lighthouseScores,
+        top3Issues,
       };
     }),
 
