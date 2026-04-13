@@ -47,6 +47,7 @@ const FILES = [
   '0033_tool_reviews.sql',
   '0035_full_audit_results.sql',
   '0036_brand_monitor_clients.sql',
+  '0037_email_queue_scheduled_at.sql',
 ];
 
 /** Tables we expect after 0015–0017 (0018 alters enum, 0019 Paymob idempotency). */

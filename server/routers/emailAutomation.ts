@@ -435,15 +435,16 @@ export const emailAutomationRouter = router({
 
         // Handle delay
         if (rule.delayMinutes > 0) {
-          // Queue for later (simplified: just log as queued)
+          const scheduledAt = new Date(Date.now() + rule.delayMinutes * 60 * 1000);
           await db.insert(emailSendLog).values({
             userId: input.userId,
             email: user.email,
             templateId: rule.templateId,
             automationRuleId: rule.id,
             subject: template.subjectAr || template.subject,
-            status: 'queued',
+            status: "queued",
             trigger: input.trigger,
+            scheduledAt,
           });
           triggered++;
         } else {

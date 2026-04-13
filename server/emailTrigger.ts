@@ -67,15 +67,17 @@ export async function fireEmailTrigger(
       if (!template || !template.isActive) continue;
 
       if (rule.delayMinutes > 0) {
-        // Queue for later
+        const scheduledAt = new Date(Date.now() + rule.delayMinutes * 60 * 1000);
+        // Queue for later (Sprint I: emailQueueWorker sends when scheduledAt <= now)
         await db.insert(emailSendLog).values({
           userId,
           email: user.email,
           templateId: rule.templateId,
           automationRuleId: rule.id,
           subject: template.subjectAr || template.subject,
-          status: 'queued',
+          status: "queued",
           trigger,
+          scheduledAt,
         });
       } else {
         // Send immediately — use wzrdEmails.sendEmail (Resend / SendGrid / skip if no provider)

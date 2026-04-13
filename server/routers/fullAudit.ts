@@ -24,6 +24,7 @@ import {
   cleanupOldFullAuditPdfs,
 } from "../fullAuditPdf";
 import { renderStrategyPackPdfToFile, getPersistedStrategyPack } from "../strategyPackPdf";
+import { fireEmailTrigger } from "../emailTrigger";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -579,6 +580,13 @@ ${dataContext || 'No external data available.'}`.trim();
         } catch (err) {
           logger.error({ err, userId }, '[FullAudit] Failed to save to DB');
         }
+      }
+
+      if (savedId) {
+        void fireEmailTrigger("audit_followup_48h", userId, {
+          toolName: "full_audit",
+          score: typeof auditResult.overallScore === "number" ? auditResult.overallScore : undefined,
+        });
       }
 
       if (isPartial) {
