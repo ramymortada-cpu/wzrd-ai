@@ -126,6 +126,21 @@ const TEMPLATE_ROWS: Array<{
   <a href="${APP}/tools" style="display:inline-block;background:#6366f1;color:#fff;font-weight:700;padding:14px 28px;border-radius:9999px;text-decoration:none;font-size:14px;">Return to WZZRD AI →</a>
 </p>`),
   },
+  {
+    name: 'sprint_i_full_audit_followup_48h',
+    nameAr: 'متابعة بعد التحليل الشامل ٤٨ ساعة',
+    subject: 'Your full brand audit — next steps inside',
+    subjectAr: 'تحليلك الشامل — الخطوة الجاية',
+    type: 'follow_up',
+    html: shell(`
+<h1 style="color:#f4f4f6;font-size:22px;margin:16px 0 12px;">Hi {{NAME}},</h1>
+<p style="color:#a1a1aa;font-size:15px;">A couple of days ago you ran a <strong style="color:#fafafa;">full brand audit</strong> on WZZRD AI.</p>
+<p style="color:#a1a1aa;font-size:15px;">If you’re ready to go deeper — unlock more credits, explore pricing, or run another audit anytime.</p>
+<p style="margin-top:24px;display:flex;flex-wrap:wrap;gap:12px;">
+  <a href="${APP}/app/pricing" style="display:inline-block;background:#6366f1;color:#fff;font-weight:700;padding:14px 24px;border-radius:9999px;text-decoration:none;font-size:14px;">Pricing</a>
+  <a href="${APP}/app/full-audit" style="display:inline-block;background:#27272a;color:#e4e4e7;font-weight:700;padding:14px 24px;border-radius:9999px;text-decoration:none;font-size:14px;">Full audit</a>
+</p>`),
+  },
 ];
 
 type TriggerName =
@@ -134,7 +149,8 @@ type TriggerName =
   | 'credits_low'
   | 'inactive_3d'
   | 'inactive_7d'
-  | 'inactive_30d';
+  | 'inactive_30d'
+  | 'audit_followup_48h';
 
 const RULE_ROWS: Array<{
   name: string;
@@ -150,6 +166,14 @@ const RULE_ROWS: Array<{
   { name: 'sprint5_rule_inactive_3d', nameAr: 'خمول ٣ أيام', trigger: 'inactive_3d', templateName: 'sprint5_inactive_3d', delayMinutes: 0, isActive: 1 },
   { name: 'sprint5_rule_inactive_7d', nameAr: 'خمول ٧ أيام', trigger: 'inactive_7d', templateName: 'sprint5_inactive_7d', delayMinutes: 0, isActive: 1 },
   { name: 'sprint5_rule_inactive_30d', nameAr: 'خمول ٣٠ يوم', trigger: 'inactive_30d', templateName: 'sprint5_inactive_30d', delayMinutes: 0, isActive: 1 },
+  {
+    name: 'sprint_i_rule_audit_followup_48h',
+    nameAr: 'متابعة التحليل الشامل ٤٨ ساعة',
+    trigger: 'audit_followup_48h',
+    templateName: 'sprint_i_full_audit_followup_48h',
+    delayMinutes: 48 * 60,
+    isActive: 1,
+  },
 ];
 
 async function ensureTemplate(row: (typeof TEMPLATE_ROWS)[0]): Promise<number> {

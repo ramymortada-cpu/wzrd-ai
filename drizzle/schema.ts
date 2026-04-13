@@ -942,6 +942,7 @@ export const automationRules = mysqlTable("automation_rules", {
     "inactive_30d",
     "premium_purchase",
     "manual",
+    "audit_followup_48h",
   ]).notNull(),
   templateId: int("templateId"),
   delayMinutes: int("delayMinutes").notNull().default(0),
@@ -960,6 +961,8 @@ export const emailSendLog = mysqlTable("email_send_log", {
   status: mysqlEnum("status", ["queued", "sent", "failed", "bounced"]).notNull().default("queued"),
   trigger: varchar("trigger", { length: 50 }),
   errorMessage: varchar("errorMessage", { length: 500 }),
+  /** When set, queue worker sends after this time (Sprint I). Legacy rows may be NULL → use createdAt. */
+  scheduledAt: timestamp("scheduledAt"),
   sentAt: timestamp("sentAt"),
   openedAt: timestamp("openedAt"),
   clickedAt: timestamp("clickedAt"),
