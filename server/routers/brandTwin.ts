@@ -6,7 +6,18 @@ import { logger } from "../_core/logger";
 import { runBrandAudit, compareSnapshots } from "../brandTwin";
 import { eq, and, desc } from "drizzle-orm";
 import { brandAlerts } from "../../drizzle/schema";
-import { createBrandHealthSnapshot, getLatestSnapshot, getSnapshotHistory, getSnapshotById, getAlertsByClient, updateAlertStatus, getMetricsByClient, getBrandTwinDashboard, getClientById } from "../db";
+import {
+  createBrandHealthSnapshot,
+  getLatestSnapshot,
+  getSnapshotHistory,
+  getSnapshotById,
+  getAlertsByClient,
+  updateAlertStatus,
+  getMetricsByClient,
+  getBrandTwinDashboard,
+  getClientById,
+  updateClient,
+} from "../db";
 import { getDb } from "../db/index";
 import { observeClient, observeAllClients } from "../brandObservatory";
 
@@ -63,10 +74,50 @@ export const brandTwinRouter = router({
   updateAlert: protectedProcedure.input(z.object({ id: z.number(), status: z.enum(["active", "acknowledged", "resolved", "dismissed"]) })).mutation(async ({ input, ctx }) => { checkEditor(ctx); await updateAlertStatus(input.id, input.status); return { success: true }; }),
   metrics: protectedProcedure.input(z.object({ clientId: z.number().int().positive(), dimension: z.string().max(100).optional() })).query(async ({ input }) => getMetricsByClient(input.clientId, input.dimension)),
 
+  /** Brand Monitor schedule (Sprint F) */
+  monitorSettings: protectedProcedure
+    .input(z.object({ clientId: z.number().int().positive() }))
+    .query(async ({ input, ctx }) => {
+      checkEditor(ctx);
+      const c = await getClientById(input.clientId, ctx.workspaceId);
+      if (!c) return null;
+      return {
+        clientId: c.id,
+        companyName: c.companyName || c.name,
+        brandMonitorEnabled: Boolean(c.brandMonitorEnabled),
+        brandMonitorIntervalDays: c.brandMonitorIntervalDays ?? 7,
+        brandMonitorLastRunAt: c.brandMonitorLastRunAt ?? null,
+      };
+    }),
+
+  updateMonitorSettings: protectedProcedure
+    .input(
+      z.object({
+        clientId: z.number().int().positive(),
+        brandMonitorEnabled: z.boolean(),
+        brandMonitorIntervalDays: z.number().int().min(1).max(90),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      checkEditor(ctx);
+      const c = await getClientById(input.clientId, ctx.workspaceId);
+      if (!c) throw new Error("Client not found");
+      await updateClient(input.clientId, {
+        brandMonitorEnabled: input.brandMonitorEnabled ? 1 : 0,
+        brandMonitorIntervalDays: input.brandMonitorIntervalDays,
+      });
+      return { success: true as const };
+    }),
+
   /** Observatory: scan a single client for brand signals */
   observe: protectedProcedure
     .input(z.object({ clientId: z.number().int().positive() }))
-    .mutation(async ({ input, ctx }) => { checkEditor(ctx); return observeClient(input.clientId); }),
+    .mutation(async ({ input, ctx }) => {
+      checkEditor(ctx);
+      const c = await getClientById(input.clientId, ctx.workspaceId);
+      if (!c) throw new Error("Client not found");
+      return observeClient(input.clientId);
+    }),
 
   /** Observatory: scan ALL active clients */
   observeAll: protectedProcedure.mutation(async ({ ctx }) => { checkEditor(ctx); return observeAllClients(); }),

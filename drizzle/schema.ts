@@ -121,6 +121,10 @@ export const clients = mysqlTable("clients", {
   deletedAt: timestamp("deletedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  /** Sprint F — scheduled Brand Observatory (Command Center) */
+  brandMonitorEnabled: int("brandMonitorEnabled").default(0).notNull(),
+  brandMonitorIntervalDays: int("brandMonitorIntervalDays").default(7).notNull(),
+  brandMonitorLastRunAt: timestamp("brandMonitorLastRunAt"),
 });
 
 export type Client = typeof clients.$inferSelect;

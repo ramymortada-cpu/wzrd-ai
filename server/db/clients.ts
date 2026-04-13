@@ -2,7 +2,7 @@
  * Clients DB Helpers — client CRUD with pagination and soft delete.
  */
 
-import { eq, desc, isNull, sql, and } from "drizzle-orm";
+import { eq, desc, isNull, sql, and, or } from "drizzle-orm";
 import { clients, InsertClient, Client } from "../../drizzle/schema";
 import { getDb } from "./index";
 import { logger } from "../_core/logger";
@@ -69,6 +69,29 @@ export async function getClients(params?: { page?: number; pageSize?: number; wo
 /**
  * Get a single client by ID (excludes soft-deleted).
  */
+/**
+ * Clients with Brand Monitor enabled, active, and due for an observatory scan (Sprint F).
+ */
+export async function listClientsDueForBrandMonitor(): Promise<Client[]> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db
+    .select()
+    .from(clients)
+    .where(
+      and(
+        isNull(clients.deletedAt),
+        eq(clients.status, "active"),
+        eq(clients.brandMonitorEnabled, 1),
+        or(
+          isNull(clients.brandMonitorLastRunAt),
+          sql`${clients.brandMonitorLastRunAt} < DATE_SUB(UTC_TIMESTAMP(), INTERVAL ${clients.brandMonitorIntervalDays} DAY)`,
+        ),
+      ),
+    )
+    .orderBy(desc(clients.updatedAt));
+}
+
 export async function getClientById(id: number, workspaceId?: number): Promise<Client | null> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
