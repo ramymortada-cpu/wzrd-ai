@@ -23,6 +23,7 @@ import {
   writePdfMetaFile,
   cleanupOldFullAuditPdfs,
 } from "../fullAuditPdf";
+import { renderStrategyPackPdfToFile, getPersistedStrategyPack } from "../strategyPackPdf";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -683,6 +684,7 @@ ${dataContext || 'No external data available.'}`.trim();
         userId,
         createdAt: Date.now(),
         auditId: input.auditId,
+        kind: "full_audit",
       });
 
       void cleanupOldFullAuditPdfs(dir).catch(() => {});
@@ -691,6 +693,61 @@ ${dataContext || 'No external data available.'}`.trim();
       return {
         downloadUrl: `/api/download-pdf/${uuid}`,
         filename: `WZZRD-FullAudit-${safe}.pdf`,
+      };
+    }),
+
+  /** Strategy Pack PDF — requires persisted strategy in `resultJson.strategyPack` */
+  generateStrategyPdf: protectedProcedure
+    .input(z.object({ auditId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user!.id;
+      const db = await getDb();
+      if (!db) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      }
+
+      const [row] = await db
+        .select()
+        .from(fullAuditResults)
+        .where(eq(fullAuditResults.id, input.auditId))
+        .limit(1);
+
+      if (!row || row.userId !== userId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Audit not found" });
+      }
+
+      if (!getPersistedStrategyPack(row)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Strategy pack not available — generate the strategy pack first.",
+        });
+      }
+
+      const uuid = randomUUID();
+      const dir = getFullAuditPdfDir();
+      await mkdir(dir, { recursive: true });
+      const pdfPath = join(dir, `${uuid}.pdf`);
+
+      try {
+        await renderStrategyPackPdfToFile(row, pdfPath);
+      } catch (err) {
+        logger.error({ err, auditId: input.auditId }, "[FullAudit] Strategy PDF render failed");
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Strategy PDF generation failed" });
+      }
+
+      await writePdfMetaFile(dir, uuid, {
+        userId,
+        createdAt: Date.now(),
+        auditId: input.auditId,
+        kind: "strategy_pack",
+      });
+
+      void cleanupOldFullAuditPdfs(dir).catch(() => {});
+
+      const safe = row.companyName.replace(/[^a-zA-Z0-9\u0600-\u06FF\s-]/g, "").trim().slice(0, 40) || "strategy";
+      return {
+        downloadUrl: `/api/download-pdf/${uuid}`,
+        filename: `WZZRD-StrategyPack-${safe}.pdf`,
       };
     }),
 
@@ -850,6 +907,23 @@ Each month should have 3-5 tasks. Tasks must be specific and actionable.`,
           have: balance,
         };
       }
+
+      const merged = {
+        ...auditResult,
+        strategyPack: {
+          competitive,
+          messaging,
+          roadmap,
+          creditsUsed: needed,
+          successCount,
+          generatedAt: new Date().toISOString(),
+        },
+      };
+
+      await db
+        .update(fullAuditResults)
+        .set({ resultJson: merged })
+        .where(eq(fullAuditResults.id, input.auditId));
 
       return {
         success: true as const,

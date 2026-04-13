@@ -54,8 +54,12 @@ export function mountFullAuditPdfDownload(app: Express): void {
 
     void cleanupOldFullAuditPdfs(dir).catch(() => {});
 
+    const kind = meta.kind ?? "full_audit";
+    const baseName =
+      kind === "strategy_pack" ? `WZZRD-StrategyPack-${uuid.slice(0, 8)}` : `WZZRD-FullAudit-${uuid.slice(0, 8)}`;
+
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="WZZRD-FullAudit-${uuid.slice(0, 8)}.pdf"`);
+    res.setHeader("Content-Disposition", `attachment; filename="${baseName}.pdf"`);
     const stream = createReadStream(pdfPath);
     stream.on("error", () => {
       if (!res.headersSent) res.status(500).end();

@@ -334,19 +334,24 @@ export async function renderFullAuditPdfToFile(row: FullAuditResult, outPath: st
   }
 }
 
-export async function writePdfMetaFile(
-  dir: string,
-  uuid: string,
-  meta: { userId: number; createdAt: number; auditId: number }
-): Promise<void> {
+/** Written next to each temp PDF for `/api/download-pdf/:uuid`. */
+export type FullAuditPdfDownloadMeta = {
+  userId: number;
+  createdAt: number;
+  auditId: number;
+  /** Defaults to full audit when omitted (older meta files). */
+  kind?: "full_audit" | "strategy_pack";
+};
+
+export async function writePdfMetaFile(dir: string, uuid: string, meta: FullAuditPdfDownloadMeta): Promise<void> {
   await mkdir(dir, { recursive: true });
   await writeFile(join(dir, `${uuid}.meta.json`), JSON.stringify(meta), "utf8");
 }
 
-export async function readPdfMetaFile(dir: string, uuid: string): Promise<{ userId: number; createdAt: number; auditId: number } | null> {
+export async function readPdfMetaFile(dir: string, uuid: string): Promise<FullAuditPdfDownloadMeta | null> {
   try {
     const raw = await readFile(join(dir, `${uuid}.meta.json`), "utf8");
-    return JSON.parse(raw) as { userId: number; createdAt: number; auditId: number };
+    return JSON.parse(raw) as FullAuditPdfDownloadMeta;
   } catch {
     return null;
   }
